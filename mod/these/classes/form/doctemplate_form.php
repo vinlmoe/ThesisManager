@@ -22,7 +22,7 @@ require_once($CFG->libdir . '/formslib.php');
 require_once($CFG->dirroot . '/mod/these/locallib.php');
 
 /**
- * Modification du modèle d'un document (administration du site) : le source HTML avec ses balises
+ * Modification du modèle d'un document de l'activité (DEVE) : le source HTML avec ses balises
  * Mustache, un aperçu PDF avec des données fictives (dans un nouvel onglet), l'enregistrement.
  *
  * @package   mod_these
@@ -36,6 +36,8 @@ class doctemplate_form extends \moodleform {
     public function definition() {
         $mform = $this->_form;
 
+        $mform->addElement('hidden', 'id');
+        $mform->setType('id', PARAM_INT);
         $mform->addElement('hidden', 'type');
         $mform->setType('type', PARAM_ALPHA);
 
@@ -68,7 +70,12 @@ class doctemplate_form extends \moodleform {
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
         if (empty($errors['content'])) {
-            $error = these_doctemplate_error($data['type'], (string) $data['content']);
+            $error = these_doctemplate_error(
+                $this->_customdata['these'],
+                $this->_customdata['context'],
+                $data['type'],
+                (string) $data['content']
+            );
             if ($error !== null) {
                 $errors['content'] = $error;
             }

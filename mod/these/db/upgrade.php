@@ -100,5 +100,56 @@ function xmldb_these_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2026102500, 'these');
     }
 
+    if ($oldversion < 2026102600) {
+        // Modèles des documents propres à chaque activité, modifiés par la DEVE.
+        $table = new xmldb_table('these_doctemplate');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('theseid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('doctype', XMLDB_TYPE_CHAR, '20', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('content', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('theseid', XMLDB_KEY_FOREIGN, ['theseid'], 'these', ['id']);
+        $table->add_index('theseid_doctype', XMLDB_INDEX_UNIQUE, ['theseid', 'doctype']);
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Les modèles et images modifiés auparavant pour tout le site passent dans chaque activité.
+        $config = (array) get_config('mod_these');
+        $fs = get_file_storage();
+        $systemcontext = context_system::instance();
+        $images = $fs->get_area_files($systemcontext->id, 'mod_these', 'docimages', 0, 'filename', false);
+        $moduleid = $DB->get_field('modules', 'id', ['name' => 'these']);
+        foreach ($DB->get_records('these', null, 'id', 'id') as $these) {
+            foreach ($config as $name => $content) {
+                if (strpos($name, 'doctpl_') === 0 && trim((string) $content) !== '') {
+                    $doctype = substr($name, strlen('doctpl_'));
+                    if (!$DB->record_exists('these_doctemplate', ['theseid' => $these->id, 'doctype' => $doctype])) {
+                        $DB->insert_record('these_doctemplate', (object) [
+                            'theseid' => $these->id, 'doctype' => $doctype, 'content' => $content, 'timemodified' => time(),
+                        ]);
+                    }
+                }
+            }
+            $cmid = $DB->get_field('course_modules', 'id', ['module' => $moduleid, 'instance' => $these->id]);
+            if ($images && $cmid) {
+                $context = context_module::instance($cmid);
+                foreach ($images as $image) {
+                    $fs->create_file_from_storedfile(['contextid' => $context->id, 'itemid' => 0], $image);
+                }
+            }
+        }
+        foreach (array_keys($config) as $name) {
+            if (strpos($name, 'doctpl_') === 0) {
+                unset_config($name, 'mod_these');
+            }
+        }
+        $fs->delete_area_files($systemcontext->id, 'mod_these', 'docimages');
+        unset_config('docimages', 'mod_these');
+
+        upgrade_mod_savepoint(true, 2026102600, 'these');
+    }
+
     return true;
 }

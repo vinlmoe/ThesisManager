@@ -25,15 +25,6 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-// Les réglages occupent leur page habituelle, complétée par la page de modification des modèles
-// de documents, dans une catégorie propre au module.
-$ADMIN->add('modsettings', new admin_category(
-    'modthesefolder',
-    new lang_string('pluginname', 'mod_these'),
-    $module->is_enabled() === false
-));
-$settings = new admin_settingpage($section, get_string('settings'), 'moodle/site:config', $module->is_enabled() === false);
-
 if ($ADMIN->fulltree) {
     // Rôles des services : comme la DEVE sur le rôle « Enseignant », la bibliothèque est reconnue à
     // son rôle, le rôle interne « Bibliothèque (thèses) » créé à l'installation par défaut.
@@ -68,20 +59,6 @@ if ($ADMIN->fulltree) {
         'mod_these/documentsheading',
         get_string('settingsdocuments', 'mod_these'),
         get_string('settingsdocuments_desc', 'mod_these')
-    ));
-    $settings->add(new admin_setting_description(
-        'mod_these/doctemplateslink',
-        '',
-        get_string('settingsdoctemplates_desc', 'mod_these', (new moodle_url('/mod/these/doctemplates.php'))->out())
-    ));
-    // Images des modèles de documents ({{img.nom}}) : remplacent ou complètent celles du module.
-    $settings->add(new admin_setting_configstoredfile(
-        'mod_these/docimages',
-        get_string('settingsdocimages', 'mod_these'),
-        get_string('settingsdocimages_desc', 'mod_these'),
-        'docimages',
-        0,
-        ['maxfiles' => 20, 'accepted_types' => ['.png', '.jpg', '.jpeg']]
     ));
     // Contrat de diffusion électronique : le PDF officiel est déposé tel quel ; le module le fait
     // précéder d'une page de données et de choix de l'auteur et suivre d'une page de signatures.
@@ -119,14 +96,3 @@ if ($ADMIN->fulltree) {
         ));
     }
 }
-
-$ADMIN->add('modthesefolder', $settings);
-$ADMIN->add('modthesefolder', new admin_externalpage(
-    'mod_these_doctemplates',
-    new lang_string('doctemplates', 'mod_these'),
-    new moodle_url('/mod/these/doctemplates.php'),
-    'moodle/site:config',
-    $module->is_enabled() === false
-));
-// La catégorie remplace la page de réglages par défaut.
-$settings = null;

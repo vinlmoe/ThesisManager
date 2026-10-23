@@ -69,11 +69,10 @@ l'étudiant comme directeurs.
 
 ## 3 bis. Documents officiels et signatures électroniques
 
-Réglages du site, rubrique *Documents* : images des modèles, **modèle PDF du
-contrat de diffusion** (E04 en vigueur), établissement, lien HeTOP, lieu du
-visa, direction des études (fiche d'agréments), puis nom, qualité et courriel
-des signataires extérieurs (direction générale, président de la CCEM,
-université).
+Réglages du site, rubrique *Documents* : **modèle PDF du contrat de diffusion**
+(E04 en vigueur), établissement, lien HeTOP, lieu du visa, direction des études
+(fiche d'agréments), puis nom, qualité et courriel des signataires extérieurs
+(direction générale, président de la CCEM, université).
 
 Les formulaires E01 (sujet), E02 (agréments), E03 (fiche signalétique), le
 bordereau ABES, le rapport, la grille de conformité et les conclusions sont
@@ -82,15 +81,16 @@ cadres, libellés, cases à cocher) et remplis avec les données du dossier. Le
 contrat de diffusion est assemblé ainsi : page de données et choix, modèle
 déposé par l'administrateur tel quel, page de signatures.
 
-Chaque document est produit à partir d'un **modèle modifiable** : *Administration
-du site > Plugins > Modules d'activité > Gestion des thèses > Modèles des
-documents*. Un modèle est du HTML (interprété par TCPDF) avec des balises
-Mustache (`{{student.lastname}}`, `{{{sig.director}}}`, `{{#jury}}…{{/jury}}`) ;
-la page de modification liste toutes les variables, propose un aperçu PDF avec
-des données fictives et refuse un modèle qui ne produit pas de document. Un
-modèle modifié peut être ramené à son origine (`doctemplates/<document>.html`).
-Les logos fournis (`doctemplates/images/`) peuvent être remplacés en déposant une
-image du même nom dans le réglage *Images des modèles*.
+Chaque document est produit à partir d'un **modèle modifiable par la DEVE dans
+l'activité** (bouton *Modèles des documents* de la barre de navigation, comme les
+courriels). Chaque activité a ses propres modèles, sauvegardés et restaurés avec
+elle. Un modèle est du HTML (interprété par TCPDF) avec des balises Mustache
+(`{{student.lastname}}`, `{{{sig.director}}}`, `{{#jury}}…{{/jury}}`) ; la page
+de modification liste toutes les variables, propose un aperçu PDF avec des
+données fictives et refuse un modèle qui ne produit pas de document. Un modèle
+modifié peut être ramené à son origine (`doctemplates/<document>.html`). Les
+logos fournis (`doctemplates/images/`) se remplacent en déposant, dans la même
+page, une image du même nom (*Images des modèles*).
 
 Chaque signature (tracé, nom, date, empreinte SHA-256 du contenu signé) est
 annulée si le contenu signé change ; modifier un modèle ne l'annule pas. Les

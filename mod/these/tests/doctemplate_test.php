@@ -39,11 +39,23 @@ final class doctemplate_test extends \advanced_testcase {
      */
     public function test_default_templates_render(): void {
         $this->resetAfterTest();
-        $data = these_sample_document_context();
+        [$these, $context] = $this->activity();
+        $data = these_sample_document_context($context, $these);
         foreach (array_keys(these_doctemplate_types()) as $type) {
-            $this->assertNull(these_doctemplate_error($type, these_doctemplate_default($type)), $type);
-            $this->assertStringStartsWith('%PDF', these_render_doctemplate($type, $data), $type);
+            $this->assertNull(these_doctemplate_error($these, $context, $type, these_doctemplate_default($type)), $type);
+            $this->assertStringStartsWith('%PDF', these_render_doctemplate($these, $type, $data), $type);
         }
+    }
+
+    /**
+     * Activité de test.
+     *
+     * @return array [instance, contexte]
+     */
+    private function activity(): array {
+        $course = $this->getDataGenerator()->create_course();
+        $these = $this->getDataGenerator()->create_module('these', ['course' => $course->id]);
+        return [$these, \context_module::instance($these->cmid)];
     }
 
     /**
@@ -52,18 +64,48 @@ final class doctemplate_test extends \advanced_testcase {
      */
     public function test_customise_and_reset(): void {
         $this->resetAfterTest();
-        $this->assertFalse(these_doctemplate_customised('report'));
+        [$these] = $this->activity();
+        [$other] = $this->activity();
+        $this->assertFalse(these_doctemplate_customised($these->id, 'report'));
 
-        these_set_doctemplate('report', "<p>Rapport de {{student.lastname}}</p>\r\n");
-        $this->assertTrue(these_doctemplate_customised('report'));
-        $this->assertSame("<p>Rapport de {{student.lastname}}</p>\n", these_get_doctemplate('report'));
+        these_set_doctemplate($these->id, 'report', "<p>Rapport de {{student.lastname}}</p>\r\n");
+        $this->assertTrue(these_doctemplate_customised($these->id, 'report'));
+        $this->assertSame("<p>Rapport de {{student.lastname}}</p>\n", these_get_doctemplate($these->id, 'report'));
+        // Les autres activités gardent leur modèle.
+        $this->assertFalse(these_doctemplate_customised($other->id, 'report'));
+        $this->assertSame(these_doctemplate_default('report'), these_get_doctemplate($other->id, 'report'));
 
-        these_set_doctemplate('report', null);
-        $this->assertFalse(these_doctemplate_customised('report'));
-        $this->assertSame(these_doctemplate_default('report'), these_get_doctemplate('report'));
+        these_set_doctemplate($these->id, 'report', "<p>Autre</p>");
+        $this->assertSame('<p>Autre</p>', these_get_doctemplate($these->id, 'report'));
 
-        these_set_doctemplate('grid', "  " . these_doctemplate_default('grid'));
-        $this->assertFalse(these_doctemplate_customised('grid'));
+        these_set_doctemplate($these->id, 'report', null);
+        $this->assertFalse(these_doctemplate_customised($these->id, 'report'));
+        $this->assertSame(these_doctemplate_default('report'), these_get_doctemplate($these->id, 'report'));
+
+        these_set_doctemplate($these->id, 'grid', "  " . these_doctemplate_default('grid'));
+        $this->assertFalse(these_doctemplate_customised($these->id, 'grid'));
+
+        // La suppression de l'activité emporte ses modèles.
+        these_set_doctemplate($these->id, 'grid', '<p>Grille</p>');
+        course_delete_module($these->cmid);
+        $this->assertFalse($GLOBALS['DB']->record_exists('these_doctemplate', ['theseid' => $these->id]));
+    }
+
+    /**
+     * Les images déposées dans l'activité remplacent ou complètent celles du module.
+     */
+    public function test_activity_images(): void {
+        $this->resetAfterTest();
+        [, $context] = $this->activity();
+        $bundled = these_doctemplate_images($context);
+        $this->assertArrayHasKey('vetagrosup', $bundled);
+        get_file_storage()->create_file_from_string([
+            'contextid' => $context->id, 'component' => 'mod_these', 'filearea' => 'docimages', 'itemid' => 0,
+            'filepath' => '/', 'filename' => 'VetAgroSup.png',
+        ], these_sample_signature_image());
+        $images = these_doctemplate_images($context);
+        $this->assertSame('@' . base64_encode(these_sample_signature_image()), $images['vetagrosup']);
+        $this->assertSame($bundled['vetagrosup'], these_doctemplate_images(null)['vetagrosup']);
     }
 
     /**
@@ -71,8 +113,9 @@ final class doctemplate_test extends \advanced_testcase {
      */
     public function test_invalid_template(): void {
         $this->resetAfterTest();
-        $this->assertNotNull(these_doctemplate_error('report', '<p>{{#student}}sans fin</p>'));
-        $this->assertNull(these_doctemplate_error('report', '<p>{{#student}}{{lastname}}{{/student}}</p>'));
+        [$these, $context] = $this->activity();
+        $this->assertNotNull(these_doctemplate_error($these, $context, 'report', '<p>{{#student}}sans fin</p>'));
+        $this->assertNull(these_doctemplate_error($these, $context, 'report', '<p>{{#student}}{{lastname}}{{/student}}</p>'));
     }
 
     /**

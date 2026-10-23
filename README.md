@@ -47,9 +47,9 @@ Bibliothèque ──conformité du manuscrit──▶ DEVE ──convocations, f
   empreinte du contenu, liens de signature pour les signataires extérieurs). Le
   contrat de diffusion reprend le PDF déposé par l'administrateur, entre une
   page de données et choix et une page de signatures.
-- Chaque document est produit à partir d'un **modèle modifiable** dans
-  l'administration du site (HTML et balises `{{...}}`, aperçu PDF, retour au
-  modèle d'origine).
+- Chaque document est produit à partir d'un **modèle modifiable par la DEVE
+  dans l'activité** (HTML et balises `{{...}}`, aperçu PDF, retour au modèle
+  d'origine, images propres à l'activité).
 - La bibliothèque dispose d'un rôle propre (« Bibliothèque (thèses) »), et les
   rôles DEVE et Bibliothèque se choisissent dans l'administration du site.
 - La DEVE **génère** la convocation de l'étudiant et de chaque membre du jury,
@@ -66,7 +66,7 @@ Bibliothèque ──conformité du manuscrit──▶ DEVE ──convocations, f
 ## Qualité
 
 - Style : standard Moodle (`moodlehq/moodle-cs`), sans avertissement.
-- Tests PHPUnit (48 tests) : circuit complet, renvois, droits, relances,
+- Tests PHPUnit (49 tests) : circuit complet, renvois, droits, relances,
   documents générés, signatures, modèles, import, confidentialité, sauvegarde/restauration.
 - CI GitHub Actions : phpcs, lint, validation du plugin, savepoints, PHPDoc,
   PHPUnit sur Moodle 4.5 / PostgreSQL.

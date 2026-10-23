@@ -211,5 +211,21 @@
         <INDEX NAME="theseid_emailkey" UNIQUE="true" FIELDS="theseid, emailkey"/>
       </INDEXES>
     </TABLE>
+    <TABLE NAME="these_doctemplate" COMMENT="Modèle de document modifié par la DEVE pour une instance">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="theseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="doctype" TYPE="char" LENGTH="20" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="content" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="theseid" TYPE="foreign" FIELDS="theseid" REFTABLE="these" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="theseid_doctype" UNIQUE="true" FIELDS="theseid, doctype"/>
+      </INDEXES>
+    </TABLE>
   </TABLES>
 </XMLDB>

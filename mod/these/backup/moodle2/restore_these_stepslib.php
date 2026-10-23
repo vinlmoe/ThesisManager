@@ -40,6 +40,7 @@ class restore_these_activity_structure_step extends restore_activity_structure_s
         $paths = [];
         $paths[] = new restore_path_element('these', '/activity/these');
         $paths[] = new restore_path_element('these_email_template', '/activity/these/emailtemplates/emailtemplate');
+        $paths[] = new restore_path_element('these_doctemplate', '/activity/these/doctemplates/doctemplate');
         if ($this->get_setting_value('userinfo')) {
             $paths[] = new restore_path_element('these_dossier', '/activity/these/dossiers/dossier');
             $paths[] = new restore_path_element('these_jury', '/activity/these/dossiers/dossier/jurymembers/jurymember');
@@ -79,6 +80,21 @@ class restore_these_activity_structure_step extends restore_activity_structure_s
         $data->theseid = $this->get_new_parentid('these');
         $newid = $DB->insert_record('these_email_template', $data);
         $this->set_mapping('these_email_template', $oldid, $newid);
+    }
+
+    /**
+     * Restaure un modèle de document modifié.
+     *
+     * @param array $data
+     */
+    protected function process_these_doctemplate($data) {
+        global $DB;
+
+        $data = (object) $data;
+        $oldid = $data->id;
+        $data->theseid = $this->get_new_parentid('these');
+        $newid = $DB->insert_record('these_doctemplate', $data);
+        $this->set_mapping('these_doctemplate', $oldid, $newid);
     }
 
     /**
@@ -175,6 +191,7 @@ class restore_these_activity_structure_step extends restore_activity_structure_s
      */
     protected function after_execute() {
         $this->add_related_files('mod_these', 'intro', null);
+        $this->add_related_files('mod_these', 'docimages', null);
         foreach (THESE_FILEAREAS as $filearea) {
             $this->add_related_files('mod_these', $filearea, 'these_dossier');
         }

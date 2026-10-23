@@ -476,11 +476,10 @@ $string['settingsdocuments'] = 'Documents et signataires';
 $string['settingsdocuments_desc'] = "En-tête et signataires des documents de l'établissement produits par le module. Les signataires "
     . "sans compte Moodle (direction générale, CCEM, présidence de l'université) reçoivent par courriel un lien de signature si leur "
     . "adresse est renseignée ; sinon la DEVE recueille leur signature sur place.";
-$string['settingsdoctemplates_desc'] = 'La mise en page de chaque document se modifie dans <a href="{$a}">Modèles des documents</a>.';
-$string['settingsdocimages'] = 'Images des modèles';
-$string['settingsdocimages_desc'] = "Images (PNG ou JPEG) utilisables dans les modèles de documents par {{img.nom}}, nom étant le nom du "
+$string['doctplimages'] = 'Images des modèles';
+$string['doctplimages_help'] = "Images (PNG ou JPEG) utilisables dans les modèles de documents par {{img.nom}}, nom étant le nom du "
     . "fichier en minuscules, sans extension ni caractère spécial. Une image du même nom qu'une image fournie avec le module "
-    . "(marianne, vetagrosup, lyon1, bulyon1, abes) la remplace.";
+    . "(marianne, vetagrosup, lyon1, bulyon1, abes) la remplace dans les documents de cette activité.";
 $string['settingsdevename'] = 'Direction des études : nom';
 $string['settingsdevename_desc'] = "Nom de la directrice ou du directeur des études et de la vie étudiante (fiche d'agréments).";
 $string['settingsdevetitle'] = 'Direction des études : qualité';
@@ -722,7 +721,7 @@ $string['directorfunction_help'] = "Fonction imprimée dans l'agrément scientif
 
 // Modèles des documents.
 $string['doctemplates'] = 'Modèles des documents';
-$string['doctemplates_desc'] = "Chaque document produit par le module est composé à partir d'un modèle : du HTML, dans lequel les "
+$string['doctemplates_desc'] = "Chaque document produit par cette activité est composé à partir d'un modèle : du HTML, dans lequel les "
     . "données du dossier s'insèrent par des balises {{...}}. Les modèles d'origine reproduisent les formulaires de l'établissement ; "
     . "un modèle modifié peut à tout moment être ramené à son origine. Les documents déjà produits ne changent pas.";
 $string['doctpldocument'] = 'Document';
