@@ -37,7 +37,7 @@ $these = $DB->get_record('these', ['id' => $cm->instance], '*', MUST_EXIST);
 
 require_login($course, true, $cm);
 $context = context_module::instance($cm->id);
-require_capability('mod/these:managedeve', $context);
+these_require_service($context, 'deve');
 
 $dossier = $DB->get_record('these_dossier', ['id' => $dossierid, 'theseid' => $these->id], '*', MUST_EXIST);
 $rights = these_get_rights($context, $dossier, $USER->id);

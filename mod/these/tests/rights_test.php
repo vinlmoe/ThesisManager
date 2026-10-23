@@ -127,4 +127,25 @@ final class rights_test extends these_testcase {
         $devequeue = these_get_dossiers($this->these->id, ['queue' => ['deve'], 'queuedirectorid' => $this->deve->id]);
         $this->assertCount(0, $devequeue);
     }
+
+    /**
+     * Accès à l'activité : la capacité de consultation, ou le rôle d'un service sans capacité.
+     */
+    public function test_require_view(): void {
+        $this->setup_activity();
+        $this->setUser($this->student);
+        $this->assertFalse(these_require_view($this->context)->deve);
+
+        // Un utilisateur titulaire du seul rôle DEVE choisi dans les réglages, sans la capacité.
+        $role = $this->getDataGenerator()->create_role(['shortname' => 'devecustom']);
+        set_config('deverole', $role, 'mod_these');
+        $deve = $this->getDataGenerator()->create_user();
+        role_assign($role, $deve->id, \context_course::instance($this->course->id));
+        $this->setUser($deve);
+        $this->assertTrue(these_require_view($this->context)->deve);
+
+        $this->setUser($this->getDataGenerator()->create_user());
+        $this->expectException(\required_capability_exception::class);
+        these_require_view($this->context);
+    }
 }

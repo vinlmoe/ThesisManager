@@ -56,6 +56,7 @@ $mform = new defense_form($PAGE->url, [
     'jurycount' => count($jury),
     'minjury' => $these->minjury,
     'submitlabel' => $returned ? 'resubmitdefense' : 'submitdefense',
+    'signername' => fullname($USER),
 ]);
 
 $formdata = (object) array_merge(['id' => $cm->id, 'dossierid' => $dossier->id], these_jury_form_data($jury));
@@ -65,6 +66,26 @@ foreach (['manuscript', 'defensedocs'] as $filearea) {
     $formdata->$filearea = $draftitemid;
 }
 $formdata->proposeddate = $dossier->proposeddate ?: null;
+$formdata->titleen = $dossier->titleen;
+$formdata->conclusions = $dossier->conclusions;
+// Données de l'étudiant : celles déjà enregistrées, à défaut son profil et sa fiche de sujet.
+$bordereau = these_get_bordereau($dossier) + [
+    'birthname' => core_text::strtoupper($USER->lastname),
+    'firstnames' => $USER->firstname,
+    'city' => $USER->city,
+    'country' => $USER->country ? get_string($USER->country, 'countries') : '',
+    'phone' => $USER->phone1,
+    'nbvolumes' => 1,
+    'summaryfr' => $dossier->summary,
+    'keywords' => these_split_keywords($dossier->keywords),
+];
+foreach ($bordereau as $field => $value) {
+    if ($field === 'keywords') {
+        $formdata->bkeyword = array_values((array) $value);
+    } else {
+        $formdata->{'b' . $field} = $value;
+    }
+}
 $formdata->defenselocation = $dossier->defenselocation ?: $these->defaultlocation;
 // Le directeur figure presque toujours au jury : il est proposé d'office au premier dépôt.
 if (empty($jury) && $dossier->directorid && ($director = $DB->get_record('user', ['id' => $dossier->directorid]))) {
@@ -89,7 +110,7 @@ if ($mform->is_cancelled()) {
         );
     }
     $submit = !empty($data->submitdefense);
-    these_save_defense($these, $cm, $dossier, $data, $submit, $USER->id);
+    these_save_defense($these, $cm, $dossier, $data, $submit, $USER->id, $submit ? these_signature_from_form($data) : null);
     redirect(
         $viewurl,
         get_string($submit ? 'defensesubmittedmsg' : 'draftsaved', 'mod_these'),

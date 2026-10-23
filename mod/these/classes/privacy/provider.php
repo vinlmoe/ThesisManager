@@ -77,8 +77,19 @@ class provider implements
             'defenseresult' => 'privacy:metadata:these_dossier:defenseresult',
             'returncomment' => 'privacy:metadata:these_dossier:returncomment',
             'returnedby' => 'privacy:metadata:these_dossier:returnedby',
+            'bordereau' => 'privacy:metadata:these_dossier:bordereau',
+            'conclusions' => 'privacy:metadata:these_dossier:conclusions',
+            'reporttext' => 'privacy:metadata:these_dossier:reporttext',
             'timecreated' => 'privacy:metadata:these_dossier:timecreated',
         ], 'privacy:metadata:these_dossier');
+
+        $collection->add_database_table('these_signature', [
+            'userid' => 'privacy:metadata:these_signature:userid',
+            'signername' => 'privacy:metadata:these_signature:signername',
+            'signeremail' => 'privacy:metadata:these_signature:signeremail',
+            'ipaddress' => 'privacy:metadata:these_signature:ipaddress',
+            'timesigned' => 'privacy:metadata:these_signature:timesigned',
+        ], 'privacy:metadata:these_signature');
 
         $collection->add_database_table('these_jury', [
             'fullname' => 'privacy:metadata:these_jury:fullname',
@@ -118,7 +129,8 @@ class provider implements
                  WHERE d.userid = :userid1
                     OR d.directorid = :userid2
                     OR d.returnedby = :userid3
-                    OR EXISTS (SELECT 1 FROM {these_log} l WHERE l.dossierid = d.id AND l.userid = :userid4)";
+                    OR EXISTS (SELECT 1 FROM {these_log} l WHERE l.dossierid = d.id AND l.userid = :userid4)
+                    OR EXISTS (SELECT 1 FROM {these_signature} sg WHERE sg.dossierid = d.id AND sg.userid = :userid5)";
     }
 
     /**
@@ -136,6 +148,7 @@ class provider implements
             'userid2' => $userid,
             'userid3' => $userid,
             'userid4' => $userid,
+            'userid5' => $userid,
         ]);
         return $contextlist;
     }
@@ -164,6 +177,12 @@ class provider implements
                                              JOIN {modules} m ON m.id = cm.module AND m.name = :modname
                                              JOIN {these_dossier} d ON d.theseid = cm.instance
                                              JOIN {these_log} l ON l.dossierid = d.id
+                                            WHERE cm.id = :instanceid", $params);
+        $userlist->add_from_sql('userid', "SELECT sg.userid
+                                             FROM {course_modules} cm
+                                             JOIN {modules} m ON m.id = cm.module AND m.name = :modname
+                                             JOIN {these_dossier} d ON d.theseid = cm.instance
+                                             JOIN {these_signature} sg ON sg.dossierid = d.id
                                             WHERE cm.id = :instanceid", $params);
     }
 
@@ -205,6 +224,8 @@ class provider implements
                     'defenseresult' => (int) $dossier->defenseresult ? these_result_label($dossier->defenseresult) : null,
                     'mention' => $dossier->mention,
                     'returncomment' => $dossier->returncomment,
+                    'conclusions' => $dossier->conclusions,
+                    'personaldata' => these_get_bordereau($dossier),
                     'timecreated' => transform::datetime($dossier->timecreated),
                 ]);
                 $jury = array_map(function ($member) {
@@ -244,6 +265,27 @@ class provider implements
             }
 
             self::export_staff_data($context, $cm, $user->id);
+
+            // Signatures apposées par l'utilisateur, dans son dossier comme dans ceux des autres.
+            $signatures = $DB->get_records_sql(
+                "SELECT sg.*, d.title
+                   FROM {these_signature} sg
+                   JOIN {these_dossier} d ON d.id = sg.dossierid
+                  WHERE d.theseid = :theseid AND sg.userid = :userid AND sg.timesigned > 0",
+                ['theseid' => $cm->instance, 'userid' => $user->id]
+            );
+            foreach ($signatures as $signature) {
+                $subcontext = [get_string('signatures', 'mod_these'), $signature->id];
+                writer::with_context($context)->export_data($subcontext, (object) [
+                    'dossier' => $signature->title,
+                    'document' => these_document_label($signature->doctype),
+                    'slot' => these_slot_label($signature->slot),
+                    'signername' => $signature->signername,
+                    'ipaddress' => $signature->ipaddress,
+                    'timesigned' => transform::datetime($signature->timesigned),
+                ]);
+                writer::with_context($context)->export_area_files($subcontext, 'mod_these', 'signature', $signature->id);
+            }
         }
     }
 
@@ -375,5 +417,18 @@ class provider implements
             "UPDATE {these_log} SET userid = 0, remark = '' WHERE dossierid $dsql AND userid $insql",
             array_merge($dparams, $inparams)
         );
+        // Signatures du personnel dans les dossiers d'autrui : l'image et l'identité sont effacées,
+        // la date de signature est conservée (le document reste marqué comme signé à cette date).
+        $signatures = $DB->get_records_select(
+            'these_signature',
+            "dossierid $dsql AND userid $insql",
+            array_merge($dparams, $inparams)
+        );
+        foreach ($signatures as $signature) {
+            get_file_storage()->delete_area_files($context->id, 'mod_these', 'signature', $signature->id);
+            $DB->update_record('these_signature', (object) [
+                'id' => $signature->id, 'userid' => 0, 'signername' => '', 'signeremail' => '', 'ipaddress' => '',
+            ]);
+        }
     }
 }

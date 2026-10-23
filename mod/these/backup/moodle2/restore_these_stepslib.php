@@ -44,6 +44,10 @@ class restore_these_activity_structure_step extends restore_activity_structure_s
             $paths[] = new restore_path_element('these_dossier', '/activity/these/dossiers/dossier');
             $paths[] = new restore_path_element('these_jury', '/activity/these/dossiers/dossier/jurymembers/jurymember');
             $paths[] = new restore_path_element('these_log', '/activity/these/dossiers/dossier/logs/log');
+            $paths[] = new restore_path_element(
+                'these_signature',
+                '/activity/these/dossiers/dossier/signatures/signature'
+            );
         }
         return $this->prepare_activity_structure($paths);
     }
@@ -147,6 +151,26 @@ class restore_these_activity_structure_step extends restore_activity_structure_s
     }
 
     /**
+     * Restaure une signature.
+     *
+     * @param array $data
+     */
+    protected function process_these_signature($data) {
+        global $DB;
+
+        $data = (object) $data;
+        $oldid = $data->id;
+        $data->dossierid = $this->get_new_parentid('these_dossier');
+        if (!$data->dossierid) {
+            return;
+        }
+        $data->userid = $this->map_user($data->userid);
+        $data->token = null;
+        $newid = $DB->insert_record('these_signature', $data);
+        $this->set_mapping('these_signature', $oldid, $newid, true);
+    }
+
+    /**
      * Restaure les fichiers une fois tous les identifiants connus.
      */
     protected function after_execute() {
@@ -154,5 +178,6 @@ class restore_these_activity_structure_step extends restore_activity_structure_s
         foreach (THESE_FILEAREAS as $filearea) {
             $this->add_related_files('mod_these', $filearea, 'these_dossier');
         }
+        $this->add_related_files('mod_these', 'signature', 'these_signature');
     }
 }

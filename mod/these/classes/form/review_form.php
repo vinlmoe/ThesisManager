@@ -28,8 +28,11 @@ require_once($CFG->dirroot . '/mod/these/locallib.php');
  *
  * - devesubject : numéro d'enregistrement DEVE ;
  * - librarysubject : référence de la notice bibliographique ;
- * - directordefense : rapport du directeur, obligatoire ;
- * - devedefense : date et lieu retenus, jury (modifiables par la DEVE).
+ * - directordefense : rapport du directeur, grille de conformité, agrément scientifique ;
+ * - devedefense : date et lieu retenus, jury (modifiables par la DEVE), agrément administratif.
+ *
+ * Aux étapes qui signent des documents (voir these_review_steps()), la validation exige la
+ * signature de l'acteur, apposée sur tous les documents de l'étape.
  *
  * Les champs propres à l'étape ne sont exigés qu'à la validation, le commentaire qu'au renvoi :
  * formslib ne permettant pas de conditionner une règle au bouton cliqué, le contrôle est fait dans
@@ -67,6 +70,11 @@ class review_form extends \moodleform {
                 $mform->setType('libraryref', PARAM_TEXT);
                 break;
             case 'directordefense':
+                // Rapport du directeur.
+                $mform->addElement('textarea', 'reporttext', get_string('reporttext', 'mod_these'), ['rows' => 14, 'cols' => 80]);
+                $mform->setType('reporttext', PARAM_TEXT);
+                $mform->addHelpButton('reporttext', 'reporttext', 'mod_these');
+                $mform->addElement('advcheckbox', 'reportfavorable', '', get_string('reportfavorable', 'mod_these'));
                 $mform->addElement(
                     'filemanager',
                     'directorreport',
@@ -75,16 +83,61 @@ class review_form extends \moodleform {
                     these_filemanager_options('directorreport')
                 );
                 $mform->addHelpButton('directorreport', 'directorreport', 'mod_these');
+                // Grille de conformité du manuscrit.
+                $mform->addElement('header', 'gridheader', get_string('docgrid', 'mod_these'));
+                $mform->setExpanded('gridheader');
+                $mform->addElement('text', 'ethicsnumber', get_string('ethicsnumber', 'mod_these'), ['size' => 20]);
+                $mform->setType('ethicsnumber', PARAM_TEXT);
+                foreach (these_grid_items() as $section => $items) {
+                    $mform->addElement(
+                        'static',
+                        'gridsection' . $section,
+                        '',
+                        \html_writer::tag('strong', get_string('gridsection' . $section, 'mod_these'))
+                    );
+                    foreach (array_keys($items) as $item) {
+                        $mform->addElement('advcheckbox', 'grid_' . $item, '', get_string('grid' . $item, 'mod_these'));
+                    }
+                }
+                // Agrément scientifique.
+                $mform->addElement('header', 'scientificheader', get_string('agreementscientific', 'mod_these'));
+                $mform->setExpanded('scientificheader');
+                $mform->addElement('static', 'scientifichelp', '', get_string(
+                    !empty($this->_customdata['externaldirector']) ? 'agreementmembertext' : 'agreementdirectortext',
+                    'mod_these'
+                ));
+                if (empty($this->_customdata['externaldirector'])) {
+                    $mform->addElement('text', 'directorfunction', get_string('directorfunction', 'mod_these'), ['size' => 48]);
+                    $mform->setType('directorfunction', PARAM_TEXT);
+                    $mform->addHelpButton('directorfunction', 'directorfunction', 'mod_these');
+                }
                 break;
             case 'devedefense':
                 $mform->addElement('date_time_selector', 'defensedate', get_string('defensedate', 'mod_these'));
                 $mform->addElement('text', 'defenselocation', get_string('defenselocation', 'mod_these'), ['size' => 64]);
                 $mform->setType('defenselocation', PARAM_TEXT);
                 these_add_jury_fields($this, $mform, $this->_customdata['jurycount'] ?? 0);
+                // Agrément administratif.
+                $mform->addElement('header', 'adminheader', get_string('agreementadmin', 'mod_these'));
+                $mform->setExpanded('adminheader');
+                $mform->addElement('date_selector', 'agdefvdate', get_string('agdefvdate', 'mod_these'), ['optional' => true]);
+                $mform->addElement('advcheckbox', 'agmobility', '', get_string('agmobility', 'mod_these'));
+                $mform->addElement('advcheckbox', 'aga6notyet', '', get_string('aga6notyet', 'mod_these'));
+                $mform->addElement('date_selector', 'aga6date', get_string('aga6date', 'mod_these'), ['optional' => true]);
+                $mform->hideIf('aga6date', 'aga6notyet', 'checked');
+                $mform->addElement('static', 'agauthorized', '', get_string('agauthorized', 'mod_these'));
                 break;
             case 'libraryconformity':
                 $mform->addElement('advcheckbox', 'conformitychecked', get_string('conformitychecked', 'mod_these'));
                 break;
+        }
+
+        if (!empty($this->_customdata['signs'])) {
+            these_add_signature_fields(
+                $mform,
+                $this->_customdata['signername'],
+                get_string('signreviewintro', 'mod_these', $this->_customdata['signs'])
+            );
         }
 
         $mform->addElement('header', 'remarkheader', get_string('reviewremark', 'mod_these'));
@@ -151,11 +204,30 @@ class review_form extends \moodleform {
                 }
                 break;
             case 'directordefense':
-                if (these_count_draft_files($data['directorreport']) < 1) {
-                    $errors['directorreport'] = get_string('directorreportrequired', 'mod_these');
+                if (trim((string) $data['reporttext']) === '') {
+                    $errors['reporttext'] = get_string('directorreportrequired', 'mod_these');
+                }
+                if (empty($this->_customdata['externaldirector']) && trim((string) ($data['directorfunction'] ?? '')) === '') {
+                    $errors['directorfunction'] = get_string('required');
+                }
+                if (empty($data['reportfavorable'])) {
+                    $errors['reportfavorable'] = get_string('reportfavorablerequired', 'mod_these');
+                }
+                foreach (these_grid_items() as $items) {
+                    foreach ($items as $item => $conditional) {
+                        if (!$conditional && empty($data['grid_' . $item])) {
+                            $errors['grid_' . $item] = get_string('gridrequired', 'mod_these');
+                        }
+                    }
                 }
                 break;
             case 'devedefense':
+                if (empty($data['agdefvdate'])) {
+                    $errors['agdefvdate'] = get_string('required');
+                }
+                if (empty($data['aga6notyet']) && empty($data['aga6date'])) {
+                    $errors['aga6date'] = get_string('a6required', 'mod_these');
+                }
                 if (trim((string) $data['defenselocation']) === '') {
                     $errors['defenselocation'] = get_string('required');
                 }
@@ -169,6 +241,9 @@ class review_form extends \moodleform {
                     $errors['conformitychecked'] = get_string('conformitycheckrequired', 'mod_these');
                 }
                 break;
+        }
+        if (!empty($this->_customdata['signs'])) {
+            $errors = array_merge($errors, these_signature_errors($data));
         }
         return $errors;
     }

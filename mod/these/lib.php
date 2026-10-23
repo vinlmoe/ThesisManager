@@ -271,7 +271,7 @@ function these_pluginfile($course, $cm, $context, $filearea, $args, $forcedownlo
     }
 
     require_login($course, true, $cm);
-    require_capability('mod/these:view', $context);
+    these_require_view($context);
 
     $dossierid = (int) array_shift($args);
     $dossier = $DB->get_record('these_dossier', ['id' => $dossierid, 'theseid' => $cm->instance]);
