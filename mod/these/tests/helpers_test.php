@@ -153,20 +153,6 @@ final class helpers_test extends these_testcase {
     }
 
     /**
-     * Les documents à la demande (fiche de sujet, attestation) sont des PDF valides.
-     */
-    public function test_on_demand_documents(): void {
-        $this->setup_activity();
-        $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
-            'status' => THESE_STATUS_CONFORM, 'directorid' => $this->director->id, 'devenumber' => '2026-003',
-        ]);
-        these_save_jury($dossier->id, $this->generator->default_jury());
-        $data = these_document_data($this->these, $dossier);
-        $this->assertStringStartsWith('%PDF', \mod_these\pdf\document_pdf::subject_sheet($data));
-        $data['librarian'] = 'Bibliothécaire';
-        $this->assertStringStartsWith('%PDF', \mod_these\pdf\document_pdf::conformity($data));
-    }
-    /**
      * Le formulaire rechargé conserve le rôle enregistré de chaque membre du jury (régression :
      * une valeur par défaut posée sur les lignes répétées écrasait le président).
      */

@@ -15,9 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Documents produits à la demande, sans être stockés : la fiche de sujet (dès l'enregistrement
- * DEVE) et l'attestation de conformité du manuscrit (dès sa délivrance par la bibliothèque). Ils
- * reflètent toujours l'état courant du dossier.
+ * Documents de l'établissement produits à la demande (voir these_document_definitions()) : ils
+ * reflètent toujours l'état courant du dossier et portent les signatures déjà apposées.
  *
  * @package   mod_these
  * @copyright 2026 Sébastien Lefebvre
@@ -38,7 +37,7 @@ $context = context_module::instance($cm->id);
 $dossierid = required_param('dossierid', PARAM_INT);
 $type = required_param('type', PARAM_ALPHA);
 
-require_capability('mod/these:view', $context);
+these_require_view($context);
 
 $dossier = $DB->get_record('these_dossier', ['id' => $dossierid, 'theseid' => $these->id], '*', MUST_EXIST);
 $rights = these_get_rights($context, $dossier, $USER->id);
@@ -46,28 +45,20 @@ if (!these_can_view_dossier($rights)) {
     throw new required_capability_exception($context, 'mod/these:viewall', 'nopermissions', '');
 }
 
-$data = these_document_data($these, $dossier);
-if ($type === 'subject' && these_rank_reached($dossier, THESE_STATUS_SUBJECT_REGISTERED)) {
-    $content = \mod_these\pdf\document_pdf::subject_sheet($data);
-    $filename = these_document_filename('fiche-sujet', $data['student']);
-} else if ($type === 'conformity' && these_rank_reached($dossier, THESE_STATUS_CONFORM)) {
-    // Bibliothécaire et date : ceux de la dernière attestation inscrite à l'historique.
-    $logs = $DB->get_records(
-        'these_log',
-        ['dossierid' => $dossier->id, 'logaction' => 'validatedlibraryconformity'],
-        'timecreated DESC',
-        '*',
-        0,
-        1
-    );
-    $log = reset($logs);
-    $librarian = $log && $log->userid ? $DB->get_record('user', ['id' => $log->userid]) : null;
-    $data['librarian'] = $librarian ? fullname($librarian) : '';
-    $data['conformitydate'] = userdate($log ? $log->timecreated : time(), get_string('strftimedate', 'langconfig'));
-    $content = \mod_these\pdf\document_pdf::conformity($data);
-    $filename = these_document_filename('attestation-conformite', $data['student']);
-} else {
+if (
+    !array_key_exists($type, these_document_definitions())
+        || !these_document_available($dossier, $type) || !these_can_view_document($type, $rights)
+) {
     throw new moodle_exception('documentnotavailable', 'mod_these');
 }
 
-send_file($content, $filename, 0, 0, true, true, 'application/pdf');
+$student = $DB->get_record('user', ['id' => $dossier->userid]);
+send_file(
+    these_signed_document_pdf($these, $context, $dossier, $type),
+    these_document_filename($type, $student ? fullname($student) : ''),
+    0,
+    0,
+    true,
+    true,
+    'application/pdf'
+);

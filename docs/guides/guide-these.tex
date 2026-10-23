@@ -4,9 +4,9 @@
 
 % Version du guide : à mettre à jour à chaque modification, avec une ligne dans l'historique.
 \newcommand{\titreguide}{Guide de la gestion des thèses}
-\newcommand{\versionguide}{1.0}
+\newcommand{\versionguide}{1.1}
 \newcommand{\dateguide}{23 octobre 2026}
-\newcommand{\versionthese}{0.1.0}
+\newcommand{\versionthese}{0.2.0}
 
 \usepackage{guide-commun}
 \usepackage{tikz}
@@ -27,6 +27,8 @@
 \textbf{Version} & \textbf{Date} & \textbf{Modifications} \\
 \midrule
 1.0 & 23 octobre 2026 & Première version. \\
+1.1 & 23 octobre 2026 & Rôles DEVE et Bibliothèque choisis dans l'administration ;
+documents de l'établissement remplis et signés dans le module. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -147,18 +149,28 @@ administrateur. Le module requiert Moodle~4.0 ou supérieur.
 Étudiant & Étudiant & \texttt{mod/these:submit} \\
 Directeur de thèse & Enseignant non éditeur & \texttt{mod/these:direct} \\
 DEVE & Enseignant & \texttt{mod/these:managedeve}, \texttt{viewall} \\
-Bibliothèque & Rôle \og Bibliothèque\fg{} à créer & \texttt{mod/these:managelibrary}, \texttt{viewall} \\
+Bibliothèque & \og Bibliothèque (thèses)\fg{} (créé par le module) & \texttt{mod/these:managelibrary}, \texttt{viewall} \\
 \bottomrule
 \end{tabularx}
 \end{center}
 
-Comme dans StageCompagnon, la DEVE utilise le rôle standard \og Enseignant\fg{}.
-La bibliothèque n'a pas d'équivalent : l'administrateur crée un rôle
-\og Bibliothèque\fg{} (\chemin{Administration du site > Utilisateurs > Permissions >
-Définition des rôles}) à partir de l'archétype \og Enseignant non éditeur\fg{},
-autorise \texttt{mod/these:managelibrary} et \texttt{mod/these:viewall}, et
-\emph{interdit} \texttt{mod/these:direct} pour que les bibliothécaires ne soient
-pas proposés comme directeurs de thèse.
+Comme dans StageCompagnon, la DEVE est reconnue au rôle standard \og
+Enseignant\fg{}. La bibliothèque, qui n'a pas d'équivalent, dispose d'un
+\textbf{rôle interne au module}, \og Bibliothèque (thèses)\fg{}, créé à
+l'installation. Les deux correspondances se règlent dans
+\chemin{Administration du site > Plugins > Modules d'activité > Gestion des
+thèses} :
+
+\begin{description}
+  \item[Rôle DEVE] par défaut \og Enseignant\fg{} ;
+  \item[Rôle Bibliothèque] par défaut \og Bibliothèque (thèses)\fg{}.
+\end{description}
+
+Un rôle choisi ici donne les droits du service même sans les capacités du
+module. Il peut être attribué dans le cours, dans sa catégorie ou \textbf{au
+niveau du site} (\chemin{Administration du site > Utilisateurs > Permissions >
+Attribution des rôles système}) : les bibliothécaires accèdent alors à toutes
+les activités de gestion des thèses sans être inscrits aux cours.
 
 \begin{astuce}
 Un directeur de thèse ne voit et ne valide que les dossiers qu'il dirige. Seuls
@@ -166,6 +178,23 @@ les enseignants inscrits au cours avec la capacité \texttt{mod/these:direct}
 apparaissent dans la liste des directeurs proposée à l'étudiant : tous les
 directeurs potentiels doivent donc être inscrits au cours.
 \end{astuce}
+
+\subsection{Réglages du site : documents et signataires}
+
+Dans la même page d'administration :
+
+\begin{description}
+  \item[Logos] jusqu'à quatre images imprimées en tête des documents, dans
+        l'ordre de leur nom de fichier.
+  \item[Contrat type de diffusion électronique] le PDF officiel
+        (ENS-INI-P308-E04), déposé tel quel. Le module le fait précéder d'une
+        page de données et de choix de l'auteur et suivre d'une page de
+        signatures, comme pour les conventions de stage.
+  \item[Signataires] direction générale, président du CCEM, présidence de
+        l'université : nom et adresse. Avec une adresse, le signataire reçoit un
+        lien de signature ; sans adresse, la DEVE recueille sa signature sur place.
+  \item[Textes] établissement, lien HeTOP, lieu du visa.
+\end{description}
 
 \subsection{Organisation recommandée}
 
@@ -226,8 +255,10 @@ par défaut, affiche le compte rendu ligne par ligne sans rien créer.
 
 L'activité ouvre sur \og Mon dossier de thèse\fg{}. Sans dossier, le bouton
 \bouton{Proposer un sujet de thèse} ouvre la fiche de sujet : titre (et titre
-anglais), résumé, mots-clés, directeur de thèse, co-directeur éventuel et pièces
-jointes facultatives.
+anglais), année d'études, confidentialité éventuelle, résumé, 3 à 5 mots-clés
+(liens vers HeTOP), directeur de thèse (ou directeur extérieur à l'école, avec
+ses coordonnées), co-directeur éventuel, pièces jointes facultatives, puis les
+engagements du formulaire E01 et votre signature tracée à la souris ou au doigt.
 
 \capture{02_etudiant_sujet}{Fiche de sujet.}
 
@@ -244,13 +275,18 @@ Une fois le dossier actif, le bouton \bouton{Déposer les documents de
 soutenance} permet de déposer le manuscrit (PDF, obligatoire), les autres
 documents, de proposer une date, un lieu et le jury : un président et au moins
 le nombre de membres votants fixé dans l'activité. Le directeur est proposé
-d'office comme membre du jury. Le dépôt peut se préparer en plusieurs fois.
+d'office comme membre du jury. Le même écran recueille les données du
+bordereau ABES (identité, cursus, mots-clés, résumé), le texte des conclusions
+et vos choix de diffusion pour le contrat (confidentialité, embargo), avant
+votre signature. Le dépôt peut se préparer en plusieurs fois.
 
 \capture{09_etudiant_soutenance}{Dépôt des documents de soutenance.}
 
 \begin{attention}
-Le rapport de votre directeur n'est pas visible depuis votre dossier : il est
-destiné au jury et à l'administration.
+Le rapport de votre directeur et la grille de conformité ne sont pas visibles
+depuis votre dossier : ils sont destinés au jury et à l'administration. Toute
+modification d'un document déjà signé annule les signatures concernées, qui
+devront être apposées de nouveau.
 \end{attention}
 
 % ===========================================================================
@@ -266,8 +302,12 @@ qu'il dirige.
   \item[Phase 1] \bouton{Examiner la proposition de sujet} : valider, ou
         renvoyer à l'étudiant avec un commentaire.
   \item[Phase 2] \bouton{Valider la soutenance et déposer le rapport} : la
-        validation de la proposition (date, jury) et le dépôt du rapport se font
-        \emph{en une seule étape} ; le rapport est obligatoire.
+        validation de la proposition (date, jury) et le rapport se font
+        \emph{en une seule étape} : texte du rapport, avis favorable,
+        fonction (pour la fiche d'agréments), grille de conformité, puis une
+        signature unique qui vaut pour le rapport, la grille, les conclusions
+        et la partie scientifique de la fiche d'agréments. Un directeur
+        extérieur signe par le lien reçu par courriel.
 \end{description}
 
 \capture{11_directeur_rapport}{Validation de la soutenance avec le rapport du directeur.}
@@ -365,6 +405,98 @@ dossier ; l'étudiant et le directeur sont prévenus.
 \end{description}
 
 \capture{13_bibliotheque_conformite}{Contrôle de conformité du manuscrit.}
+
+% ===========================================================================
+\section{Documents de l'établissement et signatures}
+
+Les formulaires de l'établissement sont remplis dans le module, au fil du
+circuit. Le PDF produit est \textbf{le formulaire officiel lui-même} (fourni
+dans le module, dossier \texttt{pdftemplates/}), sur lequel les données saisies
+sont écrites à leur emplacement : la mise en page, les logos et les mentions
+sont exactement ceux du document d'origine. Chaque emplacement de signature
+reçoit la signature tracée à l'écran (souris, doigt ou stylet), avec la mention
+\og Signé électroniquement par \ldots{} le \ldots\fg{} et le début de
+l'empreinte SHA-256 du contenu signé ; un emplacement non signé reste vierge.
+
+Le contrat de diffusion électronique suit le modèle des conventions de stage :
+une page de données et de choix de l'auteur, puis le contrat officiel déposé
+dans les réglages du site, puis une page de signatures. L'attestation de
+conformité de la bibliothèque, qui n'a pas de modèle papier, est produite par
+le module.
+
+\begin{attention}
+Les emplacements des champs sont relevés sur les versions fournies des
+formulaires (E01 V9, E02 V8, E03 V8, bordereau 2022, grille 08-2024,
+conclusions 09-2026). Une nouvelle version d'un formulaire doit remplacer le
+fichier correspondant dans \texttt{pdftemplates/}, et ses emplacements être
+vérifiés dans \texttt{classes/pdf/official\_forms.php}.
+\end{attention}
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}l X X@{}}
+\toprule
+\textbf{Document} & \textbf{Rempli par} & \textbf{Signé par} \\
+\midrule
+Dépôt de sujet (E01) & Étudiant & Étudiant (soumission), directeur (validation),
+DEVE (visa), directeur extérieur éventuel (lien) \\
+Bordereau de thèse (ABES) & Étudiant & Étudiant (dépôt de soutenance) \\
+Rapport du directeur & Directeur & Directeur \\
+Grille de conformité & Directeur & Directeur \\
+Fiche d'agréments (E02) & DEVE (administratif), directeur (scientifique) &
+DEVE, directeur (ou membre si directeur extérieur), direction générale
+représentée par la DEVE, CCEM \\
+Fiche signalétique (E03) & Étudiant & Président du jury, direction générale,
+CCEM \\
+Contrat de diffusion (E04) & Étudiant (choix des articles 2 et 4) & Auteur,
+visa du directeur, direction générale, présidence de l'université \\
+Conclusions & Étudiant & Directeur, président du jury, direction générale,
+CCEM \\
+Attestation de conformité & Bibliothèque & Bibliothèque \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\capture{42_documents_signes}{Dépôt de sujet et fiche d'agréments remplis et signés sur les formulaires officiels.}
+
+\subsection{Signer}
+
+Chaque acteur signe au moment où il agit : la soumission (étudiant) ou la
+validation (directeur, DEVE, bibliothèque) exige de tracer sa signature et de
+cocher la certification ; une même signature est apposée sur tous les documents
+de l'étape.
+
+\subsection{Signataires sans compte}
+
+Le président du jury, la direction générale, le CCEM, la présidence de
+l'université et un éventuel directeur extérieur n'ont pas de compte Moodle.
+À la validation du dossier de soutenance par la DEVE (et, pour le directeur
+extérieur, à la soumission du sujet), chacun reçoit \textbf{un seul lien}
+couvrant tous les documents qui l'attendent : il les consulte en PDF puis signe
+une fois. Le lien est personnel et cesse de fonctionner une fois utilisé.
+
+La page \bouton{Suivi des signatures} du dossier (DEVE) montre l'état de chaque
+emplacement, permet de \bouton{renvoyer le lien} ou de \bouton{signer sur place}
+pour un signataire présent ou sans adresse.
+
+\capture{40_suivi_signatures}{Suivi des signatures d'un dossier.}
+
+\capture[0.8\linewidth]{41_signature_sur_place}{Signature sur place du président du jury.}
+
+\subsection{Intégrité}
+
+Un document signé ne peut pas être modifié en silence : si son contenu change
+après signature (sujet corrigé après un renvoi, conclusions reprises\ldots), les
+signatures concernées sont supprimées et l'invalidation est inscrite à
+l'historique. Si c'est la signature du directeur qui tombe, le dossier corrigé
+repart chez le directeur, même s'il avait été renvoyé par une étape ultérieure.
+Les données purement administratives (date de soutenance, numéro DEVE)
+n'invalident pas les signatures, et chaque signataire ne s'engage que sur sa
+partie : l'agrément administratif saisi par la DEVE n'invalide pas l'agrément
+scientifique du directeur.
+
+Les documents, dans leur état de signature, sont joints aux documents de
+soutenance générés et à l'archive transmise à l'université.
 
 % ===========================================================================
 \section{Courriels et relances}

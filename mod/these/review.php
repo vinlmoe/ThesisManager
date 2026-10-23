@@ -42,7 +42,7 @@ $these = $DB->get_record('these', ['id' => $cm->instance], '*', MUST_EXIST);
 
 require_login($course, true, $cm);
 $context = context_module::instance($cm->id);
-require_capability('mod/these:view', $context);
+these_require_view($context);
 
 $dossier = $DB->get_record('these_dossier', ['id' => $dossierid, 'theseid' => $these->id], '*', MUST_EXIST);
 $rights = these_get_rights($context, $dossier, $USER->id);
@@ -63,12 +63,24 @@ $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($context);
 
 $jury = these_get_jury($dossier->id);
+// Documents signés par l'acteur à la validation de cette étape.
+$signs = [];
+foreach ($step['sign'] as $slot => $doctypes) {
+    foreach ($doctypes as $doctype) {
+        if (in_array($slot, these_document_slots($dossier, $doctype), true)) {
+            $signs[$doctype] = these_document_label($doctype);
+        }
+    }
+}
 $mform = new review_form($PAGE->url, [
     'stepkey' => $step['key'],
     'returnto' => $step['returnto'],
     'theseid' => $these->id,
     'minjury' => $these->minjury,
     'jurycount' => count($jury),
+    'signs' => implode(', ', $signs),
+    'signername' => fullname($USER),
+    'externaldirector' => !empty($dossier->externaldirector),
 ]);
 
 $formdata = (object) ['id' => $cm->id, 'dossierid' => $dossier->id];
@@ -90,11 +102,25 @@ switch ($step['key']) {
             these_filemanager_options('directorreport')
         );
         $formdata->directorreport = $draftitemid;
+        $formdata->reporttext = $dossier->reporttext;
+        $formdata->reportfavorable = $dossier->reportfavorable;
+        $formdata->ethicsnumber = $dossier->ethicsnumber;
+        $formdata->directorfunction = these_get_agreement($dossier)['directorfunction'] ?? '';
+        foreach (these_get_grid($dossier) as $item => $checked) {
+            $formdata->{'grid_' . $item} = $checked;
+        }
         break;
     case 'devedefense':
         $formdata->defensedate = $dossier->defensedate ?: $dossier->proposeddate;
         $formdata->defenselocation = $dossier->defenselocation;
         $formdata = (object) array_merge((array) $formdata, these_jury_form_data($jury));
+        // Agrément administratif : à défaut, ce que l'étudiant a déclaré dans sa fiche signalétique.
+        $agreement = these_get_agreement($dossier);
+        $declared = these_get_bordereau($dossier);
+        $formdata->agdefvdate = $agreement['defvdate'] ?? ($declared['defvdate'] ?? 0);
+        $formdata->agmobility = $agreement['mobility'] ?? 0;
+        $formdata->aga6notyet = $agreement['a6notyet'] ?? ($declared['a6notyet'] ?? 0);
+        $formdata->aga6date = $agreement['a6date'] ?? ($declared['a6date'] ?? 0);
         break;
 }
 $mform->set_data($formdata);
@@ -130,14 +156,43 @@ if ($mform->is_cancelled()) {
                 $dossier->id,
                 these_filemanager_options('directorreport')
             );
+            $fields['reporttext'] = trim($data->reporttext);
+            $fields['reportfavorable'] = (int) !empty($data->reportfavorable);
+            $fields['ethicsnumber'] = trim($data->ethicsnumber);
+            $grid = [];
+            foreach (these_grid_items() as $items) {
+                foreach (array_keys($items) as $item) {
+                    $grid[$item] = (int) !empty($data->{'grid_' . $item});
+                }
+            }
+            $fields['conformitygrid'] = json_encode($grid);
+            // Fonction du directeur, imprimée dans l'agrément scientifique ; l'agrément administratif
+            // sera complété par la DEVE à l'étape suivante.
+            $fields['agreement'] = json_encode(array_merge(these_get_agreement($dossier), [
+                'directorfunction' => trim((string) ($data->directorfunction ?? '')),
+            ]));
             break;
         case 'devedefense':
             $fields['defensedate'] = (int) $data->defensedate;
             $fields['defenselocation'] = trim($data->defenselocation);
+            $fields['agreement'] = json_encode(array_merge(these_get_agreement($dossier), [
+                'defvdate' => (int) $data->agdefvdate,
+                'mobility' => (int) !empty($data->agmobility),
+                'a6notyet' => (int) !empty($data->aga6notyet),
+                'a6date' => !empty($data->aga6notyet) ? 0 : (int) $data->aga6date,
+            ]));
             these_save_jury($dossier->id, these_extract_submitted_jury($data));
             break;
     }
-    these_validate_step($these, $cm, $dossier, $USER->id, $fields, $remark);
+    these_validate_step(
+        $these,
+        $cm,
+        $dossier,
+        $USER->id,
+        $fields,
+        $remark,
+        $signs ? these_signature_from_form($data) : null
+    );
     redirect($dossierurl, get_string('stepvalidated', 'mod_these'), null, \core\output\notification::NOTIFY_SUCCESS);
 }
 

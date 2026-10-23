@@ -22,8 +22,10 @@ require_once($CFG->libdir . '/pdflib.php');
 require_once($CFG->dirroot . '/mod/these/locallib.php');
 
 /**
- * Documents PDF d'un dossier de thèse : fiche de sujet, attestation de conformité du manuscrit,
- * convocations, feuille de jury et procès-verbal de soutenance.
+ * Documents PDF de soutenance d'un dossier de thèse : convocations, feuille de jury et
+ * procès-verbal. Les documents de l'établissement signés dans le module (dépôt de sujet,
+ * agréments, fiche signalétique, contrat de diffusion, bordereau, rapport, grille de conformité,
+ * conclusions, attestation de conformité) relèvent de official_pdf.
  *
  * Tous partagent le même en-tête (établissement) et la même mise en page sobre, entièrement
  * produite ici : aucun gabarit n'est à fournir. Chaque méthode statique prend les données
@@ -182,46 +184,6 @@ class document_pdf extends \pdf {
     protected static function role_label(\stdClass $member) {
         $roles = these_jury_role_options();
         return $roles[$member->juryrole] ?? $member->juryrole;
-    }
-
-    /**
-     * Fiche de sujet (phase 1) : titre, résumé, mots-clés, directeur et enregistrements.
-     *
-     * @param array $data
-     * @return string Contenu PDF.
-     */
-    public static function subject_sheet(array $data) {
-        $pdf = self::start($data, get_string('subjectsheet', 'mod_these'));
-        $pdf->doctitle(get_string('subjectsheet', 'mod_these'));
-        $pdf->band(get_string('subject', 'mod_these'));
-        $pdf->dossier_fields();
-        $pdf->field(get_string('subjectkeywords', 'mod_these'), $data['keywords']);
-        $pdf->band(get_string('subjectsummary', 'mod_these'));
-        $pdf->paragraph($data['summary'] !== '' ? $data['summary'] : '-');
-        $pdf->band(get_string('registration', 'mod_these'));
-        $pdf->field(get_string('devenumber', 'mod_these'), $data['devenumber']);
-        $pdf->field(get_string('libraryref', 'mod_these'), $data['libraryref']);
-        return $pdf->Output('', 'S');
-    }
-
-    /**
-     * Attestation de conformité du manuscrit, délivrée par la bibliothèque (phase 2, étape 4).
-     *
-     * @param array $data Données du dossier, plus 'librarian' (nom de qui a attesté) et
-     *                    'conformitydate' (date de l'attestation).
-     * @return string Contenu PDF.
-     */
-    public static function conformity(array $data) {
-        $pdf = self::start($data, get_string('conformitycertificate', 'mod_these'));
-        $pdf->doctitle(get_string('conformitycertificate', 'mod_these'));
-        $pdf->dossier_fields();
-        $pdf->Ln(4);
-        $pdf->paragraph(get_string('pdfconformitytext', 'mod_these', (object) [
-            'student' => $data['student'],
-            'date' => $data['conformitydate'] ?? $data['today'],
-        ]));
-        $pdf->signature($data['librarian'] ?? '', get_string('actorlibrary', 'mod_these'));
-        return $pdf->Output('', 'S');
     }
 
     /**

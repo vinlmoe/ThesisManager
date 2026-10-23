@@ -38,8 +38,17 @@ Bibliothèque ──conformité du manuscrit──▶ DEVE ──convocations, f
 - Chaque étape de validation peut **renvoyer** le dossier, motif obligatoire :
   à l'étudiant (à sa nouvelle soumission, le dossier revient directement à
   l'étape qui l'a renvoyé) ou, pour la DEVE, au directeur de thèse.
-- Le directeur **valide la soutenance et dépose son rapport en une seule
-  étape** ; le rapport n'est pas communiqué à l'étudiant.
+- Le directeur **valide la soutenance et rédige son rapport en une seule
+  étape** (avis, grille de conformité, signature unique) ; le rapport n'est
+  pas communiqué à l'étudiant.
+- Les **documents officiels** (E01 sujet, E02 agréments, E03 fiche
+  signalétique, bordereau ABES, rapport, grille, conclusions) sont produits sur
+  les PDF de l'établissement et **signés dans le module** (tracé, empreinte du
+  contenu, liens de signature pour les signataires extérieurs). Le contrat de
+  diffusion reprend le PDF déposé par l'administrateur, entre une page de
+  données et choix et une page de signatures.
+- La bibliothèque dispose d'un rôle propre (« Bibliothèque (thèses) »), et les
+  rôles DEVE et Bibliothèque se choisissent dans l'administration du site.
 - La DEVE **génère** la convocation de l'étudiant et de chaque membre du jury,
   la feuille de jury et le procès-verbal à signer, puis les **transmet** par
   courriel (chaque membre reçoit sa convocation, l'université une archive de
@@ -54,8 +63,8 @@ Bibliothèque ──conformité du manuscrit──▶ DEVE ──convocations, f
 ## Qualité
 
 - Style : standard Moodle (`moodlehq/moodle-cs`), sans avertissement.
-- Tests PHPUnit (35 tests) : circuit complet, renvois, droits, relances,
-  documents générés, import, confidentialité, sauvegarde/restauration.
+- Tests PHPUnit (43 tests) : circuit complet, renvois, droits, relances,
+  documents générés, signatures, import, confidentialité, sauvegarde/restauration.
 - CI GitHub Actions : phpcs, lint, validation du plugin, savepoints, PHPDoc,
   PHPUnit sur Moodle 4.5 / PostgreSQL.
 

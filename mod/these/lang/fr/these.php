@@ -142,7 +142,7 @@ $string['subjecttitleen'] = 'Titre en anglais';
 $string['subjectsummary'] = 'Résumé';
 $string['subjectsummary_help'] = "Présentation du sujet : contexte, objectifs, démarche envisagée (une page environ).";
 $string['subjectkeywords'] = 'Mots-clés';
-$string['subjectkeywords_help'] = 'Mots-clés séparés par des virgules ou des points-virgules.';
+$string['subjectkeywords_help'] = "3 à 5 mots-clés séparés par des points-virgules, choisis de préférence dans la terminologie HeTOP.";
 $string['director'] = 'Directeur de thèse';
 $string['director_help'] = "Enseignant qui dirige la thèse. Seuls les enseignants inscrits dans ce cours et autorisés à diriger des "
     . "thèses sont proposés : si le vôtre n'apparaît pas, contactez la DEVE.";
@@ -158,7 +158,6 @@ $string['draftsaved'] = 'Brouillon enregistré.';
 $string['subjectsubmittedmsg'] = 'Sujet soumis.';
 $string['subjectnoteditable'] = "Le sujet n'est plus modifiable : il a été soumis. Il le redeviendra si le dossier vous est renvoyé.";
 $string['editsubject'] = 'Modifier le sujet';
-$string['subjectsheet'] = 'Fiche de sujet (PDF)';
 $string['registration'] = 'Enregistrements';
 $string['devenumber'] = "Numéro d'enregistrement DEVE";
 $string['devenumber_help'] = "Numéro d'ordre attribué au sujet. Le numéro proposé est le suivant de l'année en cours (format AAAA-NNN) ; "
@@ -246,7 +245,6 @@ $string['validatedevedefense'] = 'Valider le dossier';
 $string['validatelibraryconformity'] = 'Attester la conformité';
 $string['conformitychecked'] = 'Le manuscrit est conforme (forme, dépôt légal, normes de présentation)';
 $string['conformitycheckrequired'] = 'Cochez la case pour attester la conformité, ou renvoyez le dossier.';
-$string['conformitycertificate'] = 'Attestation de conformité (PDF)';
 $string['reviewremark'] = 'Commentaire';
 $string['reviewremark_help'] = "Facultatif à la validation (il est inscrit à l'historique du dossier). Obligatoire pour un renvoi : "
     . "c'est le motif transmis au destinataire.";
@@ -472,3 +470,296 @@ $string['privacy:metadata:jury'] = "Les membres du jury reçoivent par courriel 
 $string['privacy:metadata:jury:student'] = "Nom de l'étudiant.";
 $string['privacy:metadata:jury:title'] = 'Titre de la thèse.';
 $string['privacy:metadata:jury:defensedate'] = 'Date et lieu de la soutenance.';
+
+// Rôles des services (réglages du site).
+$string['settingsroles'] = 'Rôles des services';
+$string['settingsroles_desc'] = "Comme la DEVE est reconnue au rôle « Enseignant », la bibliothèque est reconnue au rôle choisi ici. "
+    . "Le rôle peut être attribué dans le cours, dans sa catégorie ou au niveau du site (il donne alors accès à toutes les activités "
+    . "de gestion des thèses sans inscription). Les capacités du module restent également prises en compte.";
+$string['deverole'] = 'Rôle DEVE';
+$string['deverole_desc'] = 'Rôle dont les détenteurs agissent comme DEVE dans les activités de gestion des thèses.';
+$string['libraryrole'] = 'Rôle Bibliothèque';
+$string['libraryrole_desc'] = "Rôle dont les détenteurs agissent comme bibliothèque. Par défaut, le rôle interne « Bibliothèque "
+    . "(thèses) » créé à l'installation du module.";
+$string['libraryrolename'] = 'Bibliothèque (thèses)';
+$string['libraryroledescription'] = "Rôle interne du module Gestion des thèses : enregistrement des sujets au référentiel documentaire et "
+    . "attestation de conformité des manuscrits. À attribuer au niveau du site, d'une catégorie ou d'un cours.";
+
+// Documents (réglages du site).
+$string['settingsdocuments'] = 'Documents et signataires';
+$string['settingsdocuments_desc'] = "En-tête et signataires des documents de l'établissement produits par le module. Les signataires "
+    . "sans compte Moodle (direction générale, CCEM, présidence de l'université) reçoivent par courriel un lien de signature si leur "
+    . "adresse est renseignée ; sinon la DEVE recueille leur signature sur place.";
+$string['settingslogo'] = 'Logos';
+$string['settingslogo_desc'] = "Jusqu'à quatre images (PNG ou JPEG), imprimées de gauche à droite dans l'ordre de leur nom de fichier en "
+    . "tête des documents.";
+$string['settingscontracttemplate'] = 'Contrat type de diffusion électronique (PDF)';
+$string['settingscontracttemplate_desc'] = "Le contrat officiel (ENS-INI-P308-E04), tel quel. Le module le fait précéder d'une page "
+    . "reprenant les données et les choix de l'auteur et suivre d'une page de signatures.";
+$string['settingsinstitution'] = 'Établissement';
+$string['settingsinstitution_desc'] = 'Nom court utilisé dans les documents (« Visa de la Directrice de … », « Membre de … »).';
+$string['settingshetopurl'] = 'Lien HeTOP';
+$string['settingshetopurl_desc'] = 'Terminologie de référence pour les mots-clés du sujet.';
+$string['settingsdgtitle'] = 'Direction générale (intitulé)';
+$string['settingsdgtitle_desc'] = '';
+$string['settingsdgname'] = 'Direction générale (nom)';
+$string['settingsdgname_desc'] = '';
+$string['settingsdgemail'] = 'Direction générale (courriel)';
+$string['settingsdgemail_desc'] = 'Adresse à laquelle envoyer les liens de signature ; vide : signature recueillie sur place par la DEVE.';
+$string['settingsvisaplace'] = 'Lieu du visa';
+$string['settingsvisaplace_desc'] = '« Vu, … le » des conclusions, « Fait à » du contrat de diffusion.';
+$string['settingsccemname'] = 'CCEM (nom)';
+$string['settingsccemname_desc'] = '';
+$string['settingsccememail'] = 'CCEM (courriel)';
+$string['settingsccememail_desc'] = 'Adresse à laquelle envoyer les liens de signature ; vide : signature recueillie sur place par la DEVE.';
+$string['settingsucbltitle'] = 'Présidence de l\'université (intitulé)';
+$string['settingsucbltitle_desc'] = '';
+$string['settingsucblname'] = 'Présidence de l\'université (nom)';
+$string['settingsucblname_desc'] = '';
+$string['settingsucblemail'] = 'Présidence de l\'université (courriel)';
+$string['settingsucblemail_desc'] = 'Adresse à laquelle envoyer les liens de signature ; vide : signature recueillie sur place par la DEVE.';
+
+// Formulaire de dépôt de sujet.
+$string['studyyear'] = "Année d'études";
+$string['confidential'] = 'Thèse confidentielle, ne pas divulguer le titre';
+$string['hetoplink'] = 'Rechercher les mots-clés dans HeTOP';
+$string['keywordscount'] = 'Indiquez de 3 à 5 mots-clés, séparés par des points-virgules.';
+$string['subjectapproval'] = 'Approbation du sujet';
+$string['externaldirector'] = "Le directeur de thèse est extérieur à l'établissement";
+$string['externaldirector_help'] = "Le directeur extérieur, sans compte Moodle, signe le formulaire depuis un lien reçu par courriel. "
+    . "Choisissez alors ci-dessous, comme directeur dans le module, le membre de l'établissement (enseignant-chercheur) qui suit la "
+    . "thèse : c'est lui qui valide les étapes et signe en qualité de membre.";
+$string['directortitle'] = 'Titre du directeur';
+$string['directortitle_help'] = 'Dr, Pr… tel qu\'il doit figurer sur les documents.';
+$string['extdirectorname'] = 'Directeur extérieur : titre, nom, prénom';
+$string['extdirectorgrade'] = 'Grade';
+$string['extdirectorinstitution'] = 'Établissement';
+$string['extdirectoremail'] = 'Adresse mail';
+$string['commitments'] = "Engagement de l'étudiant";
+$string['commitguide'] = 'Avoir pris connaissance du Guide des thèses';
+$string['commitduplicate'] = "Avoir vérifié que le sujet n'a pas fait l'objet d'une thèse de doctorat vétérinaire dans l'une des écoles "
+    . "et n'est pas celui d'une thèse en cours de rédaction";
+$string['commitethics'] = "Si nécessaire : soumettre le protocole au Comité d'éthique avant le début des travaux";
+$string['commitrequired'] = 'Cet engagement est obligatoire.';
+$string['subjectnotice'] = "Un centre d'investigation de recherche clinique vétérinaire (CICV) peut vous proposer un accompagnement "
+    . "méthodologique, réglementaire et logistique pour la recherche clinique. Pour les thèses dans le domaine des sciences humaines et "
+    . "sociales, l'encadrement doit faire intervenir un spécialiste du domaine, qui participera au jury comme membre.";
+
+// Signature.
+$string['signature'] = 'Signature';
+$string['signaturedraw'] = 'Tracez votre signature';
+$string['signatureclear'] = 'Effacer';
+$string['signername'] = 'Nom du signataire';
+$string['signatureconsent'] = "Je certifie l'exactitude des informations et signe électroniquement le(s) document(s) ci-dessus.";
+$string['signatureconsentrequired'] = 'Cochez la case pour signer.';
+$string['signaturemissing'] = 'Tracez votre signature dans le cadre ci-dessus.';
+$string['signsubjectintro'] = 'La soumission signe le formulaire de dépôt de sujet de thèse.';
+$string['signdefenseintro'] = 'La soumission signe le bordereau de thèse et le contrat de diffusion électronique.';
+$string['signreviewintro'] = 'La validation signe : {$a}.';
+$string['signexternalintro'] = 'Consultez chaque document (liens ci-dessus) avant de signer : votre signature sera apposée sur tous.';
+$string['signaturepending'] = 'En attente';
+$string['signaturerequestedon'] = 'Demandée le {$a}';
+$string['signedby'] = 'Signé par {$a->name} le {$a->date}';
+$string['signeddocuments'] = 'Documents signés';
+$string['signatures'] = 'Signatures';
+$string['document'] = 'Document';
+$string['downloadpdf'] = 'PDF';
+$string['managesignatures'] = 'Suivi des signatures';
+$string['externalsigners'] = 'Signataires sans compte';
+$string['signer'] = 'Signataire';
+$string['noemail'] = 'pas d\'adresse';
+$string['documentstosign'] = 'Documents à signer';
+$string['resendsignature'] = 'Envoyer le lien';
+$string['signinperson'] = 'Signer sur place';
+$string['signaturerequestsent'] = 'Lien de signature envoyé.';
+$string['signaturesrecorded'] = 'Signature enregistrée. Merci.';
+$string['signpagetitle'] = 'Signature de documents de thèse';
+$string['signpageintro'] = 'Signature en qualité de {$a->slot} des documents de la thèse de {$a->student} : « {$a->title} ».';
+$string['signinvalidtoken'] = "Ce lien n'est plus valide : les documents ont déjà été signés, ou une nouvelle invitation a été envoyée.";
+$string['signnothingpending'] = 'Aucun document n\'attend de signature.';
+$string['signdocuments'] = 'Signer les documents';
+
+// Documents et emplacements de signature.
+$string['docsubject'] = 'Dépôt de sujet de thèse';
+$string['docbordereau'] = 'Bordereau de thèse (ABES)';
+$string['docreport'] = 'Rapport du directeur';
+$string['docgrid'] = 'Grille de conformité de la thèse';
+$string['docagreement'] = "Fiche d'agréments administratif et scientifique";
+$string['docsignaletique'] = 'Fiche signalétique';
+$string['doccontract'] = 'Contrat de diffusion électronique';
+$string['docconformity'] = 'Attestation de conformité (bibliothèque)';
+$string['docconclusions'] = 'Conclusions';
+$string['slotstudent'] = 'Étudiant';
+$string['slotdirector'] = 'Directeur de thèse';
+$string['slotextdirector'] = 'Directeur de thèse extérieur';
+$string['slotdeve'] = 'DEVE';
+$string['slotdgrep'] = 'Direction générale (représentée par la DEVE)';
+$string['slotlibrary'] = 'Bibliothèque';
+$string['slotpresident'] = 'Président du jury';
+$string['slotdg'] = 'Direction générale';
+$string['slotccem'] = 'Président du CCEM';
+$string['slotucbl'] = "Présidence de l'université";
+
+// Dépôt de soutenance : données de l'étudiant.
+$string['visio'] = 'Visioconférence';
+$string['identity'] = 'Identité et coordonnées';
+$string['identityhelp'] = 'Ces informations alimentent le bordereau de thèse, la fiche signalétique et le contrat de diffusion.';
+$string['bbirthname'] = 'Nom de naissance';
+$string['bfirstnames'] = 'Prénom(s)';
+$string['busagename'] = "Nom d'usage";
+$string['bpublicationname'] = 'Nom figurant sur la publication (si différent)';
+$string['bbirthdate'] = 'Date de naissance';
+$string['bbirthplace'] = 'Lieu de naissance';
+$string['bbirthdept'] = 'N° de département';
+$string['bnationality'] = 'Nationalité';
+$string['bstreet'] = 'Adresse pérenne (n° et rue)';
+$string['bpostcode'] = 'Code postal';
+$string['bcity'] = 'Ville';
+$string['bcountry'] = 'Pays';
+$string['bphone'] = 'Téléphone';
+$string['bpersonalemail'] = 'Courriel personnel';
+$string['bpersonalemail_help'] = "Adresse personnelle et pérenne, différente de celle de l'établissement.";
+$string['bemailconsent'] = "J'accepte que mon courriel soit utilisé dans le cadre des accréditations et diffusé à des partenaires institutionnels";
+$string['cursus'] = 'Cursus';
+$string['bdefvdate'] = 'Obtention du DEFV le';
+$string['bschool'] = 'à';
+$string['schoolother'] = 'Autre établissement';
+$string['ba6date'] = "Validation de l'année d'approfondissement (A6) le";
+$string['ba6notyet'] = "Je n'ai pas encore validé mon année d'approfondissement (A6)";
+$string['a6required'] = "Indiquez la date de validation de l'A6, ou cochez la case si elle n'est pas encore validée.";
+$string['bnbvolumes'] = 'Nombre de volumes';
+$string['bnbpages'] = 'Nombre total de pages';
+$string['bnbrefs'] = 'Nombre de références bibliographiques';
+$string['bsummaryfr'] = 'Résumé de la thèse en français';
+$string['bsummaryen'] = 'Résumé de la thèse en anglais (facultatif)';
+$string['bsummary'] = 'Résumé';
+$string['bsummary_help'] = '1700 caractères maximum, espaces compris.';
+$string['summarytoolong'] = 'Le résumé dépasse {$a} caractères.';
+$string['bkeywords'] = 'Mots-clés (en français)';
+$string['bkeywords_help'] = 'Identiques à ceux de la 4e page de couverture, 8 au maximum.';
+$string['conclusionstext'] = 'Texte des conclusions';
+$string['conclusionstext_help'] = "Les conclusions telles qu'elles figureront dans le manuscrit (deux pages au maximum). Elles seront "
+    . "signées par le directeur, le président du jury, la direction générale et le président du CCEM.";
+$string['contracthelp'] = "Choix de l'auteur pour le contrat de diffusion électronique de la thèse (articles 2 et 4). Une thèse "
+    . "confidentielle (case cochée au dépôt du sujet) l'est jusqu'à la date indiquée.";
+$string['bconfidentialuntil'] = "Confidentialité jusqu'au";
+$string['bconfidentialuntil_help'] = 'Ne concerne que les thèses déclarées confidentielles au dépôt du sujet.';
+$string['bembargo'] = "Thèse soumise à embargo (diffusion différée)";
+$string['bembargountil'] = "Embargo jusqu'au";
+$string['bdiffusion'] = 'Diffusion de la thèse';
+$string['bdiffusion_help'] = "Diffusion en texte intégral sur internet (portail DUMAS, catalogue Sudoc, catalogues des bibliothèques), "
+    . "ou consultation de la version papier dans les bibliothèques des écoles vétérinaires et diffusion sur l'intranet de "
+    . "l'université uniquement.";
+$string['diffusioninternet'] = "J'autorise la diffusion de la thèse en texte intégral sur internet";
+$string['diffusionrestricted'] = "Je n'autorise pas la diffusion sur internet, mais uniquement la consultation papier et l'intranet";
+
+// Étapes du directeur et de la DEVE.
+$string['reporttext'] = 'Rapport du directeur';
+$string['reporttext_help'] = "Argumentaire d'une page au plus présentant le travail de thèse (travail effectué, principaux résultats, "
+    . "implication de l'étudiant…).";
+$string['reportfavorable'] = "J'émets un avis favorable à la soutenance et à l'obtention du titre de Docteur vétérinaire";
+$string['reportfavorablerequired'] = "L'avis favorable est nécessaire pour valider la soutenance.";
+$string['ethicsnumber'] = "N° de l'avis favorable du comité d'éthique (si existant)";
+$string['gridsectionfond'] = 'Conformité du fond';
+$string['gridsectionforme'] = 'Conformité de la forme';
+$string['gridrequired'] = 'Élément à valider.';
+$string['gridquestion'] = 'La question scientifique est clairement posée et identifiée.';
+$string['gridanswer'] = 'La réponse bibliographique ou expérimentale est satisfaisante.';
+$string['gridbiblio'] = 'La bibliographie est complète, pertinente et actuelle.';
+$string['gridcritique'] = "L'analyse critique de la bibliographie est satisfaisante.";
+$string['gridownwork'] = "Le travail présenté est bien celui de l'étudiant.";
+$string['gridtool'] = "Si la thèse porte sur le développement d'un outil, d'un support pédagogique, d'un site internet etc. : la thèse "
+    . "ne se restreint pas à la description technique du travail.";
+$string['gridfrench'] = 'Expression française et orthographe satisfaisantes.';
+$string['gridlanguage'] = "Rédaction en français. Ou si rédaction en anglais, au moins 15 % du manuscrit en français et existence de "
+    . "résumés de chaque partie du manuscrit en français.";
+$string['gridtyping'] = 'Dactylographie et pagination correctes.';
+$string['gridthanks'] = 'Remerciements aux membres du jury et remerciements personnels sobres.';
+$string['gridtoc'] = "Présence d'une table des matières.";
+$string['gridstaff'] = 'Présence de la liste à jour du corps enseignant.';
+$string['gridlists'] = 'Présence de la liste des abréviations, des figures, des tableaux, des annexes.';
+$string['gridcovers'] = 'Pages de couverture conformes.';
+$string['gridcitations'] = 'Citation des références dans le texte (au format de la bibliothèque universitaire).';
+$string['gridbibliography'] = "Présence d'une bibliographie finale correctement formatée.";
+$string['gridfigures'] = 'Numérotation, titres et légendes, qualité et lisibilité des figures et tableaux satisfaisants.';
+$string['gridintroduction'] = 'Il existe une introduction exposant la problématique et le plan du manuscrit.';
+$string['gridconclusion'] = 'Il existe une conclusion reprenant les points clés et proposant des perspectives.';
+$string['gridabstract'] = "Le résumé n'est pas un copier-coller de la conclusion.";
+$string['gridstructure'] = "Pour les thèses non bibliographiques, le travail est présenté sous la forme d'un document scientifique : "
+    . "introduction, matériel et méthodes, résultats, discussion et conclusion.";
+$string['agreementscientific'] = 'Agrément scientifique';
+$string['agreementdirectortext'] = "En validant, vous déclarez avoir lu et corrigé la thèse de l'étudiant et en valider le contenu.";
+$string['agreementmembertext'] = "Le directeur étant extérieur, vous déclarez en qualité de membre avoir corrigé la thèse et en attester "
+    . "la forme par la grille de conformité ; le directeur extérieur signera l'agrément depuis le lien reçu par courriel.";
+$string['agreementadmin'] = 'Agrément administratif';
+$string['agdefvdate'] = 'DEFV obtenu le';
+$string['agmobility'] = 'a validé sa mobilité internationale';
+$string['aga6notyet'] = "n'a pas encore validé son année d'approfondissement (A6)";
+$string['aga6date'] = "Année d'approfondissement (A6) validée le";
+$string['agauthorized'] = "L'étudiant(e) est autorisé(e) à soutenir sa thèse de Doctorat vétérinaire.";
+
+// Historique et courriels des signatures.
+$string['logsigned'] = 'Document signé';
+$string['logsignaturesinvalidated'] = 'Signatures invalidées (document modifié)';
+$string['logsignaturerequested'] = 'Signature demandée';
+$string['logsignedinperson'] = 'Signature recueillie sur place';
+$string['emailkeysignaturerequest'] = 'Demande de signature (signataires sans compte)';
+$string['emailsignaturerequestsubject'] = 'Thèse de {$a->student} : document(s) à signer';
+$string['emailsignaturerequestbody'] = 'Bonjour {$a->name},
+
+Les documents suivants de la thèse de {$a->student}, intitulée « {$a->title} », attendent votre signature : {$a->document}.
+
+Pour les consulter et les signer : {$a->url}
+
+Ce lien vous est personnel et n\'est valable que pour une signature.';
+
+// Libellés des documents PDF.
+$string['pdfsignaturepending'] = 'En attente de signature';
+$string['pdfsignedby'] = 'Signé électroniquement par {$a->name} le {$a->date} — empreinte {$a->hash}';
+$string['pdfname'] = 'NOM';
+$string['pdffirstname'] = 'Prénom';
+$string['pdfthesistitle'] = 'TITRE DE LA THÈSE';
+$string['pdfdoneatshort'] = '{$a->city}, le {$a->date}';
+$string['pdfreportfavorable'] = "Avis favorable à la soutenance de la thèse et à l'obtention du titre de Docteur vétérinaire.";
+$string['pdfagreementa6'] = "a validé son année d'approfondissement (A6) le :";
+$string['pdfagreementdirectortext'] = "Je soussigné(e), {\$a}, déclare que j'ai lu et corrigé la thèse de l'étudiant ci-dessous et "
+    . "j'en valide le contenu.";
+$string['pdfagreementmembertext'] = "Je soussigné(e), {\$a->name}, Enseignant-Chercheur de {\$a->institution}, déclare que j'ai corrigé "
+    . "la thèse de l'étudiant ci-dessous et j'en atteste la forme par la grille de conformité du manuscrit communiquée à la DEVE.";
+$string['pdfentitled'] = 'Intitulée';
+$string['pdfbornon'] = 'Né(e) le';
+$string['pdfcontracttitle'] = "CONTRAT DE DIFFUSION ÉLECTRONIQUE DE LA THÈSE D'EXERCICE DE MÉDECINE VÉTÉRINAIRE";
+$string['pdfcontractref'] = 'ENS-INI-P308-E04 V7';
+$string['pdfcontractdatapage'] = "Données et choix de l'auteur";
+$string['pdfcontractauthor'] = "L'Auteur(e) de la thèse d'exercice de médecine vétérinaire";
+$string['pdfpersonaladdress'] = 'Adresse personnelle';
+$string['pdfdefendedon'] = 'Thèse soutenue le';
+$string['pdfcontractart2title'] = 'Article 2 : Confidentialité et/ou embargo';
+$string['pdfcontractconfidentiality'] = 'Confidentialité';
+$string['pdfcontractnotconfidential'] = 'thèse non soumise à confidentialité';
+$string['pdfcontractconfidentialuntil'] = "thèse soumise à confidentialité jusqu'au";
+$string['pdfcontractembargo'] = 'Embargo ou diffusion différée de la Thèse';
+$string['pdfcontractnoembargo'] = 'thèse non soumise à embargo';
+$string['pdfcontractembargountil'] = "thèse soumise à embargo jusqu'au";
+$string['pdfcontractart4title'] = "Article 4 : Finalité d'exploitation de la Thèse par les Établissements";
+$string['pdfcontractnotemplate'] = "Le contrat type n'a pas été déposé dans les réglages du module (ou n'a pas pu être lu) : il doit être "
+    . "joint à ces pages.";
+$string['pdfcontractsignaturepage'] = 'CONTRAT DE DIFFUSION ÉLECTRONIQUE — SIGNATURES';
+$string['pdfcontractsignaturetext'] = "Contrat de diffusion électronique de la thèse de {\$a->student}, « {\$a->title} », conclu selon "
+    . "les données et les choix indiqués en première page et les articles qui précèdent.";
+$string['pdfcontractcopies'] = 'En trois exemplaires.';
+$string['pdfauthorsignature'] = "Signature de l'Auteur";
+$string['pdfcontractsupervisorvisa'] = "Visa de l'encadrant :";
+$string['pdfthesisof'] = 'Thèse de {$a}';
+$string['pdfseen'] = 'Vu, {$a->place} le {$a->date}';
+$string['privacy:metadata:these_dossier:bordereau'] = "Données personnelles saisies avec la soutenance (état civil, adresse, courriel personnel, cursus, choix de diffusion).";
+$string['privacy:metadata:these_dossier:conclusions'] = 'Conclusions de la thèse.';
+$string['privacy:metadata:these_dossier:reporttext'] = 'Rapport du directeur.';
+$string['privacy:metadata:these_signature'] = 'Signatures électroniques apposées sur les documents du dossier (image tracée conservée dans les fichiers).';
+$string['privacy:metadata:these_signature:userid'] = 'Signataire.';
+$string['privacy:metadata:these_signature:signername'] = 'Nom du signataire.';
+$string['privacy:metadata:these_signature:signeremail'] = 'Adresse du signataire sans compte.';
+$string['privacy:metadata:these_signature:ipaddress'] = 'Adresse IP au moment de la signature.';
+$string['privacy:metadata:these_signature:timesigned'] = 'Date de signature.';
+$string['directorfunction'] = 'Votre fonction';
+$string['directorfunction_help'] = "Fonction imprimée dans l'agrément scientifique : « Je soussigné(e), NOM Prénom, fonction, déclare… » (par exemple : Maître de conférences, Professeur).";

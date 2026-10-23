@@ -131,9 +131,11 @@ final class workflow_test extends these_testcase {
         $this->assertEquals(THESE_STATUS_CONFORM, $dossier->status);
         $sink->clear();
 
-        // Étape 5 : convocation étudiant, une par membre du jury, feuille de jury, PV.
+        // Étape 5 : convocation étudiant, une par membre du jury, feuille de jury, PV, et les
+        // documents de l'établissement disponibles (ici le dépôt de sujet et l'attestation de
+        // conformité, les autres n'ayant pas été renseignés par ce raccourci de test).
         $files = these_generate_documents($this->these, $this->context, $dossier, $this->deve->id);
-        $this->assertCount(7, $files);
+        $this->assertCount(9, $files);
         foreach ($files as $file) {
             $this->assertStringStartsWith('%PDF', $file->get_content());
         }

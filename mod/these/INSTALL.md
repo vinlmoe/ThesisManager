@@ -4,7 +4,8 @@ Module d'activité Moodle pour le circuit des thèses d'exercice vétérinaire :
 dépôt et validation du sujet, puis dépôt, validation et soutenance.
 
 - **Prérequis** : Moodle 4.0 ou supérieur, PHP 7.4+.
-- **Dépendances** : aucune (les PDF sont produits avec TCPDF, fourni par Moodle).
+- **Dépendances** : aucune à installer. Les PDF sont produits avec TCPDF (fourni
+  par Moodle) et FPDI 2.6 (fourni dans `thirdparty/`, comme pour `mod_stage`).
 
 ## 1. Installation
 
@@ -27,14 +28,19 @@ l'installer.
 | Bibliothèque | Rôle dédié « Bibliothèque » | `mod/these:managelibrary`, `mod/these:viewall` |
 | Administration | Manager | Tous les droits |
 
-Comme pour `mod_stage`, la DEVE utilise le rôle standard « Enseignant ».
+Les rôles des services se choisissent dans *Administration du site > Plugins >
+Modules d'activité > Gestion des thèses* :
 
-**Rôle Bibliothèque** : *Administration du site > Utilisateurs > Permissions >
-Définition des rôles > Ajouter un rôle*, archétype « Enseignant non éditeur »,
-contexte d'attribution « Cours ». Autoriser `mod/these:managelibrary` et
-`mod/these:viewall`, **interdire** `mod/these:direct` (sinon les bibliothécaires
-seraient proposés comme directeurs de thèse). Inscrire ensuite les
-bibliothécaires au cours avec ce rôle.
+- **Rôle DEVE** (« Enseignant » par défaut, comme pour `mod_stage`) ;
+- **Rôle Bibliothèque** : le module crée à l'installation le rôle « Bibliothèque
+  (thèses) » (`theselibrary`), attribuable au niveau système, catégorie ou
+  cours, avec `mod/these:view`, `mod/these:managelibrary`, `mod/these:viewall`
+  et `moodle/course:view`. Il suffit de l'attribuer aux bibliothécaires (au
+  niveau du site ou du cours) ; ils ne sont jamais proposés comme directeurs.
+
+Un utilisateur détient les droits d'un service s'il a la capacité
+correspondante **ou** le rôle choisi dans le contexte de l'activité ou un
+contexte parent.
 
 Un directeur de thèse ne voit que les dossiers qu'il dirige. Seuls les
 enseignants **inscrits au cours** avec `mod/these:direct` sont proposés à
@@ -60,6 +66,30 @@ l'étudiant comme directeurs.
    désignés par identifiant, courriel ou numéro d'identification). Les dossiers
    importés sont créés « actifs ». Une simulation est proposée par défaut.
 4. Personnaliser au besoin les courriels (*Courriels*).
+
+## 3 bis. Documents officiels et signatures électroniques
+
+Réglages du site, rubrique *Documents* : logos (pages produites par le module),
+**modèle PDF du contrat de diffusion** (E04 en vigueur), établissement, lien
+HeTOP, lieu du visa, puis nom, qualité et courriel des signataires extérieurs
+(directeur général ou son représentant, président de la CCEM, université).
+
+Les formulaires E01 (sujet), E02 (agréments), E03 (fiche signalétique), le
+bordereau ABES, le rapport, la grille de conformité et les conclusions sont
+produits **en remplissant les PDF officiels** fournis dans `pdftemplates/` :
+la mise en page est celle des documents de l'établissement, le module n'écrit
+que les données et les signatures aux emplacements prévus. Le contrat de
+diffusion est assemblé ainsi : page de données et choix, modèle déposé par
+l'administrateur tel quel, page de signatures.
+
+Chaque signature (tracé, nom, date, empreinte SHA-256 du contenu signé) est
+annulée si le contenu signé change. Les signataires extérieurs reçoivent un
+lien personnel par courriel ; la DEVE suit les signatures (*Suivi des
+signatures*), relance ou fait signer sur place.
+
+> **Changement de version d'un formulaire** : remplacer le PDF dans
+> `pdftemplates/` impose de recaler les coordonnées correspondantes dans
+> `classes/pdf/official_forms.php`.
 
 La réinitialisation du cours ne supprime les dossiers que si l'option est
 cochée explicitement (elle ne l'est pas par défaut).

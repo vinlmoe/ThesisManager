@@ -56,6 +56,9 @@ class backup_these_activity_structure_step extends backup_activity_structure_ste
             'userid', 'status', 'statustime', 'title', 'titleen', 'summary', 'keywords',
             'directorid', 'codirectorname', 'devenumber', 'libraryref',
             'proposeddate', 'defensedate', 'defenselocation', 'defenseresult', 'mention',
+            'studyyear', 'confidential', 'directortitle', 'externaldirector', 'extdirectorname', 'extdirectorgrade',
+            'extdirectorinstitution', 'extdirectoremail', 'commitments', 'ethicsnumber', 'bordereau', 'conclusions',
+            'reporttext', 'reportfavorable', 'conformitygrid', 'agreement',
             'returnstatus', 'returncomment', 'returnedby', 'returntime', 'cancelledfromstatus',
             'documentstime', 'senttime', 'remindertime', 'timecreated', 'timemodified',
         ]);
@@ -63,6 +66,14 @@ class backup_these_activity_structure_step extends backup_activity_structure_ste
         $jurymembers = new backup_nested_element('jurymembers');
         $jurymember = new backup_nested_element('jurymember', ['id'], [
             'juryrole', 'fullname', 'jurytitle', 'institution', 'email', 'sortorder', 'timecreated',
+        ]);
+
+        // Le jeton d'une invitation en attente n'est pas sauvegardé : c'est un secret d'accès sans
+        // compte, que la DEVE renverra depuis la copie restaurée si besoin.
+        $signatures = new backup_nested_element('signatures');
+        $signature = new backup_nested_element('signature', ['id'], [
+            'doctype', 'slot', 'userid', 'signername', 'signeremail', 'requesttime', 'timesigned', 'contenthash',
+            'ipaddress', 'timecreated',
         ]);
 
         $logs = new backup_nested_element('logs');
@@ -76,6 +87,8 @@ class backup_these_activity_structure_step extends backup_activity_structure_ste
         $dossiers->add_child($dossier);
         $dossier->add_child($jurymembers);
         $jurymembers->add_child($jurymember);
+        $dossier->add_child($signatures);
+        $signatures->add_child($signature);
         $dossier->add_child($logs);
         $logs->add_child($log);
 
@@ -86,12 +99,15 @@ class backup_these_activity_structure_step extends backup_activity_structure_ste
             $dossier->set_source_table('these_dossier', ['theseid' => backup::VAR_PARENTID], 'id ASC');
             $jurymember->set_source_table('these_jury', ['dossierid' => backup::VAR_PARENTID], 'sortorder ASC, id ASC');
             $log->set_source_table('these_log', ['dossierid' => backup::VAR_PARENTID], 'id ASC');
+            $signature->set_source_table('these_signature', ['dossierid' => backup::VAR_PARENTID], 'id ASC');
         }
 
         $dossier->annotate_ids('user', 'userid');
         $dossier->annotate_ids('user', 'directorid');
         $dossier->annotate_ids('user', 'returnedby');
         $log->annotate_ids('user', 'userid');
+        $signature->annotate_ids('user', 'userid');
+        $signature->annotate_files('mod_these', 'signature', 'id');
 
         $these->annotate_files('mod_these', 'intro', null);
         foreach (THESE_FILEAREAS as $filearea) {

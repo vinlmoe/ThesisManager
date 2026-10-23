@@ -36,7 +36,7 @@ require_login($course, true, $cm);
 $context = context_module::instance($cm->id);
 $dataformat = optional_param('dataformat', '', PARAM_ALPHA);
 
-$rights = these_get_rights($context, null, $USER->id);
+$rights = these_require_view($context);
 if (!$rights->viewall) {
     require_capability('mod/these:viewall', $context);
 }
