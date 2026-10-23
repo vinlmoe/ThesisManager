@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Modèles des documents (Administration du site > Plugins > Modules d'activité > Gestion des
- * thèses > Modèles des documents) : liste des documents, modification du modèle de chacun, aperçu
- * PDF avec des données fictives, retour au modèle d'origine.
+ * Modèles des documents de l'activité (DEVE) : liste des documents et images des modèles,
+ * modification du modèle de chacun, aperçu PDF avec des données fictives, retour au modèle
+ * d'origine. Comme les courriels, chaque activité a ses propres modèles.
  *
  * @package   mod_these
  * @copyright 2026 Sébastien Lefebvre
@@ -25,26 +25,37 @@
  */
 
 require(__DIR__ . '/../../config.php');
-require_once($CFG->libdir . '/adminlib.php');
 require_once($CFG->dirroot . '/mod/these/locallib.php');
 
 use mod_these\form\doctemplate_form;
+use mod_these\form\doctemplate_images_form;
 
+$id = required_param('id', PARAM_INT);
 $type = optional_param('type', '', PARAM_ALPHA);
 $action = optional_param('action', '', PARAM_ALPHA);
 
-admin_externalpage_setup('mod_these_doctemplates');
+$cm = get_coursemodule_from_id('these', $id, 0, false, MUST_EXIST);
+$course = get_course($cm->course);
+$these = $DB->get_record('these', ['id' => $cm->instance], '*', MUST_EXIST);
+
+require_login($course, true, $cm);
+$context = context_module::instance($cm->id);
+these_require_service($context, 'deve');
 
 $types = these_doctemplate_types();
 if ($type !== '' && !array_key_exists($type, $types)) {
     throw new moodle_exception('invalidparameter', 'debug');
 }
-$listurl = new moodle_url('/mod/these/doctemplates.php');
+$listurl = new moodle_url('/mod/these/doctemplates.php', ['id' => $cm->id]);
+$PAGE->set_url($type !== '' ? new moodle_url($listurl, ['type' => $type]) : $listurl);
+$PAGE->set_title(format_string($these->name) . ' - ' . get_string('doctemplates', 'mod_these'));
+$PAGE->set_heading(format_string($course->fullname));
+$PAGE->set_context($context);
 
 // Aperçu du modèle en vigueur.
 if ($type !== '' && $action === 'preview') {
     send_file(
-        these_render_doctemplate($type, these_sample_document_context()),
+        these_render_doctemplate($these, $type, these_sample_document_context($context, $these)),
         $type . '.pdf',
         0,
         0,
@@ -57,7 +68,7 @@ if ($type !== '' && $action === 'preview') {
 // Retour au modèle d'origine.
 if ($type !== '' && $action === 'reset') {
     if (optional_param('confirm', 0, PARAM_BOOL) && confirm_sesskey()) {
-        these_set_doctemplate($type, null);
+        these_set_doctemplate($these->id, $type, null);
         redirect(
             $listurl,
             get_string('doctplresetdone', 'mod_these', these_doctemplate_label($type)),
@@ -77,18 +88,16 @@ if ($type !== '' && $action === 'reset') {
 
 // Modification d'un modèle.
 if ($type !== '') {
-    $pageurl = new moodle_url($listurl, ['type' => $type]);
-    $PAGE->set_url($pageurl);
-    $mform = new doctemplate_form($pageurl);
+    $mform = new doctemplate_form($PAGE->url, ['these' => $these, 'context' => $context]);
     if ($mform->is_cancelled()) {
         redirect($listurl);
     }
-    $mform->set_data(['type' => $type, 'content' => these_get_doctemplate($type)]);
+    $mform->set_data(['id' => $cm->id, 'type' => $type, 'content' => these_get_doctemplate($these->id, $type)]);
     if ($data = $mform->get_data()) {
         if (!empty($data->previewbutton)) {
             // Aperçu du modèle en cours de modification, sans l'enregistrer.
             send_file(
-                these_render_doctemplate($type, these_sample_document_context(), $data->content),
+                these_render_doctemplate($these, $type, these_sample_document_context($context, $these), $data->content),
                 $type . '.pdf',
                 0,
                 0,
@@ -97,7 +106,7 @@ if ($type !== '') {
                 'application/pdf'
             );
         }
-        these_set_doctemplate($type, $data->content);
+        these_set_doctemplate($these->id, $type, $data->content);
         redirect(
             $listurl,
             get_string('doctplsaved', 'mod_these', these_doctemplate_label($type)),
@@ -108,6 +117,7 @@ if ($type !== '') {
 
     echo $OUTPUT->header();
     echo $OUTPUT->heading(get_string('doctemplates', 'mod_these') . ' : ' . these_doctemplate_label($type));
+    echo these_render_navlinks($cm, $context);
     echo html_writer::link($listurl, get_string('back'));
     echo html_writer::div(get_string('doctplintro', 'mod_these'), 'my-3');
     $mform->display();
@@ -116,7 +126,7 @@ if ($type !== '') {
     $table = new html_table();
     $table->head = [get_string('doctplvariable', 'mod_these'), get_string('doctplexample', 'mod_these')];
     $table->attributes['class'] = 'generaltable table-sm';
-    foreach (these_doctemplate_variables(these_sample_document_context()) as $name => $example) {
+    foreach (these_doctemplate_variables(these_sample_document_context($context, $these)) as $name => $example) {
         $table->data[] = [html_writer::tag('code', '{{' . s($name) . '}}'), s($example)];
     }
     echo $OUTPUT->heading(get_string('doctplvariables', 'mod_these'), 3, 'mt-4');
@@ -126,17 +136,33 @@ if ($type !== '') {
     exit;
 }
 
+// Images des modèles.
+$imageoptions = ['subdirs' => 0, 'maxfiles' => 20, 'accepted_types' => ['.png', '.jpg', '.jpeg']];
+$imagesform = new doctemplate_images_form($listurl, ['options' => $imageoptions]);
+$draftitemid = file_get_submitted_draft_itemid('docimages');
+file_prepare_draft_area($draftitemid, $context->id, 'mod_these', 'docimages', 0, $imageoptions);
+$imagesform->set_data(['id' => $cm->id, 'docimages' => $draftitemid]);
+if ($data = $imagesform->get_data()) {
+    file_save_draft_area_files($data->docimages, $context->id, 'mod_these', 'docimages', 0, $imageoptions);
+    redirect($listurl, get_string('changessaved'), null, \core\output\notification::NOTIFY_SUCCESS);
+}
+
 // Liste des modèles.
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('doctemplates', 'mod_these'));
+echo these_render_navlinks($cm, $context);
 echo html_writer::div(get_string('doctemplates_desc', 'mod_these'), 'mb-3');
 $table = new html_table();
 $table->head = [get_string('doctpldocument', 'mod_these'), get_string('status'), get_string('actions')];
 $table->attributes['class'] = 'generaltable';
 foreach (array_keys($types) as $key) {
-    $customised = these_doctemplate_customised($key);
+    $customised = these_doctemplate_customised($these->id, $key);
     $actions = [
-        html_writer::link(new moodle_url($listurl, ['type' => $key]), get_string('edit'), ['class' => 'btn btn-sm btn-primary']),
+        html_writer::link(
+            new moodle_url($listurl, ['type' => $key]),
+            get_string('edit'),
+            ['class' => 'btn btn-sm btn-primary']
+        ),
         html_writer::link(
             new moodle_url($listurl, ['type' => $key, 'action' => 'preview']),
             get_string('doctplpreview', 'mod_these'),
@@ -158,4 +184,6 @@ foreach (array_keys($types) as $key) {
     ];
 }
 echo html_writer::table($table);
+echo $OUTPUT->heading(get_string('doctplimages', 'mod_these'), 3, 'mt-4');
+$imagesform->display();
 echo $OUTPUT->footer();

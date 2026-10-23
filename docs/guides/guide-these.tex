@@ -4,9 +4,9 @@
 
 % Version du guide : à mettre à jour à chaque modification, avec une ligne dans l'historique.
 \newcommand{\titreguide}{Guide de la gestion des thèses}
-\newcommand{\versionguide}{1.2}
+\newcommand{\versionguide}{1.3}
 \newcommand{\dateguide}{23 octobre 2026}
-\newcommand{\versionthese}{0.3.0}
+\newcommand{\versionthese}{0.4.0}
 
 \usepackage{guide-commun}
 \usepackage{tikz}
@@ -31,6 +31,8 @@
 documents de l'établissement remplis et signés dans le module. \\
 1.2 & 23 octobre 2026 & Documents reconstitués dans la mise en forme des
 formulaires officiels ; modèles des documents modifiables dans l'administration. \\
+1.3 & 23 octobre 2026 & Modèles et images des documents propres à chaque
+activité, modifiés par la DEVE. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -186,11 +188,6 @@ directeurs potentiels doivent donc être inscrits au cours.
 Dans la même page d'administration :
 
 \begin{description}
-  \item[Modèles des documents] lien vers la page où se modifie la mise en page
-        de chaque document (voir section~\ref{sec:modeles}).
-  \item[Images des modèles] images supplémentaires, ou remplaçant celles fournies
-        avec le module (logos de la République française, de VetAgro Sup, de
-        Lyon~1, de la BU Lyon~1 et de l'ABES).
   \item[Contrat type de diffusion électronique] le PDF officiel
         (ENS-INI-P308-E04), déposé tel quel. Le module le fait précéder d'une
         page de données et de choix de l'auteur et suivre d'une page de
@@ -326,8 +323,9 @@ qu'il dirige.
 La DEVE voit tous les dossiers : la file \og À traiter\fg{}, le décompte par
 statut (cliquable pour filtrer) et la liste complète avec recherche par
 étudiant, titre ou numéro. La barre de boutons donne accès à la création d'un
-dossier pour le compte d'un étudiant, à l'import, aux courriels et à l'export du
-registre (CSV, Excel, ODS...).
+dossier pour le compte d'un étudiant, à l'import, aux courriels, aux modèles
+des documents (section~\ref{sec:modeles}) et à l'export du registre (CSV,
+Excel, ODS...).
 
 \capture{18_tableau_de_bord_deve}{Tableau de bord de la DEVE.}
 
@@ -460,11 +458,20 @@ Attestation de conformité & Bibliothèque & Bibliothèque \\
 
 \subsection{Modèles des documents}\label{sec:modeles}
 
-La mise en page de chaque document est un \textbf{modèle modifiable} :
-\chemin{Administration du site > Plugins > Modules d'activité > Gestion des
-thèses > Modèles des documents}. La page liste les documents, indique ceux
-dont le modèle a été modifié et propose pour chacun \bouton{Modifier},
-\bouton{Aperçu PDF} et, s'il a été modifié, \bouton{Rétablir l'origine}.
+La mise en page de chaque document est un \textbf{modèle modifiable par la DEVE
+dans l'activité}, comme les courriels : bouton \bouton{Modèles des documents}
+de la barre de navigation. Chaque activité a ses propres modèles ; une activité
+nouvelle (ou restaurée sans eux) part des modèles d'origine, et la sauvegarde de
+l'activité emporte ses modèles et ses images. La page liste les documents,
+indique ceux dont le modèle a été modifié et propose pour chacun
+\bouton{Modifier}, \bouton{Aperçu PDF} et, s'il a été modifié,
+\bouton{Rétablir l'origine}.
+
+Sous la liste, \bouton{Images des modèles} reçoit des images supplémentaires,
+appelées dans les modèles par \var{img.nom} (nom du fichier en minuscules, sans
+extension), ou remplaçant celles fournies avec le module sous le même nom :
+\texttt{marianne}, \texttt{vetagrosup}, \texttt{lyon1}, \texttt{bulyon1},
+\texttt{abes}.
 
 \capture[0.85\linewidth]{43_modeles_documents}{Liste des modèles des documents.}
 

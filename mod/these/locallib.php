@@ -1899,13 +1899,13 @@ function these_generate_documents(stdClass $these, context $context, stdClass $d
 
     $data = these_document_context($these, $context, $dossier, null);
     $documents = [];
-    $documents[these_document_filename('convocation-etudiant')] = these_render_doctemplate('convocation', $data);
+    $documents[these_document_filename('convocation-etudiant')] = these_render_doctemplate($these, 'convocation', $data);
     foreach (these_get_jury($dossier->id) as $index => $member) {
         $documents[these_document_filename('convocation-jury-' . ($index + 1), $member->fullname)] =
-            these_render_doctemplate('convocation', these_document_context($these, $context, $dossier, null, $member));
+            these_render_doctemplate($these, 'convocation', these_document_context($these, $context, $dossier, null, $member));
     }
-    $documents[these_document_filename('feuille-de-jury')] = these_render_doctemplate('jurysheet', $data);
-    $documents[these_document_filename('proces-verbal')] = these_render_doctemplate('minutes', $data);
+    $documents[these_document_filename('feuille-de-jury')] = these_render_doctemplate($these, 'jurysheet', $data);
+    $documents[these_document_filename('proces-verbal')] = these_render_doctemplate($these, 'minutes', $data);
     // Documents de l'établissement, dans leur état de signature à la génération.
     foreach (array_keys(these_document_definitions()) as $doctype) {
         if (these_document_available($dossier, $doctype)) {
@@ -2169,6 +2169,7 @@ function these_render_navlinks(stdClass $cm, context $context) {
         $links[get_string('createdossier', 'mod_these')] = new moodle_url('/mod/these/create.php', ['id' => $cm->id]);
         $links[get_string('importdossiers', 'mod_these')] = new moodle_url('/mod/these/import.php', ['id' => $cm->id]);
         $links[get_string('notifications', 'mod_these')] = new moodle_url('/mod/these/notifications.php', ['id' => $cm->id]);
+        $links[get_string('doctemplates', 'mod_these')] = new moodle_url('/mod/these/doctemplates.php', ['id' => $cm->id]);
     }
     if ($rights->viewall) {
         $links[get_string('export', 'mod_these')] = new moodle_url('/mod/these/export.php', ['id' => $cm->id]);
@@ -3498,43 +3499,67 @@ function these_doctemplate_default($type) {
 }
 
 /**
- * Modèle en vigueur d'un document : celui modifié par l'administrateur, sinon celui d'origine.
+ * Modèle en vigueur d'un document dans une activité : celui modifié par la DEVE, sinon celui
+ * d'origine.
  *
+ * @param int $theseid
  * @param string $type
  * @return string
  */
-function these_get_doctemplate($type) {
-    $custom = get_config('mod_these', 'doctpl_' . $type);
+function these_get_doctemplate($theseid, $type) {
+    global $DB;
+
+    $custom = $DB->get_field('these_doctemplate', 'content', ['theseid' => $theseid, 'doctype' => $type]);
     return is_string($custom) && trim($custom) !== '' ? $custom : these_doctemplate_default($type);
 }
 
 /**
- * Le modèle d'un document a-t-il été modifié ?
+ * Le modèle d'un document a-t-il été modifié dans l'activité ?
  *
+ * @param int $theseid
  * @param string $type
  * @return bool
  */
-function these_doctemplate_customised($type) {
-    $custom = get_config('mod_these', 'doctpl_' . $type);
-    return is_string($custom) && trim($custom) !== '';
+function these_doctemplate_customised($theseid, $type) {
+    global $DB;
+
+    return $DB->record_exists('these_doctemplate', ['theseid' => $theseid, 'doctype' => $type]);
 }
 
 /**
- * Enregistre le modèle d'un document ; null, ou le modèle d'origine, rétablit celui-ci.
+ * Enregistre le modèle d'un document de l'activité ; null, ou le modèle d'origine, rétablit
+ * celui-ci.
  *
+ * @param int $theseid
  * @param string $type
  * @param string|null $content
  * @return void
  */
-function these_set_doctemplate($type, $content) {
+function these_set_doctemplate($theseid, $type, $content) {
+    global $DB;
+
     $normalise = function ($text) {
         return trim(str_replace("\r\n", "\n", (string) $text));
     };
+    $existing = $DB->get_record('these_doctemplate', ['theseid' => $theseid, 'doctype' => $type]);
     if ($content === null || $normalise($content) === $normalise(these_doctemplate_default($type))) {
-        unset_config('doctpl_' . $type, 'mod_these');
+        if ($existing) {
+            $DB->delete_records('these_doctemplate', ['id' => $existing->id]);
+        }
         return;
     }
-    set_config('doctpl_' . $type, str_replace("\r\n", "\n", $content), 'mod_these');
+    $record = (object) [
+        'theseid' => $theseid,
+        'doctype' => $type,
+        'content' => str_replace("\r\n", "\n", $content),
+        'timemodified' => time(),
+    ];
+    if ($existing) {
+        $record->id = $existing->id;
+        $DB->update_record('these_doctemplate', $record);
+    } else {
+        $DB->insert_record('these_doctemplate', $record);
+    }
 }
 
 /**
@@ -3549,21 +3574,24 @@ function these_doctemplate_image_name($filename) {
 
 /**
  * Images utilisables dans les modèles : celles fournies avec le module (doctemplates/images/),
- * remplacées ou complétées par celles déposées dans la page d'administration.
+ * remplacées ou complétées par celles déposées par la DEVE dans l'activité.
  *
+ * @param context|null $context Contexte de l'activité (null : images du module seules).
  * @return array nom => source pour TCPDF ('@' suivi du contenu en base64)
  */
-function these_doctemplate_images() {
+function these_doctemplate_images(?context $context) {
     global $CFG;
 
     $images = [];
     foreach (glob($CFG->dirroot . '/mod/these/doctemplates/images/*.{png,jpg,jpeg}', GLOB_BRACE) ?: [] as $path) {
         $images[these_doctemplate_image_name($path)] = '@' . base64_encode(file_get_contents($path));
     }
-    $fs = get_file_storage();
-    foreach ($fs->get_area_files(context_system::instance()->id, 'mod_these', 'docimages', 0, 'filename', false) as $file) {
-        if (in_array($file->get_mimetype(), ['image/png', 'image/jpeg'], true)) {
-            $images[these_doctemplate_image_name($file->get_filename())] = '@' . base64_encode($file->get_content());
+    if ($context) {
+        $fs = get_file_storage();
+        foreach ($fs->get_area_files($context->id, 'mod_these', 'docimages', 0, 'filename', false) as $file) {
+            if (in_array($file->get_mimetype(), ['image/png', 'image/jpeg'], true)) {
+                $images[these_doctemplate_image_name($file->get_filename())] = '@' . base64_encode($file->get_content());
+            }
         }
     }
     return $images;
@@ -3602,6 +3630,7 @@ function these_document_sources(stdClass $these, context $context, stdClass $dos
         'jury' => these_get_jury($dossier->id),
         'signatures' => $signatures,
         'recipient' => null,
+        'context' => $context,
     ];
 }
 
@@ -3648,7 +3677,7 @@ function these_doctemplate_text($text) {
  * contiennent du HTML à insérer par {{{...}}}. La liste complète, avec un exemple de valeur, est
  * présentée dans la page de modification d'un modèle.
  *
- * @param array $src {these, dossier, student, director, jury, signatures, recipient}, voir
+ * @param array $src {these, dossier, student, director, jury, signatures, recipient, context}, voir
  *                   these_document_sources().
  * @return array
  */
@@ -4003,21 +4032,22 @@ function these_build_document_context(array $src) {
         'sigdate' => $sigdate,
         'signer' => $signer,
         'signed' => $signed,
-        'img' => these_doctemplate_images(),
+        'img' => these_doctemplate_images($src['context'] ?? null),
     ];
 }
 
 /**
  * Produit le PDF d'un modèle de document.
  *
+ * @param stdClass $these Activité, dont le modèle est utilisé.
  * @param string $type Voir these_doctemplate_types().
  * @param array $data Voir these_build_document_context().
  * @param string|null $template Modèle à utiliser à la place de celui en vigueur (aperçu).
  * @return string Contenu PDF.
  */
-function these_render_doctemplate($type, array $data, $template = null) {
+function these_render_doctemplate(stdClass $these, $type, array $data, $template = null) {
     return \mod_these\pdf\html_document::render(
-        $template ?? these_get_doctemplate($type),
+        $template ?? these_get_doctemplate($these->id, $type),
         $data,
         these_doctemplate_label($type)
     );
@@ -4038,7 +4068,7 @@ function these_signed_document_pdf(stdClass $these, context $context, stdClass $
     }
     $data = these_document_context($these, $context, $dossier, $doctype);
     if ($doctype !== 'contract') {
-        return these_render_doctemplate($doctype, $data);
+        return these_render_doctemplate($these, $doctype, $data);
     }
 
     // Contrat de diffusion, comme les conventions de mod_stage : page de données et de choix,
@@ -4047,9 +4077,9 @@ function these_signed_document_pdf(stdClass $these, context $context, stdClass $
     if ($template !== null) {
         try {
             return these_merge_pdfs([
-                these_render_doctemplate('contractdata', $data),
+                these_render_doctemplate($these, 'contractdata', $data),
                 $template,
-                these_render_doctemplate('contractsign', $data),
+                these_render_doctemplate($these, 'contractsign', $data),
             ]);
         } catch (\Throwable $e) {
             // Contrat type illisible par l'analyseur libre de FPDI (certaines compressions récentes) :
@@ -4058,19 +4088,24 @@ function these_signed_document_pdf(stdClass $these, context $context, stdClass $
         }
     }
     $data['contract']['templatemissing'] = true;
-    return these_merge_pdfs([these_render_doctemplate('contractdata', $data), these_render_doctemplate('contractsign', $data)]);
+    return these_merge_pdfs([
+        these_render_doctemplate($these, 'contractdata', $data),
+        these_render_doctemplate($these, 'contractsign', $data),
+    ]);
 }
 
 /**
  * Vérifie qu'un modèle produit un document avec les données d'exemple.
  *
+ * @param stdClass $these
+ * @param context $context Contexte de l'activité (images).
  * @param string $type
  * @param string $content
  * @return string|null Message d'erreur, ou null si le modèle est utilisable.
  */
-function these_doctemplate_error($type, $content) {
+function these_doctemplate_error(stdClass $these, context $context, $type, $content) {
     try {
-        these_render_doctemplate($type, these_sample_document_context(), $content);
+        these_render_doctemplate($these, $type, these_sample_document_context($context, $these), $content);
     } catch (\Throwable $e) {
         return get_string('doctplerror', 'mod_these', $e->getMessage());
     }
@@ -4078,14 +4113,15 @@ function these_doctemplate_error($type, $content) {
 }
 
 /**
- * Données fictives pour l'aperçu d'un modèle dans la page d'administration : un dossier complet,
- * signé à tous les emplacements.
+ * Données fictives pour l'aperçu d'un modèle : un dossier complet, signé à tous les emplacements.
  *
+ * @param context|null $context Contexte de l'activité (images déposées par la DEVE).
+ * @param stdClass|null $activity Activité dont reprendre l'établissement (sinon des valeurs fictives).
  * @return array Voir these_build_document_context().
  */
-function these_sample_document_context() {
+function these_sample_document_context(?context $context = null, ?stdClass $activity = null) {
     $now = time();
-    $these = (object) [
+    $these = $activity ?? (object) [
         'establishmentname' => 'VetAgro Sup', 'establishmentaddress' => "1 avenue Bourgelat\n69280 Marcy-l'Étoile",
         'establishmentcity' => "Marcy-l'Étoile", 'signatoryname' => 'Hélène AGUESSE',
         'signatorytitle' => 'Directrice des Études et de la Vie Étudiante',
@@ -4153,6 +4189,7 @@ function these_sample_document_context() {
         'jury' => $jury,
         'signatures' => $signatures,
         'recipient' => null,
+        'context' => $context,
     ]);
 }
 

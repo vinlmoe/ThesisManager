@@ -51,6 +51,9 @@ class backup_these_activity_structure_step extends backup_activity_structure_ste
         $emailtemplates = new backup_nested_element('emailtemplates');
         $emailtemplate = new backup_nested_element('emailtemplate', ['id'], ['emailkey', 'subject', 'body', 'timemodified']);
 
+        $doctemplates = new backup_nested_element('doctemplates');
+        $doctemplate = new backup_nested_element('doctemplate', ['id'], ['doctype', 'content', 'timemodified']);
+
         $dossiers = new backup_nested_element('dossiers');
         $dossier = new backup_nested_element('dossier', ['id'], [
             'userid', 'status', 'statustime', 'title', 'titleen', 'summary', 'keywords',
@@ -83,6 +86,8 @@ class backup_these_activity_structure_step extends backup_activity_structure_ste
 
         $these->add_child($emailtemplates);
         $emailtemplates->add_child($emailtemplate);
+        $these->add_child($doctemplates);
+        $doctemplates->add_child($doctemplate);
         $these->add_child($dossiers);
         $dossiers->add_child($dossier);
         $dossier->add_child($jurymembers);
@@ -94,6 +99,7 @@ class backup_these_activity_structure_step extends backup_activity_structure_ste
 
         $these->set_source_table('these', ['id' => backup::VAR_ACTIVITYID]);
         $emailtemplate->set_source_table('these_email_template', ['theseid' => backup::VAR_PARENTID], 'id ASC');
+        $doctemplate->set_source_table('these_doctemplate', ['theseid' => backup::VAR_PARENTID], 'id ASC');
 
         if ($userinfo) {
             $dossier->set_source_table('these_dossier', ['theseid' => backup::VAR_PARENTID], 'id ASC');
@@ -110,6 +116,7 @@ class backup_these_activity_structure_step extends backup_activity_structure_ste
         $signature->annotate_files('mod_these', 'signature', 'id');
 
         $these->annotate_files('mod_these', 'intro', null);
+        $these->annotate_files('mod_these', 'docimages', null);
         foreach (THESE_FILEAREAS as $filearea) {
             $dossier->annotate_files('mod_these', $filearea, 'id');
         }

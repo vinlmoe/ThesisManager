@@ -474,11 +474,10 @@ $string['settingsdocuments'] = 'Documents and signatories';
 $string['settingsdocuments_desc'] = 'Header and signatories of the institution documents produced by the module. Signatories without '
     . 'a Moodle account (general management, CCEM, university presidency) receive a signing link by email if their address is set; '
     . 'otherwise the registrar collects their signature in person.';
-$string['settingsdoctemplates_desc'] = 'The layout of each document is edited in <a href="{$a}">Document templates</a>.';
-$string['settingsdocimages'] = 'Template images';
-$string['settingsdocimages_desc'] = 'Images (PNG or JPEG) usable in the document templates as {{img.name}}, name being the file name in '
+$string['doctplimages'] = 'Template images';
+$string['doctplimages_help'] = 'Images (PNG or JPEG) usable in the document templates as {{img.name}}, name being the file name in '
     . 'lower case, without extension or special characters. An image with the same name as one provided with the module '
-    . '(marianne, vetagrosup, lyon1, bulyon1, abes) replaces it.';
+    . '(marianne, vetagrosup, lyon1, bulyon1, abes) replaces it in the documents of this activity.';
 $string['settingsdevename'] = 'Head of studies: name';
 $string['settingsdevename_desc'] = 'Name of the head of studies and student life (agreement form).';
 $string['settingsdevetitle'] = 'Head of studies: title';
@@ -720,7 +719,7 @@ $string['directorfunction_help'] = 'Position printed in the scientific approval:
 
 // Document templates.
 $string['doctemplates'] = 'Document templates';
-$string['doctemplates_desc'] = 'Each document produced by the module is built from a template: HTML in which the record data are '
+$string['doctemplates_desc'] = 'Each document produced by this activity is built from a template: HTML in which the record data are '
     . 'inserted with {{...}} tags. The original templates reproduce the institution forms; a modified template can be restored to '
     . 'its original at any time. Documents already produced do not change.';
 $string['doctpldocument'] = 'Document';

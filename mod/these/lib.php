@@ -159,6 +159,7 @@ function these_delete_instance($id) {
     // Moodle, qui supprime le contexte du module et ses zones de fichiers juste après.
     these_delete_dossiers($DB->get_fieldset_select('these_dossier', 'id', 'theseid = ?', [$id]));
     $DB->delete_records('these_email_template', ['theseid' => $id]);
+    $DB->delete_records('these_doctemplate', ['theseid' => $id]);
     $DB->delete_records('these', ['id' => $id]);
 
     return true;
