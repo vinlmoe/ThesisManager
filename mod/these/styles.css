@@ -1,0 +1,57 @@
+.these-navlinks a {
+    margin-right: 0.5rem;
+}
+
+/* Frise de progression d'un dossier dans le circuit. */
+.these-progress {
+    display: flex;
+    flex-wrap: wrap;
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1rem 0;
+    gap: 0.4rem;
+}
+.these-progress .these-step {
+    border-radius: 0.3rem;
+    padding: 0.35rem 0.6rem;
+    font-size: 0.85rem;
+    border: 1px solid #dee2e6;
+    background-color: #f8f9fa;
+    color: #6c757d;
+    display: flex;
+    flex-direction: column;
+    min-width: 8.5rem;
+}
+.these-progress .these-step-done {
+    background-color: #e6f4ea;
+    border-color: #a8d5b5;
+    color: #1e6b34;
+}
+.these-progress .these-step-current {
+    background-color: #e7f1fb;
+    border-color: #0f6cbf;
+    color: #0f6cbf;
+    font-weight: bold;
+}
+.these-progress .these-step-actor {
+    font-size: 0.75rem;
+    font-weight: normal;
+    opacity: 0.8;
+}
+.these-progress .these-step-separator {
+    align-self: center;
+    font-size: 0.75rem;
+    font-style: italic;
+    color: #6c757d;
+    padding: 0 0.4rem;
+}
+
+.these-detail td:first-child {
+    width: 16rem;
+}
+.these-email-default {
+    white-space: pre-wrap;
+    font-size: 0.85rem;
+    background-color: #f8f9fa;
+    padding: 0.5rem;
+}

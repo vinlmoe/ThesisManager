@@ -1,0 +1,152 @@
+<?php
+// This file is part of Moodle - http://moodle.org/
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * Étapes de validation du circuit (voir these_review_steps()) : validation ou renvoi du sujet par
+ * le directeur, enregistrement par la DEVE puis par la bibliothèque ; validation de la soutenance
+ * et dépôt du rapport par le directeur, validation du dossier complet par la DEVE, attestation de
+ * conformité par la bibliothèque.
+ *
+ * L'étape traitée est déterminée par le statut du dossier : la page refuse l'accès à quiconque
+ * n'est pas l'acteur attendu à cette étape.
+ *
+ * @package   mod_these
+ * @copyright 2026 Sébastien Lefebvre
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+require(__DIR__ . '/../../config.php');
+require_once($CFG->dirroot . '/mod/these/locallib.php');
+
+use mod_these\form\review_form;
+
+$id = required_param('id', PARAM_INT);
+$dossierid = required_param('dossierid', PARAM_INT);
+
+$cm = get_coursemodule_from_id('these', $id, 0, false, MUST_EXIST);
+$course = get_course($cm->course);
+$these = $DB->get_record('these', ['id' => $cm->instance], '*', MUST_EXIST);
+
+require_login($course, true, $cm);
+$context = context_module::instance($cm->id);
+require_capability('mod/these:view', $context);
+
+$dossier = $DB->get_record('these_dossier', ['id' => $dossierid, 'theseid' => $these->id], '*', MUST_EXIST);
+$rights = these_get_rights($context, $dossier, $USER->id);
+$dossierurl = new moodle_url('/mod/these/dossier.php', ['id' => $cm->id, 'dossierid' => $dossier->id]);
+
+$steps = these_review_steps();
+$step = $steps[(int) $dossier->status] ?? null;
+if ($step === null) {
+    redirect($dossierurl, get_string('nostepwaiting', 'mod_these'), null, \core\output\notification::NOTIFY_INFO);
+}
+if (empty($rights->{$step['actor']})) {
+    throw new moodle_exception('notyourstep', 'mod_these', $dossierurl);
+}
+
+$PAGE->set_url('/mod/these/review.php', ['id' => $cm->id, 'dossierid' => $dossier->id]);
+$PAGE->set_title(format_string($these->name) . ' - ' . get_string('review' . $step['key'], 'mod_these'));
+$PAGE->set_heading(format_string($course->fullname));
+$PAGE->set_context($context);
+
+$jury = these_get_jury($dossier->id);
+$mform = new review_form($PAGE->url, [
+    'stepkey' => $step['key'],
+    'returnto' => $step['returnto'],
+    'theseid' => $these->id,
+    'minjury' => $these->minjury,
+    'jurycount' => count($jury),
+]);
+
+$formdata = (object) ['id' => $cm->id, 'dossierid' => $dossier->id];
+switch ($step['key']) {
+    case 'devesubject':
+        $formdata->devenumber = $dossier->devenumber ?: these_suggest_devenumber($these->id);
+        break;
+    case 'librarysubject':
+        $formdata->libraryref = $dossier->libraryref;
+        break;
+    case 'directordefense':
+        $draftitemid = file_get_submitted_draft_itemid('directorreport');
+        file_prepare_draft_area(
+            $draftitemid,
+            $context->id,
+            'mod_these',
+            'directorreport',
+            $dossier->id,
+            these_filemanager_options('directorreport')
+        );
+        $formdata->directorreport = $draftitemid;
+        break;
+    case 'devedefense':
+        $formdata->defensedate = $dossier->defensedate ?: $dossier->proposeddate;
+        $formdata->defenselocation = $dossier->defenselocation;
+        $formdata = (object) array_merge((array) $formdata, these_jury_form_data($jury));
+        break;
+}
+$mform->set_data($formdata);
+
+if ($mform->is_cancelled()) {
+    redirect($dossierurl);
+} else if ($data = $mform->get_data()) {
+    $remark = trim((string) $data->remark);
+    if (!empty($data->returndossier)) {
+        these_return_dossier($these, $cm, $dossier, $USER->id, $data->returntarget, $remark);
+        redirect(
+            $dossierurl,
+            get_string('dossierreturned', 'mod_these', these_actor_label($data->returntarget)),
+            null,
+            \core\output\notification::NOTIFY_SUCCESS
+        );
+    }
+
+    $fields = [];
+    switch ($step['key']) {
+        case 'devesubject':
+            $fields['devenumber'] = trim($data->devenumber);
+            break;
+        case 'librarysubject':
+            $fields['libraryref'] = trim($data->libraryref);
+            break;
+        case 'directordefense':
+            file_save_draft_area_files(
+                $data->directorreport,
+                $context->id,
+                'mod_these',
+                'directorreport',
+                $dossier->id,
+                these_filemanager_options('directorreport')
+            );
+            break;
+        case 'devedefense':
+            $fields['defensedate'] = (int) $data->defensedate;
+            $fields['defenselocation'] = trim($data->defenselocation);
+            these_save_jury($dossier->id, these_extract_submitted_jury($data));
+            break;
+    }
+    these_validate_step($these, $cm, $dossier, $USER->id, $fields, $remark);
+    redirect($dossierurl, get_string('stepvalidated', 'mod_these'), null, \core\output\notification::NOTIFY_SUCCESS);
+}
+
+$student = $DB->get_record('user', ['id' => $dossier->userid]);
+
+echo $OUTPUT->header();
+echo $OUTPUT->heading(get_string('review' . $step['key'], 'mod_these'));
+echo html_writer::link($dossierurl, get_string('back'));
+echo $OUTPUT->box(get_string('dossierof', 'mod_these', $student ? fullname($student) : '-'), 'generalbox mb-3');
+$mform->display();
+echo these_render_dossier($these, $cm, $context, $dossier, $rights, false);
+echo $OUTPUT->footer();

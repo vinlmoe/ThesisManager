@@ -1,0 +1,130 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  style:
+    name: Style Moodle
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          tools: composer
+          coverage: none
+
+      - name: Install Moodle coding standard
+        run: |
+          composer global config --no-plugins allow-plugins.dealerdirect/phpcodesniffer-composer-installer true
+          composer global require --no-interaction moodlehq/moodle-cs
+          echo "$(composer global config bin-dir --absolute)" >> "$GITHUB_PATH"
+
+      - name: Run phpcs
+        run: phpcs --standard=phpcs.xml -p
+
+  moodle:
+    name: Moodle checks and PHPUnit
+    runs-on: ubuntu-24.04
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: pgsql, pdo_pgsql, gd, intl, mbstring, soap, zip
+          ini-values: max_input_vars=5000, opcache.enable_cli=1
+          tools: composer
+          coverage: none
+
+      - name: Install moodle-plugin-ci
+        run: |
+          composer create-project --no-interaction --no-dev --prefer-dist moodlehq/moodle-plugin-ci ci ^4
+          echo "${GITHUB_WORKSPACE}/ci/bin" >> "$GITHUB_PATH"
+          echo "${GITHUB_WORKSPACE}/ci/vendor/bin" >> "$GITHUB_PATH"
+          echo "NVM_DIR=${HOME}/.nvm" >> "$GITHUB_ENV"
+          sudo locale-gen en_AU.UTF-8
+
+      - name: Install Moodle
+        id: moodle_install
+        run: |
+          moodle-plugin-ci install \
+            --moodle=moodle \
+            --branch=MOODLE_405_STABLE \
+            --db-type=pgsql \
+            --db-host=127.0.0.1 \
+            --db-name=moodle \
+            --db-user=postgres \
+            --plugin=mod/these
+
+      - name: PHP lint
+        if: ${{ !cancelled() && steps.moodle_install.outcome == 'success' }}
+        run: |
+          check_status=0
+          moodle-plugin-ci phplint mod/these || check_status=1
+          exit "$check_status"
+
+      - name: Plugin validation
+        if: ${{ !cancelled() && steps.moodle_install.outcome == 'success' }}
+        run: |
+          check_status=0
+          moodle-plugin-ci validate mod/these || check_status=1
+          exit "$check_status"
+
+      - name: Upgrade savepoints
+        if: ${{ !cancelled() && steps.moodle_install.outcome == 'success' }}
+        run: |
+          check_status=0
+          moodle-plugin-ci savepoints mod/these || check_status=1
+          exit "$check_status"
+
+      - name: PHPDoc for mod_these
+        if: ${{ !cancelled() && steps.moodle_install.outcome == 'success' }}
+        continue-on-error: true
+        run: moodle-plugin-ci phpdoc --max-warnings=0 mod/these
+
+      - name: Mustache templates
+        if: ${{ !cancelled() && steps.moodle_install.outcome == 'success' }}
+        run: |
+          check_status=0
+          moodle-plugin-ci mustache mod/these || check_status=1
+          exit "$check_status"
+
+      - name: PHPUnit
+        if: ${{ !cancelled() && steps.moodle_install.outcome == 'success' }}
+        run: |
+          check_status=0
+          moodle-plugin-ci phpunit mod/these || check_status=1
+          exit "$check_status"

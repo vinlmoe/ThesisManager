@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="mod/these/db" VERSION="20261023" COMMENT="XMLDB file for module mod_these"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
+>
+  <TABLES>
+    <TABLE NAME="these" COMMENT="Instance de l'activité Gestion des thèses vétérinaires">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="course" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="intro" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="introformat" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="establishmentname" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"
+            COMMENT="Nom de l'établissement, en tête des documents générés"/>
+        <FIELD NAME="establishmentaddress" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="establishmentcity" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"
+            COMMENT="Ville utilisée dans la mention « Fait à » des documents générés"/>
+        <FIELD NAME="signatoryname" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"
+            COMMENT="Signataire des convocations (directeur de l'établissement ou son délégataire)"/>
+        <FIELD NAME="signatorytitle" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="defaultlocation" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"
+            COMMENT="Lieu de soutenance proposé par défaut à l'étudiant"/>
+        <FIELD NAME="minjury" TYPE="int" LENGTH="3" NOTNULL="true" DEFAULT="3" SEQUENCE="false"
+            COMMENT="Nombre minimal de membres votants du jury (président compris)"/>
+        <FIELD NAME="deveemail" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"
+            COMMENT="Boîte de service de la DEVE ; vide : notifier chaque utilisateur DEVE inscrit"/>
+        <FIELD NAME="libraryemail" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"
+            COMMENT="Boîte de service de la bibliothèque ; vide : notifier chaque utilisateur bibliothèque inscrit"/>
+        <FIELD NAME="universityemail" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"
+            COMMENT="Destinataire universitaire des documents de soutenance (facultatif)"/>
+        <FIELD NAME="reminderdays" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="14" SEQUENCE="false"
+            COMMENT="Délai en jours avant relance d'un acteur dont une étape est en attente ; 0 : pas de relance"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="course" TYPE="foreign" FIELDS="course" REFTABLE="course" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+
+    <TABLE NAME="these_dossier" COMMENT="Dossier de thèse d'un étudiant : sujet, soutenance et état du circuit">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="theseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Étudiant"/>
+        <FIELD NAME="status" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
+            COMMENT="Voir les constantes THESE_STATUS_* de lib.php"/>
+        <FIELD NAME="statustime" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
+            COMMENT="Date d'entrée dans le statut courant (délais d'attente et relances)"/>
+        <FIELD NAME="title" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="titleen" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Titre en anglais"/>
+        <FIELD NAME="summary" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="keywords" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="directorid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="codirectorname" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"
+            COMMENT="Co-directeur éventuel, en texte libre (il peut être extérieur à l'établissement)"/>
+        <FIELD NAME="devenumber" TYPE="char" LENGTH="50" NOTNULL="false" SEQUENCE="false"
+            COMMENT="Numéro d'enregistrement attribué par la DEVE"/>
+        <FIELD NAME="libraryref" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"
+            COMMENT="Référence de la notice bibliographique du sujet"/>
+        <FIELD NAME="proposeddate" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
+            COMMENT="Date de soutenance proposée par l'étudiant"/>
+        <FIELD NAME="defensedate" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
+            COMMENT="Date de soutenance retenue par la DEVE"/>
+        <FIELD NAME="defenselocation" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="defenseresult" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
+            COMMENT="Voir les constantes THESE_RESULT_*"/>
+        <FIELD NAME="mention" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="returnstatus" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
+            COMMENT="Statut repris à la nouvelle soumission d'un dossier renvoyé à l'étudiant"/>
+        <FIELD NAME="returncomment" TYPE="text" NOTNULL="false" SEQUENCE="false"
+            COMMENT="Motif du dernier renvoi, affiché à son destinataire"/>
+        <FIELD NAME="returnedby" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="returntime" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="cancelledfromstatus" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
+            COMMENT="Statut restauré à la réouverture d'un dossier abandonné"/>
+        <FIELD NAME="documentstime" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
+            COMMENT="Dernière génération des documents de soutenance"/>
+        <FIELD NAME="senttime" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
+            COMMENT="Dernière transmission des documents au jury et à l'université"/>
+        <FIELD NAME="remindertime" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
+            COMMENT="Dernière relance envoyée pour le statut courant"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="theseid" TYPE="foreign" FIELDS="theseid" REFTABLE="these" REFFIELDS="id"/>
+        <KEY NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="theseid_userid" UNIQUE="true" FIELDS="theseid, userid"/>
+        <INDEX NAME="status" UNIQUE="false" FIELDS="status"/>
+        <INDEX NAME="directorid" UNIQUE="false" FIELDS="directorid"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="these_jury" COMMENT="Membre du jury proposé ou retenu pour une soutenance (souvent sans compte Moodle)">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="dossierid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="juryrole" TYPE="char" LENGTH="20" NOTNULL="true" SEQUENCE="false"
+            COMMENT="president, director, member ou guest"/>
+        <FIELD NAME="fullname" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="jurytitle" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"
+            COMMENT="Titre ou qualité (Professeur, Maître de conférences, Docteur vétérinaire...)"/>
+        <FIELD NAME="institution" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="email" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="sortorder" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="dossierid" TYPE="foreign" FIELDS="dossierid" REFTABLE="these_dossier" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+
+    <TABLE NAME="these_log" COMMENT="Historique du circuit d'un dossier : qui a fait quoi, quand, avec quel commentaire">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="dossierid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
+            COMMENT="Auteur de l'action ; 0 pour une action du système (tâche planifiée)"/>
+        <FIELD NAME="logaction" TYPE="char" LENGTH="40" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="fromstatus" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="tostatus" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="remark" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="dossierid" TYPE="foreign" FIELDS="dossierid" REFTABLE="these_dossier" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+
+    <TABLE NAME="these_email_template" COMMENT="Texte de courriel personnalisé par la DEVE pour une instance">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="theseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="emailkey" TYPE="char" LENGTH="40" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="subject" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="body" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="theseid" TYPE="foreign" FIELDS="theseid" REFTABLE="these" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="theseid_emailkey" UNIQUE="true" FIELDS="theseid, emailkey"/>
+      </INDEXES>
+    </TABLE>
+  </TABLES>
+</XMLDB>
