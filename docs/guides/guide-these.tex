@@ -4,9 +4,9 @@
 
 % Version du guide : à mettre à jour à chaque modification, avec une ligne dans l'historique.
 \newcommand{\titreguide}{Guide de la gestion des thèses}
-\newcommand{\versionguide}{1.1}
+\newcommand{\versionguide}{1.2}
 \newcommand{\dateguide}{23 octobre 2026}
-\newcommand{\versionthese}{0.2.0}
+\newcommand{\versionthese}{0.3.0}
 
 \usepackage{guide-commun}
 \usepackage{tikz}
@@ -29,6 +29,8 @@
 1.0 & 23 octobre 2026 & Première version. \\
 1.1 & 23 octobre 2026 & Rôles DEVE et Bibliothèque choisis dans l'administration ;
 documents de l'établissement remplis et signés dans le module. \\
+1.2 & 23 octobre 2026 & Documents reconstitués dans la mise en forme des
+formulaires officiels ; modèles des documents modifiables dans l'administration. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -184,8 +186,11 @@ directeurs potentiels doivent donc être inscrits au cours.
 Dans la même page d'administration :
 
 \begin{description}
-  \item[Logos] jusqu'à quatre images imprimées en tête des documents, dans
-        l'ordre de leur nom de fichier.
+  \item[Modèles des documents] lien vers la page où se modifie la mise en page
+        de chaque document (voir section~\ref{sec:modeles}).
+  \item[Images des modèles] images supplémentaires, ou remplaçant celles fournies
+        avec le module (logos de la République française, de VetAgro Sup, de
+        Lyon~1, de la BU Lyon~1 et de l'ABES).
   \item[Contrat type de diffusion électronique] le PDF officiel
         (ENS-INI-P308-E04), déposé tel quel. Le module le fait précéder d'une
         page de données et de choix de l'auteur et suivre d'une page de
@@ -193,7 +198,8 @@ Dans la même page d'administration :
   \item[Signataires] direction générale, président du CCEM, présidence de
         l'université : nom et adresse. Avec une adresse, le signataire reçoit un
         lien de signature ; sans adresse, la DEVE recueille sa signature sur place.
-  \item[Textes] établissement, lien HeTOP, lieu du visa.
+  \item[Textes] établissement, lien HeTOP, lieu du visa, nom et qualité de la
+        direction des études (fiche d'agréments).
 \end{description}
 
 \subsection{Organisation recommandée}
@@ -410,27 +416,20 @@ dossier ; l'étudiant et le directeur sont prévenus.
 \section{Documents de l'établissement et signatures}
 
 Les formulaires de l'établissement sont remplis dans le module, au fil du
-circuit. Le PDF produit est \textbf{le formulaire officiel lui-même} (fourni
-dans le module, dossier \texttt{pdftemplates/}), sur lequel les données saisies
-sont écrites à leur emplacement : la mise en page, les logos et les mentions
-sont exactement ceux du document d'origine. Chaque emplacement de signature
-reçoit la signature tracée à l'écran (souris, doigt ou stylet), avec la mention
+circuit, puis produits en PDF \textbf{dans la mise en forme des documents
+d'origine} : chaque formulaire (E01 V9, E02 V8, E03 V8, bordereau ABES 2022,
+rapport, grille 08-2024, conclusions 09-2026) a été reconstitué à l'identique,
+logos, cadres, libellés et cases à cocher compris, et les données du dossier
+viennent s'insérer à leur place. Chaque emplacement de signature reçoit la
+signature tracée à l'écran (souris, doigt ou stylet), avec la mention
 \og Signé électroniquement par \ldots{} le \ldots\fg{} et le début de
 l'empreinte SHA-256 du contenu signé ; un emplacement non signé reste vierge.
 
 Le contrat de diffusion électronique suit le modèle des conventions de stage :
 une page de données et de choix de l'auteur, puis le contrat officiel déposé
 dans les réglages du site, puis une page de signatures. L'attestation de
-conformité de la bibliothèque, qui n'a pas de modèle papier, est produite par
-le module.
-
-\begin{attention}
-Les emplacements des champs sont relevés sur les versions fournies des
-formulaires (E01 V9, E02 V8, E03 V8, bordereau 2022, grille 08-2024,
-conclusions 09-2026). Une nouvelle version d'un formulaire doit remplacer le
-fichier correspondant dans \texttt{pdftemplates/}, et ses emplacements être
-vérifiés dans \texttt{classes/pdf/official\_forms.php}.
-\end{attention}
+conformité de la bibliothèque, les convocations, la feuille de jury et le
+procès-verbal reprennent la même présentation.
 
 \begin{center}
 \small
@@ -457,7 +456,44 @@ Attestation de conformité & Bibliothèque & Bibliothèque \\
 \end{tabularx}
 \end{center}
 
-\capture{42_documents_signes}{Dépôt de sujet et fiche d'agréments remplis et signés sur les formulaires officiels.}
+\capture{42_documents_signes}{Dépôt de sujet et fiche d'agréments remplis et signés, dans la mise en forme des formulaires officiels.}
+
+\subsection{Modèles des documents}\label{sec:modeles}
+
+La mise en page de chaque document est un \textbf{modèle modifiable} :
+\chemin{Administration du site > Plugins > Modules d'activité > Gestion des
+thèses > Modèles des documents}. La page liste les documents, indique ceux
+dont le modèle a été modifié et propose pour chacun \bouton{Modifier},
+\bouton{Aperçu PDF} et, s'il a été modifié, \bouton{Rétablir l'origine}.
+
+\capture[0.85\linewidth]{43_modeles_documents}{Liste des modèles des documents.}
+
+Un modèle est du HTML (tableaux, styles en ligne, images) dans lequel les
+données du dossier s'insèrent par des balises : \var{student.lastname} pour le
+nom de l'étudiant, \var{thesis.title} pour le titre,
+\texttt{\{\{\{box.confidential\}\}\}} pour une case à cocher,
+\texttt{\{\{\{sig.director\}\}\}} pour la signature du directeur, etc. Une
+section \texttt{\{\{\#extdirector.present\}\}\ldots\{\{/extdirector.present\}\}}
+n'apparaît que si la condition est remplie ; appliquée à une liste
+(\texttt{jury}), elle se répète pour chaque élément. La première ligne fixe les
+marges, la police et la taille ; un en-tête et un pied de page répétés sur
+chaque page peuvent être définis. La page de modification présente la liste
+complète des variables, avec un exemple de valeur pour chacune.
+
+\capture{44_modele_edition}{Modification du modèle du dépôt de sujet.}
+
+\bouton{Aperçu PDF} ouvre, dans un nouvel onglet, le document produit avec des
+données fictives (dossier complet, signé à tous les emplacements), sans
+enregistrer. Un modèle qui ne produit pas de document (balise non fermée, par
+exemple) est refusé à l'enregistrement avec le message d'erreur.
+
+\begin{attention}
+Quand l'établissement publie une nouvelle version d'un formulaire, on reporte
+ses changements dans le modèle correspondant. Les documents déjà produits ne
+changent pas ; ceux produits ensuite suivent le nouveau modèle. Modifier un
+modèle n'annule aucune signature : seules les données signées sont couvertes
+par l'empreinte, pas leur mise en page.
+\end{attention}
 
 \subsection{Signer}
 

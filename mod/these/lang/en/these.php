@@ -424,20 +424,6 @@ Subject: {$a->title}
 
 Open the file: {$a->url}';
 
-// PDF documents.
-$string['pdfdoneat'] = 'Done at {$a->city}, on {$a->date}';
-$string['pdfconvocationstudent'] = 'Dear student,
-
-You are invited to the public defence of your veterinary thesis on {$a->date} at {$a->time}, {$a->location}, before the jury below.';
-$string['pdfconvocationjury'] = 'Dear colleague,
-
-You are invited, as {$a->role}, to the jury of the veterinary thesis defence of {$a->student}, on {$a->date} at {$a->time}, {$a->location}.';
-$string['pdfconformitytext'] = 'The library certifies that the thesis manuscript of {$a->student} complies with the presentation standards and legal deposit requirements of the institution, as of {$a->date}.';
-$string['pdfsignature'] = 'Signature';
-$string['pdfsignatures'] = 'Signatures of the jury members';
-$string['pdfdeliberation'] = 'Deliberation';
-$string['pdfminutestext'] = 'After deliberation, the jury declares the thesis of {$a->student}:';
-
 // Tasks and privacy.
 $string['taskreminders'] = 'Reminders for pending thesis files';
 $string['staffactions'] = 'Actions on thesis files';
@@ -488,9 +474,15 @@ $string['settingsdocuments'] = 'Documents and signatories';
 $string['settingsdocuments_desc'] = 'Header and signatories of the institution documents produced by the module. Signatories without '
     . 'a Moodle account (general management, CCEM, university presidency) receive a signing link by email if their address is set; '
     . 'otherwise the registrar collects their signature in person.';
-$string['settingslogo'] = 'Logos';
-$string['settingslogo_desc'] = 'Up to four images (PNG or JPEG), printed from left to right in file name order at the top of the '
-    . 'documents.';
+$string['settingsdoctemplates_desc'] = 'The layout of each document is edited in <a href="{$a}">Document templates</a>.';
+$string['settingsdocimages'] = 'Template images';
+$string['settingsdocimages_desc'] = 'Images (PNG or JPEG) usable in the document templates as {{img.name}}, name being the file name in '
+    . 'lower case, without extension or special characters. An image with the same name as one provided with the module '
+    . '(marianne, vetagrosup, lyon1, bulyon1, abes) replaces it.';
+$string['settingsdevename'] = 'Head of studies: name';
+$string['settingsdevename_desc'] = 'Name of the head of studies and student life (agreement form).';
+$string['settingsdevetitle'] = 'Head of studies: title';
+$string['settingsdevetitle_desc'] = 'Title printed on the agreement form (without article).';
 $string['settingscontracttemplate'] = 'Electronic distribution contract template (PDF)';
 $string['settingscontracttemplate_desc'] = 'The official contract (ENS-INI-P308-E04), as is. The module adds before it a page with the '
     . 'author\'s data and choices, and after it a signature page.';
@@ -712,44 +704,8 @@ To read and sign them: {$a->url}
 This link is personal and valid for one signature only.';
 
 // PDF labels (the documents are official French forms: labels stay close to the originals).
-$string['pdfsignaturepending'] = 'Awaiting signature';
 $string['pdfsignedby'] = 'Electronically signed by {$a->name} on {$a->date} — fingerprint {$a->hash}';
-$string['pdfname'] = 'NAME';
-$string['pdffirstname'] = 'First name';
-$string['pdfthesistitle'] = 'THESIS TITLE';
-$string['pdfdoneatshort'] = '{$a->city}, on {$a->date}';
 $string['pdfreportfavorable'] = 'Favourable opinion for the thesis defence and the award of the Doctor of Veterinary Medicine title.';
-$string['pdfagreementa6'] = 'validated the final year (A6) on:';
-$string['pdfagreementdirectortext'] = 'I, the undersigned {$a}, declare that I have read and corrected the thesis of the student below '
-    . 'and approve its content.';
-$string['pdfagreementmembertext'] = 'I, the undersigned {$a->name}, teacher-researcher at {$a->institution}, declare that I have '
-    . 'corrected the thesis of the student below and certify its form with the compliance grid sent to the registrar.';
-$string['pdfentitled'] = 'Entitled';
-$string['pdfbornon'] = 'Born on';
-$string['pdfcontracttitle'] = 'ELECTRONIC DISTRIBUTION CONTRACT FOR THE VETERINARY THESIS';
-$string['pdfcontractref'] = 'ENS-INI-P308-E04 V7';
-$string['pdfcontractdatapage'] = 'Author data and choices';
-$string['pdfcontractauthor'] = 'The author of the veterinary thesis';
-$string['pdfpersonaladdress'] = 'Personal address';
-$string['pdfdefendedon'] = 'Thesis defended on';
-$string['pdfcontractart2title'] = 'Article 2: Confidentiality and/or embargo';
-$string['pdfcontractconfidentiality'] = 'Confidentiality';
-$string['pdfcontractnotconfidential'] = 'thesis not subject to confidentiality';
-$string['pdfcontractconfidentialuntil'] = 'thesis confidential until';
-$string['pdfcontractembargo'] = 'Embargo or delayed distribution of the thesis';
-$string['pdfcontractnoembargo'] = 'thesis not under embargo';
-$string['pdfcontractembargountil'] = 'thesis under embargo until';
-$string['pdfcontractart4title'] = 'Article 4: Purposes of use of the thesis by the institutions';
-$string['pdfcontractnotemplate'] = 'The contract template has not been uploaded in the module settings (or could not be read): it must be '
-    . 'attached to these pages.';
-$string['pdfcontractsignaturepage'] = 'ELECTRONIC DISTRIBUTION CONTRACT — SIGNATURES';
-$string['pdfcontractsignaturetext'] = 'Electronic distribution contract for the thesis of {$a->student}, "{$a->title}", concluded '
-    . 'according to the data and choices on the first page and the preceding articles.';
-$string['pdfcontractcopies'] = 'In three copies.';
-$string['pdfauthorsignature'] = 'Signature of the author';
-$string['pdfcontractsupervisorvisa'] = 'Supervisor approval:';
-$string['pdfthesisof'] = 'Thesis of {$a}';
-$string['pdfseen'] = 'Seen, {$a->place} on {$a->date}';
 $string['privacy:metadata:these_dossier:bordereau'] = 'Personal data entered with the defence (civil status, address, personal email, curriculum, distribution choices).';
 $string['privacy:metadata:these_dossier:conclusions'] = 'Thesis conclusions.';
 $string['privacy:metadata:these_dossier:reporttext'] = 'Director report.';
@@ -761,3 +717,52 @@ $string['privacy:metadata:these_signature:ipaddress'] = 'IP address when signing
 $string['privacy:metadata:these_signature:timesigned'] = 'Signature date.';
 $string['directorfunction'] = 'Your position';
 $string['directorfunction_help'] = 'Position printed in the scientific approval: "I, the undersigned NAME First name, position, declare…" (for example: Associate professor, Professor).';
+
+// Document templates.
+$string['doctemplates'] = 'Document templates';
+$string['doctemplates_desc'] = 'Each document produced by the module is built from a template: HTML in which the record data are '
+    . 'inserted with {{...}} tags. The original templates reproduce the institution forms; a modified template can be restored to '
+    . 'its original at any time. Documents already produced do not change.';
+$string['doctpldocument'] = 'Document';
+$string['doctplcustomised'] = 'Modified';
+$string['doctploriginal'] = 'Original template';
+$string['doctplpreview'] = 'PDF preview';
+$string['doctplreset'] = 'Restore original';
+$string['doctplresetconfirm'] = 'Restore the original template of the document "{$a}"? Your changes will be lost.';
+$string['doctplresetdone'] = 'The original template of the document "{$a}" has been restored.';
+$string['doctplsaved'] = 'The template of the document "{$a}" has been saved.';
+$string['doctplintro'] = 'The PDF preview opens in a new tab with sample data (complete record, signed in every slot), without saving '
+    . 'the template.';
+$string['doctplcontent'] = 'Template';
+$string['doctplcontent_help'] = 'HTML as interpreted by TCPDF: tables (widths in mm, borders with a "border" style), inline styles, '
+    . 'images, page break with &lt;br pagebreak="true" /&gt;.
+
+* {{variable}} inserts a value (escaped); {{{variable}}} inserts HTML (check boxes box.*, signatures sig.*, *html texts);
+* {{#variable}}...{{/variable}} shows the content only if the variable is true or not empty, or repeats it for each item of a list
+  (jury...); {{^variable}}...{{/variable}} shows it if it is false or empty;
+* the first line may set the layout: &lt;!--@page margins="top,right,bottom,left" header="8" footer="12" font="freesans" size="10" lineheight="1.25"--&gt; (mm, points);
+* &lt;!--@header--&gt;, &lt;!--@body--&gt; and &lt;!--@footer--&gt; separate the header and footer, repeated on every page, from the content;
+  {{pagenumber}} and {{pagecount}} give the page number and page count there.';
+$string['doctplerror'] = 'This template does not produce a document: {$a}';
+$string['doctplvariables'] = 'Available variables';
+$string['doctplvariables_desc'] = 'Examples taken from the preview sample data. Signatures are empty until the slot is signed; sigsrc.* '
+    . 'gives the image source to use in &lt;img src="{{sigsrc.director}}" height="10mm" /&gt;.';
+$string['doctplvariable'] = 'Variable';
+$string['doctplexample'] = 'Example';
+$string['doctplvarimage'] = 'Image, to use in <img src="...">';
+$string['doctplvarlist'] = 'List (items: {$a})';
+$string['doctplvarbool'] = 'True / false ({$a})';
+$string['doctplvarhtml'] = 'HTML, to insert with {{{...}}}';
+$string['doctplsubject'] = 'Thesis subject form (E01)';
+$string['doctplagreement'] = 'Administrative and scientific agreement form (E02)';
+$string['doctplsignaletique'] = 'Identification form (E03)';
+$string['doctplbordereau'] = 'Thesis form (ABES)';
+$string['doctplreport'] = "Director's report";
+$string['doctplgrid'] = 'Conformity grid';
+$string['doctplconclusions'] = 'Conclusions';
+$string['doctplcontractdata'] = "Distribution contract (E04): author's data and choices page";
+$string['doctplcontractsign'] = 'Distribution contract (E04): signature page';
+$string['doctplconformity'] = 'Conformity certificate (library)';
+$string['doctplconvocation'] = 'Defence notice';
+$string['doctpljurysheet'] = 'Jury sheet';
+$string['doctplminutes'] = 'Defence minutes';

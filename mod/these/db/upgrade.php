@@ -91,5 +91,14 @@ function xmldb_these_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2026102400, 'these');
     }
 
+    if ($oldversion < 2026102500) {
+        // Documents composés à partir de modèles modifiables : les logos de l'ancien réglage sont
+        // remplacés par les images des modèles (doctemplates/images, réglage « docimages »).
+        get_file_storage()->delete_area_files(context_system::instance()->id, 'mod_these', 'logo');
+        unset_config('logo', 'mod_these');
+
+        upgrade_mod_savepoint(true, 2026102500, 'these');
+    }
+
     return true;
 }

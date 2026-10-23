@@ -1897,16 +1897,15 @@ function these_document_filename($prefix, $name = '') {
 function these_generate_documents(stdClass $these, context $context, stdClass $dossier, $userid) {
     global $DB;
 
-    $data = these_document_data($these, $dossier);
+    $data = these_document_context($these, $context, $dossier, null);
     $documents = [];
-    $documents[these_document_filename('convocation-etudiant')] =
-        \mod_these\pdf\document_pdf::convocation($data, null);
-    foreach ($data['jury'] as $index => $member) {
+    $documents[these_document_filename('convocation-etudiant')] = these_render_doctemplate('convocation', $data);
+    foreach (these_get_jury($dossier->id) as $index => $member) {
         $documents[these_document_filename('convocation-jury-' . ($index + 1), $member->fullname)] =
-            \mod_these\pdf\document_pdf::convocation($data, $member);
+            these_render_doctemplate('convocation', these_document_context($these, $context, $dossier, null, $member));
     }
-    $documents[these_document_filename('feuille-de-jury')] = \mod_these\pdf\document_pdf::jury_sheet($data);
-    $documents[these_document_filename('proces-verbal')] = \mod_these\pdf\document_pdf::minutes($data);
+    $documents[these_document_filename('feuille-de-jury')] = these_render_doctemplate('jurysheet', $data);
+    $documents[these_document_filename('proces-verbal')] = these_render_doctemplate('minutes', $data);
     // Documents de l'établissement, dans leur état de signature à la génération.
     foreach (array_keys(these_document_definitions()) as $doctype) {
         if (these_document_available($dossier, $doctype)) {
@@ -3446,62 +3445,582 @@ function these_render_signed_documents(stdClass $cm, context $context, stdClass 
     return $out;
 }
 
+
+// Modèles des documents.
+
 /**
- * Données d'un document signé, prêtes pour sa mise en page : celles du dossier (voir
- * these_document_data()), plus les signatures avec leur image.
+ * Documents produits à partir d'un modèle modifiable (doctemplates/, page d'administration
+ * « Modèles des documents »), dans l'ordre de présentation.
+ *
+ * @return array type de modèle => document signé dont il reprend les signatures (null : aucun).
+ */
+function these_doctemplate_types() {
+    return [
+        'subject' => 'subject',
+        'agreement' => 'agreement',
+        'signaletique' => 'signaletique',
+        'bordereau' => 'bordereau',
+        'report' => 'report',
+        'grid' => 'grid',
+        'conclusions' => 'conclusions',
+        'contractdata' => 'contract',
+        'contractsign' => 'contract',
+        'conformity' => 'conformity',
+        'convocation' => null,
+        'jurysheet' => null,
+        'minutes' => null,
+    ];
+}
+
+/**
+ * Libellé d'un modèle de document.
+ *
+ * @param string $type
+ * @return string
+ */
+function these_doctemplate_label($type) {
+    return get_string('doctpl' . $type, 'mod_these');
+}
+
+/**
+ * Modèle d'origine d'un document, fourni avec le module (doctemplates/<type>.html).
+ *
+ * @param string $type
+ * @return string
+ */
+function these_doctemplate_default($type) {
+    global $CFG;
+
+    if (!array_key_exists($type, these_doctemplate_types())) {
+        throw new coding_exception('Modèle de document inconnu : ' . $type);
+    }
+    return (string) file_get_contents($CFG->dirroot . '/mod/these/doctemplates/' . $type . '.html');
+}
+
+/**
+ * Modèle en vigueur d'un document : celui modifié par l'administrateur, sinon celui d'origine.
+ *
+ * @param string $type
+ * @return string
+ */
+function these_get_doctemplate($type) {
+    $custom = get_config('mod_these', 'doctpl_' . $type);
+    return is_string($custom) && trim($custom) !== '' ? $custom : these_doctemplate_default($type);
+}
+
+/**
+ * Le modèle d'un document a-t-il été modifié ?
+ *
+ * @param string $type
+ * @return bool
+ */
+function these_doctemplate_customised($type) {
+    $custom = get_config('mod_these', 'doctpl_' . $type);
+    return is_string($custom) && trim($custom) !== '';
+}
+
+/**
+ * Enregistre le modèle d'un document ; null, ou le modèle d'origine, rétablit celui-ci.
+ *
+ * @param string $type
+ * @param string|null $content
+ * @return void
+ */
+function these_set_doctemplate($type, $content) {
+    $normalise = function ($text) {
+        return trim(str_replace("\r\n", "\n", (string) $text));
+    };
+    if ($content === null || $normalise($content) === $normalise(these_doctemplate_default($type))) {
+        unset_config('doctpl_' . $type, 'mod_these');
+        return;
+    }
+    set_config('doctpl_' . $type, str_replace("\r\n", "\n", $content), 'mod_these');
+}
+
+/**
+ * Nom sous lequel une image est appelée dans les modèles ({{img.nom}}).
+ *
+ * @param string $filename
+ * @return string
+ */
+function these_doctemplate_image_name($filename) {
+    return preg_replace('/[^a-z0-9]/', '', core_text::strtolower(pathinfo($filename, PATHINFO_FILENAME)));
+}
+
+/**
+ * Images utilisables dans les modèles : celles fournies avec le module (doctemplates/images/),
+ * remplacées ou complétées par celles déposées dans la page d'administration.
+ *
+ * @return array nom => source pour TCPDF ('@' suivi du contenu en base64)
+ */
+function these_doctemplate_images() {
+    global $CFG;
+
+    $images = [];
+    foreach (glob($CFG->dirroot . '/mod/these/doctemplates/images/*.{png,jpg,jpeg}', GLOB_BRACE) ?: [] as $path) {
+        $images[these_doctemplate_image_name($path)] = '@' . base64_encode(file_get_contents($path));
+    }
+    $fs = get_file_storage();
+    foreach ($fs->get_area_files(context_system::instance()->id, 'mod_these', 'docimages', 0, 'filename', false) as $file) {
+        if (in_array($file->get_mimetype(), ['image/png', 'image/jpeg'], true)) {
+            $images[these_doctemplate_image_name($file->get_filename())] = '@' . base64_encode($file->get_content());
+        }
+    }
+    return $images;
+}
+
+/**
+ * Données d'un dossier nécessaires à ses documents, lues en base.
  *
  * @param stdClass $these
  * @param context $context
  * @param stdClass $dossier
- * @param string $doctype
- * @return array
+ * @param string|null $doctype Document signé dont reprendre les signatures (null : aucun).
+ * @return array Voir these_build_document_context().
  */
-function these_signed_document_data(stdClass $these, context $context, stdClass $dossier, $doctype) {
+function these_document_sources(stdClass $these, context $context, stdClass $dossier, $doctype) {
     global $DB;
 
-    $data = these_document_data($these, $dossier);
-    $data['dossier'] = $dossier;
-    $data['bordereau'] = these_get_bordereau($dossier);
-    $data['grid'] = these_get_grid($dossier);
-    $data['directortitle'] = (string) ($dossier->directortitle ?? '');
-    $data['studyyear'] = (string) ($dossier->studyyear ?? '');
-    $studentuser = $DB->get_record('user', ['id' => $dossier->userid]);
-    $data['studentfirstname'] = $studentuser ? $studentuser->firstname : '';
-    $data['studentlastname'] = $studentuser ? $studentuser->lastname : '';
-    $directoruser = $dossier->directorid ? $DB->get_record('user', ['id' => $dossier->directorid]) : null;
-    $data['directorfirstname'] = $directoruser ? $directoruser->firstname : '';
-    $data['directorlastname'] = $directoruser ? $directoruser->lastname : '';
-    $data['agreement'] = these_get_agreement($dossier);
-    $data['institution'] = (string) get_config('mod_these', 'institution');
-    $data['signers'] = these_external_signers($dossier);
-    $data['config'] = (array) get_config('mod_these');
-    $data['logos'] = these_get_logos();
-    $data['signatures'] = [];
-    foreach (these_get_signatures($dossier->id) as $signature) {
-        if ($signature->doctype !== $doctype || empty($signature->timesigned)) {
-            continue;
+    $signatures = [];
+    if ($doctype !== null) {
+        foreach (these_get_signatures($dossier->id) as $signature) {
+            if ($signature->doctype === $doctype && !empty($signature->timesigned)) {
+                $signatures[$signature->slot] = [
+                    'name' => $signature->signername,
+                    'time' => (int) $signature->timesigned,
+                    'hash' => substr((string) $signature->contenthash, 0, 12),
+                    'image' => these_get_signature_image($context->id, $signature->id),
+                ];
+            }
         }
-        $data['signatures'][$signature->slot] = [
-            'name' => $signature->signername,
-            'date' => userdate($signature->timesigned, get_string('strftimedatetimeshort', 'langconfig')),
-            'day' => userdate($signature->timesigned, get_string('strftimedate', 'langconfig')),
-            'hash' => substr((string) $signature->contenthash, 0, 12),
-            'image' => these_get_signature_image($context->id, $signature->id),
-        ];
     }
-    return $data;
+    return [
+        'these' => $these,
+        'dossier' => $dossier,
+        'student' => $DB->get_record('user', ['id' => $dossier->userid]) ?: null,
+        'director' => $dossier->directorid ? ($DB->get_record('user', ['id' => $dossier->directorid]) ?: null) : null,
+        'jury' => these_get_jury($dossier->id),
+        'signatures' => $signatures,
+        'recipient' => null,
+    ];
 }
 
 /**
- * Logos de l'en-tête des documents de l'établissement, déposés dans les réglages du site.
+ * Données d'un document, prêtes à être insérées dans son modèle.
  *
- * @return string[] Contenus des images, dans l'ordre de leur nom de fichier.
+ * @param stdClass $these
+ * @param context $context
+ * @param stdClass $dossier
+ * @param string|null $doctype Document signé dont reprendre les signatures (null : aucun).
+ * @param stdClass|null $recipient Destinataire d'une convocation : membre du jury, ou null pour
+ *                                 l'étudiant.
+ * @return array
  */
-function these_get_logos() {
-    $fs = get_file_storage();
-    return array_values(array_map(function ($file) {
-        return $file->get_content();
-    }, $fs->get_area_files(context_system::instance()->id, 'mod_these', 'logo', 0, 'filename', false)));
+function these_document_context(stdClass $these, context $context, stdClass $dossier, $doctype, ?stdClass $recipient = null) {
+    $sources = these_document_sources($these, $context, $dossier, $doctype);
+    $sources['recipient'] = $recipient;
+    return these_build_document_context($sources);
+}
+
+/**
+ * Case à cocher des modèles (glyphes de FreeSerif : FreeSans ne les contient pas).
+ *
+ * @param bool $checked
+ * @return string HTML
+ */
+function these_doctemplate_box($checked) {
+    return '<span style="font-family:freeserif;">' . ($checked ? '&#9746;' : '&#9744;') . '</span>';
+}
+
+/**
+ * Texte multiligne pour un modèle : échappé, retours à la ligne conservés.
+ *
+ * @param string|null $text
+ * @return string HTML
+ */
+function these_doctemplate_text($text) {
+    return nl2br(htmlspecialchars(trim((string) $text), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), false);
+}
+
+/**
+ * Compose les données des modèles de documents. Toutes les valeurs sont du texte brut (échappé
+ * par {{...}}), sauf celles dont le nom finit par « html » et les tableaux box, mark, sig, qui
+ * contiennent du HTML à insérer par {{{...}}}. La liste complète, avec un exemple de valeur, est
+ * présentée dans la page de modification d'un modèle.
+ *
+ * @param array $src {these, dossier, student, director, jury, signatures, recipient}, voir
+ *                   these_document_sources().
+ * @return array
+ */
+function these_build_document_context(array $src) {
+    $these = $src['these'];
+    $d = $src['dossier'];
+    $b = these_get_bordereau($d);
+    $agreementdata = these_get_agreement($d);
+    $griddata = these_get_grid($d);
+    $config = (array) get_config('mod_these');
+
+    $day = function ($time) {
+        return (int) $time ? userdate((int) $time, '%d/%m/%Y') : '';
+    };
+    $up = function ($text) {
+        return core_text::strtoupper(trim((string) $text));
+    };
+    $schools = these_school_options();
+    $school = function ($key) use ($schools) {
+        return (string) $key !== '' ? ($schools[$key] ?? '') : '';
+    };
+
+    // Étudiant : noms de l'état civil déclaré au bordereau, à défaut ceux du compte.
+    $user = $src['student'];
+    $lastname = $up(($b['birthname'] ?? '') ?: ($user->lastname ?? ''));
+    $firstname = trim((string) (($b['firstnames'] ?? '') ?: ($user->firstname ?? '')));
+    $address = implode(', ', array_filter([
+        trim((string) ($b['street'] ?? '')),
+        trim(($b['postcode'] ?? '') . ' ' . ($b['city'] ?? '')),
+        trim((string) ($b['country'] ?? '')),
+    ], 'strlen'));
+    $student = [
+        'lastname' => $lastname,
+        'firstname' => $firstname,
+        'fullname' => trim($lastname . ' ' . $firstname),
+        'email' => (string) ($user->email ?? ''),
+        'usagename' => $up($b['usagename'] ?? ''),
+        'publicationname' => $up($b['publicationname'] ?? ''),
+        'birthdate' => $day($b['birthdate'] ?? 0),
+        'birthdatecompact' => !empty($b['birthdate']) ? userdate((int) $b['birthdate'], '%d%m%Y') : '',
+        'birthplace' => (string) ($b['birthplace'] ?? ''),
+        'birthdept' => (string) ($b['birthdept'] ?? ''),
+        'nationality' => (string) ($b['nationality'] ?? ''),
+        'street' => (string) ($b['street'] ?? ''),
+        'postcode' => (string) ($b['postcode'] ?? ''),
+        'city' => (string) ($b['city'] ?? ''),
+        'country' => (string) ($b['country'] ?? ''),
+        'address' => $address,
+        'phone' => (string) ($b['phone'] ?? ''),
+        'personalemail' => (string) ($b['personalemail'] ?? ''),
+        'emailconsent' => !empty($b['emailconsent']),
+    ];
+
+    // Directeur (membre de l'établissement) et directeur extérieur éventuel.
+    $duser = $src['director'];
+    $directorlast = $up($duser->lastname ?? '');
+    $directorfirst = (string) ($duser->firstname ?? '');
+    $director = [
+        'title' => (string) $d->directortitle,
+        'lastname' => $directorlast,
+        'firstname' => $directorfirst,
+        'fullname' => trim($d->directortitle . ' ' . $directorlast . ' ' . $directorfirst),
+        'email' => (string) ($duser->email ?? ''),
+        'function' => (string) ($agreementdata['directorfunction'] ?? ''),
+    ];
+    $external = !empty($d->externaldirector);
+    $extdirector = [
+        'present' => $external,
+        'name' => $external ? trim((string) $d->extdirectorname) : '',
+        'grade' => $external ? trim((string) $d->extdirectorgrade) : '',
+        'institution' => $external ? trim((string) $d->extdirectorinstitution) : '',
+        'email' => $external ? trim((string) $d->extdirectoremail) : '',
+    ];
+    // Directeur de thèse au sens des formulaires : l'extérieur s'il y en a un.
+    $thesisdirector = [
+        'name' => $external ? $extdirector['name'] : $director['fullname'],
+        'function' => $external ? $extdirector['grade'] : $director['function'],
+        'external' => $external,
+    ];
+
+    // Thèse.
+    $keywords = these_split_keywords((string) $d->keywords);
+    $abeskeywords = array_slice(array_values((array) ($b['keywords'] ?? [])), 0, THESE_BORDEREAU_KEYWORDS);
+    $thesis = [
+        'title' => (string) $d->title,
+        'titleupper' => $up($d->title),
+        'titleen' => (string) $d->titleen,
+        'summary' => (string) $d->summary,
+        'summaryhtml' => these_doctemplate_text($d->summary),
+        'keywords' => implode(' ; ', $keywords),
+        'confidential' => !empty($d->confidential),
+        'studyyear' => (string) $d->studyyear,
+        'devenumber' => (string) $d->devenumber,
+        'libraryref' => (string) $d->libraryref,
+        'ethicsnumber' => trim((string) $d->ethicsnumber),
+        'codirector' => (string) $d->codirectorname,
+    ];
+    $summary = function ($field) use ($b) {
+        return core_text::substr((string) ($b[$field] ?? ''), 0, THESE_BORDEREAU_SUMMARY_MAX);
+    };
+    $abes = [
+        'nbvolumes' => (string) (int) ($b['nbvolumes'] ?? 1 ?: 1),
+        'nbpages' => !empty($b['nbpages']) ? (string) (int) $b['nbpages'] : '',
+        'nbrefs' => !empty($b['nbrefs']) ? (string) (int) $b['nbrefs'] : '',
+        // Résumés coupés à 1700 caractères, comme l'annonce le bordereau.
+        'summaryfrhtml' => these_doctemplate_text($summary('summaryfr')),
+        'summaryenhtml' => these_doctemplate_text($summary('summaryen')),
+    ];
+    for ($i = 1; $i <= THESE_BORDEREAU_KEYWORDS; $i++) {
+        $abes['kw' . $i] = (string) ($abeskeywords[$i - 1] ?? '');
+    }
+
+    // Soutenance.
+    $date = (int) ($d->defensedate ?: $d->proposeddate);
+    $defense = [
+        'date' => $day($date),
+        'longdate' => $date ? userdate($date, get_string('strftimedaydate', 'langconfig')) : '',
+        'time' => $date ? userdate($date, '%H:%M') : '',
+        'year' => $date ? userdate($date, '%Y') : '',
+        'month' => $date ? userdate($date, '%m') : '',
+        'day' => $date ? userdate($date, '%d') : '',
+        'location' => (string) $d->defenselocation,
+        'visio' => !empty($b['visio']),
+        'result' => these_result_label($d->defenseresult),
+        'mention' => (string) $d->mention,
+    ];
+
+    // Cursus déclaré par l'étudiant (fiche signalétique) et agrément administratif de la DEVE.
+    $cursus = [
+        'defvdate' => $day($b['defvdate'] ?? 0),
+        'defvschool' => $school($b['defvschool'] ?? ''),
+        'a6notyet' => !empty($b['a6notyet']),
+        'a6date' => empty($b['a6notyet']) ? $day($b['a6date'] ?? 0) : '',
+        'a6school' => empty($b['a6notyet']) ? $school($b['a6school'] ?? '') : '',
+    ];
+    $agreement = [
+        'defv' => !empty($agreementdata['defvdate']),
+        'defvdate' => $day($agreementdata['defvdate'] ?? 0),
+        'mobility' => !empty($agreementdata['mobility']),
+        'a6notyet' => !empty($agreementdata['a6notyet']),
+        'a6' => empty($agreementdata['a6notyet']) && !empty($agreementdata['a6date']),
+        'a6date' => empty($agreementdata['a6notyet']) ? $day($agreementdata['a6date'] ?? 0) : '',
+    ];
+
+    // Jury : liste complète, et places fixes des formulaires (président, membre de
+    // l'établissement, deux autres membres, directeur, deux invités).
+    $roles = these_jury_role_options();
+    $empty = ['role' => '', 'rolelabel' => '', 'title' => '', 'fullname' => '', 'name' => '', 'institution' => '', 'email' => ''];
+    $jury = [];
+    $president = $empty;
+    $jurydirector = $empty;
+    $members = [];
+    $guests = [];
+    foreach ($src['jury'] as $member) {
+        $item = [
+            'role' => $member->juryrole,
+            'rolelabel' => $roles[$member->juryrole] ?? $member->juryrole,
+            'title' => (string) $member->jurytitle,
+            'fullname' => (string) $member->fullname,
+            'name' => trim($member->jurytitle . ' ' . $member->fullname),
+            'institution' => (string) $member->institution,
+            'email' => (string) $member->email,
+        ];
+        $jury[] = $item;
+        if ($member->juryrole === 'president') {
+            $president = $item;
+        } else if ($member->juryrole === 'director') {
+            $jurydirector = $item;
+        } else if ($member->juryrole === 'guest') {
+            $guests[] = $item;
+        } else {
+            $members[] = $item;
+        }
+    }
+    $institution = core_text::strtolower(trim((string) ($config['institution'] ?? '')));
+    $local = $empty;
+    foreach ($members as $index => $member) {
+        if ($institution !== '' && strpos(core_text::strtolower($member['institution']), $institution) !== false) {
+            $local = $member;
+            unset($members[$index]);
+            break;
+        }
+    }
+    $members = array_values($members);
+    if ($jurydirector['name'] === '') {
+        $jurydirector = ['name' => $thesisdirector['name'], 'fullname' => $thesisdirector['name'],
+            'institution' => $external ? $extdirector['institution'] : (string) ($config['institution'] ?? '')] + $empty;
+    }
+    $voting = array_values(array_filter($jury, function ($item) {
+        return $item['role'] !== 'guest';
+    }));
+
+    // Rapport, grille et conclusions du directeur.
+    $report = [
+        'text' => trim((string) $d->reporttext),
+        'html' => these_doctemplate_text($d->reporttext),
+        'favorable' => !empty($d->reportfavorable),
+        'favorabletext' => get_string('pdfreportfavorable', 'mod_these'),
+    ];
+    $grid = [];
+    $mark = [];
+    foreach (these_grid_items() as $items) {
+        foreach (array_keys($items) as $item) {
+            $grid[$item] = !empty($griddata[$item]);
+            $mark[$item] = !empty($griddata[$item]) ? '<span style="font-family:freeserif;">&#10003;</span>' : '';
+        }
+    }
+    $paragraphs = array_values(array_filter(array_map('trim', preg_split("/\n\s*\n/", trim((string) $d->conclusions))), 'strlen'));
+    $paragraphs = array_map('these_doctemplate_text', $paragraphs);
+    $last = $paragraphs ? array_pop($paragraphs) : '';
+    $conclusions = [
+        'html' => implode('<br /><br />', array_merge($paragraphs, $last !== '' ? [$last] : [])),
+        'bodyhtml' => implode('<br /><br />', $paragraphs),
+        'lasthtml' => $last,
+    ];
+
+    // Contrat de diffusion.
+    $embargo = !empty($b['embargo']);
+    $contract = [
+        'confidential' => !empty($d->confidential),
+        'confidentialuntil' => !empty($d->confidential) ? $day($b['confidentialuntil'] ?? 0) : '',
+        'embargo' => $embargo,
+        'embargountil' => $embargo ? $day($b['embargountil'] ?? 0) : '',
+        'internet' => ($b['diffusion'] ?? '') === 'internet',
+        'restricted' => ($b['diffusion'] ?? '') === 'restricted',
+        'templatemissing' => false,
+    ];
+
+    // Signatures : image et mention par emplacement, plus l'alias « thesisdirector ».
+    $sig = [];
+    $sigsrc = [];
+    $sigcaption = [];
+    $sigdate = [];
+    $signer = [];
+    $signed = [];
+    $slots = ['student', 'director', 'extdirector', 'deve', 'library', 'dgrep', 'dg', 'ccem', 'ucbl', 'president'];
+    foreach ($slots as $slot) {
+        $signature = $src['signatures'][$slot] ?? null;
+        $signed[$slot] = (bool) $signature;
+        $sigdate[$slot] = $signature ? $day($signature['time']) : '';
+        $signer[$slot] = $signature ? (string) $signature['name'] : '';
+        $sigcaption[$slot] = $signature ? get_string('pdfsignedby', 'mod_these', (object) [
+            'name' => $signature['name'],
+            'date' => userdate($signature['time'], get_string('strftimedatetimeshort', 'langconfig')),
+            'hash' => $signature['hash'],
+        ]) : '';
+        $sigsrc[$slot] = $signature && !empty($signature['image']) ? '@' . base64_encode($signature['image']) : '';
+        $sig[$slot] = $signature ? ($sigsrc[$slot] !== '' ? '<img src="' . $sigsrc[$slot] . '" height="12mm" /><br />' : '')
+            . '<span style="font-size:6pt;color:#555555;letter-spacing:0;">'
+            . htmlspecialchars($sigcaption[$slot], ENT_QUOTES, 'UTF-8')
+            . '</span>' : '';
+    }
+    $alias = $external ? 'extdirector' : 'director';
+    $sig['thesisdirector'] = $sig[$alias];
+    $sigsrc['thesisdirector'] = $sigsrc[$alias];
+    $sigcaption['thesisdirector'] = $sigcaption[$alias];
+    $sigdate['thesisdirector'] = $sigdate[$alias];
+    $signer['thesisdirector'] = $signer[$alias];
+    $signed['thesisdirector'] = $signed[$alias];
+
+    // Destinataire d'une convocation.
+    $recipient = $src['recipient'];
+    $recipientdata = $recipient ? [
+        'jury' => true,
+        'name' => trim($recipient->jurytitle . ' ' . $recipient->fullname),
+        'institution' => (string) $recipient->institution,
+        'rolelabel' => $roles[$recipient->juryrole] ?? $recipient->juryrole,
+    ] : ['jury' => false, 'name' => $student['fullname'], 'institution' => '', 'rolelabel' => ''];
+
+    $years = [];
+    foreach (['A2', 'A3', 'A4', 'A5', 'A6'] as $year) {
+        $years[$year] = $thesis['studyyear'] === $year;
+    }
+    $commitments = (int) $d->commitments;
+    $box = [
+        'confidential' => $thesis['confidential'],
+        'notconfidential' => !$thesis['confidential'],
+        'visio' => $defense['visio'],
+        'defv' => $agreement['defv'],
+        'mobility' => $agreement['mobility'],
+        'a6' => $agreement['a6'],
+        'a6notyet' => $agreement['a6notyet'],
+        'cursusa6notyet' => $cursus['a6notyet'],
+        'embargo' => $embargo,
+        'noembargo' => !$embargo,
+        'internet' => $contract['internet'],
+        'restricted' => $contract['restricted'],
+        'favorable' => $report['favorable'],
+        'emailconsent' => $student['emailconsent'],
+        'commitguide' => (bool) ($commitments & THESE_COMMIT_GUIDE),
+        'commitduplicate' => (bool) ($commitments & THESE_COMMIT_DUPLICATE),
+        'commitethics' => (bool) ($commitments & THESE_COMMIT_ETHICS),
+        'admitted' => (int) $d->defenseresult === THESE_RESULT_ADMITTED,
+        'adjourned' => (int) $d->defenseresult === THESE_RESULT_ADJOURNED,
+    ] + $years;
+
+    return [
+        'today' => userdate(time(), '%d/%m/%Y'),
+        'settings' => [
+            'institution' => (string) ($config['institution'] ?? ''),
+            'visaplace' => (string) ($config['visaplace'] ?? ''),
+            'hetopurl' => (string) ($config['hetopurl'] ?? ''),
+            'devename' => (string) ($config['devename'] ?? ''),
+            'devetitle' => (string) ($config['devetitle'] ?? ''),
+            'dgtitle' => (string) ($config['dgtitle'] ?? ''),
+            'dgname' => (string) ($config['dgname'] ?? ''),
+            'ccemname' => (string) ($config['ccemname'] ?? ''),
+            'ucbltitle' => (string) ($config['ucbltitle'] ?? ''),
+            'ucblname' => (string) ($config['ucblname'] ?? ''),
+        ],
+        'establishment' => [
+            'name' => (string) $these->establishmentname,
+            'addresshtml' => these_doctemplate_text($these->establishmentaddress),
+            'city' => (string) $these->establishmentcity,
+            'signatoryname' => (string) $these->signatoryname,
+            'signatorytitle' => (string) $these->signatorytitle,
+        ],
+        'student' => $student,
+        'director' => $director,
+        'extdirector' => $extdirector,
+        'thesisdirector' => $thesisdirector,
+        'thesis' => $thesis,
+        'abes' => $abes,
+        'defense' => $defense,
+        'cursus' => $cursus,
+        'agreement' => $agreement,
+        'year' => $years,
+        'jury' => $jury,
+        'juryvoting' => $voting,
+        'jurypresident' => $president,
+        'jurydirector' => $jurydirector,
+        'jurylocal' => $local,
+        'jurymember1' => $members[0] ?? $empty,
+        'jurymember2' => $members[1] ?? $empty,
+        'juryothers' => $members,
+        'juryguest1' => $guests[0] ?? $empty,
+        'juryguest2' => $guests[1] ?? $empty,
+        'juryguests' => $guests,
+        'report' => $report,
+        'grid' => $grid,
+        'mark' => $mark,
+        'conclusions' => $conclusions,
+        'contract' => $contract,
+        'recipient' => $recipientdata,
+        'box' => array_map('these_doctemplate_box', $box),
+        'checked' => these_doctemplate_box(true),
+        'unchecked' => these_doctemplate_box(false),
+        'check' => '<span style="font-family:freeserif;">&#10003;</span>',
+        'sig' => $sig,
+        'sigsrc' => $sigsrc,
+        'sigcaption' => $sigcaption,
+        'sigdate' => $sigdate,
+        'signer' => $signer,
+        'signed' => $signed,
+        'img' => these_doctemplate_images(),
+    ];
+}
+
+/**
+ * Produit le PDF d'un modèle de document.
+ *
+ * @param string $type Voir these_doctemplate_types().
+ * @param array $data Voir these_build_document_context().
+ * @param string|null $template Modèle à utiliser à la place de celui en vigueur (aperçu).
+ * @return string Contenu PDF.
+ */
+function these_render_doctemplate($type, array $data, $template = null) {
+    return \mod_these\pdf\html_document::render(
+        $template ?? these_get_doctemplate($type),
+        $data,
+        these_doctemplate_label($type)
+    );
 }
 
 /**
@@ -3514,34 +4033,183 @@ function these_get_logos() {
  * @return string Contenu PDF.
  */
 function these_signed_document_pdf(stdClass $these, context $context, stdClass $dossier, $doctype) {
-    $data = these_signed_document_data($these, $context, $dossier, $doctype);
     if (!array_key_exists($doctype, these_document_definitions())) {
         throw new coding_exception('Document inconnu : ' . $doctype);
     }
-    if ($doctype === 'conformity') {
-        return \mod_these\pdf\official_pdf::conformity($data);
-    }
+    $data = these_document_context($these, $context, $dossier, $doctype);
     if ($doctype !== 'contract') {
-        // Formulaires officiels, remplis sur leur propre gabarit (pdftemplates/).
-        return \mod_these\pdf\official_forms::$doctype($data);
+        return these_render_doctemplate($doctype, $data);
     }
 
     // Contrat de diffusion, comme les conventions de mod_stage : page de données et de choix,
     // contrat type officiel déposé dans les réglages du site, page de signatures.
     $template = these_get_contract_template();
-    $data['contracttemplate'] = $template !== null;
-    $signatures = \mod_these\pdf\official_pdf::contract_signatures($data);
     if ($template !== null) {
         try {
-            return these_merge_pdfs([\mod_these\pdf\official_pdf::contract_data($data), $template, $signatures]);
+            return these_merge_pdfs([
+                these_render_doctemplate('contractdata', $data),
+                $template,
+                these_render_doctemplate('contractsign', $data),
+            ]);
         } catch (\Throwable $e) {
             // Contrat type illisible par l'analyseur libre de FPDI (certaines compressions récentes) :
             // les pages du module restent produites, avec un avertissement à la place du contrat.
             debugging('Contrat type de diffusion illisible : ' . $e->getMessage(), DEBUG_DEVELOPER);
-            $data['contracttemplate'] = false;
         }
     }
-    return these_merge_pdfs([\mod_these\pdf\official_pdf::contract_data($data), $signatures]);
+    $data['contract']['templatemissing'] = true;
+    return these_merge_pdfs([these_render_doctemplate('contractdata', $data), these_render_doctemplate('contractsign', $data)]);
+}
+
+/**
+ * Vérifie qu'un modèle produit un document avec les données d'exemple.
+ *
+ * @param string $type
+ * @param string $content
+ * @return string|null Message d'erreur, ou null si le modèle est utilisable.
+ */
+function these_doctemplate_error($type, $content) {
+    try {
+        these_render_doctemplate($type, these_sample_document_context(), $content);
+    } catch (\Throwable $e) {
+        return get_string('doctplerror', 'mod_these', $e->getMessage());
+    }
+    return null;
+}
+
+/**
+ * Données fictives pour l'aperçu d'un modèle dans la page d'administration : un dossier complet,
+ * signé à tous les emplacements.
+ *
+ * @return array Voir these_build_document_context().
+ */
+function these_sample_document_context() {
+    $now = time();
+    $these = (object) [
+        'establishmentname' => 'VetAgro Sup', 'establishmentaddress' => "1 avenue Bourgelat\n69280 Marcy-l'Étoile",
+        'establishmentcity' => "Marcy-l'Étoile", 'signatoryname' => 'Hélène AGUESSE',
+        'signatorytitle' => 'Directrice des Études et de la Vie Étudiante',
+    ];
+    $bordereau = [
+        'birthname' => 'Martin', 'firstnames' => 'Camille', 'usagename' => '', 'publicationname' => '',
+        'birthdate' => make_timestamp(1999, 4, 12), 'birthplace' => 'Lyon', 'birthdept' => '69', 'nationality' => 'Française',
+        'street' => '12 rue des Écoles', 'postcode' => '69007', 'city' => 'Lyon', 'country' => 'France',
+        'phone' => '06 12 34 56 78', 'personalemail' => 'camille.martin@example.org', 'emailconsent' => 1,
+        'defvdate' => make_timestamp(2023, 7, 3), 'defvschool' => 'lyon', 'a6date' => make_timestamp(2025, 7, 1),
+        'a6school' => 'lyon', 'a6notyet' => 0, 'nbvolumes' => 1, 'nbpages' => 112, 'nbrefs' => 86,
+        'summaryfr' => str_repeat("Ce travail étudie la prise en charge de la douleur chronique chez le chien âgé. ", 12),
+        'summaryen' => str_repeat("This work studies the management of chronic pain in elderly dogs. ", 12),
+        'keywords' => ['Chien', 'Douleur chronique', 'Gériatrie', 'Analgésie', 'Arthrose'],
+        'confidentialuntil' => 0, 'embargo' => 0, 'embargountil' => 0, 'diffusion' => 'internet', 'visio' => 0,
+    ];
+    $dossier = (object) [
+        'id' => 0, 'userid' => 0, 'directorid' => 0,
+        'title' => 'Prise en charge de la douleur chronique chez le chien âgé : enquête auprès des vétérinaires praticiens',
+        'titleen' => 'Management of chronic pain in elderly dogs: a survey of veterinary practitioners',
+        'summary' => 'Résumé du sujet.', 'keywords' => 'Chien ; Douleur chronique ; Gériatrie ; Analgésie',
+        'codirectorname' => '', 'studyyear' => 'A5', 'confidential' => 0, 'directortitle' => 'Pr',
+        'externaldirector' => 0, 'extdirectorname' => '', 'extdirectorgrade' => '', 'extdirectorinstitution' => '',
+        'extdirectoremail' => '', 'commitments' => THESE_COMMIT_GUIDE | THESE_COMMIT_DUPLICATE, 'ethicsnumber' => '2526',
+        'bordereau' => json_encode($bordereau),
+        'conclusions' => "Premier paragraphe des conclusions.\n\n"
+            . "Dernier paragraphe des conclusions, qui reste avec les signatures.",
+        'reporttext' => "Camille Martin a conduit une enquête rigoureuse auprès de 250 praticiens.\n"
+            . "Le manuscrit est clair et bien construit.",
+        'reportfavorable' => 1,
+        'conformitygrid' => json_encode(array_fill_keys(
+            array_merge(...array_map('array_keys', array_values(these_grid_items()))),
+            1
+        )),
+        'agreement' => json_encode(['defvdate' => make_timestamp(2023, 7, 3), 'mobility' => 1,
+            'a6date' => make_timestamp(2025, 7, 1), 'a6notyet' => 0, 'directorfunction' => 'Professeur']),
+        'devenumber' => '2026-042', 'libraryref' => 'THV-2026-042', 'proposeddate' => $now + 30 * DAYSECS,
+        'defensedate' => $now + 30 * DAYSECS, 'defenselocation' => 'Amphithéâtre Bourgelat', 'defenseresult' => 0,
+        'mention' => '',
+    ];
+    $jury = [];
+    foreach (
+        [
+        ['president', 'Pr', 'Jean DUPONT', 'Université Claude Bernard Lyon 1'],
+        ['member', 'Dr', 'Claire BERNARD', 'VetAgro Sup Campus vétérinaire de Lyon'],
+        ['member', 'Dr', 'Paul LEROY', 'VetAgro Sup Campus vétérinaire de Lyon'],
+        ['director', 'Pr', 'Anne DURAND', 'VetAgro Sup Campus vétérinaire de Lyon'],
+        ['guest', 'Dr', 'Luc PETIT', 'Clinique vétérinaire des Monts'],
+        ] as $i => [$role, $title, $name, $institution]
+    ) {
+        $jury[] = (object) ['juryrole' => $role, 'jurytitle' => $title, 'fullname' => $name, 'institution' => $institution,
+            'email' => 'jury' . $i . '@example.org'];
+    }
+    $image = these_sample_signature_image();
+    $signatures = [];
+    foreach (['student', 'director', 'extdirector', 'deve', 'library', 'dgrep', 'dg', 'ccem', 'ucbl', 'president'] as $slot) {
+        $signatures[$slot] = ['name' => these_slot_label($slot), 'time' => $now, 'hash' => '3f2a9c51d0e4',
+            'image' => $image];
+    }
+    return these_build_document_context([
+        'these' => $these,
+        'dossier' => $dossier,
+        'student' => (object) ['firstname' => 'Camille', 'lastname' => 'Martin', 'email' => 'camille.martin@example.org'],
+        'director' => (object) ['firstname' => 'Anne', 'lastname' => 'Durand', 'email' => 'anne.durand@example.org'],
+        'jury' => $jury,
+        'signatures' => $signatures,
+        'recipient' => null,
+    ]);
+}
+
+/**
+ * Tracé de signature fictif (PNG) pour les aperçus.
+ *
+ * @return string
+ */
+function these_sample_signature_image() {
+    $image = imagecreatetruecolor(300, 100);
+    imagesavealpha($image, true);
+    imagefill($image, 0, 0, imagecolorallocatealpha($image, 255, 255, 255, 127));
+    $ink = imagecolorallocate($image, 20, 40, 120);
+    imagesetthickness($image, 3);
+    $previous = null;
+    for ($x = 20; $x <= 280; $x += 4) {
+        $point = [$x, (int) (50 + 28 * sin($x / 18) * cos($x / 47))];
+        if ($previous) {
+            imageline($image, $previous[0], $previous[1], $point[0], $point[1], $ink);
+        }
+        $previous = $point;
+    }
+    ob_start();
+    imagepng($image);
+    imagedestroy($image);
+    return (string) ob_get_clean();
+}
+
+/**
+ * Variables d'un contexte de modèle, à plat, avec un exemple de valeur : aide de la page de
+ * modification d'un modèle.
+ *
+ * @param array $data
+ * @param string $prefix
+ * @return array nom => exemple (texte)
+ */
+function these_doctemplate_variables(array $data, $prefix = '') {
+    $variables = [];
+    foreach ($data as $key => $value) {
+        $name = $prefix . $key;
+        if ($key === 'img') {
+            foreach (array_keys($value) as $image) {
+                $variables[$name . '.' . $image] = get_string('doctplvarimage', 'mod_these');
+            }
+        } else if (is_array($value) && isset($value[0]) && is_array($value[0])) {
+            $variables[$name] = get_string('doctplvarlist', 'mod_these', implode(', ', array_keys($value[0])));
+        } else if (is_array($value) && !isset($value[0])) {
+            $variables += these_doctemplate_variables($value, $name . '.');
+        } else if (is_bool($value)) {
+            $variables[$name] = get_string('doctplvarbool', 'mod_these', $value ? 'true' : 'false');
+        } else if (is_scalar($value)) {
+            $value = (string) $value;
+            $variables[$name] = strpos($value, '<') !== false ? get_string('doctplvarhtml', 'mod_these')
+                : core_text::substr($value, 0, 60) . (core_text::strlen($value) > 60 ? '…' : '');
+        }
+    }
+    return $variables;
 }
 
 /**

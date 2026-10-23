@@ -1,0 +1,92 @@
+<!--@page margins="8,20,8,20" font="freesans" size="9" lineheight="1.25"-->
+<!--@body-->
+<table cellpadding="0">
+  <tr><td align="right" style="font-family:helvetica;font-size:8pt;">ENS-INI-P308-E02 V8&nbsp;&nbsp;</td></tr>
+</table>
+<table cellpadding="0">
+  <tr>
+    <td width="1mm"></td>
+    <td width="76mm"><img src="{{img.marianne}}" height="25mm" /></td>
+    <td width="45mm"><img src="{{img.lyon1}}" height="29mm" /></td>
+    <td width="48mm"><br /><img src="{{img.vetagrosup}}" height="22mm" /></td>
+  </tr>
+</table>
+<div style="text-align:right;font-size:10pt;font-weight:bold;">Thèse d’exercice vétérinaire</div>
+<div style="text-align:center;font-size:14pt;font-weight:bold;letter-spacing:0.35mm;line-height:1.9;">FICHE D’AGREMENTS ADMINISTRATIF ET SCIENTIFIQUE</div>
+<table cellpadding="0" style="letter-spacing:0.25mm;">
+  <tr>
+    <td colspan="2" style="border-left:0.5pt solid #000000;border-right:0.5pt solid #000000;border-top:0.5pt solid #000000;">
+      <table cellpadding="0"><tr><td width="1%"></td><td width="98%" align="center" style="background-color:#d9d9d9;font-size:8.5pt;"><b>AGREMENT ADMINISTRATIF</b></td><td width="1%"></td></tr></table>
+      <table cellpadding="0" style="line-height:1.6;">
+        <tr><td width="2%"></td><td width="96%">
+          <br />{{settings.devename}}, {{settings.devetitle}} certifie que l’étudiant(e) :<br />
+          <b>{{student.fullname}}</b><br />
+          <span style="line-height:2.15;"><span style="font-size:12pt;">{{{box.defv}}}</span> a obtenu son Diplôme d’Etudes Fondamentales Vétérinaires (<b>DEFV</b>) le : {{agreement.defvdate}}</span><br />
+          <span style="line-height:2.15;"><span style="font-size:12pt;">{{{box.mobility}}}</span> a validé sa mobilité internationale</span><br />
+          <span style="line-height:2.15;"><span style="font-size:12pt;">{{{box.a6}}}</span> a validé son année d’approfondissement (A6) le : {{agreement.a6date}}</span><br />
+          <span style="line-height:2.15;"><span style="font-size:12pt;">{{{box.a6notyet}}}</span> n’a pas encore validé son année d’approfondissement (A6)</span><br />
+          <span style="line-height:2.15;">L’étudiant(e) est autorisé(e) à soutenir sa thèse de Doctorat Vétérinaire</span>
+        </td><td width="2%"></td></tr>
+      </table>
+      <table cellpadding="0">
+        <tr>
+          <td width="45%" align="center">{{{sig.deve}}}</td>
+          <td width="53%" align="center"><b>La {{settings.devetitle}}<br />{{settings.devename}}</b></td>
+        </tr>
+      </table>
+      <br />
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2" style="border-left:0.5pt solid #000000;border-right:0.5pt solid #000000;border-top:0.5pt solid #000000;">
+      <table cellpadding="0"><tr><td width="1%"></td><td width="98%" align="center" style="background-color:#d9d9d9;font-size:8.5pt;"><b>AGREMENT SCIENTIFIQUE</b></td><td width="1%"></td></tr></table>
+    </td>
+  </tr>
+  <tr>
+    <td width="85mm" height="58mm" style="border-left:0.5pt solid #000000;border-right:0.5pt solid #000000;">
+      <table cellpadding="0"><tr><td width="3%"></td><td width="95%">
+        <br /><div style="text-align:center;"><b><u>Directeur de thèse</u></b></div>
+        <br />Je soussigné(e), <b>{{thesisdirector.name}}</b>, {{thesisdirector.function}}, déclare que j’ai lu et corrigé la thèse de l’étudiant ci-dessous et j’en valide le contenu.
+        <br /><br /><br />
+        <table cellpadding="0"><tr>
+          <td width="50%">Le Directeur de thèse<br /><b>{{thesisdirector.name}}</b></td>
+          <td width="50%" align="center">{{#signed.thesisdirector}}<img src="{{sigsrc.thesisdirector}}" height="10mm" />{{/signed.thesisdirector}}</td>
+        </tr></table>
+        <span style="font-size:5.5pt;color:#555555;letter-spacing:0;">{{sigcaption.thesisdirector}}</span>
+      </td><td width="2%"></td></tr></table>
+    </td>
+    <td width="85mm" style="border-right:0.5pt solid #000000;">
+      <table cellpadding="0"><tr><td width="3%"></td><td width="95%">
+        <div style="text-align:center;"><i>Si le Directeur de thèse, n’est pas de VetAgro Sup,</i><br /><b><u>Membre</u></b><br /><b><u>(= Enseignant-Chercheur VETAGRO SUP)</u></b></div>
+        <br />Je soussigné(e), <b>{{#extdirector.present}}{{director.fullname}}{{/extdirector.present}}{{^extdirector.present}}……………{{/extdirector.present}}</b>, Enseignant Chercheur de VetAgro Sup, déclare que j’ai corrigé la thèse de l’étudiant ci-dessous, j’en atteste la forme par la grille de conformité du manuscrit communiqué à la DEVE.
+        <br /><br />
+        <table cellpadding="0"><tr>
+          <td width="50%">Membre<br /><b>{{#extdirector.present}}{{director.fullname}}{{/extdirector.present}}</b></td>
+          <td width="50%" align="center">{{#extdirector.present}}{{#signed.director}}<img src="{{sigsrc.director}}" height="10mm" />{{/signed.director}}{{/extdirector.present}}</td>
+        </tr></table>
+        {{#extdirector.present}}<span style="font-size:5.5pt;color:#555555;letter-spacing:0;">{{sigcaption.director}}</span>{{/extdirector.present}}
+      </td><td width="2%"></td></tr></table>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2" height="26mm" style="border:0.5pt solid #000000;">
+      <table cellpadding="0"><tr><td width="2%"></td><td width="96%">
+        <br />Nom : <b>{{student.lastname}}</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Prénom : <b>{{student.firstname}}</b>
+        <br /><br />intitulée : <span style="font-size:10.5pt;"><b>{{thesis.title}}</b></span>
+      </td><td width="2%"></td></tr></table>
+    </td>
+  </tr>
+  <tr>
+    <td width="85mm" height="44mm" style="border-left:0.5pt solid #000000;border-right:0.5pt solid #000000;border-bottom:0.5pt solid #000000;">
+      <table cellpadding="0"><tr><td width="3%"></td><td width="95%">
+        <br />La Directrice Générale de VetAgro Sup<br />ou son représentant<br /><b>{{settings.devename}}, DEVE</b>
+        <br /><br /><br /><br />Pour le président de l’Université Lyon 1 et par délégation<br />Le président du CCEM<br /><b>{{settings.ccemname}}</b>
+      </td><td width="2%"></td></tr></table>
+    </td>
+    <td width="85mm" style="border-right:0.5pt solid #000000;border-bottom:0.5pt solid #000000;">
+      <table cellpadding="0"><tr><td width="3%"></td><td width="95%">
+        <br />{{{sig.dgrep}}}<br />{{^signed.dgrep}}<br /><br /><br />{{/signed.dgrep}}<br />{{{sig.ccem}}}
+      </td><td width="2%"></td></tr></table>
+    </td>
+  </tr>
+</table>
