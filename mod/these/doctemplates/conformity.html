@@ -1,0 +1,37 @@
+<!--@page margins="48,20,15,20" header="10" font="freesans" size="10.5" lineheight="1.35"-->
+<!--@header-->
+<table cellpadding="0">
+  <tr>
+    <td width="2mm"></td>
+    <td width="110mm"><img src="{{img.marianne}}" height="25mm" /></td>
+    <td width="58mm"><br /><br /><img src="{{img.vetagrosup}}" height="20mm" /></td>
+  </tr>
+</table>
+<!--@body-->
+<div style="text-align:right;font-size:9pt;"><b>DEVE - BIBLIOTHEQUE</b></div>
+<br />
+<div style="text-align:center;font-size:14pt;font-weight:bold;">ATTESTATION DE CONFORMITÉ DU MANUSCRIT</div>
+<div style="text-align:center;font-size:11pt;font-weight:bold;">Thèse d’exercice vétérinaire</div>
+<br /><br />
+<table cellpadding="4">
+  <tr>
+    <td style="border:0.5pt solid #000000;">
+      <table cellpadding="0" style="line-height:1.5;">
+        <tr><td width="52mm"><b>Étudiant(e) :</b></td><td width="113mm">{{student.lastname}} {{student.firstname}}</td></tr>
+        <tr><td width="52mm"><b>Titre de la thèse :</b></td><td width="113mm">{{thesis.title}}</td></tr>
+        <tr><td width="52mm"><b>N° d’enregistrement DEVE :</b></td><td width="113mm">{{thesis.devenumber}}</td></tr>
+        <tr><td width="52mm"><b>Directeur de thèse :</b></td><td width="113mm">{{thesisdirector.name}}</td></tr>
+        <tr><td width="52mm"><b>Date de soutenance :</b></td><td width="113mm">{{defense.date}}</td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<br /><br />
+<div style="text-align:justify;">La bibliothèque atteste que le manuscrit de la thèse de {{student.firstname}} {{student.lastname}} est conforme aux normes de présentation et aux conditions du dépôt légal en vigueur à VetAgro Sup, à la date du {{sigdate.library}}{{^signed.library}}{{today}}{{/signed.library}}.</div>
+<br /><br /><br />
+<table cellpadding="0">
+  <tr>
+    <td width="85mm"></td>
+    <td width="85mm" align="center"><b>Pour la bibliothèque</b><br />{{signer.library}}<br />{{{sig.library}}}</td>
+  </tr>
+</table>

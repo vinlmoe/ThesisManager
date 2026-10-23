@@ -426,20 +426,6 @@ Sujet : {$a->title}
 
 Accéder au dossier : {$a->url}';
 
-// Documents PDF.
-$string['pdfdoneat'] = 'Fait à {$a->city}, le {$a->date}';
-$string['pdfconvocationstudent'] = 'Madame, Monsieur,
-
-Vous êtes convoqué(e) à la soutenance publique de votre thèse d\'exercice vétérinaire, le {$a->date} à {$a->time}, {$a->location}, devant le jury ci-dessous.';
-$string['pdfconvocationjury'] = 'Madame, Monsieur,
-
-Vous êtes convoqué(e), en qualité de {$a->role}, au jury de la soutenance de thèse d\'exercice vétérinaire de {$a->student}, le {$a->date} à {$a->time}, {$a->location}.';
-$string['pdfconformitytext'] = 'La bibliothèque atteste que le manuscrit de la thèse de {$a->student} est conforme aux normes de présentation et aux conditions du dépôt légal en vigueur dans l\'établissement, à la date du {$a->date}.';
-$string['pdfsignature'] = 'Signature';
-$string['pdfsignatures'] = 'Signatures des membres du jury';
-$string['pdfdeliberation'] = 'Délibération';
-$string['pdfminutestext'] = 'Après en avoir délibéré, le jury déclare la thèse de {$a->student} :';
-
 // Tâches et données personnelles.
 $string['taskreminders'] = 'Relances des dossiers de thèse en attente';
 $string['staffactions'] = 'Interventions dans les dossiers de thèse';
@@ -490,9 +476,15 @@ $string['settingsdocuments'] = 'Documents et signataires';
 $string['settingsdocuments_desc'] = "En-tête et signataires des documents de l'établissement produits par le module. Les signataires "
     . "sans compte Moodle (direction générale, CCEM, présidence de l'université) reçoivent par courriel un lien de signature si leur "
     . "adresse est renseignée ; sinon la DEVE recueille leur signature sur place.";
-$string['settingslogo'] = 'Logos';
-$string['settingslogo_desc'] = "Jusqu'à quatre images (PNG ou JPEG), imprimées de gauche à droite dans l'ordre de leur nom de fichier en "
-    . "tête des documents.";
+$string['settingsdoctemplates_desc'] = 'La mise en page de chaque document se modifie dans <a href="{$a}">Modèles des documents</a>.';
+$string['settingsdocimages'] = 'Images des modèles';
+$string['settingsdocimages_desc'] = "Images (PNG ou JPEG) utilisables dans les modèles de documents par {{img.nom}}, nom étant le nom du "
+    . "fichier en minuscules, sans extension ni caractère spécial. Une image du même nom qu'une image fournie avec le module "
+    . "(marianne, vetagrosup, lyon1, bulyon1, abes) la remplace.";
+$string['settingsdevename'] = 'Direction des études : nom';
+$string['settingsdevename_desc'] = "Nom de la directrice ou du directeur des études et de la vie étudiante (fiche d'agréments).";
+$string['settingsdevetitle'] = 'Direction des études : qualité';
+$string['settingsdevetitle_desc'] = "Qualité imprimée sur la fiche d'agréments (sans article).";
 $string['settingscontracttemplate'] = 'Contrat type de diffusion électronique (PDF)';
 $string['settingscontracttemplate_desc'] = "Le contrat officiel (ENS-INI-P308-E04), tel quel. Le module le fait précéder d'une page "
     . "reprenant les données et les choix de l'auteur et suivre d'une page de signatures.";
@@ -714,44 +706,8 @@ Pour les consulter et les signer : {$a->url}
 Ce lien vous est personnel et n\'est valable que pour une signature.';
 
 // Libellés des documents PDF.
-$string['pdfsignaturepending'] = 'En attente de signature';
 $string['pdfsignedby'] = 'Signé électroniquement par {$a->name} le {$a->date} — empreinte {$a->hash}';
-$string['pdfname'] = 'NOM';
-$string['pdffirstname'] = 'Prénom';
-$string['pdfthesistitle'] = 'TITRE DE LA THÈSE';
-$string['pdfdoneatshort'] = '{$a->city}, le {$a->date}';
 $string['pdfreportfavorable'] = "Avis favorable à la soutenance de la thèse et à l'obtention du titre de Docteur vétérinaire.";
-$string['pdfagreementa6'] = "a validé son année d'approfondissement (A6) le :";
-$string['pdfagreementdirectortext'] = "Je soussigné(e), {\$a}, déclare que j'ai lu et corrigé la thèse de l'étudiant ci-dessous et "
-    . "j'en valide le contenu.";
-$string['pdfagreementmembertext'] = "Je soussigné(e), {\$a->name}, Enseignant-Chercheur de {\$a->institution}, déclare que j'ai corrigé "
-    . "la thèse de l'étudiant ci-dessous et j'en atteste la forme par la grille de conformité du manuscrit communiquée à la DEVE.";
-$string['pdfentitled'] = 'Intitulée';
-$string['pdfbornon'] = 'Né(e) le';
-$string['pdfcontracttitle'] = "CONTRAT DE DIFFUSION ÉLECTRONIQUE DE LA THÈSE D'EXERCICE DE MÉDECINE VÉTÉRINAIRE";
-$string['pdfcontractref'] = 'ENS-INI-P308-E04 V7';
-$string['pdfcontractdatapage'] = "Données et choix de l'auteur";
-$string['pdfcontractauthor'] = "L'Auteur(e) de la thèse d'exercice de médecine vétérinaire";
-$string['pdfpersonaladdress'] = 'Adresse personnelle';
-$string['pdfdefendedon'] = 'Thèse soutenue le';
-$string['pdfcontractart2title'] = 'Article 2 : Confidentialité et/ou embargo';
-$string['pdfcontractconfidentiality'] = 'Confidentialité';
-$string['pdfcontractnotconfidential'] = 'thèse non soumise à confidentialité';
-$string['pdfcontractconfidentialuntil'] = "thèse soumise à confidentialité jusqu'au";
-$string['pdfcontractembargo'] = 'Embargo ou diffusion différée de la Thèse';
-$string['pdfcontractnoembargo'] = 'thèse non soumise à embargo';
-$string['pdfcontractembargountil'] = "thèse soumise à embargo jusqu'au";
-$string['pdfcontractart4title'] = "Article 4 : Finalité d'exploitation de la Thèse par les Établissements";
-$string['pdfcontractnotemplate'] = "Le contrat type n'a pas été déposé dans les réglages du module (ou n'a pas pu être lu) : il doit être "
-    . "joint à ces pages.";
-$string['pdfcontractsignaturepage'] = 'CONTRAT DE DIFFUSION ÉLECTRONIQUE — SIGNATURES';
-$string['pdfcontractsignaturetext'] = "Contrat de diffusion électronique de la thèse de {\$a->student}, « {\$a->title} », conclu selon "
-    . "les données et les choix indiqués en première page et les articles qui précèdent.";
-$string['pdfcontractcopies'] = 'En trois exemplaires.';
-$string['pdfauthorsignature'] = "Signature de l'Auteur";
-$string['pdfcontractsupervisorvisa'] = "Visa de l'encadrant :";
-$string['pdfthesisof'] = 'Thèse de {$a}';
-$string['pdfseen'] = 'Vu, {$a->place} le {$a->date}';
 $string['privacy:metadata:these_dossier:bordereau'] = "Données personnelles saisies avec la soutenance (état civil, adresse, courriel personnel, cursus, choix de diffusion).";
 $string['privacy:metadata:these_dossier:conclusions'] = 'Conclusions de la thèse.';
 $string['privacy:metadata:these_dossier:reporttext'] = 'Rapport du directeur.';
@@ -763,3 +719,52 @@ $string['privacy:metadata:these_signature:ipaddress'] = 'Adresse IP au moment de
 $string['privacy:metadata:these_signature:timesigned'] = 'Date de signature.';
 $string['directorfunction'] = 'Votre fonction';
 $string['directorfunction_help'] = "Fonction imprimée dans l'agrément scientifique : « Je soussigné(e), NOM Prénom, fonction, déclare… » (par exemple : Maître de conférences, Professeur).";
+
+// Modèles des documents.
+$string['doctemplates'] = 'Modèles des documents';
+$string['doctemplates_desc'] = "Chaque document produit par le module est composé à partir d'un modèle : du HTML, dans lequel les "
+    . "données du dossier s'insèrent par des balises {{...}}. Les modèles d'origine reproduisent les formulaires de l'établissement ; "
+    . "un modèle modifié peut à tout moment être ramené à son origine. Les documents déjà produits ne changent pas.";
+$string['doctpldocument'] = 'Document';
+$string['doctplcustomised'] = 'Modifié';
+$string['doctploriginal'] = "Modèle d'origine";
+$string['doctplpreview'] = 'Aperçu PDF';
+$string['doctplreset'] = "Rétablir l'origine";
+$string['doctplresetconfirm'] = "Rétablir le modèle d'origine du document « {\$a} » ? Les modifications seront perdues.";
+$string['doctplresetdone'] = "Le modèle d'origine du document « {\$a} » est rétabli.";
+$string['doctplsaved'] = 'Le modèle du document « {$a} » est enregistré.';
+$string['doctplintro'] = "L'aperçu PDF s'ouvre dans un nouvel onglet avec des données fictives (dossier complet, signé à tous les "
+    . "emplacements), sans enregistrer le modèle.";
+$string['doctplcontent'] = 'Modèle';
+$string['doctplcontent_help'] = "HTML interprété par TCPDF : tableaux (largeurs en mm, bordures par style « border »), styles en ligne, "
+    . "images, saut de page par &lt;br pagebreak=\"true\" /&gt;.
+
+* {{variable}} insère une valeur (échappée) ; {{{variable}}} insère du HTML (cases à cocher box.*, signatures sig.*, textes *html) ;
+* {{#variable}}...{{/variable}} n'affiche le contenu que si la variable est vraie ou non vide, ou le répète pour chaque élément d'une liste
+  (jury...) ; {{^variable}}...{{/variable}} l'affiche si elle est fausse ou vide ;
+* la première ligne peut fixer la mise en page : &lt;!--@page margins=\"haut,droite,bas,gauche\" header=\"8\" footer=\"12\" font=\"freesans\" size=\"10\" lineheight=\"1.25\"--&gt; (mm, points) ;
+* &lt;!--@header--&gt;, &lt;!--@body--&gt; et &lt;!--@footer--&gt; séparent l'en-tête et le pied de page, répétés sur chaque page, du contenu ;
+  {{pagenumber}} et {{pagecount}} y donnent le numéro de page et le nombre de pages.";
+$string['doctplerror'] = 'Ce modèle ne produit pas de document : {$a}';
+$string['doctplvariables'] = 'Variables disponibles';
+$string['doctplvariables_desc'] = "Exemples tirés des données fictives de l'aperçu. Les signatures sont vides tant que l'emplacement n'est "
+    . "pas signé ; sigsrc.* donne la source d'image à utiliser dans &lt;img src=\"{{sigsrc.director}}\" height=\"10mm\" /&gt;.";
+$string['doctplvariable'] = 'Variable';
+$string['doctplexample'] = 'Exemple';
+$string['doctplvarimage'] = 'Image, à utiliser dans <img src="...">';
+$string['doctplvarlist'] = 'Liste (éléments : {$a})';
+$string['doctplvarbool'] = 'Vrai / faux ({$a})';
+$string['doctplvarhtml'] = 'HTML, à insérer par {{{...}}}';
+$string['doctplsubject'] = 'Dépôt de sujet de thèse (E01)';
+$string['doctplagreement'] = "Fiche d'agréments administratif et scientifique (E02)";
+$string['doctplsignaletique'] = 'Fiche signalétique (E03)';
+$string['doctplbordereau'] = 'Bordereau de thèse (ABES)';
+$string['doctplreport'] = 'Rapport du directeur';
+$string['doctplgrid'] = 'Grille de conformité';
+$string['doctplconclusions'] = 'Conclusions';
+$string['doctplcontractdata'] = "Contrat de diffusion (E04) : page des données et choix de l'auteur";
+$string['doctplcontractsign'] = 'Contrat de diffusion (E04) : page de signatures';
+$string['doctplconformity'] = 'Attestation de conformité (bibliothèque)';
+$string['doctplconvocation'] = 'Convocation à la soutenance';
+$string['doctpljurysheet'] = 'Feuille de jury';
+$string['doctplminutes'] = 'Procès-verbal de soutenance';

@@ -42,11 +42,14 @@ Bibliothèque ──conformité du manuscrit──▶ DEVE ──convocations, f
   étape** (avis, grille de conformité, signature unique) ; le rapport n'est
   pas communiqué à l'étudiant.
 - Les **documents officiels** (E01 sujet, E02 agréments, E03 fiche
-  signalétique, bordereau ABES, rapport, grille, conclusions) sont produits sur
-  les PDF de l'établissement et **signés dans le module** (tracé, empreinte du
-  contenu, liens de signature pour les signataires extérieurs). Le contrat de
-  diffusion reprend le PDF déposé par l'administrateur, entre une page de
-  données et choix et une page de signatures.
+  signalétique, bordereau ABES, rapport, grille, conclusions) sont reconstitués
+  dans la mise en forme de l'établissement et **signés dans le module** (tracé,
+  empreinte du contenu, liens de signature pour les signataires extérieurs). Le
+  contrat de diffusion reprend le PDF déposé par l'administrateur, entre une
+  page de données et choix et une page de signatures.
+- Chaque document est produit à partir d'un **modèle modifiable** dans
+  l'administration du site (HTML et balises `{{...}}`, aperçu PDF, retour au
+  modèle d'origine).
 - La bibliothèque dispose d'un rôle propre (« Bibliothèque (thèses) »), et les
   rôles DEVE et Bibliothèque se choisissent dans l'administration du site.
 - La DEVE **génère** la convocation de l'étudiant et de chaque membre du jury,
@@ -63,8 +66,8 @@ Bibliothèque ──conformité du manuscrit──▶ DEVE ──convocations, f
 ## Qualité
 
 - Style : standard Moodle (`moodlehq/moodle-cs`), sans avertissement.
-- Tests PHPUnit (43 tests) : circuit complet, renvois, droits, relances,
-  documents générés, signatures, import, confidentialité, sauvegarde/restauration.
+- Tests PHPUnit (48 tests) : circuit complet, renvois, droits, relances,
+  documents générés, signatures, modèles, import, confidentialité, sauvegarde/restauration.
 - CI GitHub Actions : phpcs, lint, validation du plugin, savepoints, PHPDoc,
   PHPUnit sur Moodle 4.5 / PostgreSQL.
 

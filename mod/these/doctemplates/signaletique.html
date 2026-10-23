@@ -1,0 +1,184 @@
+<!--@page margins="7,7,6,18" font="freesans" size="9.5" lineheight="1.2"-->
+<!--@body-->
+<table cellpadding="0">
+  <tr>
+    <td width="120mm" style="font-size:8pt;color:#808080;"><i>&nbsp;Ce document doit tenir sur une seule page</i></td>
+    <td width="57mm" align="right" style="font-size:8pt;"><br /><br />ENS-INI-P308-E03 V8</td>
+  </tr>
+</table>
+<table cellpadding="0">
+  <tr>
+    <td width="107mm"><br /><br /><img src="{{img.marianne}}" height="25mm" /></td>
+    <td width="32mm"><br /><br /><img src="{{img.lyon1}}" height="33mm" /></td>
+    <td width="46mm"><br /><br /><br /><br /><br /><img src="{{img.vetagrosup}}" height="19mm" /></td>
+  </tr>
+</table>
+<div style="text-align:right;font-size:9.5pt;font-weight:bold;">Thèse d’Exercice Vétérinaire&nbsp;&nbsp;</div>
+<div style="text-align:center;font-size:13pt;font-weight:bold;">FICHE SIGNALETIQUE</div>
+<div style="font-size:3pt;"> </div>
+<table cellpadding="1.5">
+  <tr>
+    <td height="36.5mm" style="border:0.5pt solid #000000;line-height:1.5;">
+      <table cellpadding="0" style="line-height:1.9;">
+        <tr>
+          <td width="17mm"><b>Nom :</b></td>
+          <td width="98mm">{{student.lastname}}</td>
+          <td width="19mm"><b>Prénom :</b></td>
+          <td width="48mm">{{student.firstname}}</td>
+        </tr>
+      </table>
+      <table cellpadding="0" style="line-height:1.1;">
+        <tr><td width="182mm"><b>Email personnel*</b> (≠ VetAgro Sup) <b>:</b> {{student.personalemail}}<br /><b>*</b> <i><span style="font-size:6.5pt;">j’accepte que mon email soit utilisé par VetAgro Sup dans le cadre des accréditations et qu’il soit diffusé à des partenaires institutionnels</span></i></td></tr>
+      </table>
+      <table cellpadding="0" style="line-height:2.2;">
+        <tr>
+          <td width="17mm"><b>Né(e) le :</b></td>
+          <td width="65mm">{{student.birthdate}}</td>
+          <td width="7mm"><b>à :</b></td>
+          <td width="58mm">{{student.birthplace}}</td>
+          <td width="18mm"><b>N° Dép. :</b></td>
+          <td width="17mm">{{student.birthdept}}</td>
+        </tr>
+        <tr>
+          <td width="32mm"><b>Adresse pérenne :</b></td>
+          <td width="94mm">{{student.address}}</td>
+          <td width="10mm"><b>Tél :</b></td>
+          <td width="46mm">{{student.phone}}</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<div style="font-size:4pt;"> </div>
+<table cellpadding="1.5">
+  <tr>
+    <td style="border:0.5pt solid #000000;">
+      <table cellpadding="0">
+        <tr>
+          <td width="38mm"><b>Date de soutenance :</b></td>
+          <td width="19mm">{{defense.date}}</td>
+          <td width="14mm"><b>Heure :</b></td>
+          <td width="18mm">{{defense.time}}</td>
+          <td width="12mm"><b>Salle :</b></td>
+          <td width="43mm">{{defense.location}}</td>
+          <td width="38mm"><span style="font-size:11pt;">{{{box.visio}}}</span> <b>Visioconférence</b></td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<div style="font-size:4pt;"> </div>
+<table cellpadding="1.5">
+  <tr>
+    <td height="20.5mm" style="border:0.5pt solid #000000;line-height:1.7;">
+      <table cellpadding="0">
+        <tr>
+          <td width="82mm"><b>Obtention DEFV le : {{cursus.defvdate}}</b></td>
+          <td width="100mm"><b>à : {{cursus.defvschool}}</b></td>
+        </tr>
+        <tr>
+          <td width="82mm"><b>Validation de la A6 * : {{cursus.a6date}}</b></td>
+          <td width="100mm"><b>à : {{cursus.a6school}}</b></td>
+        </tr>
+      </table>
+      <table cellpadding="0"><tr><td width="182mm"><span style="font-size:11pt;">{{{box.cursusa6notyet}}}</span> <b>*Je n’ai pas encore validé mon année d’approfondissement (A6)</b></td></tr></table>
+    </td>
+  </tr>
+</table>
+<div style="font-size:4pt;"> </div>
+<table cellpadding="1.5">
+  <tr>
+    <td height="53mm" style="border:0.5pt solid #000000;">
+      <table cellpadding="0" style="line-height:1.75;">
+        <tr><td width="182mm"><b><i><u>COMPOSTION DU JURY (=3 à 5 membres)</u></i></b></td></tr>
+      </table>
+      <table cellpadding="0" style="line-height:1.75;">
+        <tr>
+          <td width="7mm"></td>
+          <td width="109mm"><br /><b><i>Titre, Nom, Prénom</i></b></td>
+          <td width="66mm"><br /><b><i>Etablissement</i></b></td>
+        </tr>
+      </table>
+      <table cellpadding="0" style="line-height:1.75;">
+        <tr>
+          <td width="38mm"><b>Président</b></td>
+          <td width="5mm"><b>:</b></td>
+          <td width="62mm">{{jurypresident.name}}</td>
+          <td width="77mm">{{jurypresident.institution}}</td>
+        </tr>
+        <tr>
+          <td width="38mm"><b>Membre</b></td>
+          <td width="5mm"><b>:</b></td>
+          <td width="62mm">{{jurylocal.name}}</td>
+          <td width="77mm"><b>VetAgro Sup Campus vétérinaire de Lyon</b></td>
+        </tr>
+      </table>
+      <table cellpadding="0"><tr><td width="182mm" style="font-size:6.5pt;line-height:1;"><i>Si le Directeur n’est pas de VetAgro Sup – Examinateur = Enseignant-Chercheur VETAGRO SUP</i></td></tr></table>
+      <table cellpadding="0" style="line-height:1.75;">
+        <tr>
+          <td width="38mm"><b>Membre</b></td>
+          <td width="5mm"><b>:</b></td>
+          <td width="62mm">{{jurymember1.name}}</td>
+          <td width="77mm">{{jurymember1.institution}}</td>
+        </tr>
+        <tr>
+          <td width="38mm"><b>Membre</b></td>
+          <td width="5mm"><b>:</b></td>
+          <td width="62mm">{{jurymember2.name}}</td>
+          <td width="77mm">{{jurymember2.institution}}</td>
+        </tr>
+        <tr>
+          <td width="38mm"><b>Directeur de thèse</b></td>
+          <td width="5mm"><b>:</b></td>
+          <td width="62mm">{{jurydirector.name}}</td>
+          <td width="77mm">{{jurydirector.institution}}</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<div style="font-size:4pt;"> </div>
+<table cellpadding="1.5">
+  <tr>
+    <td style="border:0.5pt solid #000000;">
+      <table cellpadding="0">
+        <tr>
+          <td width="38mm"><b>Membre(s) invité(s) :</b></td>
+          <td width="66mm">{{juryguest1.name}}</td>
+          <td width="20mm">adresse @ :</td>
+          <td width="58mm">{{juryguest1.email}}</td>
+        </tr>
+        <tr>
+          <td width="38mm" style="font-size:6.5pt;"><i>(facultatif 1 à 2 maximum)</i></td>
+          <td width="66mm">{{juryguest2.name}}</td>
+          <td width="20mm">adresse @ :</td>
+          <td width="58mm">{{juryguest2.email}}</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<div style="font-size:6pt;"> </div>
+<table cellpadding="1.5">
+  <tr>
+    <td height="17mm" style="border:0.5pt solid #000000;">
+      <table cellpadding="0">
+        <tr>
+          <td width="140mm"><b><i><u>SUJET DE LA THESE DEFINITIF</u></i> (écrire en majuscules)</b></td>
+          <td width="42mm"><span style="font-size:11pt;">{{{box.confidential}}}</span> <b>Thèse confidentielle</b></td>
+        </tr>
+      </table>
+      <table cellpadding="0"><tr><td width="182mm">{{thesis.titleupper}}</td></tr></table>
+    </td>
+  </tr>
+</table>
+<table cellpadding="0">
+  <tr>
+    <td width="108mm"><br /><br /><b>Le Président du Jury</b><br />{{{sig.president}}}</td>
+    <td width="76mm"><br /><br /><b>La Directrice générale<br />VetAgro Sup</b><br />{{{sig.dg}}}</td>
+  </tr>
+  <tr>
+    <td width="108mm"><br /><br /><b>Pour le président de l’Université Lyon 1 et par délégation<br />Le président du CCEM<br />{{settings.ccemname}}</b></td>
+    <td width="76mm"><br />{{{sig.ccem}}}</td>
+  </tr>
+</table>

@@ -69,30 +69,33 @@ l'étudiant comme directeurs.
 
 ## 3 bis. Documents officiels et signatures électroniques
 
-Réglages du site, rubrique *Documents* : logos (pages produites par le module),
-**modèle PDF du contrat de diffusion** (E04 en vigueur), établissement, lien
-HeTOP, lieu du visa, puis nom, qualité et courriel des signataires extérieurs
-(directeur général ou son représentant, président de la CCEM, université).
+Réglages du site, rubrique *Documents* : images des modèles, **modèle PDF du
+contrat de diffusion** (E04 en vigueur), établissement, lien HeTOP, lieu du
+visa, direction des études (fiche d'agréments), puis nom, qualité et courriel
+des signataires extérieurs (direction générale, président de la CCEM,
+université).
 
 Les formulaires E01 (sujet), E02 (agréments), E03 (fiche signalétique), le
 bordereau ABES, le rapport, la grille de conformité et les conclusions sont
-produits **en remplissant les PDF officiels** fournis dans `pdftemplates/` :
-la mise en page est celle des documents de l'établissement, le module n'écrit
-que les données et les signatures aux emplacements prévus. Le contrat de
-diffusion est assemblé ainsi : page de données et choix, modèle déposé par
-l'administrateur tel quel, page de signatures.
+**reconstitués dans la mise en forme des documents de l'établissement** (logos,
+cadres, libellés, cases à cocher) et remplis avec les données du dossier. Le
+contrat de diffusion est assemblé ainsi : page de données et choix, modèle
+déposé par l'administrateur tel quel, page de signatures.
+
+Chaque document est produit à partir d'un **modèle modifiable** : *Administration
+du site > Plugins > Modules d'activité > Gestion des thèses > Modèles des
+documents*. Un modèle est du HTML (interprété par TCPDF) avec des balises
+Mustache (`{{student.lastname}}`, `{{{sig.director}}}`, `{{#jury}}…{{/jury}}`) ;
+la page de modification liste toutes les variables, propose un aperçu PDF avec
+des données fictives et refuse un modèle qui ne produit pas de document. Un
+modèle modifié peut être ramené à son origine (`doctemplates/<document>.html`).
+Les logos fournis (`doctemplates/images/`) peuvent être remplacés en déposant une
+image du même nom dans le réglage *Images des modèles*.
 
 Chaque signature (tracé, nom, date, empreinte SHA-256 du contenu signé) est
-annulée si le contenu signé change. Les signataires extérieurs reçoivent un
-lien personnel par courriel ; la DEVE suit les signatures (*Suivi des
-signatures*), relance ou fait signer sur place.
-
-> **Changement de version d'un formulaire** : remplacer le PDF dans
-> `pdftemplates/` impose de recaler les coordonnées correspondantes dans
-> `classes/pdf/official_forms.php`.
-
-La réinitialisation du cours ne supprime les dossiers que si l'option est
-cochée explicitement (elle ne l'est pas par défaut).
+annulée si le contenu signé change ; modifier un modèle ne l'annule pas. Les
+signataires extérieurs reçoivent un lien personnel par courriel ; la DEVE suit
+les signatures (*Suivi des signatures*), relance ou fait signer sur place.
 
 ## 4. Statuts
 

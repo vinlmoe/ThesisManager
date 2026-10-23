@@ -1,0 +1,59 @@
+<!--@page margins="58,20,12,20" header="8" font="freesans" size="10" lineheight="1.25"-->
+<!--@header-->
+<table cellpadding="0">
+  <tr><td width="170mm" align="right" style="font-size:8pt;">ENS-INI-P308-E04 V7</td></tr>
+</table>
+<table cellpadding="0">
+  <tr>
+    <td width="4mm"></td>
+    <td width="30mm"><img src="{{img.marianne}}" height="31mm" /></td>
+    <td width="84mm"><br /><br /><img src="{{img.bulyon1}}" height="26mm" /></td>
+    <td width="52mm"><br /><br /><br /><br /><img src="{{img.vetagrosup}}" height="20mm" /></td>
+  </tr>
+</table>
+<table cellpadding="0">
+  <tr><td width="155mm" align="right" style="font-size:9pt;"><b>DEVE - BIBLIOTHEQUE</b></td><td width="15mm"></td></tr>
+  <tr><td width="170mm" style="border-bottom:0.8pt solid #2f5496;font-size:2pt;"> </td></tr>
+</table>
+<!--@body-->
+<div style="text-align:center;"><b>CONTRAT DE DIFFUSION ELECTRONIQUE<br />DE LA THÈSE D’EXERCICE DE MÉDECINE VÉTÉRINAIRE</b></div>
+<div style="text-align:center;font-size:9pt;color:#555555;"><i>Données et choix de l’auteur (première page du contrat)</i></div>
+<br />
+<b><i><u>Entre d’une part</u></i></b> :<br /><br />
+<b>L’Auteur(e) de la thèse d’exercice de médecine vétérinaire :</b><br /><br />
+<table cellpadding="0" style="line-height:1.4;">
+  <tr><td width="52mm">Nom :</td><td width="118mm">{{student.lastname}}</td></tr>
+  <tr><td width="52mm">Prénom :</td><td width="118mm">{{student.firstname}}</td></tr>
+  <tr><td width="52mm">Né(e) le :</td><td width="118mm">{{student.birthdate}}</td></tr>
+  <tr><td width="52mm">Adresse personnelle :</td><td width="118mm">{{student.address}}</td></tr>
+  <tr><td width="52mm">Adresse courriel personnelle :</td><td width="118mm">{{student.personalemail}}</td></tr>
+  <tr><td width="52mm">Intitulé de la thèse :</td><td width="118mm">{{thesis.title}}</td></tr>
+  <tr><td width="52mm">Thèse soutenue le :</td><td width="118mm">{{defense.date}}</td></tr>
+</table>
+<br />
+<div style="text-align:center;">Ci-après désigné(e) <b>« l’Auteur »</b> ;</div>
+<br />
+<b>Article 2 : Confidentialité et/ou embargo</b><br /><br />
+<b>2.1. Confidentialité :</b><br />
+<table cellpadding="0" style="line-height:1.6;">
+  <tr><td width="10mm"></td><td width="160mm"><span style="font-size:12pt;">{{{box.notconfidential}}}</span> thèse non soumise à confidentialité</td></tr>
+  <tr><td width="10mm"></td><td width="160mm"><span style="font-size:12pt;">{{{box.confidential}}}</span> thèse soumise à confidentialité jusqu’au (JJ/MM/AAAA) : <b>{{contract.confidentialuntil}}</b></td></tr>
+</table>
+<div style="font-size:9pt;"> </div>
+<b>2.2. Embargo ou diffusion différée de la Thèse :</b><br />
+<table cellpadding="0" style="line-height:1.6;">
+  <tr><td width="10mm"></td><td width="160mm"><span style="font-size:12pt;">{{{box.noembargo}}}</span> thèse non soumise à embargo</td></tr>
+  <tr><td width="10mm"></td><td width="160mm"><span style="font-size:12pt;">{{{box.embargo}}}</span> thèse soumise à embargo jusqu’au (JJ/MM/AAAA) : <b>{{contract.embargountil}}</b></td></tr>
+</table>
+<div style="font-size:9pt;"> </div>
+<b>Article 4 : Finalité d’exploitation de la Thèse par les Établissements</b><br /><br />
+L’Auteur, qui cède aux Établissements, à titre gratuit, les droits indiqués à l’article 3 pour les finalités suivantes et pour le Monde entier :<br /><br />
+<span style="font-size:12pt;">{{{box.internet}}}</span> autorise la diffusion de la Thèse en texte intégral sur internet, à savoir :<br />
+&nbsp;&nbsp;&nbsp;- sur le portail DUMAS (Dépôt Universitaires de Mémoires Après Soutenance) ;<br />
+&nbsp;&nbsp;&nbsp;- dans le catalogue national Sudoc ;<br />
+&nbsp;&nbsp;&nbsp;- dans le catalogue des ressources documentaires de la bibliothèque vétérinaire de VetAgro Sup ;<br />
+&nbsp;&nbsp;&nbsp;- et dans le catalogue des bibliothèques universitaires de l’UCBL.<br /><br />
+<span style="font-size:12pt;">{{{box.restricted}}}</span> n’autorise pas la diffusion de la Thèse en texte intégral sur internet, mais uniquement :<br />
+&nbsp;&nbsp;&nbsp;- la consultation de la version papier dans les bibliothèques des écoles vétérinaires ;<br />
+&nbsp;&nbsp;&nbsp;- et la diffusion sur l’intranet/extranet de l’UCBL.
+{{#contract.templatemissing}}<br /><br /><span style="color:#a00000;font-size:8.5pt;"><i>Le contrat type n’a pas été déposé dans les réglages du module (ou n’a pas pu être lu) : il doit être joint à ces pages.</i></span>{{/contract.templatemissing}}
