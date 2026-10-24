@@ -232,20 +232,6 @@ final class workflow_test extends these_testcase {
             'status' => THESE_STATUS_SCHEDULED, 'directorid' => $this->director->id,
         ]);
 
-        // Une thèse ajournée ne reçoit ni mention, ni prix, ni corrections.
-        $adjourned = $this->generator->create_dossier($this->these, $this->getDataGenerator()->create_user()->id, [
-            'status' => THESE_STATUS_SCHEDULED,
-        ]);
-        $adjourned = these_record_minutes($this->these, $this->cm, $adjourned, $this->deve->id, (object) [
-            'result' => THESE_RESULT_ADJOURNED, 'mention' => 'honorable', 'prizeproposal' => true,
-            'correctionsrequested' => true, 'correctionsnote' => 'x',
-        ]);
-        $this->assertEquals(THESE_STATUS_CLOSED, $adjourned->status);
-        $this->assertSame('', $adjourned->mention);
-        $this->assertEquals(0, $adjourned->prizeproposal);
-        $this->assertEquals(0, $adjourned->correctionsrequested);
-        $sink->clear();
-
         $dossier = these_record_minutes($this->these, $this->cm, $dossier, $this->deve->id, (object) [
             'result' => THESE_RESULT_ADMITTED, 'mention' => 'treshonorable', 'prizeproposal' => false,
             'correctionsrequested' => true, 'correctionsnote' => 'Reprendre la discussion.',
@@ -302,5 +288,69 @@ final class workflow_test extends these_testcase {
         $this->assertNotNull(these_report_error($this->these, str_repeat('Une phrase du rapport. ', 150)));
         $this->assertNotNull(these_report_error($this->these, str_repeat("Paragraphe.\n\n", 60)));
         $this->assertFalse(these_report_editable((object) ['status' => THESE_STATUS_DEFENSE_APPROVED]));
+    }
+
+    /**
+     * Ajournement : retour en phase de soutenance, PV archivé, documents et signatures de la
+     * soutenance supprimés (pas ceux du sujet), accès du jury révoqués ; nouveau dépôt possible.
+     */
+    public function test_adjournment(): void {
+        global $DB;
+        $this->setup_activity();
+        $sink = $this->redirectEmails();
+        $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
+            'status' => THESE_STATUS_SCHEDULED, 'directorid' => $this->director->id, 'devenumber' => '2026-004',
+            'reporttext' => 'Rapport.', 'reportfavorable' => 1, 'documentstime' => time(), 'senttime' => time(),
+        ]);
+        these_save_jury($dossier->id, $this->generator->default_jury());
+        $DB->set_field('these_jury', 'notifiedtime', time(), ['dossierid' => $dossier->id]);
+        $DB->set_field('these_jury', 'accesstoken', 'jeton', ['dossierid' => $dossier->id]);
+        $png = these_sample_signature_image();
+        these_sign_document($this->context, $dossier, 'subject', 'student', $this->student->id, 'Étudiant', $png);
+        these_sign_document($this->context, $dossier, 'report', 'director', $this->director->id, 'Directeur', $png);
+        $fs = get_file_storage();
+        $file = ['contextid' => $this->context->id, 'component' => 'mod_these', 'itemid' => $dossier->id, 'filepath' => '/'];
+        $fs->create_file_from_string($file + ['filearea' => 'pv', 'filename' => 'pv.pdf'], '%PDF-1.4');
+        $fs->create_file_from_string($file + ['filearea' => 'generated', 'filename' => 'convocation.pdf'], '%PDF-1.4');
+
+        $dossier = these_record_minutes($this->these, $this->cm, $dossier, $this->deve->id, (object) [
+            'result' => THESE_RESULT_ADJOURNED, 'mention' => 'honorable', 'prizeproposal' => true,
+            'correctionsrequested' => true, 'correctionsnote' => 'x',
+        ]);
+        $dossier = $this->reload($dossier->id);
+        $this->assertEquals(THESE_STATUS_ACTIVE, $dossier->status);
+        $this->assertTrue(these_is_adjourned($dossier));
+        $this->assertTrue(these_defense_editable($dossier));
+        $this->assertSame('', (string) $dossier->mention);
+        $this->assertEquals(0, $dossier->prizeproposal);
+        $this->assertEquals(0, $dossier->correctionsrequested);
+        $this->assertEquals(0, $dossier->reportfavorable);
+        $this->assertEquals(0, $dossier->documentstime);
+        $this->assertSame('2026-004', $dossier->devenumber);
+        $this->assertSame('Rapport.', $dossier->reporttext);
+
+        // PV archivé, documents générés supprimés.
+        $this->assertCount(0, these_get_files($this->context, 'pv', $dossier->id));
+        $this->assertCount(0, these_get_files($this->context, 'generated', $dossier->id));
+        $archived = these_get_files($this->context, 'pvadjourned', $dossier->id);
+        $this->assertCount(1, $archived);
+        $this->assertStringStartsWith('ajournement-', $archived[0]->get_filename());
+        // Signature du sujet conservée, celle du rapport supprimée ; jury à prévenir de nouveau.
+        $this->assertSame(['subject:student'], array_keys(these_get_signatures($dossier->id)));
+        foreach (these_get_jury($dossier->id) as $member) {
+            $this->assertEquals(0, $member->notifiedtime);
+            $this->assertEmpty($member->accesstoken);
+        }
+        $recipients = array_column($sink->get_messages(), 'to');
+        sort($recipients);
+        $expected = [$this->student->email, $this->director->email];
+        sort($expected);
+        $this->assertEquals($expected, $recipients);
+        $this->assertTrue($DB->record_exists('these_log', ['dossierid' => $dossier->id, 'logaction' => 'adjourned']));
+
+        // Nouveau dépôt de soutenance : de nouveau chez le directeur.
+        these_save_defense($this->these, $this->cm, $dossier, $this->defense_data(), true, $this->student->id);
+        $dossier = $this->reload($dossier->id);
+        $this->assertEquals(THESE_STATUS_DEFENSE_SUBMITTED, $dossier->status);
     }
 }

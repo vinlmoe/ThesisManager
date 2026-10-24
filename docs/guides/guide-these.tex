@@ -4,9 +4,9 @@
 
 % Version du guide : à mettre à jour à chaque modification, avec une ligne dans l'historique.
 \newcommand{\titreguide}{Guide de la gestion des thèses}
-\newcommand{\versionguide}{1.7}
+\newcommand{\versionguide}{1.8}
 \newcommand{\dateguide}{24 octobre 2026}
-\newcommand{\versionthese}{0.8.0}
+\newcommand{\versionthese}{0.8.1}
 
 \usepackage{guide-commun}
 \usepackage{tikz}
@@ -43,6 +43,9 @@ de suivi ; questionnaire préalable au jury ; recherche des thèses. \\
 \og membre du jury\fg{} au lieu d'\og assesseur\fg{} ; rapport du directeur
 rédigé dans un formulaire ; décisions du jury au procès-verbal (mention, prix de
 thèse) et circuit des corrections. \\
+1.8 & 24 octobre 2026 & Procédures pas à pas pour chaque acteur ; ajournement
+(retour en phase de soutenance) ; agent DEVE signataire ; signature
+enregistrée ; \og Mes signatures\fg{}. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -67,9 +70,15 @@ la soutenance\fg{}. Quatre acteurs y interviennent :
         documentaire puis atteste la conformité du manuscrit.
 \end{itemize}
 
+Les membres du jury consultent les documents et le président signe les siens ;
+l'agent responsable de la DEVE signe les documents de la DEVE une fois que son
+équipe a tout vérifié. Les sections \og pas à pas\fg{} décrivent, pour chacun,
+chaque action dans l'ordre.
+
 Si le jury demande des corrections, l'étudiant dépose son manuscrit corrigé,
 que le directeur, la bibliothèque puis la DEVE valident avant la clôture du
-dossier.
+dossier. Si la thèse est ajournée, le dossier revient en phase de soutenance et
+l'étudiant dépose un nouveau dossier, qui suit de nouveau tout le circuit.
 
 
 \begin{figure}[H]
@@ -214,6 +223,10 @@ Dans la même page d'administration :
         (ENS-INI-P308-E04), déposé tel quel. Le module le fait précéder d'une
         page de données et de choix de l'auteur et suivre d'une page de
         signatures, comme pour les conventions de stage.
+  \item[Agent DEVE signataire] identifiant ou adresse du compte Moodle de
+        l'agent responsable de la DEVE : l'équipe valide sans signer, puis
+        l'agent signe depuis \bouton{Mes signatures}
+        (section~\ref{sec:agent}). Vide : la personne qui valide signe.
   \item[Signataires] direction générale, président du CCEM, présidence de
         l'université : nom et adresse. Avec une adresse, le signataire reçoit un
         lien de signature ; sans adresse, la DEVE recueille sa signature sur place.
@@ -274,111 +287,210 @@ par défaut, affiche le compte rendu ligne par ligne sans rien créer.
 \capture{20_import}{Import de dossiers existants.}
 
 % ===========================================================================
-\section{Étudiant}
+\section{Étudiant : pas à pas}
 
-\subsection{Proposer son sujet (phase 1)}
-
-L'activité ouvre sur \og Mon dossier de thèse\fg{}. Sans dossier, le bouton
-\bouton{Proposer un sujet de thèse} ouvre la fiche de sujet : titre (et titre
-anglais), année d'études, confidentialité éventuelle, résumé, 3 à 5 mots-clés
-(liens vers HeTOP), directeur de thèse (ou directeur extérieur à l'école, avec
-ses coordonnées), co-directeur éventuel, pièces jointes facultatives, puis les
-engagements du formulaire E01 et votre signature tracée à la souris ou au doigt.
-
-\capture{02_etudiant_sujet}{Fiche de sujet.}
-
-\bouton{Enregistrer le brouillon} conserve la saisie sans rien transmettre ;
-\bouton{Soumettre au directeur de thèse} l'envoie au directeur, qui reçoit un
-courriel. Le sujet n'est plus modifiable ensuite, sauf s'il vous est renvoyé.
-
+L'activité \og Gestion des thèses\fg{} ouvre sur \og Mon dossier de thèse\fg{}.
 La frise en haut du dossier indique à tout moment l'étape atteinte et qui doit
-agir.
+agir ; les boutons bleus sous la frise sont les actions qui vous attendent.
 
-\subsection{Déposer ses documents de soutenance (phase 2)}
+\begin{procedure}{Proposer son sujet (phase 1)}{Étudiant}
+\begin{etapes}
+  \item Ouvrez l'activité \og Gestion des thèses\fg{} de votre cours, puis
+        cliquez sur \bouton{Proposer un sujet de thèse}.
+  \item Remplissez la fiche : titre (et titre anglais), année d'études,
+        confidentialité éventuelle, résumé, 3 à 5 mots-clés (liens vers HeTOP).
+  \item Choisissez votre directeur de thèse dans la liste ou, s'il est
+        extérieur à l'école, cochez \bouton{Le directeur de thèse est extérieur à l'établissement} et saisissez
+        ses coordonnées ; ajoutez au besoin un co-directeur et des pièces jointes.
+  \item Cochez les engagements du formulaire E01.
+  \item Signez : tracez votre signature à la souris ou au doigt. Laissez
+        cochée \bouton{Enregistrer cette signature pour mes prochaines
+        signatures} : elle sera reprise d'office la prochaine fois. Cochez la
+        certification.
+  \item Cliquez sur \bouton{Soumettre au directeur de thèse}, ou sur
+        \bouton{Enregistrer le brouillon} pour terminer plus tard.
+\end{etapes}
+\ensuite{le dossier passe en \statut{Sujet soumis au directeur} ; votre
+directeur reçoit un courriel. Le sujet n'est plus modifiable, sauf s'il vous
+est renvoyé.}
+\end{procedure}
 
-Une fois le dossier actif, le bouton \bouton{Déposer les documents de
-soutenance} permet de déposer le manuscrit (PDF, obligatoire), les autres
-documents, de proposer une date, un lieu et le jury : un président et au moins
-le nombre de membres votants fixé dans l'activité. Chaque membre se choisit de
-préférence dans l'\textbf{annuaire du jury} (section~\ref{sec:annuaire}) ; un
-membre extérieur ou un invité se décrit en choisissant \og Membre extérieur ou
-invité\fg{} (nom, titre, statut, établissement, adresse). Seuls les maîtres de
-conférences HDR, les professeurs et les émérites peuvent présider. Le directeur
-est proposé d'office. Le même écran recueille les données du bordereau ABES
-(identité, cursus, mots-clés, résumé), le texte des conclusions et vos choix de
-diffusion pour le contrat (confidentialité, embargo), avant votre signature. Le
-dépôt peut se préparer en plusieurs fois.
+\capture[0.85\linewidth]{60_etudiant_sujet_signature}{Fiche de sujet : engagements et signature.}
 
-\begin{astuce}
-Les conclusions doivent tenir \textbf{sur une page avec les signatures} :
-2\,200 caractères au plus, paragraphes séparés par une ligne vide. Au dépôt, la
-mise en page réelle est vérifiée ; des conclusions trop longues (ou en trop de
-paragraphes) sont refusées avec un message.
-\end{astuce}
+\begin{procedure}{Corriger un sujet ou un dossier renvoyé}{Étudiant}
+\begin{etapes}
+  \item Ouvrez le courriel \og dossier renvoyé\fg{} ou l'activité : le motif du
+        renvoi s'affiche en orange en haut du dossier.
+  \item Cliquez sur \bouton{Modifier le sujet} (phase 1) ou \bouton{Déposer les
+        documents de soutenance} (phase 2).
+  \item Corrigez ce qui est demandé, signez de nouveau (votre signature
+        enregistrée est proposée) et soumettez.
+\end{etapes}
+\ensuite{le dossier revient \emph{directement} à la personne qui l'a renvoyé,
+sans repasser par les étapes déjà franchies.}
+\end{procedure}
 
-\capture{09_etudiant_soutenance}{Dépôt des documents de soutenance.}
+\capture[0.85\linewidth]{61_etudiant_sujet_renvoye}{Sujet renvoyé : motif affiché en haut du dossier.}
 
-\paragraph{Questionnaire préalable au jury.} Si un questionnaire est défini
-(section~\ref{sec:questionnaire}), le bouton \bouton{Questionnaire préalable au
-jury} apparaît dans votre dossier : réponses courtes ou longues, listes et choix
-multiples. Le dépôt de la soutenance n'est accepté qu'une fois les questions
-obligatoires remplies ; le formulaire de dépôt indique celles qui manquent. Vos
-réponses figurent au dossier, sont communiquées au jury et servent à retrouver
-les thèses.
+\begin{procedure}{Remplir le questionnaire préalable au jury}{Étudiant, avant le dépôt de la soutenance}
+\begin{etapes}
+  \item Dans votre dossier (statut \statut{Dossier actif}), cliquez sur
+        \bouton{Questionnaire préalable au jury}.
+  \item Répondez aux questions : réponse courte ou longue, choix dans une
+        liste, une ou plusieurs cases pour un QCM. Les questions obligatoires
+        sont signalées.
+  \item Cliquez sur \bouton{Enregistrer}. Vous pouvez revenir modifier vos
+        réponses tant que la soutenance n'est pas déposée.
+\end{etapes}
+\ensuite{le formulaire de dépôt de la soutenance indique \og Questionnaire
+rempli\fg{} ; tant qu'une question obligatoire est sans réponse, le dépôt est
+refusé.}
+\end{procedure}
 
-\capture[0.8\linewidth]{52_questionnaire_etudiant}{Questionnaire préalable au jury, rempli par l'étudiant.}
+\capture[0.8\linewidth]{52_questionnaire_etudiant}{Questionnaire préalable au jury.}
 
-\paragraph{Corrections demandées par le jury.} Si le jury demande des
-corrections, vous êtes prévenu par courriel et le bouton \bouton{Déposer les
-corrections} apparaît : vous y déposez le manuscrit corrigé (PDF) et décrivez
-les corrections apportées, en regard des corrections demandées. Votre directeur,
-la bibliothèque puis la DEVE les valident ; chacun peut vous renvoyer le dépôt
-avec un motif, et votre nouveau dépôt revient directement à lui.
+\begin{procedure}{Déposer le dossier de soutenance (phase 2)}{Étudiant}
+\begin{etapes}
+  \item Cliquez sur \bouton{Déposer les documents de soutenance}.
+  \item Déposez le \textbf{manuscrit} (PDF, obligatoire) et, au besoin, les
+        autres documents.
+  \item Proposez la date, l'heure et le lieu de la soutenance.
+  \item Composez le jury : un président et au moins le nombre de membres
+        votants fixé par l'activité. Choisissez chaque enseignant dans
+        l'annuaire ; pour un membre extérieur ou un invité, choisissez
+        \og Membre extérieur ou invité\fg{} et saisissez nom, titre, statut,
+        établissement et adresse. Votre directeur est proposé d'office.
+  \item Remplissez les données du bordereau ABES (identité, cursus, mots-clés,
+        résumés), le titre anglais et les \textbf{conclusions} (une page au plus
+        avec les signatures).
+  \item Indiquez vos choix pour le contrat de diffusion (confidentialité,
+        embargo, diffusion sur internet).
+  \item Vérifiez que le questionnaire est rempli, signez, puis cliquez sur
+        \bouton{Soumettre au directeur de thèse}.
+\end{etapes}
+\ensuite{le dossier passe en \statut{Soutenance proposée au directeur} ; votre
+directeur rédige son rapport puis valide.}
+\end{procedure}
+
+\capture[0.85\linewidth]{67_etudiant_soutenance_signature}{Dépôt de la soutenance : documents, jury, bordereau, signature.}
+
+\begin{attention}
+Des conclusions trop longues pour tenir sur une page avec les signatures sont
+refusées au dépôt. Le rapport de votre directeur et la grille de conformité ne
+vous sont pas communiqués. Toute modification d'un document déjà signé annule
+les signatures concernées.
+\end{attention}
+
+\begin{procedure}{Déposer les corrections demandées par le jury}{Étudiant, après la soutenance}
+\begin{etapes}
+  \item Ouvrez le courriel \og action requise\fg{} ou votre dossier : statut
+        \statut{Corrections demandées par le jury}. Les corrections demandées
+        sont rappelées dans le dossier.
+  \item Cliquez sur \bouton{Déposer les corrections}.
+  \item Déposez le \textbf{manuscrit corrigé} (PDF) et décrivez, point par
+        point, les corrections apportées.
+  \item Cliquez sur \bouton{Déposer les corrections}.
+\end{etapes}
+\ensuite{votre directeur, la bibliothèque puis la DEVE valident les
+corrections ; chacun peut vous renvoyer le dépôt avec un motif, et votre
+nouveau dépôt revient directement à lui. La validation de la DEVE clôt le
+dossier.}
+\end{procedure}
 
 \capture[0.8\linewidth]{55_corrections_depot}{Dépôt du manuscrit corrigé.}
 
-\begin{attention}
-Le rapport de votre directeur et la grille de conformité ne sont pas visibles
-depuis votre dossier : ils sont destinés au jury et à l'administration. Toute
-modification d'un document déjà signé annule les signatures concernées, qui
-devront être apposées de nouveau.
-\end{attention}
+\begin{procedure}{Après un ajournement}{Étudiant}
+\begin{etapes}
+  \item Ouvrez le courriel \og soutenance ajournée\fg{} ou votre dossier : il
+        est revenu en \statut{Dossier actif}, avec un message orange.
+  \item Cliquez sur \bouton{Déposer les documents de soutenance} : vos données
+        précédentes sont reprises.
+  \item Remplacez le manuscrit par la version retravaillée, proposez une
+        nouvelle date et, au besoin, un nouveau jury ; mettez à jour le
+        questionnaire.
+  \item Signez et soumettez.
+\end{etapes}
+\ensuite{le dossier repart dans tout le circuit : rapport et validation du
+directeur, validation de la DEVE, conformité, documents, nouvelle soutenance.}
+\end{procedure}
+
+\capture[0.85\linewidth]{81_etudiant_ajourne}{Dossier revenu en phase de soutenance après un ajournement.}
 
 % ===========================================================================
-\section{Directeur de thèse}
+\section{Directeur de thèse : pas à pas}
 
 Le directeur arrive sur le \textbf{tableau de bord} : la rubrique \og À
 traiter\fg{} liste les dossiers qui attendent son action, puis tous les dossiers
-qu'il dirige.
+qu'il dirige. Chaque courriel \og action requise\fg{} contient le lien direct
+vers le dossier.
 
 \capture{04_directeur_tableau_de_bord}{Tableau de bord du directeur.}
 
-\begin{description}
-  \item[Phase 1] \bouton{Examiner la proposition de sujet} : valider, ou
-        renvoyer à l'étudiant avec un commentaire.
-  \item[Phase 2] \bouton{Rédiger le rapport} : le rapport sur le manuscrit
-        s'écrit directement dans un formulaire, s'enregistre en plusieurs fois
-        et se prévisualise en PDF ; il doit tenir sur une page avec la
-        signature (4\,000 caractères au plus, mise en page vérifiée). L'avis
-        favorable s'y coche, des pièces jointes peuvent compléter le rapport.
-  \item[] \bouton{Valider la soutenance et déposer le rapport} : la validation
-        de la proposition (date, jury) exige un rapport rédigé avec avis
-        favorable ; elle reprend la fonction (pour la fiche d'agréments) et la
-        grille de conformité, puis une signature unique qui vaut pour le
-        rapport, la grille, les conclusions et la partie scientifique de la
-        fiche d'agréments. Un directeur extérieur signe par le lien reçu par
-        courriel.
-  \item[Corrections] \bouton{Valider les corrections (directeur)} : si le jury
-        a demandé des corrections, vérifier le manuscrit corrigé, puis valider
-        ou renvoyer à l'étudiant.
-\end{description}
+\begin{procedure}{Valider ou renvoyer le sujet (phase 1)}{Directeur}
+\begin{etapes}
+  \item Ouvrez le dossier depuis \og À traiter\fg{}, puis cliquez sur
+        \bouton{Examiner la proposition de sujet}.
+  \item Lisez le sujet (affiché sous le formulaire) et le PDF du dépôt de sujet.
+  \item Pour valider : signez (votre signature enregistrée est cochée d'office
+        si vous en avez une) et cliquez sur \bouton{Valider le sujet}.
+  \item Pour renvoyer : écrivez le motif dans \bouton{Commentaire} et cliquez
+        sur \bouton{Renvoyer le dossier}.
+\end{etapes}
+\ensuite{validé, le sujet passe à la DEVE ; renvoyé, il retourne à l'étudiant
+avec votre motif.}
+\end{procedure}
+
+\capture[0.85\linewidth]{62_directeur_valide_sujet}{Validation du sujet par le directeur.}
+
+\begin{procedure}{Rédiger le rapport sur le manuscrit (phase 2)}{Directeur}
+\begin{etapes}
+  \item Ouvrez le dossier (statut \statut{Soutenance proposée au directeur})
+        et cliquez sur \bouton{Rédiger le rapport}.
+  \item Écrivez le rapport (une page au plus avec la signature, 4\,000
+        caractères au plus ; paragraphes séparés par une ligne vide).
+  \item Cochez l'avis favorable ; joignez au besoin des pièces.
+  \item \bouton{Aperçu PDF} montre le rapport tel qu'il sera imprimé ;
+        \bouton{Enregistrer le rapport} le conserve. Vous pouvez y revenir
+        autant de fois que nécessaire avant de valider.
+\end{etapes}
+\ensuite{le formulaire de validation indique \og Rapport rédigé, avis
+favorable\fg{}.}
+\end{procedure}
 
 \capture[0.85\linewidth]{53_rapport_directeur}{Rédaction du rapport du directeur.}
 
-\capture{11_directeur_rapport}{Validation de la soutenance avec le rapport du directeur.}
+\begin{procedure}{Valider la soutenance (phase 2)}{Directeur}
+\begin{etapes}
+  \item Cliquez sur \bouton{Valider la soutenance et déposer le rapport}.
+  \item Vérifiez la ligne \og Rapport du directeur\fg{} : un rapport rédigé
+        avec avis favorable est exigé.
+  \item Renseignez le numéro d'avis du comité d'éthique s'il existe, et cochez
+        les éléments de la \textbf{grille de conformité}.
+  \item Indiquez votre fonction (agrément scientifique).
+  \item Signez une fois : la signature vaut pour le rapport, la grille, les
+        conclusions, l'agrément scientifique et le contrat de diffusion.
+  \item Cliquez sur \bouton{Valider la soutenance}. Pour renvoyer le dossier à
+        l'étudiant, écrivez le motif et cliquez sur \bouton{Renvoyer le dossier}.
+\end{etapes}
+\ensuite{le dossier passe à la DEVE.}
+\end{procedure}
+
+\capture[0.85\linewidth]{70_directeur_valide_soutenance}{Validation de la soutenance : rapport, grille, agrément, signature.}
+
+\begin{procedure}{Valider les corrections}{Directeur, si le jury en a demandé}
+\begin{etapes}
+  \item Ouvrez le dossier (statut \statut{Corrections déposées}) et cliquez sur
+        \bouton{Valider les corrections (directeur)}.
+  \item Comparez, sous le formulaire, les corrections demandées, les
+        corrections apportées et le manuscrit corrigé.
+  \item Cliquez sur \bouton{Valider les corrections}, ou renvoyez à
+        l'étudiant avec un motif.
+\end{etapes}
+\ensuite{les corrections passent à la bibliothèque.}
+\end{procedure}
 
 % ===========================================================================
-\section{DEVE}
+\section{DEVE : pas à pas}
 
 \subsection{Tableau de bord}
 
@@ -386,99 +498,140 @@ La DEVE voit tous les dossiers : la file \og À traiter\fg{}, le décompte par
 statut (cliquable pour filtrer) et la liste complète avec recherche par
 étudiant, titre ou numéro. La barre de boutons donne accès à la création d'un
 dossier pour le compte d'un étudiant, à l'import, aux courriels, aux modèles
-des documents (section~\ref{sec:modeles}), au transfert des paramètres
-(section~\ref{sec:transfert}) et à l'export du registre (CSV, Excel, ODS...).
+des documents (section~\ref{sec:modeles}), à la grille, au questionnaire, à
+l'annuaire du jury, au transfert des paramètres (section~\ref{sec:transfert})
+et à l'export du registre (CSV, Excel, ODS...).
 
 \capture{18_tableau_de_bord_deve}{Tableau de bord de la DEVE.}
 
-\subsection{Enregistrer le sujet (phase 1, étape 3)}
-
-\bouton{Enregistrer le sujet (DEVE)} vise le sujet et le transmet à la
-bibliothèque. Le numéro d'enregistrement n'est pas encore attribué : il le
-sera après le dépôt de la thèse (étape suivante). Un renvoi peut être adressé à
-l'étudiant ou au directeur.
-
-\capture{06_deve_enregistrement}{Enregistrement du sujet par la DEVE.}
-
-\subsection{Valider le dossier de soutenance (phase 2, étape 3)}
-
-La DEVE vérifie le dossier complet (manuscrit, documents, rapport du directeur),
-\textbf{attribue le numéro d'enregistrement} (le suivant de l'année, au format
-\texttt{AAAA-NNN}, est proposé ; il est modifiable mais unique dans l'activité)
-et arrête la date, le lieu et le jury, qu'elle peut modifier. Elle
-\textbf{valide l'éligibilité} de chaque membre votant en cochant \bouton{Éligibilité
-vérifiée} (déjà cochée pour les enseignants de l'annuaire dont le statut convient
-à leur rôle ; à vérifier pour les membres extérieurs). Un président qui n'est ni
-maître de conférences HDR, ni professeur, ni émérite est refusé.
-
-\capture[0.85\linewidth]{46_jury_eligibilite}{Jury : enseignants de l'annuaire, membre extérieur et invité ; validation de l'éligibilité par la DEVE.}
-
-La validation transmet le manuscrit à la bibliothèque et \textbf{prévient les
-membres du jury} par courriel : chacun reçoit un lien personnel vers les
-documents du dossier (manuscrit, documents déposés, rapport du directeur, grille
-de conformité, conclusions, fiche signalétique), sans compte Moodle. Le tableau
-du jury du dossier indique l'éligibilité et la date de notification de chacun ;
-\bouton{Renvoyer l'accès au jury} renvoie le courriel à tous. Un membre ajouté
-plus tard par la DEVE est prévenu à son tour.
-
-\capture[0.75\linewidth]{50_acces_jury}{Accès d'un membre du jury aux documents du dossier.}
-
-\subsection{Générer et transmettre les documents (phase 2, étape 5)}
-
-Une fois le manuscrit déclaré conforme, \bouton{Documents de soutenance}
-génère :
-
-\begin{itemize}
-  \item une convocation pour l'étudiant et une pour chaque membre du jury ;
-  \item la feuille de jury (émargement) ;
-  \item le procès-verbal à compléter et signer le jour de la soutenance.
-\end{itemize}
-
-\capture{14_deve_documents}{Génération des documents de soutenance.}
-
-\bouton{Transmettre au jury et à l'université} envoie à chaque membre du jury
-sa convocation en pièce jointe, à l'étudiant la sienne, et à l'adresse de
-l'université une archive de tous les documents. Les membres du jury sans
-adresse de courriel sont signalés, pour être convoqués par un autre moyen. La
-première transmission fait passer le dossier en \statut{Soutenance programmée}.
-
-\begin{figure}[H]
-\centering
-\setlength{\fboxsep}{0pt}
-\fcolorbox{cadre}{white}{\includegraphics[width=0.46\linewidth]{images/30_convocation}}\hfill
-\fcolorbox{cadre}{white}{\includegraphics[width=0.46\linewidth]{images/31_proces_verbal}}
-\caption{Convocation d'un membre du jury et procès-verbal à signer.}
-\end{figure}
-
 \begin{astuce}
-Si la date, le lieu ou le jury changent après la génération (via
-\bouton{Modifier le dossier}), les documents sont marqués comme à régénérer :
-la transmission n'est possible qu'après une nouvelle génération.
+Quand un \textbf{agent DEVE signataire} est désigné dans les réglages du site
+(section~\ref{sec:agent}), l'équipe de la DEVE remplit et vérifie, puis
+\emph{valide sans signer} : l'agent reçoit un courriel et signe ensuite le visa
+du sujet et l'agrément administratif depuis \bouton{Mes signatures}. Sans agent
+désigné, la personne qui valide signe elle-même.
 \end{astuce}
 
-\subsection{Déposer le procès-verbal (phase 2, étape 6)}
+\begin{procedure}{Enregistrer le sujet (phase 1)}{Équipe DEVE}
+\begin{etapes}
+  \item Ouvrez le dossier (statut \statut{Sujet validé par le directeur}) et
+        cliquez sur \bouton{Enregistrer le sujet (DEVE)}.
+  \item Vérifiez le sujet et le PDF du dépôt de sujet signé par l'étudiant et
+        le directeur.
+  \item Cliquez sur \bouton{Enregistrer le sujet}, ou renvoyez à l'étudiant ou
+        au directeur avec un motif.
+\end{etapes}
+\ensuite{le sujet passe à la bibliothèque ; l'agent DEVE est invité à viser le
+dépôt de sujet. Le numéro d'enregistrement n'est pas encore attribué.}
+\end{procedure}
 
-Le procès-verbal généré propose au jury des cases à cocher : thèse admise ou
-ajournée ; mention \emph{honorable}, \emph{très honorable} ou \emph{très
-honorable avec félicitations du jury} ; proposition pour un prix de thèse ;
-corrections demandées, à préciser.
+\capture[0.85\linewidth]{63_deve_enregistre_sujet}{Enregistrement du sujet par l'équipe DEVE, sans signature quand un agent est désigné.}
 
-Après la soutenance, \bouton{Déposer le procès-verbal} : la DEVE dépose le PV
-signé par le jury, \textbf{scanné} (PDF ou images, obligatoire), et
-\textbf{reporte les décisions cochées} : résultat, mention (obligatoire pour une
-thèse admise), proposition pour un prix, corrections demandées et leur nature.
-Une thèse ajournée ne reçoit ni mention, ni proposition de prix, ni corrections.
+\begin{procedure}{Valider le dossier de soutenance et attribuer le numéro}{Équipe DEVE}
+\begin{etapes}
+  \item Ouvrez le dossier (statut \statut{Soutenance validée par le
+        directeur}) et cliquez sur \bouton{Valider le dossier de soutenance
+        (DEVE)}.
+  \item Vérifiez le manuscrit, les documents, le rapport et la grille du
+        directeur, les réponses au questionnaire.
+  \item Contrôlez le \textbf{numéro d'enregistrement DEVE} proposé (le
+        suivant de l'année, modifiable mais unique).
+  \item Arrêtez la date, l'heure et le lieu.
+  \item Vérifiez le jury et cochez \bouton{Éligibilité vérifiée (DEVE)} pour chaque
+        membre votant (déjà cochée pour les enseignants de l'annuaire dont le
+        statut convient).
+  \item Complétez l'agrément administratif (DEFV, mobilité, A6).
+  \item Cliquez sur \bouton{Valider le dossier}.
+\end{etapes}
+\ensuite{le manuscrit passe à la bibliothèque ; les membres du jury reçoivent
+leur accès aux documents ; les signataires invités (président du jury,
+direction générale, CCEM, université) et l'agent DEVE reçoivent leur demande
+de signature.}
+\end{procedure}
 
-\begin{itemize}
-  \item Sans corrections, le dépôt \textbf{clôt le dossier} ; l'étudiant et le
-        directeur sont prévenus, avec les décisions du jury.
-  \item Avec corrections, le dossier passe en \statut{Corrections demandées par
-        le jury} : l'étudiant dépose son manuscrit corrigé, que le directeur, la
-        bibliothèque puis la DEVE valident (\bouton{Valider les corrections et
-        clore le dossier (DEVE)}). Chacun peut renvoyer le dépôt à l'étudiant.
-\end{itemize}
+\capture[0.85\linewidth]{71_deve_valide_soutenance}{Validation du dossier de soutenance : numéro, date, jury et éligibilité.}
+
+\begin{procedure}{Suivre et recueillir les signatures}{Équipe DEVE}
+\begin{etapes}
+  \item Dans le dossier, cliquez sur \bouton{Suivi des signatures} : chaque
+        document et chaque emplacement y figurent avec leur état.
+  \item Pour un signataire qui n'a pas reçu son lien, cliquez sur
+        \bouton{Envoyer le lien} (signataires invités et agent DEVE).
+  \item Pour un signataire présent ou sans adresse, cliquez sur
+        \bouton{Signer sur place} : il consulte les documents, trace sa
+        signature, puis vous validez.
+\end{etapes}
+\end{procedure}
+
+\capture{40_suivi_signatures}{Suivi des signatures d'un dossier.}
+
+\begin{procedure}{Générer et transmettre les documents de soutenance}{Équipe DEVE}
+\begin{etapes}
+  \item Une fois le manuscrit déclaré conforme, cliquez sur \bouton{Documents
+        de soutenance}, puis sur \bouton{Générer les documents} : convocations
+        (étudiant et chaque membre du jury), feuille de jury et procès-verbal à
+        cocher et signer le jour de la soutenance.
+  \item Vérifiez les PDF (liens sous le bouton).
+  \item Cliquez sur \bouton{Transmettre au jury et à l'université}.
+\end{etapes}
+\ensuite{chaque membre reçoit sa convocation, l'université une archive de
+tous les documents ; le dossier passe en \statut{Soutenance programmée}. Les
+membres sans adresse sont signalés. Si la date, le lieu ou le jury changent,
+régénérez avant de transmettre de nouveau.}
+\end{procedure}
+
+\capture[0.85\linewidth]{73_deve_documents}{Génération des documents de soutenance.}
+
+\begin{procedure}{Déposer le procès-verbal}{Équipe DEVE, après la soutenance}
+\begin{etapes}
+  \item Scannez le procès-verbal signé par les membres du jury, sur lequel le
+        jury a coché ses décisions.
+  \item Dans le dossier, cliquez sur \bouton{Déposer le procès-verbal} et
+        déposez le scan (PDF ou images).
+  \item Reportez les décisions cochées : \bouton{Admis} ou \bouton{Ajourné} ;
+        pour une thèse admise, la \textbf{mention} (honorable, très honorable,
+        très honorable avec félicitations du jury), la \textbf{proposition pour
+        un prix de thèse} et les \textbf{corrections demandées}, à préciser.
+  \item Cliquez sur \bouton{Enregistrer le procès-verbal}.
+\end{etapes}
+\ensuite{sans corrections, le dossier est clos et l'étudiant et le directeur
+sont prévenus ; avec corrections, l'étudiant est invité à déposer son
+manuscrit corrigé ; ajournée, la thèse revient en phase de soutenance (procédure
+suivante).}
+\end{procedure}
 
 \capture[0.85\linewidth]{54_pv_decisions}{Dépôt du procès-verbal scanné et décisions du jury.}
+
+\begin{procedure}{Ajournement : ce que fait le module}{Équipe DEVE}
+\begin{etapes}
+  \item Enregistrez le procès-verbal avec \bouton{Ajourné} : aucune mention,
+        aucun prix ni correction n'est retenu.
+  \item Le dossier revient en \statut{Dossier actif} ; sujet, enregistrements,
+        numéro DEVE et texte du rapport sont conservés.
+  \item Le procès-verbal d'ajournement est archivé (\og Procès-verbaux
+        d'ajournement\fg{}) ; les documents générés et les signatures des
+        documents de soutenance sont supprimés, les accès du jury révoqués.
+  \item L'étudiant et le directeur sont prévenus ; le nouveau dépôt suit tout
+        le circuit (éligibilité du jury revue, documents régénérés et signés de
+        nouveau).
+\end{etapes}
+\end{procedure}
+
+\capture[0.85\linewidth]{80_dossier_ajourne}{Dossier ajourné : retour en phase de soutenance, procès-verbal archivé.}
+
+\begin{procedure}{Valider les corrections et clore le dossier}{Équipe DEVE}
+\begin{etapes}
+  \item Après le directeur et la bibliothèque, ouvrez le dossier (statut
+        \statut{Corrections validées par la bibliothèque}) et cliquez sur
+        \bouton{Valider les corrections et clore le dossier (DEVE)}.
+  \item Vérifiez le manuscrit corrigé et cliquez sur \bouton{Valider et clore
+        le dossier}, ou renvoyez à l'étudiant.
+\end{etapes}
+\ensuite{le dossier est clos ; l'étudiant et le directeur reçoivent les
+décisions du jury.}
+\end{procedure}
+
+\capture[0.85\linewidth]{78_dossier_clos}{Dossier clos après validation des corrections.}
 
 \subsection{Autres actions}
 
@@ -489,26 +642,114 @@ Une thèse ajournée ne reçoit ni mention, ni proposition de prix, ni correctio
   \item[Abandonner / rouvrir] l'abandon, motivé, conserve le dossier tel quel ;
         la réouverture lui rend le statut atteint.
   \item[Créer un dossier] pour un étudiant inscrit qui n'en a pas encore.
+  \item[Questionnaire] corriger les réponses d'un étudiant.
 \end{description}
 
 % ===========================================================================
-\section{Bibliothèque}
+\section{Agent DEVE signataire : pas à pas}\label{sec:agent}
 
-\begin{description}
-  \item[Phase 1, étape 4] \bouton{Enregistrer le sujet (bibliothèque)} :
-        saisir la référence de la notice créée dans le référentiel documentaire.
-        Le dossier devient actif ; l'étudiant et son directeur en sont prévenus.
-  \item[Phase 2, étape 4] \bouton{Contrôler la conformité du manuscrit} :
-        cocher l'attestation de conformité (forme, dépôt légal, normes de
-        présentation) et valider, ou renvoyer le dossier à l'étudiant avec le
-        motif. L'attestation de conformité est ensuite téléchargeable en PDF
-        depuis le dossier.
-  \item[Corrections] \bouton{Valider les corrections (bibliothèque)} : si le
-        jury a demandé des corrections, vérifier la forme du manuscrit corrigé
-        avant son dépôt définitif, puis valider ou renvoyer à l'étudiant.
-\end{description}
+L'agent responsable de la DEVE (désigné dans \chemin{Administration du site >
+Plugins > Modules d'activité > Gestion des thèses}, réglage \bouton{Agent DEVE
+signataire}) signe le visa du dépôt de sujet, l'agrément administratif et la
+partie \og direction générale représentée par la DEVE\fg{} de la fiche
+d'agréments, une fois que l'équipe a tout vérifié.
 
-\capture{13_bibliotheque_conformite}{Contrôle de conformité du manuscrit.}
+\begin{procedure}{Signer les documents qui vous attendent}{Agent DEVE}
+\begin{etapes}
+  \item Ouvrez le lien du courriel \og Documents à signer\fg{}, ou le bouton
+        \bouton{Mes signatures} de la barre de navigation de l'activité.
+  \item Consultez chaque document avec \bouton{voir le PDF} ; décochez ceux
+        que vous ne voulez pas signer maintenant.
+  \item La première fois, tracez votre signature et laissez cochée
+        \bouton{Enregistrer cette signature pour mes prochaines signatures}.
+        Ensuite, \bouton{Utiliser ma signature enregistrée} est cochée d'office :
+        rien à retracer.
+  \item Cochez la certification et cliquez sur \bouton{Signer les documents}.
+\end{etapes}
+\ensuite{votre signature est apposée sur chaque document coché, avec la date et
+l'empreinte du contenu. La page regroupe les dossiers de toutes les promotions.}
+\end{procedure}
+
+\capture[0.8\linewidth]{64_agent_mes_signatures}{Mes signatures : première signature de l'agent DEVE.}
+
+\capture[0.8\linewidth]{65_agent_signature_enregistree}{Signatures suivantes : la signature enregistrée est reprise d'office.}
+
+La signature enregistrée se supprime en bas de la page \bouton{Mes signatures}.
+
+% ===========================================================================
+\section{Bibliothèque : pas à pas}
+
+\begin{procedure}{Enregistrer la notice du sujet (phase 1)}{Bibliothèque}
+\begin{etapes}
+  \item Ouvrez le dossier (statut \statut{Sujet enregistré par la DEVE}) et
+        cliquez sur \bouton{Enregistrer le sujet (bibliothèque)}.
+  \item Saisissez la référence de la notice créée dans le référentiel
+        documentaire et cliquez sur \bouton{Enregistrer la notice}.
+\end{etapes}
+\ensuite{le dossier devient actif ; l'étudiant et son directeur en sont
+prévenus.}
+\end{procedure}
+
+\begin{procedure}{Contrôler la conformité du manuscrit (phase 2)}{Bibliothèque}
+\begin{etapes}
+  \item Ouvrez le dossier (statut \statut{Dossier validé par la DEVE}) et
+        cliquez sur \bouton{Contrôler la conformité du manuscrit}.
+  \item Vérifiez la forme du manuscrit, les normes de présentation et les
+        conditions du dépôt légal.
+  \item Conforme : cochez l'attestation, signez et cliquez sur
+        \bouton{Attester la conformité}.
+  \item Non conforme : écrivez le motif et cliquez sur \bouton{Renvoyer le
+        dossier} ; le nouveau dépôt de l'étudiant reviendra directement à vous.
+\end{etapes}
+\ensuite{l'attestation de conformité est disponible en PDF dans le dossier ; la
+DEVE génère les documents de soutenance.}
+\end{procedure}
+
+\capture[0.85\linewidth]{72_biblio_conformite}{Contrôle de conformité : renvoi avec motif ou attestation.}
+
+\begin{procedure}{Valider les corrections}{Bibliothèque, si le jury en a demandé}
+\begin{etapes}
+  \item Ouvrez le dossier (statut \statut{Corrections validées par le
+        directeur}) et cliquez sur \bouton{Valider les corrections
+        (bibliothèque)}.
+  \item Vérifiez la forme du manuscrit corrigé avant son dépôt définitif.
+  \item Validez, ou renvoyez à l'étudiant avec le motif.
+\end{etapes}
+\end{procedure}
+
+% ===========================================================================
+\section{Membres du jury : pas à pas}
+
+\begin{procedure}{Consulter les documents du dossier}{Membre du jury}
+\begin{etapes}
+  \item Après la validation du jury par la DEVE, ouvrez le lien personnel reçu
+        par courriel (aucun compte n'est nécessaire), ou, si vous avez un
+        compte, la rubrique \bouton{Mes jurys} de l'activité \og Suivi des
+        thèses\fg{}.
+  \item Consultez le manuscrit, le rapport du directeur, la grille, les
+        conclusions, la fiche signalétique et les réponses au questionnaire
+        préalable au jury.
+\end{etapes}
+\end{procedure}
+
+\capture[0.75\linewidth]{50_acces_jury}{Accès d'un membre du jury aux documents du dossier.}
+
+\begin{procedure}{Signer (président du jury)}{Président}
+\begin{etapes}
+  \item Ouvrez le lien \og signature\fg{} reçu par courriel : il couvre tous
+        les documents qui vous attendent (fiche signalétique, conclusions).
+        Si vous avez un compte Moodle à cette adresse, vous pouvez aussi les
+        retrouver dans \bouton{Mes signatures}.
+  \item Consultez chaque document en PDF.
+  \item Tracez votre signature, ou, connecté, cochez \bouton{Utiliser ma
+        signature enregistrée} ; cochez la certification et cliquez sur
+        \bouton{Signer les documents}.
+\end{etapes}
+\ensuite{le lien cesse de fonctionner une fois utilisé ; la DEVE voit votre
+signature dans le suivi des signatures.}
+\end{procedure}
+
+\capture[0.8\linewidth]{66_president_mes_signatures}{Président du jury ayant un compte : signature depuis « Mes signatures ».}
 
 % ===========================================================================
 \section{Documents de l'établissement et signatures}
@@ -682,9 +923,26 @@ document, image illisible) sont ignorés et signalés.
 \subsection{Signer}
 
 Chaque acteur signe au moment où il agit : la soumission (étudiant) ou la
-validation (directeur, DEVE, bibliothèque) exige de tracer sa signature et de
-cocher la certification ; une même signature est apposée sur tous les documents
-de l'étape.
+validation (directeur, DEVE, bibliothèque) exige sa signature et la
+certification ; une même signature est apposée sur tous les documents de
+l'étape. Quand un agent DEVE signataire est désigné, les signatures de la DEVE
+lui reviennent : l'équipe valide sans signer et l'agent signe ensuite depuis
+\bouton{Mes signatures}.
+
+\paragraph{Signature enregistrée.} Tout utilisateur connecté (étudiant,
+directeur, DEVE, bibliothèque, agent DEVE, membre du jury ayant un compte)
+peut enregistrer sa signature : la case \bouton{Enregistrer cette signature
+pour mes prochaines signatures}, cochée d'office, la conserve. Aux signatures
+suivantes, \bouton{Utiliser ma signature enregistrée} est cochée d'office : il
+suffit de cocher la certification. Elle se supprime depuis \bouton{Mes
+signatures}. La signature sur place recueillie par la DEVE pour un tiers
+n'utilise jamais une signature enregistrée.
+
+\paragraph{Mes signatures.} La page \bouton{Mes signatures} (lien dans les
+courriels de demande, et bouton de la barre de navigation quand des documents
+attendent) regroupe, toutes promotions confondues, les documents qui attendent
+la signature de l'utilisateur : ceux de l'agent DEVE, et ceux d'un signataire
+invité dont l'adresse est celle de son compte (président du jury, par exemple).
 
 \subsection{Signataires sans compte}
 

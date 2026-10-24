@@ -525,7 +525,7 @@ $string['privacy:metadata:these_log:userid'] = 'Author of the action.';
 $string['privacy:metadata:these_log:logaction'] = 'Action performed.';
 $string['privacy:metadata:these_log:remark'] = 'Comment entered with the action.';
 $string['privacy:metadata:these_log:timecreated'] = 'Date of the action.';
-$string['privacy:metadata:core_files'] = 'Files of the thesis files: subject attachments, manuscript, defence documents, director report, generated documents, minutes.';
+$string['privacy:metadata:core_files'] = 'Files of the thesis files: subject attachments, manuscript, defence documents, director report, generated documents, minutes, corrected manuscript, saved signature of the user.';
 $string['privacy:metadata:jury'] = 'Jury members receive their notice by email, mentioning the student, the subject and the defence date.';
 $string['privacy:metadata:jury:student'] = 'Student name.';
 $string['privacy:metadata:jury:title'] = 'Thesis title.';
@@ -969,7 +969,8 @@ $string['minutesscan_help'] = 'The minutes signed by the jury members, scanned (
 $string['jurydecisions'] = 'Jury decisions';
 $string['jurydecisions_help'] = 'Report the decisions ticked by the jury on the minutes. Without corrections, the file is closed; if '
     . 'the jury requests corrections, the student submits the corrected manuscript, which the director, the library and then the '
-    . 'registrar approve before closing.';
+    . 'registrar approve before closing. An adjourned thesis goes back to the defence phase: the student submits a new defence '
+    . 'file, which follows the whole circuit again.';
 $string['mentionhonorable'] = 'Honourable';
 $string['mentiontreshonorable'] = 'Very honourable';
 $string['mentionfelicitations'] = 'Very honourable with the jury\'s congratulations';
@@ -1012,3 +1013,49 @@ $string['logvalidateddirectorcorrections'] = 'Corrections approved by the direct
 $string['logvalidatedlibrarycorrections'] = 'Corrections approved by the library';
 $string['logvalidateddevecorrections'] = 'Corrections approved by the registrar, file closed';
 $string['privacy:metadata:these_dossier:correctionsdone'] = 'Corrections made, described by the student.';
+
+// Adjournment.
+$string['minutesadjourned'] = 'Adjournment minutes';
+$string['adjournednotice'] = 'Defence adjourned on {$a}: the file is back in the defence phase, awaiting a new submission from the '
+    . 'student.';
+$string['adjournednoticestudent'] = 'Your defence was adjourned on {$a}. Submit a new defence file (revised manuscript, date, '
+    . 'jury): it will be approved again by your director, the registrar and the library.';
+$string['logadjourned'] = 'Minutes uploaded, defence adjourned: back to the defence phase';
+$string['emailadjournedsubject'] = 'Thesis of {$a->student}: defence adjourned';
+$string['emailadjournedbody'] = 'Hello,
+
+The thesis defence of {$a->student} has been adjourned by the jury. The file goes back to the defence phase: a new defence file (revised manuscript, date, jury) must be submitted, then approved again by the director, the registrar and the library.
+
+Subject: {$a->title}
+
+Open the file: {$a->url}';
+
+// DEVE agent signatory and saved signature.
+$string['agentdeve'] = 'Registrar officer';
+$string['settingsdeveagent'] = 'Registrar signatory';
+$string['settingsdeveagent_desc'] = 'Username or email address of the Moodle account of the officer in charge of the registrar. The '
+    . 'registrar team fills in and checks the file, then validates without signing; the officer then receives an email and signs '
+    . 'the subject visa and the administrative approval from "My signatures", with their saved signature. Leave empty for the '
+    . 'registrar member who validates to sign.';
+$string['mysignatures'] = 'My signatures';
+$string['mysignatures_desc'] = 'Documents awaiting your signature, all cohorts together. Check each document as a PDF, tick those '
+    . 'to sign, then sign once: your saved signature is used by default.';
+$string['mysignaturescount'] = 'My signatures ({$a})';
+$string['signmyintro'] = 'Your signature is applied to each ticked document.';
+$string['signnodocument'] = 'Tick at least one document.';
+$string['signpreview'] = 'view the PDF';
+$string['signaturesrecordedcount'] = '{$a} document(s) signed.';
+$string['signaturesaved'] = 'Saved signature';
+$string['signatureusesaved'] = 'Use my saved signature';
+$string['signaturesave'] = 'Save this signature for my next signatures';
+$string['signaturesaveddelete'] = 'Delete my saved signature';
+$string['signaturesaveddeleted'] = 'Saved signature deleted.';
+$string['signaturesavednone'] = 'No saved signature: tick "Save this signature" next time you sign so you no longer need to draw it.';
+$string['emailagentsignaturesubject'] = 'Documents to sign: thesis of {$a->student}';
+$string['emailagentsignaturebody'] = 'Hello {$a->name},
+
+The registrar has checked the thesis file of {$a->student} ({$a->activity}). The following documents await your signature: {$a->document}.
+
+Subject: {$a->title}
+
+Sign from "My signatures": {$a->url}';

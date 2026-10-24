@@ -531,7 +531,7 @@ $string['privacy:metadata:these_log:userid'] = "Auteur de l'action.";
 $string['privacy:metadata:these_log:logaction'] = 'Action effectuée.';
 $string['privacy:metadata:these_log:remark'] = 'Commentaire saisi avec l\'action.';
 $string['privacy:metadata:these_log:timecreated'] = "Date de l'action.";
-$string['privacy:metadata:core_files'] = 'Fichiers des dossiers : pièces jointes au sujet, manuscrit, documents de soutenance, rapport du directeur, documents générés, procès-verbal.';
+$string['privacy:metadata:core_files'] = 'Fichiers des dossiers : pièces jointes au sujet, manuscrit, documents de soutenance, rapport du directeur, documents générés, procès-verbal, manuscrit corrigé, signature enregistrée de l\'utilisateur.';
 $string['privacy:metadata:jury'] = "Les membres du jury reçoivent par courriel leur convocation, qui mentionne l'étudiant, le sujet et la date de soutenance.";
 $string['privacy:metadata:jury:student'] = "Nom de l'étudiant.";
 $string['privacy:metadata:jury:title'] = 'Titre de la thèse.';
@@ -979,7 +979,8 @@ $string['minutesscan_help'] = 'Le procès-verbal signé par les membres du jury,
 $string['jurydecisions'] = 'Décisions du jury';
 $string['jurydecisions_help'] = 'Reportez les décisions cochées par le jury sur le procès-verbal. Sans corrections, le dossier est '
     . "clos ; si le jury demande des corrections, l'étudiant dépose son manuscrit corrigé, que le directeur, la bibliothèque puis "
-    . 'la DEVE valident avant la clôture.';
+    . "la DEVE valident avant la clôture. Une thèse ajournée revient en phase de soutenance : l'étudiant dépose un nouveau dossier "
+    . 'de soutenance, qui suit de nouveau tout le circuit.';
 $string['mentionhonorable'] = 'Honorable';
 $string['mentiontreshonorable'] = 'Très honorable';
 $string['mentionfelicitations'] = 'Très honorable avec félicitations du jury';
@@ -1023,3 +1024,50 @@ $string['logvalidateddirectorcorrections'] = 'Corrections validées par le direc
 $string['logvalidatedlibrarycorrections'] = 'Corrections validées par la bibliothèque';
 $string['logvalidateddevecorrections'] = 'Corrections validées par la DEVE, dossier clos';
 $string['privacy:metadata:these_dossier:correctionsdone'] = "Corrections apportées, décrites par l'étudiant.";
+
+// Ajournement.
+$string['minutesadjourned'] = "Procès-verbaux d'ajournement";
+$string['adjournednotice'] = "Soutenance ajournée le {\$a} : le dossier est revenu en phase de soutenance, en attente d'un nouveau "
+    . "dépôt de l'étudiant.";
+$string['adjournednoticestudent'] = 'Votre soutenance a été ajournée le {$a}. Déposez un nouveau dossier de soutenance (manuscrit '
+    . 'retravaillé, date, jury) : il sera de nouveau validé par votre directeur, la DEVE et la bibliothèque.';
+$string['logadjourned'] = 'Procès-verbal déposé, soutenance ajournée : retour en phase de soutenance';
+$string['emailadjournedsubject'] = 'Thèse de {$a->student} : soutenance ajournée';
+$string['emailadjournedbody'] = 'Bonjour,
+
+La soutenance de thèse de {$a->student} a été ajournée par le jury. Le dossier revient en phase de soutenance : un nouveau dossier de soutenance (manuscrit retravaillé, date, jury) devra être déposé, puis validé de nouveau par le directeur, la DEVE et la bibliothèque.
+
+Sujet : {$a->title}
+
+Accéder au dossier : {$a->url}';
+
+// Agent DEVE signataire et signature enregistrée.
+$string['agentdeve'] = 'Agent responsable de la DEVE';
+$string['settingsdeveagent'] = 'Agent DEVE signataire';
+$string['settingsdeveagent_desc'] = "Identifiant ou adresse de courriel du compte Moodle de l'agent responsable de la DEVE. L'équipe de "
+    . "la DEVE remplit et vérifie le dossier puis valide sans signer ; l'agent reçoit alors un courriel et signe le visa du sujet "
+    . "et l'agrément administratif depuis « Mes signatures », avec sa signature enregistrée. Laisser vide pour que la personne de "
+    . 'la DEVE qui valide signe elle-même.';
+$string['mysignatures'] = 'Mes signatures';
+$string['mysignatures_desc'] = 'Documents qui attendent votre signature, toutes promotions confondues. Consultez chaque document en '
+    . "PDF, cochez ceux à signer, puis signez une seule fois : votre signature enregistrée est reprise d'office.";
+$string['mysignaturescount'] = 'Mes signatures ({$a})';
+$string['signmyintro'] = 'Votre signature est apposée sur chaque document coché.';
+$string['signnodocument'] = 'Cochez au moins un document.';
+$string['signpreview'] = 'voir le PDF';
+$string['signaturesrecordedcount'] = '{$a} document(s) signé(s).';
+$string['signaturesaved'] = 'Signature enregistrée';
+$string['signatureusesaved'] = 'Utiliser ma signature enregistrée';
+$string['signaturesave'] = 'Enregistrer cette signature pour mes prochaines signatures';
+$string['signaturesaveddelete'] = 'Supprimer ma signature enregistrée';
+$string['signaturesaveddeleted'] = 'Signature enregistrée supprimée.';
+$string['signaturesavednone'] = "Aucune signature enregistrée : cochez « Enregistrer cette signature » lors de votre prochaine "
+    . 'signature pour ne plus avoir à la tracer.';
+$string['emailagentsignaturesubject'] = 'Documents à signer : thèse de {$a->student}';
+$string['emailagentsignaturebody'] = 'Bonjour {$a->name},
+
+La DEVE a vérifié le dossier de thèse de {$a->student} ({$a->activity}). Les documents suivants attendent votre signature : {$a->document}.
+
+Sujet : {$a->title}
+
+Signer depuis « Mes signatures » : {$a->url}';

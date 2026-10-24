@@ -50,7 +50,13 @@ Bibliothèque ──conformité du manuscrit──▶ DEVE ──convocations, f
   très honorable avec félicitations du jury), proposition pour un prix de
   thèse, corrections demandées. Des corrections ouvrent un circuit : manuscrit
   corrigé déposé par l'étudiant, validé par le directeur, la bibliothèque et la
-  DEVE avant la clôture.
+  DEVE avant la clôture. Une thèse **ajournée** revient en phase de soutenance :
+  nouveau dépôt, nouveau circuit complet, PV d'ajournement archivé.
+- **Agent DEVE signataire** : l'équipe de la DEVE vérifie et valide sans signer,
+  puis l'agent responsable reçoit un courriel et signe depuis **Mes signatures**
+  (tous les documents en attente, toutes promotions). Chaque utilisateur peut
+  **enregistrer sa signature**, reprise d'office ensuite (membres du jury ayant
+  un compte compris).
 - **Questionnaire préalable au jury** modifiable (réponses courtes ou longues,
   listes, QCM), rempli par l'étudiant avant le dépôt de la soutenance.
 - Les **documents officiels** (E01 sujet, E02 agréments, E03 fiche
@@ -93,7 +99,7 @@ Bibliothèque ──conformité du manuscrit──▶ DEVE ──convocations, f
 ## Qualité
 
 - Style : standard Moodle (`moodlehq/moodle-cs`), sans avertissement.
-- Tests PHPUnit (63 + 4 tests) : circuit complet, corrections, rapport, renvois,
+- Tests PHPUnit (67 + 4 tests) : circuit complet, corrections, rapport, renvois,
   droits, relances, documents générés, signatures, modèles, paramètres partagés,
   questionnaire, recherche, transfert des paramètres, annuaire et jury, grille,
   conclusions, suivi multi-promotions, import, confidentialité,

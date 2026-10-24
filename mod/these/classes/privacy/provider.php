@@ -168,6 +168,10 @@ class provider implements
             'userid4' => $userid,
             'userid5' => $userid,
         ]);
+        // Signature enregistrée, dans le contexte de l'utilisateur.
+        if (these_get_saved_signature($userid) !== null) {
+            $contextlist->add_user_context($userid);
+        }
         return $contextlist;
     }
 
@@ -179,6 +183,10 @@ class provider implements
      */
     public static function get_users_in_context(userlist $userlist) {
         $context = $userlist->get_context();
+        if ($context instanceof \context_user && these_get_saved_signature($context->instanceid) !== null) {
+            $userlist->add_user($context->instanceid);
+            return;
+        }
         if (!$context instanceof context_module) {
             return;
         }
@@ -216,6 +224,15 @@ class provider implements
 
         $user = $contextlist->get_user();
         foreach ($contextlist->get_contexts() as $context) {
+            if ($context instanceof \context_user && (int) $context->instanceid === (int) $user->id) {
+                writer::with_context($context)->export_area_files(
+                    [get_string('signaturesaved', 'mod_these')],
+                    'mod_these',
+                    'savedsignature',
+                    0
+                );
+                continue;
+            }
             if (!$context instanceof context_module) {
                 continue;
             }
@@ -375,6 +392,10 @@ class provider implements
     public static function delete_data_for_all_users_in_context(context $context) {
         global $DB;
 
+        if ($context instanceof \context_user) {
+            these_delete_saved_signature($context->instanceid);
+            return;
+        }
         if (!$context instanceof context_module) {
             return;
         }
@@ -418,6 +439,13 @@ class provider implements
      */
     protected static function delete_users_in_context(context $context, array $userids) {
         global $DB;
+
+        if ($context instanceof \context_user) {
+            if (in_array((int) $context->instanceid, array_map('intval', $userids), true)) {
+                these_delete_saved_signature($context->instanceid);
+            }
+            return;
+        }
 
         if (!$context instanceof context_module || empty($userids)) {
             return;

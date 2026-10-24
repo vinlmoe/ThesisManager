@@ -22,9 +22,10 @@ require_once($CFG->libdir . '/formslib.php');
 require_once($CFG->dirroot . '/mod/these/locallib.php');
 
 /**
- * Signature, en une seule fois, des documents qui attendent un signataire sans compte (président
- * du jury, direction générale, CCEM, présidence de l'université, directeur extérieur), depuis le
- * lien reçu par courriel ou sur place auprès de la DEVE (sign.php).
+ * Signature, en une seule fois, des documents qui attendent un signataire invité (président du
+ * jury, direction générale, CCEM, présidence de l'université, directeur extérieur), depuis le lien
+ * reçu par courriel ou sur place auprès de la DEVE (sign.php). Un signataire connecté avec le
+ * compte de l'adresse invitée peut reprendre sa signature enregistrée.
  *
  * @package   mod_these
  * @copyright 2026 Sébastien Lefebvre
@@ -43,7 +44,12 @@ class sign_form extends \moodleform {
             $mform->setType($name, $type);
         }
         $mform->addElement('static', 'documents', get_string('documentstosign', 'mod_these'), $this->_customdata['documents']);
-        these_add_signature_fields($mform, $this->_customdata['signername'], get_string('signexternalintro', 'mod_these'));
+        these_add_signature_fields(
+            $mform,
+            $this->_customdata['signername'],
+            get_string('signexternalintro', 'mod_these'),
+            !empty($this->_customdata['allowsaved'])
+        );
         $this->add_action_buttons(false, get_string('signdocuments', 'mod_these'));
     }
 

@@ -141,6 +141,13 @@ if ($returned && trim((string) $dossier->returncomment) !== '') {
         'alert alert-warning'
     );
 }
+if (these_is_adjourned($dossier)) {
+    echo html_writer::div(get_string(
+        'adjournednoticestudent',
+        'mod_these',
+        userdate($dossier->statustime, get_string('strftimedate', 'langconfig'))
+    ), 'alert alert-warning');
+}
 echo $OUTPUT->box(get_string('defenseintro', 'mod_these', (int) $these->minjury), 'generalbox mb-3');
 $mform->display();
 echo $OUTPUT->footer();

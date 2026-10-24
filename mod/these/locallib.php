@@ -774,7 +774,15 @@ function these_save_report(stdClass $dossier, $userid, $text, $favorable) {
  * @return stdClass|null {name, png}, ou null si aucune signature n'a été tracée.
  */
 function these_signature_from_form(stdClass $data) {
-    $png = these_decode_signature_image($data->signaturedata ?? '');
+    global $USER;
+
+    $png = !empty($data->usesavedsignature) ? these_get_saved_signature($USER->id) : null;
+    if ($png === null) {
+        $png = these_decode_signature_image($data->signaturedata ?? '');
+        if ($png !== null && !empty($data->savesignature) && isloggedin() && !isguestuser()) {
+            these_save_signature_image($USER->id, $png);
+        }
+    }
     if ($png === null) {
         return null;
     }
@@ -1038,14 +1046,21 @@ function these_validate_step(
         array_merge($fields, these_cleared_return_fields())
     );
     these_refresh_signatures($context, $dossier);
-    if ($signature !== null) {
-        foreach ($step['sign'] as $slot => $doctypes) {
-            foreach ($doctypes as $doctype) {
-                if (in_array($slot, these_document_slots($dossier, $doctype), true)) {
-                    these_sign_document($context, $dossier, $doctype, $slot, $userid, $signature->name, $signature->png);
-                }
+    $agentdoctypes = [];
+    foreach ($step['sign'] as $slot => $doctypes) {
+        if (!these_signs_slot_at_validation($slot, $userid)) {
+            // Emplacement de l'agent DEVE : il signe ensuite, depuis « Mes signatures ».
+            $agentdoctypes = array_merge($agentdoctypes, $doctypes);
+            continue;
+        }
+        foreach ($doctypes as $doctype) {
+            if ($signature !== null && in_array($slot, these_document_slots($dossier, $doctype), true)) {
+                these_sign_document($context, $dossier, $doctype, $slot, $userid, $signature->name, $signature->png);
             }
         }
+    }
+    if ($agentdoctypes) {
+        these_request_agent_signatures($these, $cm, $dossier, array_unique($agentdoctypes));
     }
     if ($step['request']) {
         // Un seul appel pour tous les documents : chaque signataire reçoit un seul lien.
@@ -1141,7 +1156,8 @@ function these_reopen_dossier(stdClass $dossier, $userid, $comment = '') {
  * déposer son manuscrit corrigé, que le directeur, la bibliothèque et la DEVE valident avant la
  * clôture.
  *
- * Une thèse ajournée ne reçoit ni mention, ni proposition de prix, ni corrections.
+ * Une thèse ajournée ne reçoit ni mention, ni proposition de prix, ni corrections : le dossier
+ * revient en phase de soutenance (voir these_adjourn_dossier()).
  *
  * @param stdClass $these
  * @param stdClass $cm
@@ -1154,6 +1170,9 @@ function these_reopen_dossier(stdClass $dossier, $userid, $comment = '') {
 function these_record_minutes(stdClass $these, stdClass $cm, stdClass $dossier, $userid, stdClass $decision, $remark = '') {
     $admitted = (int) $decision->result === THESE_RESULT_ADMITTED;
     $mention = (string) ($decision->mention ?? '');
+    if ((int) $decision->result === THESE_RESULT_ADJOURNED) {
+        return these_adjourn_dossier($these, $cm, $dossier, $userid, $remark);
+    }
     $corrections = $admitted && !empty($decision->correctionsrequested);
     $fields = [
         'defenseresult' => (int) $decision->result,
@@ -1177,6 +1196,70 @@ function these_record_minutes(stdClass $these, stdClass $cm, stdClass $dossier, 
     $dossier = these_set_status($dossier, THESE_STATUS_CLOSED, $userid, 'closed', $remark, $fields);
     these_notify_closed($these, $cm, $dossier);
     return $dossier;
+}
+
+/**
+ * Ajournement de la soutenance : le dossier revient en phase de soutenance (dossier actif), sujet,
+ * enregistrements et numéro conservés. L'étudiant dépose un nouveau dossier de soutenance, qui
+ * suit de nouveau tout le circuit.
+ *
+ * Le procès-verbal d'ajournement est archivé (zone pvadjourned, nom préfixé par la date) ; les
+ * documents générés et les signatures des documents de soutenance sont supprimés, pour être
+ * produits et signés de nouveau ; les accès du jury sont révoqués et son éligibilité sera revue.
+ * Le texte du rapport et les données déjà saisies restent proposés.
+ *
+ * @param stdClass $these
+ * @param stdClass $cm
+ * @param stdClass $dossier
+ * @param int $userid
+ * @param string $remark
+ * @return stdClass Le dossier à jour.
+ */
+function these_adjourn_dossier(stdClass $these, stdClass $cm, stdClass $dossier, $userid, $remark = '') {
+    global $DB;
+
+    $context = context_module::instance($cm->id);
+    $fs = get_file_storage();
+    $prefix = 'ajournement-' . userdate(time(), '%Y-%m-%d') . '-';
+    foreach ($fs->get_area_files($context->id, 'mod_these', 'pv', $dossier->id, 'filename', false) as $file) {
+        $filename = $prefix . $file->get_filename();
+        if (!$fs->file_exists($context->id, 'mod_these', 'pvadjourned', $dossier->id, '/', $filename)) {
+            $fs->create_file_from_storedfile(['filearea' => 'pvadjourned', 'filename' => $filename], $file);
+        }
+    }
+    $fs->delete_area_files($context->id, 'mod_these', 'pv', $dossier->id);
+    $fs->delete_area_files($context->id, 'mod_these', 'generated', $dossier->id);
+    foreach (these_get_signatures($dossier->id) as $signature) {
+        if ($signature->doctype !== 'subject') {
+            these_delete_signature($context, $signature);
+        }
+    }
+    $DB->set_field('these_jury', 'notifiedtime', 0, ['dossierid' => $dossier->id]);
+    $DB->set_field('these_jury', 'accesstoken', null, ['dossierid' => $dossier->id]);
+    $DB->set_field('these_jury', 'eligible', 0, ['dossierid' => $dossier->id]);
+
+    $dossier = these_set_status($dossier, THESE_STATUS_ACTIVE, $userid, 'adjourned', $remark, array_merge([
+        'defenseresult' => THESE_RESULT_ADJOURNED,
+        'mention' => '',
+        'prizeproposal' => 0,
+        'correctionsrequested' => 0,
+        'correctionsnote' => '',
+        'reportfavorable' => 0,
+        'documentstime' => 0,
+        'senttime' => 0,
+    ], these_cleared_return_fields()));
+    these_send_email($these, 'adjourned', these_get_student_and_director($dossier), these_email_base_vars($these, $cm, $dossier));
+    return $dossier;
+}
+
+/**
+ * Indique si le dossier est en attente d'une nouvelle soutenance après un ajournement.
+ *
+ * @param stdClass $dossier
+ * @return bool
+ */
+function these_is_adjourned(stdClass $dossier) {
+    return (int) $dossier->status === THESE_STATUS_ACTIVE && (int) $dossier->defenseresult === THESE_RESULT_ADJOURNED;
 }
 
 /**
@@ -1846,6 +1929,16 @@ function these_get_email_definitions() {
             'subjectstring' => 'emailclosedsubject',
             'bodystring' => 'emailclosedbody',
             'vars' => ['student', 'activity', 'title', 'result', 'url'],
+        ],
+        'agentsignature' => [
+            'subjectstring' => 'emailagentsignaturesubject',
+            'bodystring' => 'emailagentsignaturebody',
+            'vars' => ['name', 'student', 'activity', 'title', 'document', 'url'],
+        ],
+        'adjourned' => [
+            'subjectstring' => 'emailadjournedsubject',
+            'bodystring' => 'emailadjournedbody',
+            'vars' => ['student', 'activity', 'title', 'url'],
         ],
         'jurydesignation' => [
             'subjectstring' => 'emailjurydesignationsubject',
@@ -2592,6 +2685,10 @@ function these_render_navlinks(stdClass $cm, context $context) {
     if ($rights->viewall) {
         $links[get_string('export', 'mod_these')] = new moodle_url('/mod/these/export.php', ['id' => $cm->id]);
     }
+    $tosign = count(these_get_user_pending_signatures($USER));
+    if ($tosign) {
+        $links[get_string('mysignaturescount', 'mod_these', $tosign)] = new moodle_url('/mod/these/mysignatures.php');
+    }
     if (empty($links)) {
         return '';
     }
@@ -2860,6 +2957,13 @@ function these_render_dossier(
             'alert alert-warning'
         );
     }
+    if (these_is_adjourned($dossier)) {
+        $out .= html_writer::div(get_string(
+            $rights->student ? 'adjournednoticestudent' : 'adjournednotice',
+            'mod_these',
+            userdate($dossier->statustime, get_string('strftimedate', 'langconfig'))
+        ), 'alert alert-warning');
+    }
 
     $actions = $withactions
         ? these_render_actions(these_get_dossier_actions($cm, $dossier, $rights), 'btn btn-primary mr-1 mb-1') : '';
@@ -2907,6 +3011,7 @@ function these_render_dossier(
             $rows[get_string('prizeproposal', 'mod_these')] = $dossier->prizeproposal ? get_string('yes') : null;
             $rows[get_string('minutes', 'mod_these')] = these_render_file_links($context, 'pv', $dossier->id);
         }
+        $rows[get_string('minutesadjourned', 'mod_these')] = these_render_file_links($context, 'pvadjourned', $dossier->id);
         $out .= these_render_detail_section(get_string('defense', 'mod_these'), $rows);
         if (!empty($dossier->correctionsrequested)) {
             $out .= these_render_detail_section(get_string('corrections', 'mod_these'), [
@@ -3906,13 +4011,24 @@ function these_get_signatures_by_token($token) {
  * @param string $intro Texte d'introduction (ce qui est signé).
  * @return void
  */
-function these_add_signature_fields(MoodleQuickForm $mform, $defaultname, $intro = '') {
-    global $PAGE;
+function these_add_signature_fields(MoodleQuickForm $mform, $defaultname, $intro = '', $allowsaved = true) {
+    global $PAGE, $USER;
 
     $mform->addElement('header', 'signatureheader', get_string('signature', 'mod_these'));
     $mform->setExpanded('signatureheader');
     if ($intro !== '') {
         $mform->addElement('static', 'signatureintro', '', $intro);
+    }
+    // Signature enregistrée de l'utilisateur connecté : reprise d'office, sans nouveau tracé.
+    $cansave = $allowsaved && isloggedin() && !isguestuser();
+    $saved = $cansave ? these_get_saved_signature($USER->id) : null;
+    if ($saved !== null) {
+        $mform->addElement('advcheckbox', 'usesavedsignature', '', get_string('signatureusesaved', 'mod_these')
+            . html_writer::empty_tag('br') . html_writer::empty_tag('img', [
+                'src' => 'data:image/png;base64,' . base64_encode($saved), 'alt' => get_string('signaturesaved', 'mod_these'),
+                'class' => 'these-saved-signature border mt-1', 'style' => 'max-height:80px;background:#fff;',
+            ]));
+        $mform->setDefault('usesavedsignature', 1);
     }
     $pad = html_writer::div(
         html_writer::tag('canvas', '', ['width' => 520, 'height' => 170, 'class' => 'these-signature-canvas',
@@ -3928,6 +4044,14 @@ function these_add_signature_fields(MoodleQuickForm $mform, $defaultname, $intro
     $mform->addElement('static', 'signaturepad', get_string('signaturedraw', 'mod_these'), $pad);
     $mform->addElement('hidden', 'signaturedata', '');
     $mform->setType('signaturedata', PARAM_RAW);
+    if ($cansave) {
+        $mform->addElement('advcheckbox', 'savesignature', '', get_string('signaturesave', 'mod_these'));
+        $mform->setDefault('savesignature', 1);
+    }
+    if ($saved !== null) {
+        $mform->hideIf('signaturepad', 'usesavedsignature', 'checked');
+        $mform->hideIf('savesignature', 'usesavedsignature', 'checked');
+    }
     $mform->addElement('text', 'signername', get_string('signername', 'mod_these'), ['size' => 48]);
     $mform->setType('signername', PARAM_TEXT);
     $mform->setDefault('signername', $defaultname);
@@ -3942,8 +4066,11 @@ function these_add_signature_fields(MoodleQuickForm $mform, $defaultname, $intro
  * @return array Erreurs, indexées par champ.
  */
 function these_signature_errors(array $data) {
+    global $USER;
+
     $errors = [];
-    if (these_decode_signature_image($data['signaturedata'] ?? '') === null) {
+    $saved = !empty($data['usesavedsignature']) && these_get_saved_signature($USER->id) !== null;
+    if (!$saved && these_decode_signature_image($data['signaturedata'] ?? '') === null) {
         $errors['signername'] = get_string('signaturemissing', 'mod_these');
     } else if (trim((string) ($data['signername'] ?? '')) === '') {
         $errors['signername'] = get_string('required');
@@ -3966,12 +4093,12 @@ function these_signature_errors(array $data) {
  * @return void
  */
 function these_sign_from_form(context $context, stdClass $dossier, array $doctypes, $slot, stdClass $data, $userid) {
-    $png = these_decode_signature_image($data->signaturedata ?? '');
-    if ($png === null) {
+    $signature = these_signature_from_form($data);
+    if ($signature === null) {
         throw new coding_exception('Signature absente');
     }
     foreach ($doctypes as $doctype) {
-        these_sign_document($context, $dossier, $doctype, $slot, $userid, (string) $data->signername, $png);
+        these_sign_document($context, $dossier, $doctype, $slot, $userid, $signature->name, $signature->png);
     }
 }
 
@@ -5578,4 +5705,231 @@ function these_render_answers(stdClass $these, stdClass $dossier) {
             : format_text(these_answer_text($answer), FORMAT_PLAIN);
     }
     return these_render_detail_section(get_string('questionnaire', 'mod_these'), $rows);
+}
+
+// Signature enregistrée et agent DEVE signataire.
+
+/**
+ * Signature enregistrée d'un utilisateur (image PNG), reprise à chaque signature sans nouveau tracé.
+ *
+ * @param int $userid
+ * @return string|null Contenu PNG, null si l'utilisateur n'en a pas.
+ */
+function these_get_saved_signature($userid) {
+    if (empty($userid)) {
+        return null;
+    }
+    $context = context_user::instance($userid, IGNORE_MISSING);
+    if (!$context) {
+        return null;
+    }
+    $file = get_file_storage()->get_file($context->id, 'mod_these', 'savedsignature', 0, '/', 'signature.png');
+    return $file ? $file->get_content() : null;
+}
+
+/**
+ * Enregistre (ou remplace) la signature d'un utilisateur.
+ *
+ * @param int $userid
+ * @param string $png
+ * @return void
+ */
+function these_save_signature_image($userid, $png) {
+    $context = context_user::instance($userid);
+    $fs = get_file_storage();
+    $fs->delete_area_files($context->id, 'mod_these', 'savedsignature', 0);
+    $fs->create_file_from_string([
+        'contextid' => $context->id,
+        'component' => 'mod_these',
+        'filearea' => 'savedsignature',
+        'itemid' => 0,
+        'filepath' => '/',
+        'filename' => 'signature.png',
+        'userid' => $userid,
+    ], $png);
+}
+
+/**
+ * Supprime la signature enregistrée d'un utilisateur.
+ *
+ * @param int $userid
+ * @return void
+ */
+function these_delete_saved_signature($userid) {
+    $context = context_user::instance($userid, IGNORE_MISSING);
+    if ($context) {
+        get_file_storage()->delete_area_files($context->id, 'mod_these', 'savedsignature', 0);
+    }
+}
+
+/**
+ * Emplacements signés par l'agent responsable de la DEVE (visa du sujet, agrément administratif,
+ * représentation de la direction générale).
+ *
+ * @return string[]
+ */
+function these_agent_slots() {
+    return ['deve', 'dgrep'];
+}
+
+/**
+ * Compte de l'agent responsable de la DEVE, désigné dans les réglages du site (identifiant ou
+ * adresse de courriel). Sans agent désigné, la personne de la DEVE qui valide signe elle-même.
+ *
+ * @return stdClass|null
+ */
+function these_deve_agent() {
+    global $DB;
+
+    $value = trim((string) get_config('mod_these', 'deveagent'));
+    if ($value === '') {
+        return null;
+    }
+    $field = strpos($value, '@') !== false ? 'email' : 'username';
+    $users = $DB->get_records_select(
+        'user',
+        "LOWER($field) = LOWER(?) AND deleted = 0 AND suspended = 0",
+        [$value],
+        'id ASC',
+        '*',
+        0,
+        1
+    );
+    return $users ? reset($users) : null;
+}
+
+/**
+ * Indique si une personne appose elle-même une signature à un emplacement lors d'une validation :
+ * les emplacements de l'agent DEVE reviennent à l'agent quand il est désigné.
+ *
+ * @param string $slot
+ * @param int $userid
+ * @return bool
+ */
+function these_signs_slot_at_validation($slot, $userid) {
+    if (!in_array($slot, these_agent_slots(), true)) {
+        return true;
+    }
+    $agent = these_deve_agent();
+    return $agent === null || (int) $agent->id === (int) $userid;
+}
+
+/**
+ * Indique si un document attend la signature de l'agent DEVE : une fois validée par l'équipe de la
+ * DEVE l'étape qui le remplit (enregistrement du sujet, validation du dossier de soutenance).
+ *
+ * @param stdClass $dossier
+ * @param string $doctype
+ * @return bool
+ */
+function these_agent_document_due(stdClass $dossier, $doctype) {
+    $after = ['subject' => THESE_STATUS_SUBJECT_REGISTERED, 'agreement' => THESE_STATUS_DEFENSE_VALIDATED];
+    return isset($after[$doctype]) && these_document_available($dossier, $doctype)
+        && these_rank_reached($dossier, $after[$doctype]);
+}
+
+/**
+ * Demande à l'agent DEVE de signer les documents d'un dossier qui attendent sa signature : les
+ * signatures en attente lui sont attribuées et il est prévenu par courriel, avec le lien vers
+ * « Mes signatures ».
+ *
+ * @param stdClass $these
+ * @param stdClass $cm
+ * @param stdClass $dossier
+ * @param string[] $doctypes
+ * @return int Nombre de documents en attente de sa signature.
+ */
+function these_request_agent_signatures(stdClass $these, stdClass $cm, stdClass $dossier, array $doctypes) {
+    global $DB;
+
+    $agent = these_deve_agent();
+    if ($agent === null) {
+        return 0;
+    }
+    $now = time();
+    $labels = [];
+    foreach (these_agent_slots() as $slot) {
+        foreach (these_pending_documents_for_slot($dossier, $slot, $doctypes) as $doctype) {
+            if (!these_agent_document_due($dossier, $doctype)) {
+                continue;
+            }
+            $signature = $DB->get_record('these_signature', ['dossierid' => $dossier->id, 'doctype' => $doctype, 'slot' => $slot]);
+            $record = (object) [
+                'dossierid' => $dossier->id,
+                'doctype' => $doctype,
+                'slot' => $slot,
+                'userid' => (int) $agent->id,
+                'signername' => fullname($agent),
+                'signeremail' => $agent->email,
+                'token' => null,
+                'requesttime' => $now,
+                'timesigned' => 0,
+                'contenthash' => null,
+            ];
+            if ($signature) {
+                $record->id = $signature->id;
+                $DB->update_record('these_signature', $record);
+            } else {
+                $record->timecreated = $now;
+                $DB->insert_record('these_signature', $record);
+            }
+            $labels[] = these_document_label($doctype) . ' (' . these_slot_label($slot) . ')';
+        }
+    }
+    if (!$labels) {
+        return 0;
+    }
+    $vars = these_email_base_vars($these, $cm, $dossier);
+    $vars['name'] = fullname($agent);
+    $vars['document'] = implode(', ', $labels);
+    $vars['url'] = (new moodle_url('/mod/these/mysignatures.php'))->out(false);
+    these_send_email($these, 'agentsignature', [$agent], $vars);
+    these_log(
+        $dossier->id,
+        0,
+        'signaturerequested',
+        $dossier->status,
+        $dossier->status,
+        get_string('agentdeve', 'mod_these') . ' (' . fullname($agent) . ') — ' . implode(', ', $labels)
+    );
+    return count($labels);
+}
+
+/**
+ * Signatures qui attendent un utilisateur connecté : celles demandées à l'agent DEVE, et celles
+ * des signataires invités par courriel (président du jury, directeur extérieur...) dont l'adresse
+ * est celle de son compte.
+ *
+ * @param stdClass $user
+ * @return stdClass[] Signatures en attente, avec dossier, activité et module de cours.
+ */
+function these_get_user_pending_signatures(stdClass $user) {
+    global $DB;
+
+    $email = core_text::strtolower(trim((string) $user->email));
+    $params = ['userid' => $user->id, 'email1' => $email, 'email2' => $email];
+    $records = $DB->get_records_sql(
+        "SELECT s.*
+           FROM {these_signature} s
+           JOIN {these_dossier} d ON d.id = s.dossierid
+          WHERE s.timesigned = 0
+            AND d.status <> " . THESE_STATUS_CANCELLED . "
+            AND ((s.token IS NULL AND s.userid = :userid)
+                 OR (s.token IS NOT NULL AND :email1 <> '' AND LOWER(s.signeremail) = :email2))
+       ORDER BY s.dossierid, s.id",
+        $params
+    );
+    $pending = [];
+    foreach ($records as $signature) {
+        $dossier = $DB->get_record('these_dossier', ['id' => $signature->dossierid]);
+        $cm = $dossier ? get_coursemodule_from_instance('these', $dossier->theseid, 0, false, IGNORE_MISSING) : null;
+        if (!$cm || !these_document_available($dossier, $signature->doctype)) {
+            continue;
+        }
+        $signature->dossier = $dossier;
+        $signature->cm = $cm;
+        $signature->these = $DB->get_record('these', ['id' => $dossier->theseid]);
+        $pending[$signature->id] = $signature;
+    }
+    return $pending;
 }
