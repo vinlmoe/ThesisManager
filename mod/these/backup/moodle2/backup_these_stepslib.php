@@ -83,6 +83,12 @@ class backup_these_activity_structure_step extends backup_activity_structure_ste
             'jurorid', 'jurystatus', 'eligible', 'eligibleby', 'eligibletime', 'notifiedtime',
         ]);
 
+        $subjecthistory = new backup_nested_element('subjecthistory');
+        $subject = new backup_nested_element('previoussubject', ['id'], [
+            'title', 'titleen', 'summary', 'keywords', 'studyyear', 'confidential', 'directorid', 'directorname',
+            'codirectorname', 'libraryref', 'reason', 'changedby', 'timecreated',
+        ]);
+
         $answers = new backup_nested_element('answers');
         $answer = new backup_nested_element('answer', ['id'], ['questionid', 'value', 'timemodified']);
 
@@ -111,6 +117,8 @@ class backup_these_activity_structure_step extends backup_activity_structure_ste
         $dossiers->add_child($dossier);
         $dossier->add_child($jurymembers);
         $jurymembers->add_child($jurymember);
+        $dossier->add_child($subjecthistory);
+        $subjecthistory->add_child($subject);
         $dossier->add_child($answers);
         $answers->add_child($answer);
         $dossier->add_child($signatures);
@@ -128,6 +136,7 @@ class backup_these_activity_structure_step extends backup_activity_structure_ste
             $dossier->set_source_table('these_dossier', ['theseid' => backup::VAR_PARENTID], 'id ASC');
             $jurymember->set_source_table('these_jury', ['dossierid' => backup::VAR_PARENTID], 'sortorder ASC, id ASC');
             $answer->set_source_table('these_answer', ['dossierid' => backup::VAR_PARENTID], 'id ASC');
+            $subject->set_source_table('these_subjecthistory', ['dossierid' => backup::VAR_PARENTID], 'id ASC');
             $log->set_source_table('these_log', ['dossierid' => backup::VAR_PARENTID], 'id ASC');
             $signature->set_source_table('these_signature', ['dossierid' => backup::VAR_PARENTID], 'id ASC');
         }
@@ -136,6 +145,8 @@ class backup_these_activity_structure_step extends backup_activity_structure_ste
         $dossier->annotate_ids('user', 'directorid');
         $dossier->annotate_ids('user', 'returnedby');
         $log->annotate_ids('user', 'userid');
+        $subject->annotate_ids('user', 'directorid');
+        $subject->annotate_ids('user', 'changedby');
         $jurymember->annotate_ids('user', 'eligibleby');
         $signature->annotate_ids('user', 'userid');
         $signature->annotate_files('mod_these', 'signature', 'id');

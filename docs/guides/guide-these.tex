@@ -4,9 +4,9 @@
 
 % Version du guide : à mettre à jour à chaque modification, avec une ligne dans l'historique.
 \newcommand{\titreguide}{Guide de la gestion des thèses}
-\newcommand{\versionguide}{1.8}
+\newcommand{\versionguide}{1.9}
 \newcommand{\dateguide}{24 octobre 2026}
-\newcommand{\versionthese}{0.8.1}
+\newcommand{\versionthese}{0.9.0}
 
 \usepackage{guide-commun}
 \usepackage{tikz}
@@ -46,6 +46,8 @@ thèse) et circuit des corrections. \\
 1.8 & 24 octobre 2026 & Procédures pas à pas pour chaque acteur ; ajournement
 (retour en phase de soutenance) ; agent DEVE signataire ; signature
 enregistrée ; \og Mes signatures\fg{}. \\
+1.9 & 24 octobre 2026 & Changement de sujet de thèse, avec trace de l'ancien
+sujet et avertissement de l'ancien directeur, de la DEVE et de la bibliothèque. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -332,6 +334,28 @@ sans repasser par les étapes déjà franchies.}
 
 \capture[0.85\linewidth]{61_etudiant_sujet_renvoye}{Sujet renvoyé : motif affiché en haut du dossier.}
 
+\begin{procedure}{Changer de sujet de thèse}{Étudiant, dossier actif}
+\begin{etapes}
+  \item Dans votre dossier (statut \statut{Dossier actif} : sujet enregistré,
+        soutenance pas encore déposée), cliquez sur \bouton{Changer de sujet de
+        thèse}.
+  \item Expliquez le \textbf{motif du changement} (obligatoire).
+  \item Saisissez le nouveau sujet : titre, résumé, mots-clés, année d'études ;
+        choisissez au besoin un autre directeur de thèse.
+  \item Prenez de nouveau les engagements, signez (votre signature enregistrée
+        est proposée) et cliquez sur \bouton{Soumettre le nouveau sujet}.
+\end{etapes}
+\ensuite{l'ancien sujet est archivé dans le dossier (rubrique \og Sujets
+précédents\fg{} : date, titre, directeur, motif et PDF du dépôt de sujet
+signé) ; votre ancien directeur, la DEVE et la bibliothèque reçoivent un
+courriel avec l'ancien et le nouveau titre et le motif. Le nouveau sujet repasse
+toute la phase~1 : validation par le directeur, enregistrement par la DEVE (visa
+de l'agent DEVE), notice de la bibliothèque. Le dossier redevient ensuite
+actif.}
+\end{procedure}
+
+\capture[0.85\linewidth]{84_changement_sujet}{Changement de sujet : motif, nouveau sujet et signature.}
+
 \begin{procedure}{Remplir le questionnaire préalable au jury}{Étudiant, avant le dépôt de la soutenance}
 \begin{etapes}
   \item Dans votre dossier (statut \statut{Dossier actif}), cliquez sur
@@ -441,6 +465,13 @@ avec votre motif.}
 \end{procedure}
 
 \capture[0.85\linewidth]{62_directeur_valide_sujet}{Validation du sujet par le directeur.}
+
+\begin{astuce}
+Après un \textbf{changement de sujet}, l'ancien directeur est prévenu par
+courriel ; le nouveau sujet attend la validation du directeur choisi par
+l'étudiant, selon la même procédure. Les sujets précédents restent consultables
+dans le dossier.
+\end{astuce}
 
 \begin{procedure}{Rédiger le rapport sur le manuscrit (phase 2)}{Directeur}
 \begin{etapes}
@@ -643,7 +674,15 @@ décisions du jury.}
         la réouverture lui rend le statut atteint.
   \item[Créer un dossier] pour un étudiant inscrit qui n'en a pas encore.
   \item[Questionnaire] corriger les réponses d'un étudiant.
+  \item[Changement de sujet] à l'initiative de l'étudiant, depuis un dossier
+        actif : la DEVE est prévenue par courriel, enregistre le nouveau sujet
+        comme un premier sujet, et retrouve dans le dossier la rubrique
+        \og Sujets précédents\fg{} (motif, ancien titre, ancien directeur, PDF
+        archivé) ainsi que l'entrée \og Changement de sujet\fg{} de
+        l'historique.
 \end{description}
+
+\capture[0.85\linewidth]{85_sujets_precedents}{Trace d'un changement de sujet : sujets précédents et historique.}
 
 % ===========================================================================
 \section{Agent DEVE signataire : pas à pas}\label{sec:agent}

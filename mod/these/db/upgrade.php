@@ -287,5 +287,31 @@ function xmldb_these_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2026103000, 'these');
     }
 
+    if ($oldversion < 2026103100) {
+        // Historique des sujets : trace de chaque changement de sujet.
+        $table = new xmldb_table('these_subjecthistory');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('dossierid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('title', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('titleen', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('summary', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('keywords', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('studyyear', XMLDB_TYPE_CHAR, '4', null, null, null, null);
+        $table->add_field('confidential', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('directorid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('directorname', XMLDB_TYPE_CHAR, '255', null, null, null, null);
+        $table->add_field('codirectorname', XMLDB_TYPE_CHAR, '255', null, null, null, null);
+        $table->add_field('libraryref', XMLDB_TYPE_CHAR, '100', null, null, null, null);
+        $table->add_field('reason', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('changedby', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('dossierid', XMLDB_KEY_FOREIGN, ['dossierid'], 'these_dossier', ['id']);
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+        upgrade_mod_savepoint(true, 2026103100, 'these');
+    }
+
     return true;
 }

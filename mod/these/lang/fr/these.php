@@ -1071,3 +1071,37 @@ La DEVE a vérifié le dossier de thèse de {$a->student} ({$a->activity}). Les 
 Sujet : {$a->title}
 
 Signer depuis « Mes signatures » : {$a->url}';
+
+// Changement de sujet.
+$string['subjectchange'] = 'Changer de sujet de thèse';
+$string['subjectchange_desc'] = "Expliquez pourquoi vous changez de sujet. L'ancien sujet est archivé dans le dossier ; votre ancien "
+    . 'directeur, la DEVE et la bibliothèque sont prévenus. Le nouveau sujet est de nouveau validé par le directeur (vous pouvez en '
+    . 'choisir un autre), enregistré par la DEVE puis par la bibliothèque.';
+$string['subjectchangereason'] = 'Motif du changement';
+$string['subjectchangesubmit'] = 'Soumettre le nouveau sujet';
+$string['subjectchangecurrent'] = 'Sujet actuel : {$a}';
+$string['subjectchangenotallowed'] = "Le sujet ne peut être changé que lorsque le dossier est actif (sujet enregistré, soutenance non "
+    . 'déposée).';
+$string['subjectchangedmsg'] = 'Nouveau sujet soumis : votre directeur de thèse est prévenu, ainsi que la DEVE et la bibliothèque.';
+$string['subjectchangelog'] = 'Ancien sujet : {$a->old}. Motif : {$a->reason}';
+$string['subjecthistory'] = 'Sujets précédents';
+$string['subjectarchive'] = 'Dépôt de sujet archivé';
+$string['logsubjectchanged'] = 'Changement de sujet';
+$string['emailsubjectchangedsubject'] = 'Thèse de {$a->student} : changement de sujet';
+$string['emailsubjectchangedbody'] = 'Bonjour,
+
+{$a->student} ({$a->activity}) a changé de sujet de thèse.
+
+Ancien sujet : {$a->oldtitle}
+Nouveau sujet : {$a->title}
+Motif : {$a->reason}
+
+L\'ancien sujet est archivé dans le dossier. Le nouveau sujet va être validé par le directeur de thèse, puis enregistré par la DEVE et la bibliothèque.
+
+Accéder au dossier : {$a->url}';
+$string['privacy:metadata:these_subjecthistory'] = 'Sujets précédents, archivés à chaque changement de sujet.';
+$string['privacy:metadata:these_subjecthistory:title'] = 'Titre du sujet précédent.';
+$string['privacy:metadata:these_subjecthistory:summary'] = 'Résumé du sujet précédent.';
+$string['privacy:metadata:these_subjecthistory:reason'] = 'Motif du changement.';
+$string['privacy:metadata:these_subjecthistory:changedby'] = 'Auteur du changement.';
+$string['privacy:metadata:these_subjecthistory:timecreated'] = 'Date du changement.';

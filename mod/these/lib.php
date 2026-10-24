@@ -90,7 +90,7 @@ define('THESE_LIST_PERPAGE', 40);
  * et de la bibliothèque. Voir these_can_view_filearea().
  */
 define('THESE_FILEAREAS', ['subjectdocs', 'manuscript', 'defensedocs', 'directorreport', 'generated', 'pv', 'corrections',
-    'pvadjourned']);
+    'pvadjourned', 'subjectarchive']);
 
 /**
  * Returns the list of features supported by this module.

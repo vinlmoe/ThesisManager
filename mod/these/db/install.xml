@@ -338,5 +338,29 @@
         <INDEX NAME="dossier_question" UNIQUE="true" FIELDS="dossierid, questionid"/>
       </INDEXES>
     </TABLE>
+    <TABLE NAME="these_subjecthistory" COMMENT="Sujets précédents d'un dossier, archivés à chaque changement de sujet">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="dossierid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="title" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="titleen" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="summary" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="keywords" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="studyyear" TYPE="char" LENGTH="4" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="confidential" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="directorid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="directorname" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"
+            COMMENT="Nom du directeur au moment du changement (directeur extérieur compris)"/>
+        <FIELD NAME="codirectorname" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="libraryref" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="reason" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Motif du changement"/>
+        <FIELD NAME="changedby" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="dossierid" TYPE="foreign" FIELDS="dossierid" REFTABLE="these_dossier" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
   </TABLES>
 </XMLDB>

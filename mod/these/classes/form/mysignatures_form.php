@@ -44,8 +44,13 @@ class mysignatures_form extends \moodleform {
             $boxes[] = $mform->createElement('advcheckbox', 'sig' . $signatureid, '', $label);
             $mform->setDefault('sig' . $signatureid, 1);
         }
-        $mform->addGroup($boxes, 'documentsgroup', get_string('documentstosign', 'mod_these'),
-            \html_writer::empty_tag('br'), false);
+        $mform->addGroup(
+            $boxes,
+            'documentsgroup',
+            get_string('documentstosign', 'mod_these'),
+            \html_writer::empty_tag('br'),
+            false
+        );
         these_add_signature_fields($mform, $this->_customdata['signername'], get_string('signmyintro', 'mod_these'));
         $this->add_action_buttons(false, get_string('signdocuments', 'mod_these'));
     }
