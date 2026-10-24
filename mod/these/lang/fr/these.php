@@ -767,3 +767,38 @@ $string['doctplconformity'] = 'Attestation de conformité (bibliothèque)';
 $string['doctplconvocation'] = 'Convocation à la soutenance';
 $string['doctpljurysheet'] = 'Feuille de jury';
 $string['doctplminutes'] = 'Procès-verbal de soutenance';
+
+// Transfert des paramètres.
+$string['transfersettings'] = 'Transfert des paramètres';
+$string['transfersettings_desc'] = "Reprendre les paramètres d'une autre activité « Gestion des thèses » (nouveau cours, nouvelle année) "
+    . "ou d'un fichier exporté depuis une autre plateforme, ou exporter ceux de cette activité. Les dossiers ne sont jamais transférés.";
+$string['transferimportheading'] = 'Reprendre des paramètres';
+$string['transferexportheading'] = 'Exporter les paramètres de cette activité';
+$string['transferexport_desc'] = 'Le fichier (JSON) peut être repris dans une autre activité, sur cette plateforme ou une autre.';
+$string['transfersource'] = 'Source';
+$string['transfersourceactivity'] = 'Une autre activité de cette plateforme';
+$string['transfersourcefile'] = 'Un fichier de paramètres exporté';
+$string['transferactivity'] = 'Activité';
+$string['transferfile'] = 'Fichier de paramètres (.json)';
+$string['transfergroups'] = 'Paramètres';
+$string['transfergroups_help'] = "Chaque groupe coché remplace en totalité celui de l'activité : un courriel ou un modèle personnalisé "
+    . "ici mais pas dans la source revient à son texte d'origine. Les groupes non cochés ne changent pas.";
+$string['transfergroupactivity'] = "Paramètres de l'activité (établissement, signataire, lieu, jury, adresses de service, relances)";
+$string['transfergroupemails'] = 'Courriels personnalisés';
+$string['transfergroupdoctemplates'] = 'Modèles des documents';
+$string['transfergroupdocimages'] = 'Images des modèles';
+$string['transferconfirmreplace'] = "Je confirme le remplacement des paramètres cochés de cette activité";
+$string['transferconfirmrequired'] = 'Confirmez le remplacement pour continuer.';
+$string['transferimport'] = 'Transférer';
+$string['transferexport'] = 'Télécharger le fichier de paramètres';
+$string['transfernogroup'] = 'Cochez au moins un groupe de paramètres.';
+$string['transferbadfile'] = "Ce fichier n'est pas un fichier de paramètres de la Gestion des thèses.";
+$string['transferdone'] = 'Paramètres repris de « {$a} » :';
+$string['transferdoneactivity'] = "paramètres de l'activité remplacés ;";
+$string['transferdoneemails'] = '{$a} courriel(s) personnalisé(s) ;';
+$string['transferdonedoctemplates'] = '{$a} modèle(s) de document modifié(s) ;';
+$string['transferdonedocimages'] = '{$a} image(s).';
+$string['transferskipped'] = 'Éléments non repris :';
+$string['transferskippedemail'] = 'courriel inconnu « {$a} »';
+$string['transferskippeddoctemplate'] = 'document inconnu « {$a} »';
+$string['transferskippedimage'] = 'image illisible ou en double « {$a} »';

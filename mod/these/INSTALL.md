@@ -97,6 +97,17 @@ annulée si le contenu signé change ; modifier un modèle ne l'annule pas. Les
 signataires extérieurs reçoivent un lien personnel par courriel ; la DEVE suit
 les signatures (*Suivi des signatures*), relance ou fait signer sur place.
 
+## 3 ter. Transfert des paramètres
+
+*Transfert des paramètres* (DEVE, barre de navigation de l'activité) reprend les
+paramètres d'une autre activité dont on est la DEVE, ou d'un fichier de
+paramètres (JSON) exporté depuis la même page : paramètres de l'activité
+(établissement, signataire, lieu, jury minimum, adresses de service, relances),
+courriels personnalisés, modèles et images des documents. Chaque groupe coché
+remplace celui de l'activité ; les dossiers ne sont jamais transférés. Pratique
+à l'ouverture d'un nouveau cours, ou pour passer d'une plateforme de test à la
+production.
+
 ## 4. Statuts
 
 | Valeur | Statut | En attente de |

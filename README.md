@@ -50,6 +50,8 @@ Bibliothèque ──conformité du manuscrit──▶ DEVE ──convocations, f
 - Chaque document est produit à partir d'un **modèle modifiable par la DEVE
   dans l'activité** (HTML et balises `{{...}}`, aperçu PDF, retour au modèle
   d'origine, images propres à l'activité).
+- **Transfert des paramètres** d'une activité à une autre, ou par fichier
+  (paramètres de l'activité, courriels, modèles et images des documents).
 - La bibliothèque dispose d'un rôle propre (« Bibliothèque (thèses) »), et les
   rôles DEVE et Bibliothèque se choisissent dans l'administration du site.
 - La DEVE **génère** la convocation de l'étudiant et de chaque membre du jury,
@@ -66,8 +68,8 @@ Bibliothèque ──conformité du manuscrit──▶ DEVE ──convocations, f
 ## Qualité
 
 - Style : standard Moodle (`moodlehq/moodle-cs`), sans avertissement.
-- Tests PHPUnit (49 tests) : circuit complet, renvois, droits, relances,
-  documents générés, signatures, modèles, import, confidentialité, sauvegarde/restauration.
+- Tests PHPUnit (53 tests) : circuit complet, renvois, droits, relances,
+  documents générés, signatures, modèles, transfert des paramètres, import, confidentialité, sauvegarde/restauration.
 - CI GitHub Actions : phpcs, lint, validation du plugin, savepoints, PHPDoc,
   PHPUnit sur Moodle 4.5 / PostgreSQL.
 

@@ -765,3 +765,38 @@ $string['doctplconformity'] = 'Conformity certificate (library)';
 $string['doctplconvocation'] = 'Defence notice';
 $string['doctpljurysheet'] = 'Jury sheet';
 $string['doctplminutes'] = 'Defence minutes';
+
+// Settings transfer.
+$string['transfersettings'] = 'Settings transfer';
+$string['transfersettings_desc'] = 'Take the settings of another thesis management activity (new course, new year) or of a file '
+    . 'exported from another site, or export the settings of this activity. Thesis files are never transferred.';
+$string['transferimportheading'] = 'Take settings';
+$string['transferexportheading'] = 'Export the settings of this activity';
+$string['transferexport_desc'] = 'The file (JSON) can be taken into another activity, on this site or another one.';
+$string['transfersource'] = 'Source';
+$string['transfersourceactivity'] = 'Another activity on this site';
+$string['transfersourcefile'] = 'An exported settings file';
+$string['transferactivity'] = 'Activity';
+$string['transferfile'] = 'Settings file (.json)';
+$string['transfergroups'] = 'Settings';
+$string['transfergroups_help'] = 'Each ticked group fully replaces that of the activity: an email or template customised here but not '
+    . 'in the source goes back to its original text. Unticked groups do not change.';
+$string['transfergroupactivity'] = 'Activity settings (institution, signatory, location, jury, service addresses, reminders)';
+$string['transfergroupemails'] = 'Customised emails';
+$string['transfergroupdoctemplates'] = 'Document templates';
+$string['transfergroupdocimages'] = 'Template images';
+$string['transferconfirmreplace'] = 'I confirm the replacement of the ticked settings of this activity';
+$string['transferconfirmrequired'] = 'Confirm the replacement to continue.';
+$string['transferimport'] = 'Transfer';
+$string['transferexport'] = 'Download the settings file';
+$string['transfernogroup'] = 'Tick at least one group of settings.';
+$string['transferbadfile'] = 'This file is not a thesis management settings file.';
+$string['transferdone'] = 'Settings taken from "{$a}":';
+$string['transferdoneactivity'] = 'activity settings replaced;';
+$string['transferdoneemails'] = '{$a} customised email(s);';
+$string['transferdonedoctemplates'] = '{$a} modified document template(s);';
+$string['transferdonedocimages'] = '{$a} image(s).';
+$string['transferskipped'] = 'Items not taken:';
+$string['transferskippedemail'] = 'unknown email "{$a}"';
+$string['transferskippeddoctemplate'] = 'unknown document "{$a}"';
+$string['transferskippedimage'] = 'unreadable or duplicate image "{$a}"';
