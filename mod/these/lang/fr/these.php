@@ -201,8 +201,11 @@ $string['minutes'] = 'Procès-verbal de soutenance';
 
 // Jury.
 $string['jury'] = 'Jury';
-$string['juryhelp'] = "Une ligne par membre. Laissez le nom vide pour ignorer une ligne. L'adresse de courriel permet d'envoyer sa "
-    . "convocation à chaque membre ; sans adresse, la convocation est à transmettre par un autre moyen.";
+$string['juryhelp'] = "Une ligne par membre. Choisissez de préférence l'enseignant dans l'annuaire du jury : son titre, son "
+    . "statut, son établissement et son adresse en sont repris. Pour un membre extérieur ou un invité, choisissez « Membre extérieur "
+    . "ou invité » et renseignez la ligne (le statut est demandé pour un membre votant). Seuls les maîtres de conférences HDR, les "
+    . "professeurs et les émérites peuvent présider. La DEVE valide ensuite l'éligibilité de chaque membre ; les membres sont alors "
+    . "prévenus par courriel et reçoivent un lien d'accès aux documents du dossier.";
 $string['juryrole'] = 'Rôle';
 $string['juryrolepresident'] = 'Président';
 $string['juryroledirector'] = 'Directeur (assesseur)';
@@ -216,6 +219,70 @@ $string['juryaddmembers'] = 'Ajouter des lignes';
 $string['juryonepresident'] = 'Le jury doit comporter un et un seul président.';
 $string['juryminmembers'] = 'Le jury doit comporter au moins {$a} membres votants (président compris, invités exclus).';
 $string['juryinvalidemail'] = 'Adresse de courriel invalide pour {$a}.';
+$string['juryjuror'] = "Enseignant de l'annuaire";
+$string['juryjuror_help'] = "Enseignant choisi dans l'annuaire du jury tenu par la DEVE. Pour un membre extérieur (autre "
+    . "établissement, praticien) ou un invité, choisissez « Membre extérieur ou invité » et renseignez les champs qui apparaissent.";
+$string['juryexternal'] = '— Membre extérieur ou invité (à renseigner) —';
+$string['jurystatus'] = 'Statut';
+$string['jurystatus_help'] = "Corps de l'enseignant. Tous peuvent diriger une thèse ou être membre du jury ; seuls les maîtres de "
+    . "conférences HDR, les professeurs et les émérites (professeurs et maîtres de conférences) peuvent présider.";
+$string['jurystatusir'] = 'Ingénieur de recherche';
+$string['jurystatusmcf'] = 'Maître de conférences';
+$string['jurystatusmcfhdr'] = 'Maître de conférences HDR';
+$string['jurystatusmcfstag'] = 'Maître de conférences stagiaire';
+$string['jurystatusprstag'] = 'Professeur stagiaire';
+$string['jurystatuspr'] = 'Professeur';
+$string['jurystatuspremerite'] = 'Professeur émérite';
+$string['jurystatusmcfemerite'] = 'Maître de conférences émérite';
+$string['jurystatusother'] = 'Autre (praticien, chercheur...)';
+$string['jurystatusrequired'] = 'Indiquez le statut de {$a} (membre extérieur).';
+$string['juryduplicate'] = '{$a} figure deux fois dans le jury.';
+$string['jurypresidentnoteligible'] = "{\$a} ne peut pas présider le jury : seuls les maîtres de conférences HDR, les professeurs et "
+    . "les émérites le peuvent.";
+$string['juryeligiblecheck'] = 'Éligibilité vérifiée (DEVE)';
+$string['juryeligiblehelp'] = "Cochez l'éligibilité de chaque membre votant après vérification (déjà cochée pour les enseignants "
+    . "de l'annuaire dont le statut convient à leur rôle). À la validation, les membres du jury sont prévenus par courriel et "
+    . "reçoivent un lien d'accès aux documents du dossier.";
+$string['juryeligiblerequired'] = "L'éligibilité de {\$a} n'est pas validée.";
+$string['jurynotified'] = '{$a} membre(s) du jury prévenu(s).';
+$string['jurynotifiedmissing'] = 'Sans adresse, à prévenir par un autre moyen : {$a}.';
+$string['juryeligibilityok'] = 'Éligible';
+$string['juryeligibilitytocheck'] = 'À vérifier par la DEVE';
+$string['juryeligibilityko'] = 'Non éligible à ce rôle';
+$string['juryeligibilityvalidated'] = 'Éligibilité validée';
+$string['jurynotifiedon'] = 'Prévenu le {$a}';
+$string['juryresendaccess'] = "Renvoyer l'accès au jury";
+$string['juryaccessresent'] = '{$a} membre(s) du jury prévenu(s) de nouveau.';
+$string['juryaccess'] = 'Accès du jury';
+$string['juryaccessintro'] = 'Bonjour {$a->name}, vous êtes désigné(e) comme {$a->role} du jury de cette thèse. Vous trouverez '
+    . 'ci-dessous les informations de la soutenance et les documents du dossier.';
+$string['juryaccessinvalid'] = "Ce lien d'accès n'est pas (ou plus) valide. Contactez la DEVE.";
+$string['juryaccessdocuments'] = 'Documents';
+$string['juryaccessnodocuments'] = "Aucun document n'est encore disponible.";
+
+// Annuaire du jury.
+$string['jurors'] = 'Annuaire du jury';
+$string['jurors_desc'] = "Enseignants pouvant diriger une thèse ou siéger au jury, communs à toutes les activités et à toutes les "
+    . "promotions. Les formulaires de jury y puisent pour être préremplis. Un enseignant retiré (inactif) n'est plus proposé mais "
+    . "reste dans les jurys qui l'ont retenu.";
+$string['jurortitle'] = 'Titre';
+$string['juroractive'] = 'Proposé dans les formulaires de jury';
+$string['juroractiveyes'] = 'Actif';
+$string['juroractiveno'] = 'Retiré';
+$string['jurorpresident'] = 'Peut présider';
+$string['juroradd'] = 'Ajouter un enseignant';
+$string['juroredit'] = 'Modifier un enseignant';
+$string['jurorsaved'] = "L'enseignant est enregistré.";
+$string['jurordeleted'] = "L'enseignant est supprimé de l'annuaire.";
+$string['jurordeleteconfirm'] = "Supprimer {\$a} de l'annuaire ? Les jurys qui l'ont retenu le gardent.";
+$string['jurorsnone'] = "L'annuaire est vide.";
+$string['jurorimport'] = 'Importer un fichier CSV';
+$string['jurorimportfile'] = 'Fichier CSV';
+$string['jurorimportfile_help'] = "Colonnes : title (Dr ou Pr), lastname, firstname, email, status, institution, séparées par des "
+    . "virgules ou des points-virgules. Le statut est la clé (ir, mcf, mcfhdr, mcfstag, prstag, pr, premerite, mcfemerite) ou le "
+    . "libellé. Un enseignant déjà présent (même adresse, ou mêmes nom et prénom) est mis à jour.";
+$string['jurorimportdone'] = '{$a->created} enseignant(s) ajouté(s), {$a->updated} mis à jour.';
+$string['jurorimportbadline'] = 'Ligne {$a} ignorée : titre, nom, prénom, statut ou adresse incorrect.';
 $string['jurysheet'] = 'Feuille de jury';
 
 // Étapes de validation.
@@ -446,6 +513,14 @@ $string['privacy:metadata:these_jury'] = 'Membres du jury proposés ou retenus p
 $string['privacy:metadata:these_jury:fullname'] = 'Nom du membre du jury.';
 $string['privacy:metadata:these_jury:email'] = 'Adresse de courriel du membre du jury.';
 $string['privacy:metadata:these_jury:institution'] = 'Établissement du membre du jury.';
+$string['privacy:metadata:these_jury:jurystatus'] = 'Statut (corps) du membre du jury.';
+$string['privacy:metadata:these_juror'] = "Annuaire des enseignants pouvant diriger une thèse ou siéger au jury, tenu par la DEVE (sans lien avec un compte Moodle).";
+$string['privacy:metadata:these_juror:title'] = "Titre de l'enseignant (Dr ou Pr).";
+$string['privacy:metadata:these_juror:lastname'] = "Nom de l'enseignant.";
+$string['privacy:metadata:these_juror:firstname'] = "Prénom de l'enseignant.";
+$string['privacy:metadata:these_juror:email'] = "Adresse de courriel de l'enseignant.";
+$string['privacy:metadata:these_juror:status'] = "Statut (corps) de l'enseignant.";
+$string['privacy:metadata:these_juror:institution'] = "Établissement de l'enseignant.";
 $string['privacy:metadata:these_log'] = 'Historique des actions sur un dossier.';
 $string['privacy:metadata:these_log:userid'] = "Auteur de l'action.";
 $string['privacy:metadata:these_log:logaction'] = 'Action effectuée.';
@@ -629,8 +704,11 @@ $string['summarytoolong'] = 'Le résumé dépasse {$a} caractères.';
 $string['bkeywords'] = 'Mots-clés (en français)';
 $string['bkeywords_help'] = 'Identiques à ceux de la 4e page de couverture, 8 au maximum.';
 $string['conclusionstext'] = 'Texte des conclusions';
-$string['conclusionstext_help'] = "Les conclusions telles qu'elles figureront dans le manuscrit (deux pages au maximum). Elles seront "
-    . "signées par le directeur, le président du jury, la direction générale et le président du CCEM.";
+$string['conclusionstext_help'] = "Les conclusions telles qu'elles figureront dans le manuscrit. Elles doivent tenir sur une page avec "
+    . "les signatures (environ 2 200 caractères au plus ; séparer les paragraphes par une ligne vide). Elles seront signées par le "
+    . "directeur, le président du jury, la direction générale et le président du CCEM.";
+$string['conclusionstoolong'] = 'Les conclusions comptent {$a->length} caractères pour {$a->max} au plus : elles doivent tenir sur une page avec les signatures.';
+$string['conclusionsonepage'] = "Les conclusions ne tiennent pas sur une page avec les signatures : raccourcissez-les ou réduisez le nombre de paragraphes.";
 $string['contracthelp'] = "Choix de l'auteur pour le contrat de diffusion électronique de la thèse (articles 2 et 4). Une thèse "
     . "confidentielle (case cochée au dépôt du sujet) l'est jusqu'à la date indiquée.";
 $string['bconfidentialuntil'] = "Confidentialité jusqu'au";
@@ -653,6 +731,20 @@ $string['reportfavorablerequired'] = "L'avis favorable est nécessaire pour vali
 $string['ethicsnumber'] = "N° de l'avis favorable du comité d'éthique (si existant)";
 $string['gridsectionfond'] = 'Conformité du fond';
 $string['gridsectionforme'] = 'Conformité de la forme';
+$string['gridsectionpdffond'] = 'Conformité du FOND';
+$string['gridsectionpdfforme'] = 'Conformité de la  FORME';
+$string['gridconditional'] = '(selon la thèse)';
+$string['griditems'] = 'Grille de conformité';
+$string['griditems_desc'] = "Éléments de la grille de conformité remplie par le directeur de thèse. Modifier un élément met à jour "
+    . "les grilles en PDF (les documents de soutenance déjà générés le seront à leur prochaine génération) ; un élément supprimé "
+    . "disparaît des grilles ; un élément ajouté s'applique aux grilles remplies ensuite. « Selon la thèse » : l'élément peut rester "
+    . "non coché. Pour supprimer un élément, videz son libellé.";
+$string['griditemsection'] = 'Rubrique';
+$string['griditemlabel'] = 'Élément';
+$string['griditemconditional'] = 'Selon la thèse (facultatif)';
+$string['griditemadd'] = 'Ajouter {no} élément(s)';
+$string['griditemssaved'] = 'La grille de conformité est enregistrée.';
+$string['griditemsreset'] = "Rétablir la grille d'origine";
 $string['gridrequired'] = 'Élément à valider.';
 $string['gridquestion'] = 'La question scientifique est clairement posée et identifiée.';
 $string['gridanswer'] = 'La réponse bibliographique ou expérimentale est satisfaisante.';
@@ -695,6 +787,16 @@ $string['logsignaturesinvalidated'] = 'Signatures invalidées (document modifié
 $string['logsignaturerequested'] = 'Signature demandée';
 $string['logsignedinperson'] = 'Signature recueillie sur place';
 $string['emailkeysignaturerequest'] = 'Demande de signature (signataires sans compte)';
+$string['emailjurydesignationsubject'] = 'Désignation au jury de thèse de {$a->student}';
+$string['emailjurydesignationbody'] = 'Bonjour {$a->name},
+
+Vous êtes désigné(e) comme {$a->role} du jury de la thèse d\'exercice vétérinaire de {$a->student}, intitulée « {$a->title} ».
+
+Soutenance prévue : {$a->date}, {$a->location}.
+
+Le manuscrit et les documents du dossier sont accessibles par ce lien personnel : {$a->url}
+
+La convocation officielle vous parviendra séparément.';
 $string['emailsignaturerequestsubject'] = 'Thèse de {$a->student} : document(s) à signer';
 $string['emailsignaturerequestbody'] = 'Bonjour {$a->name},
 
@@ -785,6 +887,8 @@ $string['transfergroups_help'] = "Chaque groupe coché remplace en totalité cel
     . "ici mais pas dans la source revient à son texte d'origine. Les groupes non cochés ne changent pas.";
 $string['transfergroupactivity'] = "Paramètres de l'activité (établissement, signataire, lieu, jury, adresses de service, relances)";
 $string['transfergroupemails'] = 'Courriels personnalisés';
+$string['transfergroupgriditems'] = 'Grille de conformité (éléments)';
+$string['transferdonegriditems'] = '{$a} élément(s) de grille de conformité ;';
 $string['transfergroupdoctemplates'] = 'Modèles des documents';
 $string['transfergroupdocimages'] = 'Images des modèles';
 $string['transferconfirmreplace'] = "Je confirme le remplacement des paramètres cochés de cette activité";

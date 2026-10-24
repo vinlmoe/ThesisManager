@@ -88,15 +88,19 @@ class review_form extends \moodleform {
                 $mform->setExpanded('gridheader');
                 $mform->addElement('text', 'ethicsnumber', get_string('ethicsnumber', 'mod_these'), ['size' => 20]);
                 $mform->setType('ethicsnumber', PARAM_TEXT);
-                foreach (these_grid_items() as $section => $items) {
+                // Éléments de la grille de l'activité (modifiables par la DEVE) : la grille signée
+                // n'est produite qu'à partir de ce formulaire rempli.
+                foreach (these_get_grid_items($this->_customdata['theseid']) as $section => $items) {
                     $mform->addElement(
                         'static',
                         'gridsection' . $section,
                         '',
                         \html_writer::tag('strong', get_string('gridsection' . $section, 'mod_these'))
                     );
-                    foreach (array_keys($items) as $item) {
-                        $mform->addElement('advcheckbox', 'grid_' . $item, '', get_string('grid' . $item, 'mod_these'));
+                    foreach ($items as $key => $item) {
+                        $label = format_string($item->label) . ($item->conditional
+                            ? ' ' . \html_writer::span(get_string('gridconditional', 'mod_these'), 'text-muted') : '');
+                        $mform->addElement('advcheckbox', 'grid_' . $key, '', $label);
                     }
                 }
                 // Agrément scientifique.
@@ -116,7 +120,9 @@ class review_form extends \moodleform {
                 $mform->addElement('date_time_selector', 'defensedate', get_string('defensedate', 'mod_these'));
                 $mform->addElement('text', 'defenselocation', get_string('defenselocation', 'mod_these'), ['size' => 64]);
                 $mform->setType('defenselocation', PARAM_TEXT);
-                these_add_jury_fields($this, $mform, $this->_customdata['jurycount'] ?? 0);
+                $jurycount = $this->_customdata['jurycount'] ?? 0;
+                these_add_jury_fields($this, $mform, $jurycount, true, $this->_customdata['jurorids'] ?? []);
+                $mform->addElement('static', 'juryeligiblehelp', '', get_string('juryeligiblehelp', 'mod_these'));
                 // Agrément administratif.
                 $mform->addElement('header', 'adminheader', get_string('agreementadmin', 'mod_these'));
                 $mform->setExpanded('adminheader');
@@ -213,10 +219,10 @@ class review_form extends \moodleform {
                 if (empty($data['reportfavorable'])) {
                     $errors['reportfavorable'] = get_string('reportfavorablerequired', 'mod_these');
                 }
-                foreach (these_grid_items() as $items) {
-                    foreach ($items as $item => $conditional) {
-                        if (!$conditional && empty($data['grid_' . $item])) {
-                            $errors['grid_' . $item] = get_string('gridrequired', 'mod_these');
+                foreach (these_get_grid_items($this->_customdata['theseid']) as $items) {
+                    foreach ($items as $key => $item) {
+                        if (!$item->conditional && empty($data['grid_' . $key])) {
+                            $errors['grid_' . $key] = get_string('gridrequired', 'mod_these');
                         }
                     }
                 }
@@ -231,9 +237,13 @@ class review_form extends \moodleform {
                 if (trim((string) $data['defenselocation']) === '') {
                     $errors['defenselocation'] = get_string('required');
                 }
-                $juryerror = these_validate_jury(these_extract_submitted_jury($data), $this->_customdata['minjury']);
-                if ($juryerror !== null) {
-                    $errors['juryname[0]'] = $juryerror;
+                if (empty($data['returndossier'])) {
+                    $members = these_extract_submitted_jury($data, true);
+                    $juryerror = these_validate_jury($members, $this->_customdata['minjury'])
+                        ?? these_validate_jury_eligibility($members);
+                    if ($juryerror !== null) {
+                        $errors['juryrole[0]'] = $juryerror;
+                    }
                 }
                 break;
             case 'libraryconformity':

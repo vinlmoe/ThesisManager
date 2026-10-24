@@ -1171,19 +1171,43 @@ function these_get_jury($dossierid) {
 }
 
 /**
- * Remplace le jury d'un dossier.
+ * Clé d'identité d'un membre du jury, pour reconnaître le même membre d'une saisie à l'autre.
+ *
+ * @param stdClass $member
+ * @return string
+ */
+function these_jury_member_key(stdClass $member) {
+    if (!empty($member->jurorid)) {
+        return 'j' . (int) $member->jurorid;
+    }
+    return 'e' . core_text::strtolower(trim((string) $member->email)) . '|'
+        . core_text::strtolower(trim((string) $member->fullname));
+}
+
+/**
+ * Remplace le jury d'un dossier. Un membre déjà présent (même enseignant de l'annuaire, ou mêmes
+ * nom et adresse) garde son accès aux documents et la trace de sa notification ; son éligibilité
+ * validée est conservée s'il garde le même rôle et le même statut, sauf si $member->eligible est
+ * fourni (saisie de la DEVE).
  *
  * @param int $dossierid
- * @param array $members Liste d'objets {juryrole, fullname, jurytitle, institution, email}.
+ * @param array $members Liste d'objets {juryrole, fullname, jurytitle, institution, email, jurorid?,
+ *                       jurystatus?, eligible?}.
+ * @param int $userid Auteur de la validation d'éligibilité, s'il y en a une.
  * @return void
  */
-function these_save_jury($dossierid, array $members) {
+function these_save_jury($dossierid, array $members, $userid = 0) {
     global $DB;
 
+    $previous = [];
+    foreach ($DB->get_records('these_jury', ['dossierid' => $dossierid]) as $record) {
+        $previous[these_jury_member_key($record)] = $record;
+    }
     $DB->delete_records('these_jury', ['dossierid' => $dossierid]);
     $sortorder = 0;
     foreach ($members as $member) {
-        $DB->insert_record('these_jury', (object) [
+        $old = $previous[these_jury_member_key($member)] ?? null;
+        $record = (object) [
             'dossierid' => $dossierid,
             'juryrole' => $member->juryrole,
             'fullname' => $member->fullname,
@@ -1191,37 +1215,72 @@ function these_save_jury($dossierid, array $members) {
             'institution' => $member->institution,
             'email' => $member->email,
             'sortorder' => $sortorder++,
-            'timecreated' => time(),
-        ]);
+            'timecreated' => $old->timecreated ?? time(),
+            'jurorid' => (int) ($member->jurorid ?? 0),
+            'jurystatus' => (string) ($member->jurystatus ?? ''),
+            'eligible' => 0,
+            'eligibleby' => 0,
+            'eligibletime' => 0,
+            'accesstoken' => $old->accesstoken ?? null,
+            'notifiedtime' => (int) ($old->notifiedtime ?? 0),
+        ];
+        if (isset($member->eligible)) {
+            $record->eligible = $member->eligible ? 1 : 0;
+            $record->eligibleby = $member->eligible ? ($old && $old->eligible ? $old->eligibleby : (int) $userid) : 0;
+            $record->eligibletime = $member->eligible ? ($old && $old->eligible ? $old->eligibletime : time()) : 0;
+        } else if ($old && $old->eligible && $old->juryrole === $record->juryrole && $old->jurystatus === $record->jurystatus) {
+            $record->eligible = 1;
+            $record->eligibleby = $old->eligibleby;
+            $record->eligibletime = $old->eligibletime;
+        }
+        $DB->insert_record('these_jury', $record);
     }
 }
 
 /**
- * Ajoute à un formulaire les lignes répétables de saisie du jury.
+ * Ajoute à un formulaire les lignes répétables de saisie du jury : chaque membre est choisi dans
+ * l'annuaire des enseignants (titre, établissement, adresse et statut repris de l'annuaire) ou, pour
+ * un membre extérieur ou un invité, saisi.
  *
  * @param moodleform $form
  * @param MoodleQuickForm $mform
  * @param int $count Nombre de lignes déjà renseignées.
+ * @param bool $eligibility Ajouter la validation d'éligibilité par la DEVE.
+ * @param int[] $keep Enseignants de l'annuaire à proposer même s'ils ne sont plus actifs.
  * @return void
  */
-function these_add_jury_fields(moodleform $form, MoodleQuickForm $mform, $count) {
+function these_add_jury_fields(moodleform $form, MoodleQuickForm $mform, $count, $eligibility = false, array $keep = []) {
     $mform->addElement('header', 'juryheader', get_string('jury', 'mod_these'));
     $mform->setExpanded('juryheader');
     $mform->addElement('static', 'juryhelp', '', get_string('juryhelp', 'mod_these'));
 
+    $jurors = [0 => get_string('juryexternal', 'mod_these')] + \mod_these\local\jurors::options(false, $keep);
     $repeat = [];
     $repeat[] = $mform->createElement('static', 'jurymemberlabel', '', html_writer::tag('hr', ''));
     $repeat[] = $mform->createElement('select', 'juryrole', get_string('juryrole', 'mod_these'), these_jury_role_options());
+    $repeat[] = $mform->createElement('select', 'jurorid', get_string('juryjuror', 'mod_these'), $jurors);
     $repeat[] = $mform->createElement('text', 'juryname', get_string('juryname', 'mod_these'), ['size' => 48]);
     $repeat[] = $mform->createElement('text', 'jurytitle', get_string('jurytitle', 'mod_these'), ['size' => 48]);
+    $repeat[] = $mform->createElement(
+        'select',
+        'jurystatus',
+        get_string('jurystatus', 'mod_these'),
+        ['' => get_string('choosedots')] + \mod_these\local\jurors::external_statuses()
+    );
     $repeat[] = $mform->createElement('text', 'juryinstitution', get_string('juryinstitution', 'mod_these'), ['size' => 48]);
     $repeat[] = $mform->createElement('text', 'juryemail', get_string('juryemail', 'mod_these'), ['size' => 48]);
+    if ($eligibility) {
+        $repeat[] = $mform->createElement('advcheckbox', 'juryeligible', '', get_string('juryeligiblecheck', 'mod_these'));
+    }
 
+    $external = ['jurorid', 'neq', 0];
     $options = [
-        'juryname' => ['type' => PARAM_TEXT],
-        'jurytitle' => ['type' => PARAM_TEXT],
-        'juryinstitution' => ['type' => PARAM_TEXT],
-        'juryemail' => ['type' => PARAM_RAW_TRIMMED],
+        'jurorid' => ['type' => PARAM_INT, 'helpbutton' => ['juryjuror', 'mod_these']],
+        'juryname' => ['type' => PARAM_TEXT, 'hideif' => $external],
+        'jurytitle' => ['type' => PARAM_TEXT, 'hideif' => $external],
+        'jurystatus' => ['type' => PARAM_ALPHA, 'hideif' => $external],
+        'juryinstitution' => ['type' => PARAM_TEXT, 'hideif' => $external],
+        'juryemail' => ['type' => PARAM_RAW_TRIMMED, 'hideif' => $external],
     ];
     $form->repeat_elements(
         $repeat,
@@ -1242,46 +1301,98 @@ function these_add_jury_fields(moodleform $form, MoodleQuickForm $mform, $count)
  * @return array
  */
 function these_jury_form_data(array $members) {
-    $data = ['juryrole' => [], 'juryname' => [], 'jurytitle' => [], 'juryinstitution' => [], 'juryemail' => []];
+    $data = ['juryrole' => [], 'jurorid' => [], 'juryname' => [], 'jurytitle' => [], 'jurystatus' => [],
+        'juryinstitution' => [], 'juryemail' => [], 'juryeligible' => []];
     foreach (array_values($members) as $i => $member) {
         $data['juryrole'][$i] = $member->juryrole;
+        $data['jurorid'][$i] = (int) ($member->jurorid ?? 0);
         $data['juryname'][$i] = $member->fullname;
         $data['jurytitle'][$i] = $member->jurytitle;
+        $data['jurystatus'][$i] = (string) ($member->jurystatus ?? '');
         $data['juryinstitution'][$i] = $member->institution;
         $data['juryemail'][$i] = $member->email;
+        // Pour la DEVE : éligibilité déjà validée, ou évidente (enseignant de l'annuaire au statut admis pour son rôle).
+        $data['juryeligible'][$i] = (int) (!empty($member->eligible) || these_jury_eligibility($member) === 'ok');
     }
     return $data;
 }
 
 /**
- * Extrait des données soumises les membres du jury renseignés (lignes au nom non vide).
+ * Extrait des données soumises les membres du jury renseignés : enseignant choisi dans l'annuaire
+ * (ses titre, nom, établissement, adresse et statut en sont repris), ou ligne au nom non vide.
  *
  * @param stdClass|array $data
- * @return array Liste d'objets {juryrole, fullname, jurytitle, institution, email}.
+ * @param bool $witheligibility Reprendre la validation d'éligibilité de la DEVE.
+ * @return array Liste d'objets {juryrole, fullname, jurytitle, institution, email, jurorid, jurystatus, eligible?}.
  */
-function these_extract_submitted_jury($data) {
+function these_extract_submitted_jury($data, $witheligibility = false) {
     $data = (array) $data;
     $members = [];
-    foreach ((array) ($data['juryname'] ?? []) as $i => $name) {
-        $name = trim((string) $name);
-        if ($name === '') {
-            continue;
-        }
+    $rows = array_unique(array_merge(array_keys((array) ($data['juryname'] ?? [])), array_keys((array) ($data['jurorid'] ?? []))));
+    sort($rows);
+    foreach ($rows as $i) {
         $role = $data['juryrole'][$i] ?? 'member';
-        $members[] = (object) [
-            'juryrole' => array_key_exists($role, these_jury_role_options()) ? $role : 'member',
-            'fullname' => $name,
-            'jurytitle' => trim((string) ($data['jurytitle'][$i] ?? '')),
-            'institution' => trim((string) ($data['juryinstitution'][$i] ?? '')),
-            'email' => trim((string) ($data['juryemail'][$i] ?? '')),
-        ];
+        $role = array_key_exists($role, these_jury_role_options()) ? $role : 'member';
+        $juror = \mod_these\local\jurors::get((int) ($data['jurorid'][$i] ?? 0));
+        if ($juror) {
+            $member = (object) [
+                'juryrole' => $role,
+                'fullname' => \mod_these\local\jurors::fullname($juror),
+                'jurytitle' => $juror->title,
+                'institution' => (string) $juror->institution,
+                'email' => (string) $juror->email,
+                'jurorid' => (int) $juror->id,
+                'jurystatus' => $juror->status,
+            ];
+        } else {
+            $name = trim((string) ($data['juryname'][$i] ?? ''));
+            if ($name === '') {
+                continue;
+            }
+            $status = (string) ($data['jurystatus'][$i] ?? '');
+            $member = (object) [
+                'juryrole' => $role,
+                'fullname' => $name,
+                'jurytitle' => trim((string) ($data['jurytitle'][$i] ?? '')),
+                'institution' => trim((string) ($data['juryinstitution'][$i] ?? '')),
+                'email' => trim((string) ($data['juryemail'][$i] ?? '')),
+                'jurorid' => 0,
+                'jurystatus' => array_key_exists($status, \mod_these\local\jurors::external_statuses()) ? $status : '',
+            ];
+        }
+        if ($witheligibility) {
+            $member->eligible = !empty($data['juryeligible'][$i]);
+        }
+        $members[] = $member;
     }
     return $members;
 }
 
 /**
- * Vérifie la composition d'un jury : un et un seul président, au moins $minjury membres votants
- * (les invités ne votent pas), et des adresses de courriel valides lorsqu'elles sont données.
+ * Éligibilité d'un membre du jury à son rôle : un invité ne vote pas ; seuls les maîtres de
+ * conférences HDR, les professeurs et les émérites peuvent présider ; un enseignant de l'annuaire
+ * est éligible d'office aux autres rôles ; un membre extérieur l'est sous réserve de validation par
+ * la DEVE.
+ *
+ * @param stdClass $member
+ * @return string 'ok', 'tocheck' (à valider par la DEVE) ou 'ko'
+ */
+function these_jury_eligibility(stdClass $member) {
+    if ($member->juryrole === 'guest') {
+        return 'ok';
+    }
+    $status = (string) ($member->jurystatus ?? '');
+    if ($member->juryrole === 'president' && !\mod_these\local\jurors::can_preside($status)) {
+        return 'ko';
+    }
+    return !empty($member->jurorid) ? 'ok' : 'tocheck';
+}
+
+/**
+ * Vérifie la composition d'un jury : un et un seul président, éligible à la présidence, au moins
+ * $minjury membres votants (les invités ne votent pas), un statut déclaré pour chaque membre
+ * extérieur votant, pas deux fois le même enseignant, et des adresses de courriel valides lorsqu'elles
+ * sont données.
  *
  * @param array $members Voir these_extract_submitted_jury().
  * @param int $minjury
@@ -1290,12 +1401,25 @@ function these_extract_submitted_jury($data) {
 function these_validate_jury(array $members, $minjury) {
     $presidents = 0;
     $voting = 0;
+    $seen = [];
     foreach ($members as $member) {
         if ($member->juryrole === 'president') {
             $presidents++;
         }
         if ($member->juryrole !== 'guest') {
             $voting++;
+            if (empty($member->jurorid) && (string) ($member->jurystatus ?? '') === '') {
+                return get_string('jurystatusrequired', 'mod_these', s($member->fullname));
+            }
+        }
+        if (!empty($member->jurorid)) {
+            if (isset($seen[$member->jurorid])) {
+                return get_string('juryduplicate', 'mod_these', s($member->fullname));
+            }
+            $seen[$member->jurorid] = true;
+        }
+        if ($member->juryrole === 'president' && these_jury_eligibility($member) === 'ko') {
+            return get_string('jurypresidentnoteligible', 'mod_these', s($member->fullname));
         }
         if ($member->email !== '' && !validate_email($member->email)) {
             return get_string('juryinvalidemail', 'mod_these', s($member->fullname));
@@ -1308,6 +1432,116 @@ function these_validate_jury(array $members, $minjury) {
         return get_string('juryminmembers', 'mod_these', (int) $minjury);
     }
     return null;
+}
+
+/**
+ * Validation de l'éligibilité par la DEVE : chaque membre votant doit être coché, et aucun ne peut
+ * être inéligible à son rôle.
+ *
+ * @param array $members Voir these_extract_submitted_jury() (avec éligibilité).
+ * @return string|null Message d'erreur, ou null.
+ */
+function these_validate_jury_eligibility(array $members) {
+    foreach ($members as $member) {
+        if ($member->juryrole === 'guest') {
+            continue;
+        }
+        if (these_jury_eligibility($member) === 'ko') {
+            return get_string('jurypresidentnoteligible', 'mod_these', s($member->fullname));
+        }
+        if (empty($member->eligible)) {
+            return get_string('juryeligiblerequired', 'mod_these', s($member->fullname));
+        }
+    }
+    return null;
+}
+
+/**
+ * Prévient les membres du jury de leur désignation et leur donne accès aux documents du dossier
+ * (manuscrit, rapport, grille, conclusions...) par un lien personnel, sans compte Moodle. Seuls les
+ * membres pas encore prévenus le sont, sauf $force.
+ *
+ * @param stdClass $these
+ * @param stdClass $cm
+ * @param stdClass $dossier
+ * @param bool $force Prévenir de nouveau tous les membres.
+ * @return stdClass {sent, failed, missing (noms des membres sans adresse)}
+ */
+function these_notify_jury(stdClass $these, stdClass $cm, stdClass $dossier, $force = false) {
+    global $DB;
+
+    $result = (object) ['sent' => 0, 'failed' => 0, 'missing' => []];
+    $student = $DB->get_record('user', ['id' => $dossier->userid]);
+    $date = (int) ($dossier->defensedate ?: $dossier->proposeddate);
+    $roles = these_jury_role_options();
+    foreach (these_get_jury($dossier->id) as $member) {
+        if (!$force && !empty($member->notifiedtime)) {
+            continue;
+        }
+        if (trim((string) $member->email) === '') {
+            $result->missing[] = $member->fullname;
+            continue;
+        }
+        if (empty($member->accesstoken)) {
+            $member->accesstoken = random_string(48);
+            $DB->set_field('these_jury', 'accesstoken', $member->accesstoken, ['id' => $member->id]);
+        }
+        $sent = these_send_email($these, 'jurydesignation', [these_make_external_user($member->email, $member->fullname)], [
+            'name' => trim($member->jurytitle . ' ' . $member->fullname),
+            'role' => $roles[$member->juryrole] ?? $member->juryrole,
+            'student' => $student ? fullname($student) : '',
+            'title' => format_string($dossier->title),
+            'date' => $date ? userdate($date, get_string('strftimedaydatetime', 'langconfig')) : '-',
+            'location' => (string) $dossier->defenselocation,
+            'url' => (new moodle_url('/mod/these/jury.php', ['token' => $member->accesstoken]))->out(false),
+        ]);
+        if ($sent) {
+            $DB->set_field('these_jury', 'notifiedtime', time(), ['id' => $member->id]);
+            $result->sent++;
+        } else {
+            $result->failed++;
+        }
+    }
+    return $result;
+}
+
+/**
+ * Membre du jury correspondant à un lien d'accès aux documents.
+ *
+ * @param string $token
+ * @return stdClass|null Membre, avec dossier, these et cm.
+ */
+function these_get_jury_access($token) {
+    global $DB;
+
+    $token = clean_param($token, PARAM_ALPHANUM);
+    if (strlen($token) < 32) {
+        return null;
+    }
+    $member = $DB->get_record('these_jury', ['accesstoken' => $token]);
+    if (!$member) {
+        return null;
+    }
+    $dossier = $DB->get_record('these_dossier', ['id' => $member->dossierid]);
+    if (!$dossier || (int) $dossier->status === THESE_STATUS_CANCELLED) {
+        return null;
+    }
+    $member->dossier = $dossier;
+    $member->these = $DB->get_record('these', ['id' => $dossier->theseid], '*', MUST_EXIST);
+    $member->cm = get_coursemodule_from_instance('these', $dossier->theseid, 0, false, MUST_EXIST);
+    return $member;
+}
+
+/**
+ * Zones de fichiers et documents signés auxquels le jury a accès.
+ *
+ * @return array {areas => string[], documents => string[]}
+ */
+function these_jury_documents() {
+    return [
+        'areas' => ['manuscript', 'defensedocs', 'directorreport'],
+        'documents' => ['report', 'grid', 'conclusions', 'signaletique'],
+    ];
 }
 
 // Fichiers.
@@ -1436,6 +1670,11 @@ function these_get_email_definitions() {
             'subjectstring' => 'emailclosedsubject',
             'bodystring' => 'emailclosedbody',
             'vars' => ['student', 'activity', 'title', 'result', 'url'],
+        ],
+        'jurydesignation' => [
+            'subjectstring' => 'emailjurydesignationsubject',
+            'bodystring' => 'emailjurydesignationbody',
+            'vars' => ['name', 'role', 'student', 'title', 'date', 'location', 'url'],
         ],
         'signaturerequest' => [
             'subjectstring' => 'emailsignaturerequestsubject',
@@ -2170,6 +2409,8 @@ function these_render_navlinks(stdClass $cm, context $context) {
         $links[get_string('importdossiers', 'mod_these')] = new moodle_url('/mod/these/import.php', ['id' => $cm->id]);
         $links[get_string('notifications', 'mod_these')] = new moodle_url('/mod/these/notifications.php', ['id' => $cm->id]);
         $links[get_string('doctemplates', 'mod_these')] = new moodle_url('/mod/these/doctemplates.php', ['id' => $cm->id]);
+        $links[get_string('griditems', 'mod_these')] = new moodle_url('/mod/these/griditems.php', ['id' => $cm->id]);
+        $links[get_string('jurors', 'mod_these')] = new moodle_url('/mod/these/jurors.php', ['id' => $cm->id]);
         $links[get_string('transfersettings', 'mod_these')] = new moodle_url('/mod/these/settingstransfer.php', ['id' => $cm->id]);
     }
     if ($rights->viewall) {
@@ -2238,9 +2479,10 @@ function these_render_detail_section($heading, array $rows) {
  *
  * @param array $members
  * @param bool $showemail
+ * @param bool $staff Vue de la DEVE : éligibilité et notification des membres.
  * @return string HTML
  */
-function these_render_jury(array $members, $showemail = true) {
+function these_render_jury(array $members, $showemail = true, $staff = false) {
     if (empty($members)) {
         return '';
     }
@@ -2248,15 +2490,44 @@ function these_render_jury(array $members, $showemail = true) {
     $table = new html_table();
     $table->attributes['class'] = 'generaltable';
     $table->head = [get_string('juryrole', 'mod_these'), get_string('juryname', 'mod_these'),
-        get_string('jurytitle', 'mod_these'), get_string('juryinstitution', 'mod_these')];
+        get_string('jurytitle', 'mod_these'), get_string('jurystatus', 'mod_these'), get_string('juryinstitution', 'mod_these')];
     if ($showemail) {
         $table->head[] = get_string('juryemail', 'mod_these');
     }
+    if ($staff) {
+        $table->head[] = get_string('juryeligiblecheck', 'mod_these');
+    }
     foreach ($members as $member) {
         $row = [$roles[$member->juryrole] ?? s($member->juryrole), s($member->fullname), s($member->jurytitle),
-            s($member->institution)];
+            s(\mod_these\local\jurors::status_label($member->jurystatus ?? '')), s($member->institution)];
         if ($showemail) {
             $row[] = s($member->email);
+        }
+        if ($staff) {
+            if ($member->juryrole === 'guest') {
+                $eligibility = '-';
+            } else if (!empty($member->eligible)) {
+                $eligibility = html_writer::span(
+                    get_string('juryeligibilityvalidated', 'mod_these'),
+                    'badge badge-success bg-success'
+                );
+            } else {
+                $state = these_jury_eligibility($member);
+                $eligibility = html_writer::span(
+                    get_string('juryeligibility' . $state, 'mod_these'),
+                    'badge ' . ($state === 'ko' ? 'badge-danger bg-danger' : 'badge-warning bg-warning text-dark')
+                );
+            }
+            if (!empty($member->notifiedtime)) {
+                $eligibility .= html_writer::div(
+                    get_string('jurynotifiedon', 'mod_these', userdate(
+                        $member->notifiedtime,
+                        get_string('strftimedatetimeshort', 'langconfig')
+                    )),
+                    'small text-muted'
+                );
+            }
+            $row[] = $eligibility;
         }
         $table->data[] = $row;
     }
@@ -2446,7 +2717,16 @@ function these_render_dossier(
             $rows[get_string('minutes', 'mod_these')] = these_render_file_links($context, 'pv', $dossier->id);
         }
         $out .= these_render_detail_section(get_string('defense', 'mod_these'), $rows);
-        $out .= these_render_jury(these_get_jury($dossier->id), $rights->viewall || $rights->director || $rights->owner);
+        $showemail = $rights->viewall || $rights->director || $rights->owner;
+        $out .= these_render_jury(these_get_jury($dossier->id), $showemail, $rights->deve);
+        $juryvalidated = (int) $dossier->status >= THESE_STATUS_DEFENSE_VALIDATED && (int) $dossier->status < THESE_STATUS_CLOSED;
+        if ($rights->deve && $juryvalidated) {
+            $out .= html_writer::div(html_writer::link(
+                new moodle_url('/mod/these/jurynotify.php', ['id' => $cm->id, 'dossierid' => $dossier->id, 'sesskey' => sesskey()]),
+                get_string('juryresendaccess', 'mod_these'),
+                ['class' => 'btn btn-secondary btn-sm']
+            ), 'mb-3');
+        }
     }
 
     $out .= these_render_signed_documents($cm, $context, $dossier, $rights);
@@ -2987,6 +3267,106 @@ function these_grid_items() {
             'structure' => true,
         ],
     ];
+}
+
+/**
+ * Rubriques de la grille de conformité, dans l'ordre.
+ *
+ * @return string[]
+ */
+function these_grid_sections() {
+    return ['fond', 'forme'];
+}
+
+/**
+ * Éléments de la grille de conformité d'une activité, modifiables par la DEVE (griditems.php). Les
+ * éléments d'origine (these_grid_items()) sont enregistrés à la première consultation.
+ *
+ * @param int $theseid 0 : éléments d'origine, sans enregistrement (aperçus).
+ * @return array rubrique => [clé => {itemkey, section, label, conditional, sortorder}]
+ */
+function these_get_grid_items($theseid) {
+    global $DB;
+
+    $records = $theseid ? $DB->get_records('these_griditem', ['theseid' => $theseid], 'sortorder ASC, id ASC') : [];
+    if (!$records) {
+        $records = [];
+        $sortorder = 0;
+        foreach (these_grid_items() as $section => $items) {
+            foreach ($items as $key => $conditional) {
+                $records[] = (object) [
+                    'theseid' => $theseid,
+                    'itemkey' => $key,
+                    'section' => $section,
+                    'label' => get_string('grid' . $key, 'mod_these'),
+                    'conditional' => (int) $conditional,
+                    'sortorder' => $sortorder++,
+                    'timemodified' => time(),
+                ];
+            }
+        }
+        if ($theseid) {
+            foreach ($records as $record) {
+                $record->id = $DB->insert_record('these_griditem', $record);
+            }
+        }
+    }
+    $sections = array_fill_keys(these_grid_sections(), []);
+    foreach ($records as $record) {
+        $section = array_key_exists($record->section, $sections) ? $record->section : 'forme';
+        $sections[$section][$record->itemkey] = $record;
+    }
+    return $sections;
+}
+
+/**
+ * Remplace les éléments de la grille de conformité d'une activité. Un élément gardé conserve sa
+ * clé, et donc les réponses déjà données ; un élément supprimé disparaît des grilles et de leurs PDF.
+ *
+ * @param int $theseid
+ * @param array $items Liste d'objets {itemkey ('' pour un nouvel élément), section, label, conditional}, dans l'ordre ;
+ *                     une clé inconnue de l'activité (transfert depuis une autre) est reprise telle quelle.
+ * @return void
+ */
+function these_save_grid_items($theseid, array $items) {
+    global $DB;
+
+    $transaction = $DB->start_delegated_transaction();
+    $existing = $DB->get_records_menu('these_griditem', ['theseid' => $theseid], '', 'itemkey, id');
+    $kept = [];
+    $sortorder = 0;
+    foreach ($items as $item) {
+        $label = trim((string) $item->label);
+        if ($label === '') {
+            continue;
+        }
+        $key = (string) ($item->itemkey ?? '');
+        if (!preg_match('/^[a-zA-Z0-9]{1,40}$/', $key) || isset($kept[$key])) {
+            $key = 'item' . random_string(10);
+        }
+        $record = (object) [
+            'theseid' => $theseid,
+            'itemkey' => $key,
+            'section' => in_array($item->section, these_grid_sections(), true) ? $item->section : 'forme',
+            'label' => $label,
+            'conditional' => empty($item->conditional) ? 0 : 1,
+            'sortorder' => $sortorder++,
+            'timemodified' => time(),
+        ];
+        if (isset($existing[$key])) {
+            $record->id = $existing[$key];
+            $DB->update_record('these_griditem', $record);
+        } else {
+            $DB->insert_record('these_griditem', $record);
+        }
+        $kept[$key] = true;
+    }
+    foreach ($existing as $key => $id) {
+        if (!isset($kept[$key])) {
+            $DB->delete_records('these_griditem', ['id' => $id]);
+        }
+    }
+    $transaction->allow_commit();
 }
 
 /**
@@ -3736,11 +4116,14 @@ function these_build_document_context(array $src) {
     $duser = $src['director'];
     $directorlast = $up($duser->lastname ?? '');
     $directorfirst = (string) ($duser->firstname ?? '');
+    // Titre du directeur : celui de l'annuaire du jury s'il y figure, sinon celui saisi au dépôt du sujet.
+    $directorjuror = $duser ? \mod_these\local\jurors::find_by_email($duser->email) : null;
+    $directortitle = $directorjuror ? $directorjuror->title : (string) $d->directortitle;
     $director = [
-        'title' => (string) $d->directortitle,
+        'title' => $directortitle,
         'lastname' => $directorlast,
         'firstname' => $directorfirst,
-        'fullname' => trim($d->directortitle . ' ' . $directorlast . ' ' . $directorfirst),
+        'fullname' => trim($directortitle . ' ' . $directorlast . ' ' . $directorfirst),
         'email' => (string) ($duser->email ?? ''),
         'function' => (string) ($agreementdata['directorfunction'] ?? ''),
     ];
@@ -3880,20 +4263,25 @@ function these_build_document_context(array $src) {
     ];
     $grid = [];
     $mark = [];
-    foreach (these_grid_items() as $items) {
-        foreach (array_keys($items) as $item) {
-            $grid[$item] = !empty($griddata[$item]);
-            $mark[$item] = !empty($griddata[$item]) ? '<span style="font-family:freeserif;">&#10003;</span>' : '';
+    $gridsections = [];
+    $checkmark = '<span style="font-family:freeserif;">&#10003;</span>';
+    foreach (these_get_grid_items((int) ($these->id ?? 0)) as $section => $items) {
+        $rows = [];
+        foreach ($items as $key => $item) {
+            $checked = !empty($griddata[$key]);
+            $grid[$key] = $checked;
+            $mark[$key] = $checked ? $checkmark : '';
+            $rows[] = ['key' => $key, 'label' => $item->label, 'checked' => $checked, 'mark' => $checked ? $checkmark : ''];
         }
+        $gridsections[] = [
+            'key' => $section,
+            'first' => !$gridsections,
+            'label' => get_string('gridsection' . $section, 'mod_these'),
+            'pdflabel' => get_string('gridsectionpdf' . $section, 'mod_these'),
+            'items' => $rows,
+        ];
     }
-    $paragraphs = array_values(array_filter(array_map('trim', preg_split("/\n\s*\n/", trim((string) $d->conclusions))), 'strlen'));
-    $paragraphs = array_map('these_doctemplate_text', $paragraphs);
-    $last = $paragraphs ? array_pop($paragraphs) : '';
-    $conclusions = [
-        'html' => implode('<br /><br />', array_merge($paragraphs, $last !== '' ? [$last] : [])),
-        'bodyhtml' => implode('<br /><br />', $paragraphs),
-        'lasthtml' => $last,
-    ];
+    $conclusions = these_conclusions_context((string) $d->conclusions);
 
     // Contrat de diffusion.
     $embargo = !empty($b['embargo']);
@@ -4020,6 +4408,7 @@ function these_build_document_context(array $src) {
         'report' => $report,
         'grid' => $grid,
         'mark' => $mark,
+        'gridsections' => $gridsections,
         'conclusions' => $conclusions,
         'contract' => $contract,
         'recipient' => $recipientdata,
@@ -4035,6 +4424,50 @@ function these_build_document_context(array $src) {
         'signed' => $signed,
         'img' => these_doctemplate_images($src['context'] ?? null),
     ];
+}
+
+/** Longueur maximale des conclusions, espaces compris : elles doivent tenir sur une page avec les signatures. */
+define('THESE_CONCLUSIONS_MAX', 2200);
+
+/**
+ * Conclusions prêtes pour le modèle : paragraphes (séparés par une ligne vide), le dernier à part.
+ *
+ * @param string $text
+ * @return array {html, bodyhtml, lasthtml}
+ */
+function these_conclusions_context($text) {
+    $paragraphs = array_values(array_filter(array_map('trim', preg_split("/\n\s*\n/", trim($text))), 'strlen'));
+    $paragraphs = array_map('these_doctemplate_text', $paragraphs);
+    $last = $paragraphs ? array_pop($paragraphs) : '';
+    return [
+        'html' => implode('<br /><br />', array_merge($paragraphs, $last !== '' ? [$last] : [])),
+        'bodyhtml' => implode('<br /><br />', $paragraphs),
+        'lasthtml' => $last,
+    ];
+}
+
+/**
+ * Vérifie que des conclusions tiennent sur une page, signatures comprises : longueur maximale,
+ * puis mise en page réelle avec le modèle de l'activité.
+ *
+ * @param stdClass $these
+ * @param context|null $context
+ * @param string $text
+ * @return string|null Message d'erreur, ou null si elles tiennent.
+ */
+function these_conclusions_error(stdClass $these, ?context $context, $text) {
+    $length = core_text::strlen(trim((string) $text));
+    if ($length > THESE_CONCLUSIONS_MAX) {
+        return get_string('conclusionstoolong', 'mod_these', (object) ['max' => THESE_CONCLUSIONS_MAX, 'length' => $length]);
+    }
+    $data = these_sample_document_context($context, $these);
+    $data['conclusions'] = these_conclusions_context((string) $text);
+    try {
+        $pages = \mod_these\pdf\html_document::page_count(these_render_doctemplate($these, 'conclusions', $data));
+    } catch (\Throwable $e) {
+        return null;
+    }
+    return $pages > 1 ? get_string('conclusionsonepage', 'mod_these') : null;
 }
 
 /**
@@ -4154,7 +4587,7 @@ function these_sample_document_context(?context $context = null, ?stdClass $acti
             . "Le manuscrit est clair et bien construit.",
         'reportfavorable' => 1,
         'conformitygrid' => json_encode(array_fill_keys(
-            array_merge(...array_map('array_keys', array_values(these_grid_items()))),
+            array_merge(...array_map('array_keys', array_values(these_get_grid_items((int) ($activity->id ?? 0))))),
             1
         )),
         'agreement' => json_encode(['defvdate' => make_timestamp(2023, 7, 3), 'mobility' => 1,
@@ -4322,7 +4755,7 @@ function these_settings_activity_fields() {
  * @return string[]
  */
 function these_settings_groups() {
-    return ['activity', 'emails', 'doctemplates', 'docimages'];
+    return ['activity', 'emails', 'griditems', 'doctemplates', 'docimages'];
 }
 
 /**
@@ -4347,6 +4780,15 @@ function these_export_settings(stdClass $these, context $context, array $groups)
         $data['groups']['emails'] = [];
         foreach ($DB->get_records('these_email_template', ['theseid' => $these->id], 'emailkey') as $record) {
             $data['groups']['emails'][] = ['emailkey' => $record->emailkey, 'subject' => $record->subject, 'body' => $record->body];
+        }
+    }
+    if (in_array('griditems', $groups, true)) {
+        $data['groups']['griditems'] = [];
+        foreach (these_get_grid_items($these->id) as $items) {
+            foreach ($items as $item) {
+                $data['groups']['griditems'][] = ['itemkey' => $item->itemkey, 'section' => $item->section,
+                    'label' => $item->label, 'conditional' => (int) $item->conditional];
+            }
         }
     }
     if (in_array('doctemplates', $groups, true)) {
@@ -4393,12 +4835,13 @@ function these_parse_settings_file($json) {
  * @param context $context
  * @param array $data Voir these_export_settings().
  * @param string[] $groups Groupes à transférer.
- * @return stdClass {activity (bool), emails, doctemplates, docimages (nombres), skipped (string[])}
+ * @return stdClass {activity (bool), emails, griditems, doctemplates, docimages (nombres), skipped (string[])}
  */
 function these_import_settings(stdClass $these, context $context, array $data, array $groups) {
     global $DB;
 
-    $result = (object) ['activity' => false, 'emails' => 0, 'doctemplates' => 0, 'docimages' => 0, 'skipped' => []];
+    $result = (object) ['activity' => false, 'emails' => 0, 'griditems' => 0, 'doctemplates' => 0, 'docimages' => 0,
+        'skipped' => []];
     $source = $data['groups'];
     $transaction = $DB->start_delegated_transaction();
 
@@ -4434,6 +4877,20 @@ function these_import_settings(stdClass $these, context $context, array $data, a
             these_save_email_template($these->id, $key, (string) ($email['subject'] ?? ''), (string) ($email['body'] ?? ''));
             $result->emails++;
         }
+    }
+
+    if (in_array('griditems', $groups, true) && is_array($source['griditems'] ?? null) && $source['griditems']) {
+        $items = [];
+        foreach ($source['griditems'] as $item) {
+            $items[] = (object) [
+                'itemkey' => clean_param((string) ($item['itemkey'] ?? ''), PARAM_ALPHANUM),
+                'section' => (string) ($item['section'] ?? ''),
+                'label' => clean_param((string) ($item['label'] ?? ''), PARAM_TEXT),
+                'conditional' => !empty($item['conditional']),
+            ];
+        }
+        these_save_grid_items($these->id, $items);
+        $result->griditems = count(these_get_grid_items($these->id)['fond']) + count(these_get_grid_items($these->id)['forme']);
     }
 
     if (in_array('doctemplates', $groups, true) && is_array($source['doctemplates'] ?? null)) {

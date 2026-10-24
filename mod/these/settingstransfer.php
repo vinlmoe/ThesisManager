@@ -95,7 +95,7 @@ if ($result) {
     if ($result->activity) {
         $lines[] = get_string('transferdoneactivity', 'mod_these');
     }
-    foreach (['emails', 'doctemplates', 'docimages'] as $group) {
+    foreach (['emails', 'griditems', 'doctemplates', 'docimages'] as $group) {
         if (in_array($group, $chosengroups($data), true)) {
             $lines[] = get_string('transferdone' . $group, 'mod_these', $result->$group);
         }

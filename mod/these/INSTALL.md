@@ -97,13 +97,45 @@ annulée si le contenu signé change ; modifier un modèle ne l'annule pas. Les
 signataires extérieurs reçoivent un lien personnel par courriel ; la DEVE suit
 les signatures (*Suivi des signatures*), relance ou fait signer sur place.
 
+## 3 bis (suite). Grille de conformité, conclusions
+
+- **Grille de conformité** (DEVE, *Grille de conformité*) : les éléments de la
+  grille remplie par le directeur se modifient dans chaque activité (libellé,
+  rubrique, élément facultatif, ajout, suppression). La grille en PDF suit les
+  éléments en vigueur ; elle n'est produite qu'à partir du formulaire rempli
+  par le directeur.
+- **Conclusions** : elles doivent tenir sur une page avec les signatures
+  (2 200 caractères au plus, et contrôle de la mise en page réelle au dépôt).
+
+## 3 bis (fin). Annuaire du jury, éligibilité et accès du jury
+
+- **Annuaire du jury** (DEVE, *Annuaire du jury*, ou depuis l'activité *Suivi
+  des thèses*) : enseignants pouvant diriger une thèse ou siéger au jury, communs
+  à toutes les activités, avec leur titre (Dr ou Pr) et leur statut :
+  ingénieur de recherche, maître de conférences (stagiaire, HDR, émérite),
+  professeur (stagiaire, émérite). Tous peuvent diriger ou être membre ; seuls
+  les maîtres de conférences HDR, les professeurs et les émérites peuvent
+  présider. Import CSV possible (`title, lastname, firstname, email, status,
+  institution`).
+- **Jury** : chaque ligne choisit un enseignant de l'annuaire (titre, statut,
+  établissement et adresse repris) ou décrit un membre extérieur ou un invité.
+  Le formulaire refuse un président inéligible et un membre extérieur votant
+  sans statut.
+- **Éligibilité** : à la validation du dossier de soutenance, la DEVE coche
+  l'éligibilité de chaque membre votant. Les membres sont alors prévenus par
+  courriel (modèle *jurydesignation*, personnalisable) avec un lien personnel
+  vers les documents du dossier (manuscrit, rapport, grille, conclusions, fiche
+  signalétique), sans compte Moodle. La DEVE peut renvoyer cet accès depuis le
+  dossier.
+- **Suivi multi-promotions** : voir le module `mod_thesesynthesis`.
+
 ## 3 ter. Transfert des paramètres
 
 *Transfert des paramètres* (DEVE, barre de navigation de l'activité) reprend les
 paramètres d'une autre activité dont on est la DEVE, ou d'un fichier de
 paramètres (JSON) exporté depuis la même page : paramètres de l'activité
 (établissement, signataire, lieu, jury minimum, adresses de service, relances),
-courriels personnalisés, modèles et images des documents. Chaque groupe coché
+courriels personnalisés, grille de conformité, modèles et images des documents. Chaque groupe coché
 remplace celui de l'activité ; les dossiers ne sont jamais transférés. Pratique
 à l'ouverture d'un nouveau cours, ou pour passer d'une plateforme de test à la
 production.

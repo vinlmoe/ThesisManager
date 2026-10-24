@@ -10,105 +10,22 @@
 </table>
 <div>&nbsp;&nbsp;Si existant, préciser ici le numéro de l’avis favorable au projet du comité d'éthique : n°{{#thesis.ethicsnumber}}<b>{{thesis.ethicsnumber}}</b>{{/thesis.ethicsnumber}}{{^thesis.ethicsnumber}}<b>………</b>{{/thesis.ethicsnumber}}</div>
 <br />
+{{#gridsections}}
 <table cellpadding="1.5">
-  <tr>
+{{#first}}  <tr>
     <td width="164.8mm"></td>
     <td width="19.2mm" align="center" style="border:0.5pt solid #000000;">Cocher<br />si validé</td>
   </tr>
-  <tr>
-    <td colspan="2" style="border:0.5pt solid #000000;background-color:#d9d9d9;">&nbsp;<b>Conformité du FOND</b></td>
+{{/first}}  <tr>
+    <td colspan="2" style="border:0.5pt solid #000000;background-color:#d9d9d9;">&nbsp;<b>{{pdflabel}}</b></td>
   </tr>
-  <tr>
-    <td width="164.8mm" style="border:0.5pt solid #000000;">&nbsp;La question scientifique est clairement posée et identifiée.</td>
-    <td width="19.2mm" align="center" style="border:0.5pt solid #000000;font-size:11pt;">{{{mark.question}}}</td>
+{{#items}}  <tr>
+    <td width="164.8mm" style="border:0.5pt solid #000000;">&nbsp;{{label}}</td>
+    <td width="19.2mm" align="center" style="border:0.5pt solid #000000;font-size:11pt;">{{{mark}}}</td>
   </tr>
-  <tr>
-    <td width="164.8mm" style="border:0.5pt solid #000000;">&nbsp;La réponse bibliographique ou expérimentale est satisfaisante.</td>
-    <td width="19.2mm" align="center" style="border:0.5pt solid #000000;font-size:11pt;">{{{mark.answer}}}</td>
-  </tr>
-  <tr>
-    <td width="164.8mm" style="border:0.5pt solid #000000;">&nbsp;La bibliographie est complète, pertinente et actuelle.</td>
-    <td width="19.2mm" align="center" style="border:0.5pt solid #000000;font-size:11pt;">{{{mark.biblio}}}</td>
-  </tr>
-  <tr>
-    <td width="164.8mm" style="border:0.5pt solid #000000;">&nbsp;L’analyse critique de la bibliographie est satisfaisante.</td>
-    <td width="19.2mm" align="center" style="border:0.5pt solid #000000;font-size:11pt;">{{{mark.critique}}}</td>
-  </tr>
-  <tr>
-    <td width="164.8mm" style="border:0.5pt solid #000000;">&nbsp;Le travail présenté est bien celui de l’étudiant.</td>
-    <td width="19.2mm" align="center" style="border:0.5pt solid #000000;font-size:11pt;">{{{mark.ownwork}}}</td>
-  </tr>
-  <tr>
-    <td width="164.8mm" style="border:0.5pt solid #000000;">&nbsp;Si la thèse porte sur le développement d'un outil, d’un support pédagogique, d’un site<br />&nbsp;internet etc. ; la thèse ne se restreint pas à la description technique du travail.</td>
-    <td width="19.2mm" align="center" style="border:0.5pt solid #000000;font-size:11pt;">{{{mark.tool}}}</td>
-  </tr>
-</table>
+{{/items}}</table>
 <div style="font-size:8pt;"> </div>
-<table cellpadding="1.5">
-  <tr>
-    <td colspan="2" style="border:0.5pt solid #000000;background-color:#d9d9d9;">&nbsp;<b>Conformité de la&nbsp; FORME</b></td>
-  </tr>
-  <tr>
-    <td width="164.8mm" style="border:0.5pt solid #000000;">&nbsp;Expression française et orthographe satisfaisantes.</td>
-    <td width="19.2mm" align="center" style="border:0.5pt solid #000000;font-size:11pt;">{{{mark.french}}}</td>
-  </tr>
-  <tr>
-    <td width="164.8mm" style="border:0.5pt solid #000000;">&nbsp;Rédaction en français. Ou si rédaction en anglais, au moins 15% du manuscrit en français et<br />&nbsp;existence de résumés de chaque partie du manuscrit en français.</td>
-    <td width="19.2mm" align="center" style="border:0.5pt solid #000000;font-size:11pt;">{{{mark.language}}}</td>
-  </tr>
-  <tr>
-    <td width="164.8mm" style="border:0.5pt solid #000000;">&nbsp;Dactylographie et pagination correctes.</td>
-    <td width="19.2mm" align="center" style="border:0.5pt solid #000000;font-size:11pt;">{{{mark.typing}}}</td>
-  </tr>
-  <tr>
-    <td width="164.8mm" style="border:0.5pt solid #000000;">&nbsp;Remerciements aux membres du jury et remerciements personnels sobres.</td>
-    <td width="19.2mm" align="center" style="border:0.5pt solid #000000;font-size:11pt;">{{{mark.thanks}}}</td>
-  </tr>
-  <tr>
-    <td width="164.8mm" style="border:0.5pt solid #000000;">&nbsp;Présence d’une table des matières.</td>
-    <td width="19.2mm" align="center" style="border:0.5pt solid #000000;font-size:11pt;">{{{mark.toc}}}</td>
-  </tr>
-  <tr>
-    <td width="164.8mm" style="border:0.5pt solid #000000;">&nbsp;Présence de la liste à jour du corps enseignant de VetAgro Sup.</td>
-    <td width="19.2mm" align="center" style="border:0.5pt solid #000000;font-size:11pt;">{{{mark.staff}}}</td>
-  </tr>
-  <tr>
-    <td width="164.8mm" style="border:0.5pt solid #000000;">&nbsp;Présence&nbsp; de la liste des abréviations, des figures, des tableaux, des annexes.</td>
-    <td width="19.2mm" align="center" style="border:0.5pt solid #000000;font-size:11pt;">{{{mark.lists}}}</td>
-  </tr>
-  <tr>
-    <td width="164.8mm" style="border:0.5pt solid #000000;">&nbsp;Pages de couvertures conformes.</td>
-    <td width="19.2mm" align="center" style="border:0.5pt solid #000000;font-size:11pt;">{{{mark.covers}}}</td>
-  </tr>
-  <tr>
-    <td width="164.8mm" style="border:0.5pt solid #000000;">&nbsp;Citation des références dans le texte (au format de la bibliothèque universitaire).</td>
-    <td width="19.2mm" align="center" style="border:0.5pt solid #000000;font-size:11pt;">{{{mark.citations}}}</td>
-  </tr>
-  <tr>
-    <td width="164.8mm" style="border:0.5pt solid #000000;">&nbsp;Présence d’une bibliographie finale correctement formatée.</td>
-    <td width="19.2mm" align="center" style="border:0.5pt solid #000000;font-size:11pt;">{{{mark.bibliography}}}</td>
-  </tr>
-  <tr>
-    <td width="164.8mm" style="border:0.5pt solid #000000;">&nbsp;Numérotation + titres et légendes + qualité et lisibilité des figures et tableaux satisfaisants.</td>
-    <td width="19.2mm" align="center" style="border:0.5pt solid #000000;font-size:11pt;">{{{mark.figures}}}</td>
-  </tr>
-  <tr>
-    <td width="164.8mm" style="border:0.5pt solid #000000;">&nbsp;Il existe une introduction exposant la problématique et le plan du manuscrit.</td>
-    <td width="19.2mm" align="center" style="border:0.5pt solid #000000;font-size:11pt;">{{{mark.introduction}}}</td>
-  </tr>
-  <tr>
-    <td width="164.8mm" style="border:0.5pt solid #000000;">&nbsp;Il existe une conclusion reprenant les points clés et proposant des perspectives.</td>
-    <td width="19.2mm" align="center" style="border:0.5pt solid #000000;font-size:11pt;">{{{mark.conclusion}}}</td>
-  </tr>
-  <tr>
-    <td width="164.8mm" style="border:0.5pt solid #000000;">&nbsp;Le résumé n’est pas un copier-coller de la conclusion.</td>
-    <td width="19.2mm" align="center" style="border:0.5pt solid #000000;font-size:11pt;">{{{mark.abstract}}}</td>
-  </tr>
-  <tr>
-    <td width="164.8mm" style="border:0.5pt solid #000000;">&nbsp;Pour les thèses non bibliographiques, le travail est présenté sous la forme d'un document<br />&nbsp;scientifique : 1) introduction 2) matériel et méthodes 3) résultats 4) discussion et conclusion</td>
-    <td width="19.2mm" align="center" style="border:0.5pt solid #000000;font-size:11pt;">{{{mark.structure}}}</td>
-  </tr>
-</table>
+{{/gridsections}}
 <br /><br />
 <table cellpadding="0">
   <tr>

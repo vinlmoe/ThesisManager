@@ -77,13 +77,13 @@ class mod_these_generator extends testing_module_generator {
     public function default_jury() {
         return [
             (object) ['juryrole' => 'president', 'fullname' => 'Paul Président', 'jurytitle' => 'Professeur',
-                'institution' => 'Faculté de médecine', 'email' => 'president@example.com'],
+                'institution' => 'Faculté de médecine', 'email' => 'president@example.com', 'jurystatus' => 'pr'],
             (object) ['juryrole' => 'director', 'fullname' => 'Dora Directrice', 'jurytitle' => 'Maître de conférences',
-                'institution' => 'École vétérinaire', 'email' => 'directrice@example.com'],
+                'institution' => 'École vétérinaire', 'email' => 'directrice@example.com', 'jurystatus' => 'mcf'],
             (object) ['juryrole' => 'member', 'fullname' => 'Albert Assesseur', 'jurytitle' => 'Professeur',
-                'institution' => 'École vétérinaire', 'email' => 'assesseur@example.com'],
+                'institution' => 'École vétérinaire', 'email' => 'assesseur@example.com', 'jurystatus' => 'pr'],
             (object) ['juryrole' => 'guest', 'fullname' => 'Iris Invitée', 'jurytitle' => 'Docteur vétérinaire',
-                'institution' => 'Clinique', 'email' => ''],
+                'institution' => 'Clinique', 'email' => '', 'jurystatus' => 'other'],
         ];
     }
 }

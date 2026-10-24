@@ -95,7 +95,18 @@ class provider implements
             'fullname' => 'privacy:metadata:these_jury:fullname',
             'email' => 'privacy:metadata:these_jury:email',
             'institution' => 'privacy:metadata:these_jury:institution',
+            'jurystatus' => 'privacy:metadata:these_jury:jurystatus',
         ], 'privacy:metadata:these_jury');
+
+        // Annuaire du jury : enseignants désignés par leur nom et leur adresse, sans lien avec un compte.
+        $collection->add_database_table('these_juror', [
+            'title' => 'privacy:metadata:these_juror:title',
+            'lastname' => 'privacy:metadata:these_juror:lastname',
+            'firstname' => 'privacy:metadata:these_juror:firstname',
+            'email' => 'privacy:metadata:these_juror:email',
+            'status' => 'privacy:metadata:these_juror:status',
+            'institution' => 'privacy:metadata:these_juror:institution',
+        ], 'privacy:metadata:these_juror');
 
         $collection->add_database_table('these_log', [
             'userid' => 'privacy:metadata:these_log:userid',

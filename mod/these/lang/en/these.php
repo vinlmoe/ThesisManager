@@ -200,8 +200,10 @@ $string['minutes'] = 'Defence minutes';
 
 // Jury.
 $string['jury'] = 'Jury';
-$string['juryhelp'] = 'One row per member. Leave the name empty to ignore a row. The email address is used to send each member a '
-    . 'notice; without an address, the notice must be delivered by other means.';
+$string['juryhelp'] = 'One row per member. Preferably choose the teacher from the jury directory: title, status, institution '
+    . 'and address are taken from it. For an external member or a guest, choose "External member or guest" and fill in the row '
+    . '(the status is required for a voting member). Only HDR associate professors, professors and emeriti may chair. The registrar '
+    . 'then validates the eligibility of each member; members are then notified by email and receive a link to the file documents.';
 $string['juryrole'] = 'Role';
 $string['juryrolepresident'] = 'Chair';
 $string['juryroledirector'] = 'Director (assessor)';
@@ -215,6 +217,67 @@ $string['juryaddmembers'] = 'Add rows';
 $string['juryonepresident'] = 'The jury must have exactly one chair.';
 $string['juryminmembers'] = 'The jury must have at least {$a} voting members (chair included, guests excluded).';
 $string['juryinvalidemail'] = 'Invalid email address for {$a}.';
+$string['juryjuror'] = 'Teacher from the directory';
+$string['juryjuror_help'] = 'Teacher chosen from the jury directory kept by the registrar. For an external member (another '
+    . 'institution, practitioner) or a guest, choose "External member or guest" and fill in the fields that appear.';
+$string['juryexternal'] = '— External member or guest (to fill in) —';
+$string['jurystatus'] = 'Status';
+$string['jurystatus_help'] = 'Rank of the teacher. All may supervise a thesis or sit on the jury; only HDR associate professors, '
+    . 'professors and emeriti (professors and associate professors) may chair.';
+$string['jurystatusir'] = 'Research engineer';
+$string['jurystatusmcf'] = 'Associate professor';
+$string['jurystatusmcfhdr'] = 'Associate professor (HDR)';
+$string['jurystatusmcfstag'] = 'Probationary associate professor';
+$string['jurystatusprstag'] = 'Probationary professor';
+$string['jurystatuspr'] = 'Professor';
+$string['jurystatuspremerite'] = 'Emeritus professor';
+$string['jurystatusmcfemerite'] = 'Emeritus associate professor';
+$string['jurystatusother'] = 'Other (practitioner, researcher...)';
+$string['jurystatusrequired'] = 'Give the status of {$a} (external member).';
+$string['juryduplicate'] = '{$a} appears twice in the jury.';
+$string['jurypresidentnoteligible'] = '{$a} cannot chair the jury: only HDR associate professors, professors and emeriti can.';
+$string['juryeligiblecheck'] = 'Eligibility checked (registrar)';
+$string['juryeligiblehelp'] = 'Tick the eligibility of each voting member once checked (already ticked for directory teachers whose '
+    . 'status suits their role). On validation, jury members are notified by email and receive a link to the file documents.';
+$string['juryeligiblerequired'] = 'The eligibility of {$a} is not validated.';
+$string['jurynotified'] = '{$a} jury member(s) notified.';
+$string['jurynotifiedmissing'] = 'Without address, to notify by other means: {$a}.';
+$string['juryeligibilityok'] = 'Eligible';
+$string['juryeligibilitytocheck'] = 'To be checked by the registrar';
+$string['juryeligibilityko'] = 'Not eligible for this role';
+$string['juryeligibilityvalidated'] = 'Eligibility validated';
+$string['jurynotifiedon'] = 'Notified on {$a}';
+$string['juryresendaccess'] = 'Send the jury access again';
+$string['juryaccessresent'] = '{$a} jury member(s) notified again.';
+$string['juryaccess'] = 'Jury access';
+$string['juryaccessintro'] = 'Hello {$a->name}, you are appointed as {$a->role} of the jury of this thesis. Below are the defence '
+    . 'details and the file documents.';
+$string['juryaccessinvalid'] = 'This access link is not (or no longer) valid. Contact the registrar.';
+$string['juryaccessdocuments'] = 'Documents';
+$string['juryaccessnodocuments'] = 'No document is available yet.';
+
+// Jury directory.
+$string['jurors'] = 'Jury directory';
+$string['jurors_desc'] = 'Teachers who may supervise a thesis or sit on a jury, shared by all activities and all cohorts. Jury forms '
+    . 'draw on it to be prefilled. A withdrawn (inactive) teacher is no longer offered but stays in the juries that chose them.';
+$string['jurortitle'] = 'Title';
+$string['juroractive'] = 'Offered in jury forms';
+$string['juroractiveyes'] = 'Active';
+$string['juroractiveno'] = 'Withdrawn';
+$string['jurorpresident'] = 'May chair';
+$string['juroradd'] = 'Add a teacher';
+$string['juroredit'] = 'Edit a teacher';
+$string['jurorsaved'] = 'The teacher has been saved.';
+$string['jurordeleted'] = 'The teacher has been removed from the directory.';
+$string['jurordeleteconfirm'] = 'Remove {$a} from the directory? Juries that chose them keep them.';
+$string['jurorsnone'] = 'The directory is empty.';
+$string['jurorimport'] = 'Import a CSV file';
+$string['jurorimportfile'] = 'CSV file';
+$string['jurorimportfile_help'] = 'Columns: title (Dr or Pr), lastname, firstname, email, status, institution, separated by commas '
+    . 'or semicolons. The status is the key (ir, mcf, mcfhdr, mcfstag, prstag, pr, premerite, mcfemerite) or the label. A teacher '
+    . 'already present (same address, or same names) is updated.';
+$string['jurorimportdone'] = '{$a->created} teacher(s) added, {$a->updated} updated.';
+$string['jurorimportbadline'] = 'Line {$a} ignored: wrong title, names, status or address.';
 $string['jurysheet'] = 'Jury sheet';
 
 // Review steps.
@@ -444,6 +507,14 @@ $string['privacy:metadata:these_jury'] = 'Jury members proposed or set for a def
 $string['privacy:metadata:these_jury:fullname'] = 'Jury member name.';
 $string['privacy:metadata:these_jury:email'] = 'Jury member email address.';
 $string['privacy:metadata:these_jury:institution'] = 'Jury member institution.';
+$string['privacy:metadata:these_jury:jurystatus'] = 'Status (rank) of the jury member.';
+$string['privacy:metadata:these_juror'] = 'Directory of teachers who may supervise a thesis or sit on a jury, kept by the registrar (not linked to a Moodle account).';
+$string['privacy:metadata:these_juror:title'] = 'Title of the teacher (Dr or Pr).';
+$string['privacy:metadata:these_juror:lastname'] = 'Last name of the teacher.';
+$string['privacy:metadata:these_juror:firstname'] = 'First name of the teacher.';
+$string['privacy:metadata:these_juror:email'] = 'Email address of the teacher.';
+$string['privacy:metadata:these_juror:status'] = 'Status (rank) of the teacher.';
+$string['privacy:metadata:these_juror:institution'] = 'Institution of the teacher.';
 $string['privacy:metadata:these_log'] = 'History of actions on a file.';
 $string['privacy:metadata:these_log:userid'] = 'Author of the action.';
 $string['privacy:metadata:these_log:logaction'] = 'Action performed.';
@@ -628,8 +699,11 @@ $string['summarytoolong'] = 'The abstract exceeds {$a} characters.';
 $string['bkeywords'] = 'Keywords (in French)';
 $string['bkeywords_help'] = 'Identical to those of the back cover, 8 maximum.';
 $string['conclusionstext'] = 'Conclusions text';
-$string['conclusionstext_help'] = 'The conclusions as they will appear in the manuscript (two pages maximum). They will be signed by '
-    . 'the director, the jury chair, the general management and the CCEM president.';
+$string['conclusionstext_help'] = 'The conclusions as they will appear in the manuscript. They must fit on one page with the '
+    . 'signatures (about 2,200 characters at most; separate paragraphs with a blank line). They will be signed by the director, the '
+    . 'jury president, the general management and the CCEM president.';
+$string['conclusionstoolong'] = 'The conclusions have {$a->length} characters for {$a->max} at most: they must fit on one page with the signatures.';
+$string['conclusionsonepage'] = 'The conclusions do not fit on one page with the signatures: shorten them or use fewer paragraphs.';
 $string['contracthelp'] = 'Author choices for the electronic distribution contract (articles 2 and 4). A confidential thesis (box '
     . 'ticked with the subject) stays confidential until the date given.';
 $string['bconfidentialuntil'] = 'Confidential until';
@@ -650,6 +724,20 @@ $string['reportfavorablerequired'] = 'A favourable opinion is required to approv
 $string['ethicsnumber'] = 'Ethics committee approval number (if any)';
 $string['gridsectionfond'] = 'Content compliance';
 $string['gridsectionforme'] = 'Form compliance';
+$string['gridsectionpdffond'] = 'Content conformity';
+$string['gridsectionpdfforme'] = 'Form conformity';
+$string['gridconditional'] = '(depending on the thesis)';
+$string['griditems'] = 'Conformity grid';
+$string['griditems_desc'] = 'Items of the conformity grid filled by the thesis director. Changing an item updates the PDF grids '
+    . '(defence documents already generated will be at their next generation); a removed item disappears from the grids; an added '
+    . 'item applies to the grids filled afterwards. "Depending on the thesis": the item may stay unticked. To remove an item, empty '
+    . 'its label.';
+$string['griditemsection'] = 'Section';
+$string['griditemlabel'] = 'Item';
+$string['griditemconditional'] = 'Depending on the thesis (optional)';
+$string['griditemadd'] = 'Add {no} item(s)';
+$string['griditemssaved'] = 'The conformity grid has been saved.';
+$string['griditemsreset'] = 'Restore the original grid';
 $string['gridrequired'] = 'Item to validate.';
 $string['gridquestion'] = 'The scientific question is clearly stated and identified.';
 $string['gridanswer'] = 'The bibliographic or experimental answer is satisfactory.';
@@ -693,6 +781,16 @@ $string['logsignaturesinvalidated'] = 'Signatures invalidated (document changed)
 $string['logsignaturerequested'] = 'Signature requested';
 $string['logsignedinperson'] = 'Signature collected in person';
 $string['emailkeysignaturerequest'] = 'Signature request (signatories without an account)';
+$string['emailjurydesignationsubject'] = 'Appointment to the thesis jury of {$a->student}';
+$string['emailjurydesignationbody'] = 'Hello {$a->name},
+
+You are appointed as {$a->role} of the jury of the veterinary thesis of {$a->student}, entitled "{$a->title}".
+
+Planned defence: {$a->date}, {$a->location}.
+
+The manuscript and file documents are available through this personal link: {$a->url}
+
+The official notice will follow separately.';
 $string['emailsignaturerequestsubject'] = 'Thesis of {$a->student}: document(s) to sign';
 $string['emailsignaturerequestbody'] = 'Hello {$a->name},
 
@@ -783,6 +881,8 @@ $string['transfergroups_help'] = 'Each ticked group fully replaces that of the a
     . 'in the source goes back to its original text. Unticked groups do not change.';
 $string['transfergroupactivity'] = 'Activity settings (institution, signatory, location, jury, service addresses, reminders)';
 $string['transfergroupemails'] = 'Customised emails';
+$string['transfergroupgriditems'] = 'Conformity grid (items)';
+$string['transferdonegriditems'] = '{$a} conformity grid item(s);';
 $string['transfergroupdoctemplates'] = 'Document templates';
 $string['transfergroupdocimages'] = 'Template images';
 $string['transferconfirmreplace'] = 'I confirm the replacement of the ticked settings of this activity';
