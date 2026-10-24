@@ -435,7 +435,7 @@ function these_build_document_context(array $src) {
         'keywords' => implode(' ; ', $keywords),
         'confidential' => !empty($d->confidential),
         // Titre à imprimer sur un document destiné à des personnes qui ne connaissent pas le sujet
-        // d'une thèse confidentielle (attestation de conformité de la bibliothèque).
+        // d'une thèse confidentielle (modèles personnalisés).
         'publictitle' => !empty($d->confidential) ? get_string('confidentialtitle', 'mod_these') : (string) $d->title,
         'studyyear' => (string) $d->studyyear,
         'devenumber' => (string) $d->devenumber,

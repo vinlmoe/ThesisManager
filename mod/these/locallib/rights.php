@@ -123,8 +123,8 @@ function these_get_rights(context $context, ?stdClass $dossier, $userid) {
     $rights->student = $rights->owner && has_capability('mod/these:submit', $context, $userid);
     $rights->director = $dossier !== null && (int) $dossier->directorid === (int) $userid
         && has_capability('mod/these:direct', $context, $userid);
-    // Thèse confidentielle : son sujet n'est connu que de l'étudiant, de la DEVE, du directeur et du
-    // jury (voir these_user_knows_subject()).
+    // Thèse confidentielle : son sujet n'est connu que de l'étudiant, de la DEVE, de la bibliothèque, du
+    // directeur et du jury (voir these_user_knows_subject()).
     $rights->knowssubject = $dossier === null || these_user_knows_subject($dossier, $context, $userid);
     return $rights;
 }
@@ -187,8 +187,8 @@ function these_can_view_filearea($filearea, stdClass $rights) {
         return false;
     }
     // Thèse confidentielle : sans connaître le sujet, seuls le manuscrit et le manuscrit corrigé
-    // restent accessibles (la bibliothèque en atteste la conformité) ; les autres fichiers portent
-    // le titre. Contrôle à faire avant toute autre règle de zone.
+    // restent accessibles ; les autres fichiers portent le titre. Contrôle à faire avant toute autre
+    // règle de zone.
     if (isset($rights->knowssubject) && !$rights->knowssubject) {
         return in_array($filearea, ['manuscript', 'corrections'], true);
     }
@@ -238,9 +238,9 @@ function these_token_hash($token) {
 
 /**
  * Indique si un utilisateur peut connaître le sujet d'une thèse (titre, titre anglais, résumé,
- * mots-clés). Une thèse confidentielle n'est connue que de l'étudiant, de la DEVE, du directeur de
- * thèse et des membres du jury ; pour tous les autres (bibliothèque, autres enseignants, détenteurs
- * de mod/these:viewall), le sujet est masqué partout.
+ * mots-clés). Une thèse confidentielle n'est connue que de l'étudiant, de la DEVE, de la
+ * bibliothèque, du directeur de thèse et des membres du jury ; pour tous les autres (autres
+ * enseignants, détenteurs de mod/these:viewall sans rôle de service), le sujet est masqué partout.
  *
  * @param stdClass $dossier
  * @param context $context Contexte de l'activité du dossier.
@@ -259,6 +259,8 @@ function these_user_knows_subject(stdClass $dossier, context $context, $userid) 
     }
     return has_capability('mod/these:managedeve', $context, $userid)
         || these_user_has_service_role($context, $userid, 'deve')
+        || has_capability('mod/these:managelibrary', $context, $userid)
+        || these_user_has_service_role($context, $userid, 'library')
         || these_user_in_jury($dossier->id, $userid);
 }
 

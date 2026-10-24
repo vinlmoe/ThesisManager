@@ -356,7 +356,7 @@ function these_send_email(
 
 /**
  * Indique si le destinataire d'un courriel peut connaître le sujet d'une thèse : un compte qui le
- * connaît (voir these_user_knows_subject()), ou la boîte de service de la DEVE.
+ * connaît (voir these_user_knows_subject()), ou la boîte de service de la DEVE ou de la bibliothèque.
  *
  * @param stdClass $these
  * @param stdClass $dossier
@@ -371,8 +371,14 @@ function these_recipient_knows_subject(stdClass $these, stdClass $dossier, stdCl
         $cm = get_coursemodule_from_instance('these', $these->id, 0, false, MUST_EXIST);
         return these_user_knows_subject($dossier, context_module::instance($cm->id), $recipient->id);
     }
-    $deveemail = core_text::strtolower(trim((string) ($these->deveemail ?? '')));
-    return $deveemail !== '' && core_text::strtolower(trim((string) $recipient->email)) === $deveemail;
+    $email = core_text::strtolower(trim((string) $recipient->email));
+    foreach (['deveemail', 'libraryemail'] as $field) {
+        $service = core_text::strtolower(trim((string) ($these->$field ?? '')));
+        if ($service !== '' && $email === $service) {
+            return true;
+        }
+    }
+    return false;
 }
 
 /**

@@ -196,29 +196,39 @@ final class shared_settings_test extends \advanced_testcase {
     }
 
     /**
-     * Thèse confidentielle dans le suivi multi-promotions : la bibliothèque ne la trouve ni par son
-     * sujet ni par ses réponses au questionnaire, et ne voit ni son titre ni ses réponses ; la DEVE
-     * la trouve et la voit.
+     * Thèse confidentielle dans le suivi multi-promotions : un détenteur de mod/these:viewall sans rôle
+     * de service ne la trouve ni par son sujet ni par ses réponses au questionnaire, et ne voit ni son
+     * titre ni ses réponses ; la DEVE et la bibliothèque la trouvent et la voient.
      */
     public function test_confidential_thesis_is_not_disclosed(): void {
         $this->resetAfterTest();
         $env = $this->setup_env();
-        $roleid = these_setup_default_roles();
-        $library = $this->getDataGenerator()->create_user();
-        $this->getDataGenerator()->enrol_user($library->id, $env->activities[0]->course->id, $roleid);
+        $gen = $this->getDataGenerator();
+        $course = $env->activities[0]->course;
+        $library = $gen->create_user();
+        $gen->enrol_user($library->id, $course->id, these_setup_default_roles());
+        $roleid = $gen->create_role(['shortname' => 'theseviewall']);
+        assign_capability('mod/these:view', CAP_ALLOW, $roleid, \context_system::instance()->id);
+        assign_capability('mod/these:viewall', CAP_ALLOW, $roleid, \context_system::instance()->id);
+        $viewall = $gen->create_user();
+        $gen->enrol_user($viewall->id, $course->id, $roleid);
         accesslib_clear_all_caches_for_unit_testing();
 
         $text = these_save_question($env->scope, (object) ['qtype' => 'text', 'label' => 'Laboratoire', 'options' => '',
             'required' => 0]);
         $questions = these_get_questions($env->scope);
         these_save_answers($env->confidential, $questions, ['q' . $text => 'Unité secrète de vaccinologie']);
-
-        $links = thesesynthesis_get_active_links($env->synthesis->id, $library->id);
-        $this->assertTrue($links[0]->rights->library);
-        $search = function (array $filters) use ($links, $library, $questions) {
+        $ids = function (array $rows) {
             return array_map(function ($row) {
                 return (int) $row->dossier->id;
-            }, thesesynthesis_search($links, $library->id, $filters, $questions));
+            }, $rows);
+        };
+
+        $links = thesesynthesis_get_active_links($env->synthesis->id, $viewall->id);
+        $this->assertTrue($links[0]->rights->viewall);
+        $this->assertFalse($links[0]->rights->library);
+        $search = function (array $filters) use ($links, $viewall, $questions, $ids) {
+            return $ids(thesesynthesis_search($links, $viewall->id, $filters, $questions));
         };
 
         // Ni par le titre, ni par les réponses.
@@ -228,7 +238,7 @@ final class shared_settings_test extends \advanced_testcase {
         $this->assertSame([(int) $env->public->id], $search(['text' => 'rage']));
 
         // Trouvée par un critère qui ne révèle pas le sujet, elle reste masquée.
-        $rows = thesesynthesis_search($links, $library->id, ['year' => 2027], $questions);
+        $rows = thesesynthesis_search($links, $viewall->id, ['year' => 2027], $questions);
         $confidential = array_values(array_filter($rows, function ($row) use ($env) {
             return (int) $row->dossier->id === (int) $env->confidential->id;
         }));
@@ -237,20 +247,19 @@ final class shared_settings_test extends \advanced_testcase {
         $this->assertSame([], $confidential[0]->answers);
 
         // Dossiers suivis : titre masqué, recherche sans effet sur le titre.
-        $rows = thesesynthesis_get_dossiers($links, $library->id);
-        foreach ($rows as $row) {
+        foreach (thesesynthesis_get_dossiers($links, $viewall->id) as $row) {
             $this->assertSame((int) $row->dossier->id !== (int) $env->confidential->id, $row->knowssubject);
         }
-        $this->assertSame([], thesesynthesis_get_dossiers($links, $library->id, ['search' => 'confidentiel']));
+        $this->assertSame([], thesesynthesis_get_dossiers($links, $viewall->id, ['search' => 'confidentiel']));
 
-        // La DEVE connaît le sujet.
-        $links = thesesynthesis_get_active_links($env->synthesis->id, $env->deve->id);
-        $rows = thesesynthesis_get_dossiers($links, $env->deve->id, ['search' => 'confidentiel']);
-        $this->assertCount(1, $rows);
-        $this->assertTrue($rows[0]->knowssubject);
-        $found = thesesynthesis_search($links, $env->deve->id, ['text' => 'vaccinologie'], $questions);
-        $this->assertSame([(int) $env->confidential->id], array_map(function ($row) {
-            return (int) $row->dossier->id;
-        }, $found));
+        // La DEVE et la bibliothèque connaissent le sujet.
+        foreach (['deve' => $env->deve, 'library' => $library] as $name => $user) {
+            $links = thesesynthesis_get_active_links($env->synthesis->id, $user->id);
+            $rows = thesesynthesis_get_dossiers($links, $user->id, ['search' => 'confidentiel']);
+            $this->assertCount(1, $rows, $name);
+            $this->assertTrue($rows[0]->knowssubject, $name);
+            $found = thesesynthesis_search($links, $user->id, ['text' => 'vaccinologie'], $questions);
+            $this->assertSame([(int) $env->confidential->id], $ids($found), $name);
+        }
     }
 }

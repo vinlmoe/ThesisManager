@@ -22,8 +22,8 @@ global $CFG;
 require_once(__DIR__ . '/these_testcase.php');
 
 /**
- * Thèse confidentielle (sujet connu de l'étudiant, de la DEVE, du directeur et du jury seulement) et
- * demande d'embargo de diffusion.
+ * Thèse confidentielle (sujet connu de l'étudiant, de la DEVE, de la bibliothèque, du directeur et
+ * du jury seulement) et demande d'embargo de diffusion.
  *
  * @package    mod_these
  * @copyright  2026 Sébastien Lefebvre
@@ -58,19 +58,20 @@ final class confidentiality_test extends these_testcase {
     }
 
     /**
-     * Qui connaît le sujet : l'étudiant, la DEVE, le directeur et le jury ; ni la bibliothèque ni un
-     * autre enseignant.
+     * Qui connaît le sujet : l'étudiant, la DEVE, la bibliothèque, le directeur et le jury ; ni un
+     * autre enseignant ni un détenteur de mod/these:viewall sans rôle de service.
      */
     public function test_who_knows_the_subject(): void {
         $this->setup_activity();
         [$dossier, $juror] = $this->confidential_dossier(THESE_STATUS_DEFENSE_VALIDATED);
         $other = $this->getDataGenerator()->create_and_enrol($this->course, 'teacher');
+        $viewall = $this->viewall_user();
 
-        foreach ([$this->student, $this->deve, $this->director, $juror] as $user) {
+        foreach ([$this->student, $this->deve, $this->librarian, $this->director, $juror] as $user) {
             $this->assertTrue(these_user_knows_subject($dossier, $this->context, $user->id), $user->email);
             $this->assertSame(self::TITLE, these_subject_field($dossier, 'title', $this->context, $user->id));
         }
-        foreach ([$this->librarian, $other] as $user) {
+        foreach ([$other, $viewall] as $user) {
             $this->assertFalse(these_user_knows_subject($dossier, $this->context, $user->id));
             $this->assertSame(
                 get_string('confidentialtitle', 'mod_these'),
@@ -81,50 +82,58 @@ final class confidentiality_test extends these_testcase {
 
         // Une thèse ordinaire est connue de tous ceux qui voient le dossier.
         $dossier->confidential = 0;
-        $this->assertTrue(these_user_knows_subject($dossier, $this->context, $this->librarian->id));
+        $this->assertTrue(these_user_knows_subject($dossier, $this->context, $viewall->id));
     }
 
     /**
-     * La bibliothèque voit le dossier d'une thèse confidentielle sans son sujet : manuscrit et
-     * attestation de conformité seulement, titre masqué dans le dossier, la liste et le planning.
+     * La bibliothèque voit le dossier d'une thèse confidentielle en entier ; un détenteur de
+     * mod/these:viewall le voit sans son sujet : manuscrit seulement, titre masqué dans le dossier, la
+     * liste et le planning.
      */
-    public function test_library_view_is_masked(): void {
+    public function test_library_sees_viewall_does_not(): void {
         global $DB, $PAGE;
         $this->setup_activity();
         [$dossier] = $this->confidential_dossier(THESE_STATUS_DEFENSE_VALIDATED);
         $DB->set_field('these_dossier', 'defensedate', time() + DAYSECS, ['id' => $dossier->id]);
         $dossier = $this->reload($dossier->id);
-
-        $library = these_get_rights($this->context, $dossier, $this->librarian->id);
-        $this->assertFalse($library->knowssubject);
-        $this->assertTrue(these_can_view_filearea('manuscript', $library));
-        $this->assertTrue(these_can_view_filearea('corrections', $library));
-        $this->assertFalse(these_can_view_filearea('subjectdocs', $library));
-        $this->assertFalse(these_can_view_filearea('generated', $library));
-        $this->assertTrue(these_can_view_document('conformity', $library));
-        $this->assertFalse(these_can_view_document('subject', $library));
-        $deve = these_get_rights($this->context, $dossier, $this->deve->id);
-        $this->assertTrue($deve->knowssubject);
-        $this->assertTrue(these_can_view_document('subject', $deve));
-
+        $viewall = $this->viewall_user();
         $PAGE->set_url(new \moodle_url('/mod/these/dossier.php'));
+
+        // Bibliothèque : tout.
+        $library = these_get_rights($this->context, $dossier, $this->librarian->id);
+        $this->assertTrue($library->knowssubject);
+        $this->assertTrue(these_can_view_filearea('subjectdocs', $library));
+        $this->assertTrue(these_can_view_document('subject', $library));
+        $this->assertTrue(these_can_view_document('conformity', $library));
         $this->setUser($this->librarian);
         $html = these_render_dossier($this->these, $this->cm, $this->context, $dossier, $library);
+        $this->assertStringContainsString(self::TITLE, $html);
+
+        // Détenteur de viewall : manuscrit seulement, sujet masqué.
+        $rights = these_get_rights($this->context, $dossier, $viewall->id);
+        $this->assertFalse($rights->knowssubject);
+        $this->assertTrue(these_can_view_filearea('manuscript', $rights));
+        $this->assertTrue(these_can_view_filearea('corrections', $rights));
+        $this->assertFalse(these_can_view_filearea('subjectdocs', $rights));
+        $this->assertFalse(these_can_view_filearea('generated', $rights));
+        $this->assertFalse(these_can_view_document('conformity', $rights));
+        $this->assertFalse(these_can_view_document('subject', $rights));
+        $this->setUser($viewall);
+        $html = these_render_dossier($this->these, $this->cm, $this->context, $dossier, $rights);
         $this->assertStringNotContainsString(self::TITLE, $html);
         $this->assertStringNotContainsString('Experimental distemper vaccine', $html);
         $this->assertStringContainsString(get_string('confidentialtitle', 'mod_these'), $html);
-        $table = these_render_dossier_table([$dossier], $this->cm);
-        $this->assertStringNotContainsString(self::TITLE, $table);
+        $this->assertStringNotContainsString(self::TITLE, these_render_dossier_table([$dossier], $this->cm));
 
         // Recherche du tableau de bord : le titre n'est cherché que pour qui connaît tous les sujets.
         $this->assertCount(0, these_get_dossiers($this->these->id, ['search' => 'Carré']));
         $this->assertCount(1, these_get_dossiers($this->these->id, ['search' => 'Carré', 'confidentialsubjects' => true]));
 
-        // Planning : titre masqué pour la bibliothèque, connu de la DEVE.
-        $sources = [these_planning_source($this->these, $this->cm, $this->context, $this->librarian->id)];
-        $defenses = these_get_defenses($sources, time(), time() + WEEKSECS, $this->librarian->id);
+        // Planning : titre masqué pour viewall, connu de la bibliothèque.
+        $sources = [these_planning_source($this->these, $this->cm, $this->context, $viewall->id)];
+        $defenses = these_get_defenses($sources, time(), time() + WEEKSECS, $viewall->id);
         $this->assertSame(get_string('confidentialtitle', 'mod_these'), these_defense_row($defenses[0])['title']);
-        $this->setUser($this->deve);
+        $this->setUser($this->librarian);
         $this->assertSame(self::TITLE, these_defense_row($defenses[0])['title']);
     }
 
@@ -134,11 +143,12 @@ final class confidentiality_test extends these_testcase {
     public function test_emails_mask_the_title(): void {
         $this->setup_activity();
         [$dossier] = $this->confidential_dossier(THESE_STATUS_SUBJECT_APPROVED);
+        $viewall = $this->viewall_user();
         $sink = $this->redirectEmails();
         these_send_email(
             $this->these,
             'actionrequired',
-            [$this->librarian, $this->director],
+            [$viewall, $this->librarian, $this->director],
             these_email_base_vars($this->these, $this->cm, $dossier) + ['status' => 'x'],
             '',
             '',
@@ -149,8 +159,9 @@ final class confidentiality_test extends these_testcase {
             $bodies[$message->to] = quoted_printable_decode($message->body) . ' ' . $message->subject;
         }
         $sink->close();
-        $this->assertStringNotContainsString('maladie de Carr', $bodies[$this->librarian->email]);
-        $this->assertStringContainsString(get_string('confidentialtitle', 'mod_these'), $bodies[$this->librarian->email]);
+        $this->assertStringNotContainsString('maladie de Carr', $bodies[$viewall->email]);
+        $this->assertStringContainsString(get_string('confidentialtitle', 'mod_these'), $bodies[$viewall->email]);
+        $this->assertStringContainsString('maladie de Carr', $bodies[$this->librarian->email]);
         $this->assertStringContainsString('maladie de Carr', $bodies[$this->director->email]);
     }
 

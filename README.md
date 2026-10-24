@@ -95,8 +95,8 @@ Bibliothèque ──conformité du manuscrit──▶ DEVE ──convocations, f
 - Chaque acteur est prévenu quand un dossier l'attend ; une tâche quotidienne
   **relance** l'acteur attendu après un délai paramétrable (jamais pendant la
   phase dormante).
-- **Thèse confidentielle** : sujet connu de l'étudiant, de la DEVE, du directeur
-  et du jury seulement, masqué partout ailleurs. **Embargo de diffusion** de
+- **Thèse confidentielle** : sujet connu de l'étudiant, de la DEVE, de la
+  bibliothèque, du directeur et du jury seulement, masqué partout ailleurs. **Embargo de diffusion** de
   5 ans sur demande motivée, reporté au contrat de diffusion.
 - Un tableau de bord par acteur (« À traiter », décompte par statut, recherche),
   l'export du registre (CSV, Excel, ODS) et l'**import CSV** des sujets déjà

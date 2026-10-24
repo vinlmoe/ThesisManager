@@ -615,9 +615,9 @@ $string['settingsucblemail_desc'] = 'Adresse à laquelle envoyer les liens de si
 // Formulaire de dépôt de sujet.
 $string['studyyear'] = "Année d'études";
 $string['confidential'] = 'Thèse confidentielle, ne pas divulguer le titre';
-$string['confidential_help'] = 'Le sujet d\'une thèse confidentielle (titre, titre anglais, résumé, mots-clés) n\'est connu que de l\'étudiant, de la DEVE, du directeur de thèse et des membres du jury. Pour tous les autres (bibliothèque, autres enseignants), il est remplacé par « Thèse confidentielle » dans les pages, les listes, le planning, la recherche, l\'export et les courriels, et les documents qui portent le titre ne leur sont pas accessibles ; la bibliothèque garde l\'accès au manuscrit pour en attester la conformité.';
+$string['confidential_help'] = 'Le sujet d\'une thèse confidentielle (titre, titre anglais, résumé, mots-clés) n\'est connu que de l\'étudiant, de la DEVE, de la bibliothèque, du directeur de thèse et des membres du jury. Pour tous les autres (autres enseignants, personnels qui consultent tous les dossiers sans être la DEVE ni la bibliothèque), il est remplacé par « Thèse confidentielle » dans les pages, les listes, le planning, la recherche, l\'export et les courriels, et les documents qui portent le titre ne leur sont pas accessibles.';
 $string['confidentialtitle'] = 'Thèse confidentielle';
-$string['confidentialbadge'] = 'Thèse confidentielle : sujet connu de l\'étudiant, de la DEVE, du directeur et du jury seulement';
+$string['confidentialbadge'] = 'Thèse confidentielle : sujet connu de l\'étudiant, de la DEVE, de la bibliothèque, du directeur et du jury seulement';
 $string['confidentialitylabel'] = 'Confidentialité';
 $string['hetoplink'] = 'Rechercher les mots-clés dans HeTOP';
 $string['keywordscount'] = 'Indiquez de 3 à 5 mots-clés, séparés par des points-virgules.';

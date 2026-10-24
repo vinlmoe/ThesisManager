@@ -157,17 +157,18 @@ signés.
 
 - **Thèse confidentielle** (case de la fiche de sujet) : le sujet (titre, titre
   anglais, résumé, mots-clés) n'est connu que de l'étudiant, de la DEVE (rôle ou
-  `mod/these:managedeve`), du directeur de thèse et des membres du jury
-  (reconnus à leur adresse ou à celle de leur fiche de l'annuaire). Pour tous les
-  autres, dont la bibliothèque et les détenteurs de `mod/these:viewall`, il est
-  remplacé par « Thèse confidentielle » dans le dossier, les listes, le planning,
-  la recherche (y compris dans *Suivi des thèses*), l'export du registre et les
-  courriels ; le questionnaire, l'ancien titre d'un changement de sujet et les
-  fichiers ou documents qui portent le titre leur sont masqués. La bibliothèque
-  garde le manuscrit et le manuscrit corrigé, dont elle atteste la conformité ;
-  l'attestation imprime « Thèse confidentielle » (variable
-  `{{thesis.publictitle}}` des modèles). Les signataires extérieurs (direction
-  générale, CCEM, université) voient les documents qu'ils signent.
+  `mod/these:managedeve`), de la bibliothèque (rôle ou
+  `mod/these:managelibrary`, et sa boîte de service), du directeur de thèse et
+  des membres du jury (reconnus à leur adresse ou à celle de leur fiche de
+  l'annuaire). Pour tous les autres, dont les détenteurs de `mod/these:viewall`
+  sans rôle de service, il est remplacé par « Thèse confidentielle » dans le
+  dossier, les listes, le planning, la recherche (y compris dans *Suivi des
+  thèses*), l'export du registre et les courriels ; le questionnaire, l'ancien
+  titre d'un changement de sujet et les fichiers ou documents qui portent le
+  titre leur sont masqués, sauf le manuscrit et le manuscrit corrigé. La
+  variable `{{thesis.publictitle}}` des modèles donne « Thèse confidentielle »
+  pour un document destiné à d'autres personnes. Les signataires extérieurs
+  (direction générale, CCEM, université) voient les documents qu'ils signent.
 - **Embargo de diffusion** : au dépôt de la soutenance, l'étudiant peut demander
   un embargo de 5 ans (`THESE_EMBARGO_YEARS`), motif obligatoire. La fin de
   l'embargo est calculée à partir de la date de soutenance (arrêtée, à défaut

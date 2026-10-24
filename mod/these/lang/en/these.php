@@ -609,9 +609,9 @@ $string['settingsucblemail_desc'] = 'Address receiving signing links; empty: sig
 // Subject form.
 $string['studyyear'] = 'Year of study';
 $string['confidential'] = 'Confidential thesis, do not disclose the title';
-$string['confidential_help'] = 'The subject of a confidential thesis (title, English title, abstract, keywords) is only known to the student, the registrar, the thesis director and the jury members. For everyone else (library, other teachers), it is replaced by "Confidential thesis" in pages, lists, the schedule, search, export and emails, and the documents bearing the title are not available to them; the library keeps access to the manuscript to certify its compliance.';
+$string['confidential_help'] = 'The subject of a confidential thesis (title, English title, abstract, keywords) is only known to the student, the registrar, the library, the thesis director and the jury members. For everyone else (other teachers, staff who see all files without being the registrar or the library), it is replaced by "Confidential thesis" in pages, lists, the schedule, search, export and emails, and the documents bearing the title are not available to them.';
 $string['confidentialtitle'] = 'Confidential thesis';
-$string['confidentialbadge'] = 'Confidential thesis: subject known only to the student, the registrar, the director and the jury';
+$string['confidentialbadge'] = 'Confidential thesis: subject known only to the student, the registrar, the library, the director and the jury';
 $string['confidentialitylabel'] = 'Confidentiality';
 $string['hetoplink'] = 'Search keywords in HeTOP';
 $string['keywordscount'] = 'Enter 3 to 5 keywords, separated by semicolons.';

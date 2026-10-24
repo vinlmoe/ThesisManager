@@ -29,10 +29,11 @@ require_once(__DIR__ . '/these_testcase.php');
  * test vérifie qu'aucun marqueur n'apparaît dans ce que voit, reçoit ou télécharge un utilisateur
  * qui ne doit pas connaître le sujet, et que ceux qui le doivent le voient.
  *
- * Connaissent le sujet : l'étudiant, la DEVE (rôle de service ou mod/these:managedeve), le directeur
- * actuel, les membres du jury (par leur adresse ou par l'annuaire). Ne le connaissent pas : la
- * bibliothèque, un détenteur de mod/these:viewall, un autre directeur, un autre étudiant, l'ancien
- * directeur, un ancien membre du jury, un utilisateur sans rôle.
+ * Connaissent le sujet : l'étudiant, la DEVE (rôle de service ou mod/these:managedeve), la
+ * bibliothèque (rôle de service ou mod/these:managelibrary), le directeur actuel, les membres du jury
+ * (par leur adresse ou par l'annuaire). Ne le connaissent pas : un détenteur de mod/these:viewall
+ * sans rôle de service, un autre directeur, un autre étudiant, l'ancien directeur, un ancien membre
+ * du jury, un utilisateur sans rôle.
  *
  * @package    mod_these
  * @copyright  2026 Sébastien Lefebvre
@@ -91,15 +92,8 @@ final class confidentiality_access_test extends these_testcase {
         $formerjuror = $gen->create_user(['email' => 'ancien.jury@example.org']);
         $outsider = $gen->create_user();
 
-        // Détenteur de mod/these:viewall sans être la DEVE (gestion, scolarité...).
-        $viewallrole = $gen->create_role(['shortname' => 'theseviewall']);
-        assign_capability('mod/these:view', CAP_ALLOW, $viewallrole, \context_system::instance()->id);
-        assign_capability('mod/these:viewall', CAP_ALLOW, $viewallrole, \context_system::instance()->id);
-        $viewall = $gen->create_and_enrol($this->course, 'student');
-        $coursecontext = \context_course::instance($this->course->id);
-        role_unassign($DB->get_field('role', 'id', ['shortname' => 'student']), $viewall->id, $coursecontext->id);
-        role_assign($viewallrole, $viewall->id, $coursecontext->id);
-        accesslib_clear_all_caches_for_unit_testing();
+        // Détenteur de mod/these:viewall sans être la DEVE ni la bibliothèque (gestion, scolarité...).
+        $viewall = $this->viewall_user();
 
         $monday = these_planning_week_start(time());
         $this->dossier = $this->generator->create_dossier($this->these, $this->student->id, [
@@ -161,12 +155,12 @@ final class confidentiality_access_test extends these_testcase {
         $this->allowed = [
             'student' => $this->student,
             'deve' => $this->deve,
+            'library' => $this->librarian,
             'director' => $this->director,
             'juror' => $juror,
             'directoryjuror' => $directoryjuror,
         ];
         $this->denied = [
-            'library' => $this->librarian,
             'viewall' => $viewall,
             'otherdirector' => $otherdirector,
             'otherstudent' => $otherstudent,
@@ -207,10 +201,10 @@ final class confidentiality_access_test extends these_testcase {
         }
         $this->assertFalse(these_user_knows_subject($this->dossier, $this->context, 0));
 
-        // Seuls la bibliothèque et le détenteur de viewall ouvrent le dossier sans connaître le sujet.
+        // Seul le détenteur de viewall ouvre le dossier sans connaître le sujet.
         foreach ($this->denied as $name => $user) {
             $canview = these_can_view_dossier(these_get_rights($this->context, $this->dossier, $user->id));
-            $this->assertSame(in_array($name, ['library', 'viewall'], true), $canview, $name);
+            $this->assertSame($name === 'viewall', $canview, $name);
         }
     }
 
@@ -240,23 +234,20 @@ final class confidentiality_access_test extends these_testcase {
 
     /**
      * Fichiers et documents signés : rien de ce qui porte le titre pour qui ne connaît pas le sujet,
-     * sauf le manuscrit (et son attestation de conformité) pour la bibliothèque.
+     * sauf le manuscrit et le manuscrit corrigé ; tout pour la DEVE et la bibliothèque.
      */
     public function test_files_and_documents(): void {
         $this->setup_confidential();
         $this->assertNotContains('sealed', THESE_FILEAREAS, 'Les documents scellés ne passent pas par pluginfile.');
         $this->assertNotContains('signature', THESE_FILEAREAS, 'Les signatures ne passent pas par pluginfile.');
 
-        foreach (['library' => $this->librarian, 'viewall' => $this->denied['viewall']] as $name => $user) {
-            $rights = these_get_rights($this->context, $this->dossier, $user->id);
-            foreach (THESE_FILEAREAS as $filearea) {
-                $expected = in_array($filearea, ['manuscript', 'corrections'], true);
-                $this->assertSame($expected, these_can_view_filearea($filearea, $rights), "$name : $filearea");
-            }
-            foreach (array_keys(these_document_definitions()) as $doctype) {
-                $expected = $name === 'library' && $doctype === 'conformity';
-                $this->assertSame($expected, these_can_view_document($doctype, $rights), "$name : $doctype");
-            }
+        $rights = these_get_rights($this->context, $this->dossier, $this->denied['viewall']->id);
+        foreach (THESE_FILEAREAS as $filearea) {
+            $expected = in_array($filearea, ['manuscript', 'corrections'], true);
+            $this->assertSame($expected, these_can_view_filearea($filearea, $rights), "viewall : $filearea");
+        }
+        foreach (array_keys(these_document_definitions()) as $doctype) {
+            $this->assertFalse(these_can_view_document($doctype, $rights), "viewall : $doctype");
         }
         foreach (['otherdirector', 'otherstudent', 'formerdirector', 'outsider'] as $name) {
             $rights = these_get_rights($this->context, $this->dossier, $this->denied[$name]->id);
@@ -270,34 +261,35 @@ final class confidentiality_access_test extends these_testcase {
 
         // Ceux qui connaissent le sujet gardent leurs accès habituels.
         $deve = these_get_rights($this->context, $this->dossier, $this->deve->id);
+        $library = these_get_rights($this->context, $this->dossier, $this->librarian->id);
         $director = these_get_rights($this->context, $this->dossier, $this->director->id);
         $student = these_get_rights($this->context, $this->dossier, $this->student->id);
         foreach (THESE_FILEAREAS as $filearea) {
             $this->assertTrue(these_can_view_filearea($filearea, $deve), "deve : $filearea");
+            $this->assertTrue(these_can_view_filearea($filearea, $library), "library : $filearea");
             $this->assertTrue(these_can_view_filearea($filearea, $director), "director : $filearea");
             $this->assertSame($filearea !== 'directorreport', these_can_view_filearea($filearea, $student), "student : $filearea");
         }
         foreach (array_keys(these_document_definitions()) as $doctype) {
             $this->assertTrue(these_can_view_document($doctype, $deve), "deve : $doctype");
+            $this->assertTrue(these_can_view_document($doctype, $library), "library : $doctype");
         }
 
-        // L'attestation que voit la bibliothèque n'imprime pas le titre.
+        // Les modèles disposent d'un titre public pour un document destiné à d'autres personnes.
         $data = these_document_context($this->these, $this->context, $this->dossier, 'conformity');
         $this->assertSame(get_string('confidentialtitle', 'mod_these'), $data['thesis']['publictitle']);
-        $this->assertStringNotContainsString(self::SECRETS['title'], these_doctemplate_default('conformity'));
-        $this->assertStringContainsString('{{thesis.publictitle}}', these_doctemplate_default('conformity'));
     }
 
     /**
-     * Page du dossier : aucun marqueur pour la bibliothèque ni le détenteur de viewall ; tout pour
-     * la DEVE et le directeur.
+     * Page du dossier : aucun marqueur pour le détenteur de viewall ; tout pour la DEVE, la
+     * bibliothèque et le directeur.
      */
     public function test_dossier_page(): void {
         global $PAGE;
         $this->setup_confidential();
         $PAGE->set_url(new \moodle_url('/mod/these/dossier.php'));
 
-        foreach (['library' => $this->librarian, 'viewall' => $this->denied['viewall']] as $name => $user) {
+        foreach (['viewall' => $this->denied['viewall']] as $name => $user) {
             $this->setUser($user);
             $rights = these_get_rights($this->context, $this->dossier, $user->id);
             $html = these_render_dossier($this->these, $this->cm, $this->context, $this->dossier, $rights);
@@ -311,7 +303,7 @@ final class confidentiality_access_test extends these_testcase {
             }
         }
 
-        foreach (['deve' => $this->deve, 'director' => $this->director] as $name => $user) {
+        foreach (['deve' => $this->deve, 'library' => $this->librarian, 'director' => $this->director] as $name => $user) {
             $this->setUser($user);
             $rights = these_get_rights($this->context, $this->dossier, $user->id);
             $html = these_render_dossier($this->these, $this->cm, $this->context, $this->dossier, $rights);
@@ -341,7 +333,7 @@ final class confidentiality_access_test extends these_testcase {
         }
         $this->assertCount(1, these_get_dossiers($this->these->id, ['search' => '2026-099']));
 
-        foreach (['library' => $this->librarian, 'viewall' => $this->denied['viewall']] as $name => $user) {
+        foreach (['viewall' => $this->denied['viewall']] as $name => $user) {
             $this->setUser($user);
             $dossiers = these_get_dossiers($this->these->id);
             $this->assert_no_secret(these_render_dossier_table($dossiers, $this->cm), "$name (liste)");
@@ -358,8 +350,8 @@ final class confidentiality_access_test extends these_testcase {
             $this->assert_no_secret(json_encode($pdfdata, JSON_UNESCAPED_UNICODE), "$name (planning PDF)");
         }
 
-        // La DEVE et le directeur voient le titre partout.
-        foreach (['deve' => $this->deve, 'director' => $this->director] as $name => $user) {
+        // La DEVE, la bibliothèque et le directeur voient le titre partout.
+        foreach (['deve' => $this->deve, 'library' => $this->librarian, 'director' => $this->director] as $name => $user) {
             $this->setUser($user);
             $this->assertStringContainsString(
                 self::SECRETS['title'],
@@ -400,7 +392,7 @@ final class confidentiality_access_test extends these_testcase {
         };
         $sink = $this->redirectEmails();
 
-        // Étape de la bibliothèque : notification puis relance.
+        // Étape de la bibliothèque : notification puis relance, avec le titre.
         $dossier = clone $this->dossier;
         $dossier->status = THESE_STATUS_SUBJECT_REGISTERED;
         these_notify_actor($this->these, $this->cm, $dossier);
@@ -408,11 +400,10 @@ final class confidentiality_access_test extends these_testcase {
         $received = $bodies($sink);
         $this->assertCount(2, $received[$this->librarian->email]);
         foreach ($received[$this->librarian->email] as $body) {
-            $this->assert_no_secret($body, 'bibliothèque');
-            $this->assertStringContainsString(get_string('confidentialtitle', 'mod_these'), $body);
+            $this->assertStringContainsString(self::SECRETS['title'], $body);
         }
 
-        // Boîtes de service : la DEVE connaît le sujet, la bibliothèque non.
+        // Boîtes de service de la DEVE et de la bibliothèque : avec le titre.
         $this->these->deveemail = 'deve@example.org';
         $this->these->libraryemail = 'bibliotheque@example.org';
         $DB->update_record('these', $this->these);
@@ -422,7 +413,7 @@ final class confidentiality_access_test extends these_testcase {
         }
         $received = $bodies($sink);
         $this->assertCount(1, $received['bibliotheque@example.org']);
-        $this->assert_no_secret($received['bibliotheque@example.org'][0], 'boîte de la bibliothèque');
+        $this->assertStringContainsString(self::SECRETS['title'], $received['bibliotheque@example.org'][0]);
         $this->assertCount(1, $received['deve@example.org']);
         $this->assertStringContainsString(self::SECRETS['title'], $received['deve@example.org'][0]);
 
@@ -440,10 +431,10 @@ final class confidentiality_access_test extends these_testcase {
             $this->assertStringContainsString(self::SECRETS['title'], implode(' ', $received[$user->email]), $name);
         }
         $this->assertStringContainsString(self::SECRETS['title'], implode(' ', $received['deve@example.org']));
+        $this->assertStringContainsString(self::SECRETS['title'], implode(' ', $received['bibliotheque@example.org']));
         foreach ($this->denied as $name => $user) {
             $this->assert_no_secret(implode(' ', $received[$user->email]), $name);
         }
-        $this->assert_no_secret(implode(' ', $received['bibliotheque@example.org']), 'boîte de la bibliothèque');
         $this->assert_no_secret(implode(' ', $received['inconnu@example.org']), 'adresse inconnue');
         $sink->close();
     }

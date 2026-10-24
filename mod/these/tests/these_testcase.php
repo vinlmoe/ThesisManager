@@ -98,6 +98,24 @@ abstract class these_testcase extends \advanced_testcase {
     }
 
     /**
+     * Utilisateur qui voit tous les dossiers (mod/these:viewall) sans être la DEVE ni la bibliothèque :
+     * gestion, scolarité...
+     *
+     * @return \stdClass
+     */
+    protected function viewall_user(): \stdClass {
+        $gen = $this->getDataGenerator();
+        $roleid = $gen->create_role(['shortname' => 'theseviewall' . random_string(4)]);
+        $system = \context_system::instance()->id;
+        assign_capability('mod/these:view', CAP_ALLOW, $roleid, $system);
+        assign_capability('mod/these:viewall', CAP_ALLOW, $roleid, $system);
+        $user = $gen->create_user();
+        $gen->enrol_user($user->id, $this->course->id, $roleid);
+        accesslib_clear_all_caches_for_unit_testing();
+        return $user;
+    }
+
+    /**
      * Jeton du dernier lien envoyé à une adresse (seule son empreinte est conservée en base).
      *
      * @param array $messages Courriels interceptés.

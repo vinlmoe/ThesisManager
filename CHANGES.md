@@ -4,6 +4,17 @@ Format : une section par version publiée de `mod_these` (et de `mod_thesesynthe
 quand il change), de la plus récente à la plus ancienne. Une version publiée est
 étiquetée `vX.Y.Z` ; la CI joint alors le guide PDF à la publication GitHub.
 
+## mod_these 0.11.1 (2026103104)
+
+- Thèse confidentielle : la **bibliothèque** connaît désormais le sujet, comme
+  la DEVE, le directeur et le jury (rôle de service, `mod/these:managelibrary`
+  ou boîte de service) : titre, documents, recherche, planning, export et
+  courriels. Le sujet reste masqué aux détenteurs de `mod/these:viewall` sans
+  rôle de service, aux autres enseignants et aux autres étudiants.
+- L'attestation de conformité imprime de nouveau le titre.
+- Tests d'accès mis à jour : la bibliothèque parmi les profils autorisés, un
+  détenteur de `mod/these:viewall` comme profil refusé qui voit le dossier.
+
 ## mod_these 0.11.0 (2026103103), mod_thesesynthesis 0.3.1 (2026102903)
 
 ### Nouveautés

@@ -247,10 +247,9 @@ function these_can_view_document($doctype, stdClass $rights) {
     if (!these_can_view_dossier($rights)) {
         return false;
     }
-    // Thèse confidentielle : sans connaître le sujet, seule l'attestation de conformité, que la
-    // bibliothèque signe, reste accessible.
+    // Thèse confidentielle : aucun document, tous portant le titre, pour qui ne connaît pas le sujet.
     if (isset($rights->knowssubject) && !$rights->knowssubject) {
-        return $doctype === 'conformity' && $rights->library;
+        return false;
     }
     if (these_document_definitions()[$doctype]['staffonly']) {
         return $rights->director || $rights->viewall;
