@@ -109,6 +109,14 @@ class provider implements
             'institution' => 'privacy:metadata:these_juror:institution',
         ], 'privacy:metadata:these_juror');
 
+        $collection->add_database_table('these_subjecthistory', [
+            'title' => 'privacy:metadata:these_subjecthistory:title',
+            'summary' => 'privacy:metadata:these_subjecthistory:summary',
+            'reason' => 'privacy:metadata:these_subjecthistory:reason',
+            'changedby' => 'privacy:metadata:these_subjecthistory:changedby',
+            'timecreated' => 'privacy:metadata:these_subjecthistory:timecreated',
+        ], 'privacy:metadata:these_subjecthistory');
+
         $collection->add_database_table('these_answer', [
             'questionid' => 'privacy:metadata:these_answer:questionid',
             'value' => 'privacy:metadata:these_answer:value',
@@ -279,6 +287,22 @@ class provider implements
                     writer::with_context($context)->export_data(
                         array_merge($subcontext, [get_string('jury', 'mod_these')]),
                         (object) ['jury' => $jury]
+                    );
+                }
+                $previous = array_values(array_map(function ($entry) {
+                    return (object) [
+                        'title' => $entry->title,
+                        'summary' => $entry->summary,
+                        'keywords' => $entry->keywords,
+                        'director' => $entry->directorname,
+                        'reason' => $entry->reason,
+                        'time' => transform::datetime($entry->timecreated),
+                    ];
+                }, these_get_subject_history($dossier->id)));
+                if ($previous) {
+                    writer::with_context($context)->export_data(
+                        array_merge($subcontext, [get_string('subjecthistory', 'mod_these')]),
+                        (object) ['subjects' => $previous]
                     );
                 }
                 $answers = [];

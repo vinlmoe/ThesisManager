@@ -1059,3 +1059,37 @@ The registrar has checked the thesis file of {$a->student} ({$a->activity}). The
 Subject: {$a->title}
 
 Sign from "My signatures": {$a->url}';
+
+// Subject change.
+$string['subjectchange'] = 'Change thesis subject';
+$string['subjectchange_desc'] = 'Explain why you are changing subject. The former subject is archived in the file; your former '
+    . 'director, the registrar and the library are notified. The new subject is approved again by the director (you may choose '
+    . 'another one), then registered by the registrar and the library.';
+$string['subjectchangereason'] = 'Reason for the change';
+$string['subjectchangesubmit'] = 'Submit the new subject';
+$string['subjectchangecurrent'] = 'Current subject: {$a}';
+$string['subjectchangenotallowed'] = 'The subject can only be changed while the file is active (subject registered, defence not '
+    . 'submitted).';
+$string['subjectchangedmsg'] = 'New subject submitted: your thesis director, the registrar and the library have been notified.';
+$string['subjectchangelog'] = 'Former subject: {$a->old}. Reason: {$a->reason}';
+$string['subjecthistory'] = 'Previous subjects';
+$string['subjectarchive'] = 'Archived subject form';
+$string['logsubjectchanged'] = 'Subject changed';
+$string['emailsubjectchangedsubject'] = 'Thesis of {$a->student}: subject changed';
+$string['emailsubjectchangedbody'] = 'Hello,
+
+{$a->student} ({$a->activity}) has changed thesis subject.
+
+Former subject: {$a->oldtitle}
+New subject: {$a->title}
+Reason: {$a->reason}
+
+The former subject is archived in the file. The new subject will be approved by the thesis director, then registered by the registrar and the library.
+
+Open the file: {$a->url}';
+$string['privacy:metadata:these_subjecthistory'] = 'Previous subjects, archived at each subject change.';
+$string['privacy:metadata:these_subjecthistory:title'] = 'Title of the previous subject.';
+$string['privacy:metadata:these_subjecthistory:summary'] = 'Summary of the previous subject.';
+$string['privacy:metadata:these_subjecthistory:reason'] = 'Reason for the change.';
+$string['privacy:metadata:these_subjecthistory:changedby'] = 'Author of the change.';
+$string['privacy:metadata:these_subjecthistory:timecreated'] = 'Time of the change.';

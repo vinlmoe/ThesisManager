@@ -47,6 +47,10 @@ class restore_these_activity_structure_step extends restore_activity_structure_s
             $paths[] = new restore_path_element('these_dossier', '/activity/these/dossiers/dossier');
             $paths[] = new restore_path_element('these_jury', '/activity/these/dossiers/dossier/jurymembers/jurymember');
             $paths[] = new restore_path_element('these_answer', '/activity/these/dossiers/dossier/answers/answer');
+            $paths[] = new restore_path_element(
+                'these_subjecthistory',
+                '/activity/these/dossiers/dossier/subjecthistory/previoussubject'
+            );
             $paths[] = new restore_path_element('these_log', '/activity/these/dossiers/dossier/logs/log');
             $paths[] = new restore_path_element(
                 'these_signature',
@@ -149,6 +153,24 @@ class restore_these_activity_structure_step extends restore_activity_structure_s
         }
         $data->questionid = $questionid;
         $DB->insert_record('these_answer', $data);
+    }
+
+    /**
+     * Restaure un sujet précédent (changement de sujet).
+     *
+     * @param array $data
+     */
+    protected function process_these_subjecthistory($data) {
+        global $DB;
+
+        $data = (object) $data;
+        $data->dossierid = $this->get_new_parentid('these_dossier');
+        if (!$data->dossierid) {
+            return;
+        }
+        $data->directorid = $this->map_user($data->directorid);
+        $data->changedby = $this->map_user($data->changedby);
+        $DB->insert_record('these_subjecthistory', $data);
     }
 
     /**

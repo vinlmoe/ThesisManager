@@ -57,6 +57,9 @@ Bibliothèque ──conformité du manuscrit──▶ DEVE ──convocations, f
   (tous les documents en attente, toutes promotions). Chaque utilisateur peut
   **enregistrer sa signature**, reprise d'office ensuite (membres du jury ayant
   un compte compris).
+- **Changement de sujet** depuis un dossier actif : motif obligatoire, ancien
+  sujet archivé (historique et PDF signé), ancien directeur, DEVE et
+  bibliothèque prévenus, nouvelle validation complète de la phase 1.
 - **Questionnaire préalable au jury** modifiable (réponses courtes ou longues,
   listes, QCM), rempli par l'étudiant avant le dépôt de la soutenance.
 - Les **documents officiels** (E01 sujet, E02 agréments, E03 fiche
@@ -99,7 +102,7 @@ Bibliothèque ──conformité du manuscrit──▶ DEVE ──convocations, f
 ## Qualité
 
 - Style : standard Moodle (`moodlehq/moodle-cs`), sans avertissement.
-- Tests PHPUnit (67 + 4 tests) : circuit complet, corrections, rapport, renvois,
+- Tests PHPUnit (68 + 4 tests) : circuit complet, corrections, rapport, renvois,
   droits, relances, documents générés, signatures, modèles, paramètres partagés,
   questionnaire, recherche, transfert des paramètres, annuaire et jury, grille,
   conclusions, suivi multi-promotions, import, confidentialité,

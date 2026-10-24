@@ -165,6 +165,12 @@ les signatures (*Suivi des signatures*), relance ou fait signer sur place.
   connecté avec le compte de l'adresse invitée (président du jury, par exemple)
   peut l'utiliser et retrouve ses documents dans *Mes signatures*.
 
+- **Changement de sujet** (*Changer de sujet de thèse*, étudiant, dossier
+  actif) : motif obligatoire ; l'ancien sujet est archivé (table
+  `these_subjecthistory`, PDF du dépôt de sujet signé dans la zone
+  `subjectarchive`) ; l'ancien directeur, la DEVE et la bibliothèque reçoivent
+  le courriel *subjectchanged* ; le nouveau sujet repasse la phase 1.
+
 ## 3 ter. Transfert des paramètres
 
 *Transfert des paramètres* (DEVE, barre de navigation de l'activité) reprend les

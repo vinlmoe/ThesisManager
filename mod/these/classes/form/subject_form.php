@@ -29,6 +29,9 @@ require_once($CFG->dirroot . '/mod/these/locallib.php');
  * L'étudiant peut l'enregistrer en brouillon ou le soumettre à son directeur ; les champs, les
  * engagements et la signature ne sont exigés qu'à la soumission.
  *
+ * Pour un changement de sujet (customdata subjectchange), le formulaire commence par le motif du
+ * changement, obligatoire, et n'a pas de brouillon.
+ *
  * @package   mod_these
  * @copyright 2026 Sébastien Lefebvre
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -51,6 +54,19 @@ class subject_form extends \moodleform {
         $mform->addElement('hidden', 'dossierid');
         $mform->setType('dossierid', PARAM_INT);
 
+        if (!empty($this->_customdata['subjectchange'])) {
+            $mform->addElement('header', 'changeheader', get_string('subjectchange', 'mod_these'));
+            $mform->setExpanded('changeheader');
+            $mform->addElement('static', 'changehelp', '', get_string('subjectchange_desc', 'mod_these'));
+            $mform->addElement(
+                'textarea',
+                'changereason',
+                get_string('subjectchangereason', 'mod_these'),
+                ['rows' => 4, 'cols' => 80]
+            );
+            $mform->setType('changereason', PARAM_TEXT);
+            $mform->addRule('changereason', null, 'required', null, 'client');
+        }
         $mform->addElement('header', 'subjectheader', get_string('subject', 'mod_these'));
         $mform->setExpanded('subjectheader');
         $years = [];
@@ -142,6 +158,9 @@ class subject_form extends \moodleform {
         $errors = parent::validation($data, $files);
         if (empty($data['submitsubject'])) {
             return $errors;
+        }
+        if (!empty($this->_customdata['subjectchange']) && trim((string) ($data['changereason'] ?? '')) === '') {
+            $errors['changereason'] = get_string('required');
         }
         foreach (self::REQUIRED_FIELDS as $field) {
             if (trim((string) ($data[$field] ?? '')) === '') {
