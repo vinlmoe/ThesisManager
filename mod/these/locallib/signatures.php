@@ -950,6 +950,7 @@ function these_get_signatures_by_token($token) {
  * @param MoodleQuickForm $mform
  * @param string $defaultname Nom proposé.
  * @param string $intro Texte d'introduction (ce qui est signé).
+ * @param bool $allowsaved Proposer de reprendre ou d'enregistrer la signature de l'utilisateur.
  * @return void
  */
 function these_add_signature_fields(MoodleQuickForm $mform, $defaultname, $intro = '', $allowsaved = true) {

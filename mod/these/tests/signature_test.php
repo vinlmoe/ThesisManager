@@ -38,6 +38,7 @@ final class signature_test extends these_testcase {
     /**
      * Signature tracée factice : une image PNG.
      *
+     * @param string $name Nom du signataire.
      * @return \stdClass {name, png}
      */
     private function signature(string $name = 'Signataire'): \stdClass {

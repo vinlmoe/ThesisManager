@@ -53,9 +53,9 @@ if ($token !== '') {
 }
 $PAGE->set_url(new moodle_url('/mod/these/jury.php', $pageparams));
 $PAGE->set_pagelayout('embedded');
-$PAGE->set_title(get_string('juryaccess', 'mod_these'));
 if (!$member) {
     $PAGE->set_context(context_system::instance());
+    $PAGE->set_title(get_string('juryaccess', 'mod_these'));
     echo $OUTPUT->header();
     echo $OUTPUT->notification(get_string('juryaccessinvalid', 'mod_these'), 'info');
     echo $OUTPUT->footer();
@@ -65,6 +65,7 @@ $dossier = $member->dossier;
 $these = $member->these;
 $context = context_module::instance($member->cm->id);
 $PAGE->set_context($context);
+$PAGE->set_title(get_string('juryaccess', 'mod_these'));
 $PAGE->set_heading(format_string($these->name));
 $allowed = these_jury_documents();
 
