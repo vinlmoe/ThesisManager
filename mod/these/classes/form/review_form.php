@@ -90,7 +90,7 @@ class review_form extends \moodleform {
                 $mform->setType('ethicsnumber', PARAM_TEXT);
                 // Éléments de la grille de l'activité (modifiables par la DEVE) : la grille signée
                 // n'est produite qu'à partir de ce formulaire rempli.
-                foreach (these_get_grid_items($this->_customdata['theseid']) as $section => $items) {
+                foreach (these_get_grid_items($this->_customdata['scope']) as $section => $items) {
                     $mform->addElement(
                         'static',
                         'gridsection' . $section,
@@ -219,7 +219,7 @@ class review_form extends \moodleform {
                 if (empty($data['reportfavorable'])) {
                     $errors['reportfavorable'] = get_string('reportfavorablerequired', 'mod_these');
                 }
-                foreach (these_get_grid_items($this->_customdata['theseid']) as $items) {
+                foreach (these_get_grid_items($this->_customdata['scope']) as $items) {
                     foreach ($items as $key => $item) {
                         if (!$item->conditional && empty($data['grid_' . $key])) {
                             $errors['grid_' . $key] = get_string('gridrequired', 'mod_these');

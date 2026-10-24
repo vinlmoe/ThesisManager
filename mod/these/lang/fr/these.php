@@ -521,6 +521,10 @@ $string['privacy:metadata:these_juror:firstname'] = "Prénom de l'enseignant.";
 $string['privacy:metadata:these_juror:email'] = "Adresse de courriel de l'enseignant.";
 $string['privacy:metadata:these_juror:status'] = "Statut (corps) de l'enseignant.";
 $string['privacy:metadata:these_juror:institution'] = "Établissement de l'enseignant.";
+$string['privacy:metadata:these_answer'] = "Réponses de l'étudiant au questionnaire préalable au jury.";
+$string['privacy:metadata:these_answer:questionid'] = 'Question.';
+$string['privacy:metadata:these_answer:value'] = 'Réponse.';
+$string['privacy:metadata:these_answer:timemodified'] = 'Date de la réponse.';
 $string['privacy:metadata:these_log'] = 'Historique des actions sur un dossier.';
 $string['privacy:metadata:these_log:userid'] = "Auteur de l'action.";
 $string['privacy:metadata:these_log:logaction'] = 'Action effectuée.';
@@ -906,3 +910,48 @@ $string['transferskipped'] = 'Éléments non repris :';
 $string['transferskippedemail'] = 'courriel inconnu « {$a} »';
 $string['transferskippeddoctemplate'] = 'document inconnu « {$a} »';
 $string['transferskippedimage'] = 'image illisible ou en double « {$a} »';
+
+// Paramètres partagés par une activité « Suivi des thèses ».
+$string['sharedsettings'] = "Cette activité est suivie par l'activité « Suivi des thèses » {\$a->name}, où « {\$a->what} » "
+    . 'est défini pour toutes les promotions suivies : modifiez-le depuis celle-ci.';
+$string['doctemplatesshared_desc'] = 'Modèles des documents communs à toutes les activités « Gestion des thèses » suivies par cette '
+    . "activité : chaque promotion produit ses documents à partir d'eux. Les balises et la mise en page sont celles décrites dans "
+    . "le guide ; l'aperçu utilise des données fictives.";
+$string['griditemsshared_desc'] = 'Éléments de la grille de conformité communs à toutes les activités « Gestion des thèses » suivies '
+    . 'par cette activité. Modifier un élément met à jour les grilles PDF produites ensuite.';
+
+// Questionnaire préalable au jury.
+$string['questions'] = 'Questionnaire préalable au jury';
+$string['questions_desc'] = "Questions posées à l'étudiant avant le dépôt de la soutenance : réponse courte, réponse longue, liste "
+    . 'ou choix multiples. Les questions obligatoires conditionnent le dépôt ; les réponses figurent au dossier, sont '
+    . 'communiquées au jury et servent à la recherche des thèses.';
+$string['questionsshared_desc'] = 'Questions communes à toutes les activités « Gestion des thèses » suivies par cette activité, '
+    . "posées à l'étudiant avant le dépôt de la soutenance. Les questions obligatoires conditionnent le dépôt ; les réponses "
+    . 'servent à la recherche des thèses.';
+$string['questionsnone'] = "Aucune question n'est définie.";
+$string['questionadd'] = 'Ajouter une question';
+$string['questionedit'] = 'Modifier la question';
+$string['questiontype'] = 'Type de question';
+$string['questionlabel'] = 'Question';
+$string['questionoptions'] = 'Choix proposés';
+$string['questionoptions_help'] = "Un choix par ligne. Une liste n'accepte qu'un choix, un QCM en accepte plusieurs.";
+$string['questionoptionsrequired'] = 'Indiquez au moins deux choix, un par ligne.';
+$string['questionrequired'] = 'Réponse obligatoire';
+$string['questionsaved'] = 'Question enregistrée.';
+$string['questiondeleted'] = 'Question supprimée.';
+$string['questiondeleteconfirm'] = 'Supprimer la question « {$a->label} » et les {$a->answers} réponse(s) déjà données ?';
+$string['qtypetext'] = 'Réponse courte';
+$string['qtypetextarea'] = 'Réponse longue';
+$string['qtypelist'] = 'Liste (un choix)';
+$string['qtypemulti'] = 'QCM (plusieurs choix)';
+$string['questionnaire'] = 'Questionnaire préalable au jury';
+$string['questionnaire_desc'] = 'Répondez à ces questions avant de déposer la soutenance. Vos réponses figurent au dossier et sont '
+    . 'communiquées au jury ; elles servent aussi à retrouver les thèses.';
+$string['questionnairesaved'] = 'Réponses enregistrées.';
+$string['questionnaireunanswered'] = 'Sans réponse';
+$string['questionnairemissing'] = 'Questions obligatoires sans réponse : {$a}.';
+$string['questionnairecomplete'] = 'Questionnaire rempli.';
+$string['questionnairefill'] = 'Remplir le questionnaire';
+$string['questionnairerequired'] = 'Remplissez le questionnaire préalable au jury avant de déposer la soutenance.';
+$string['transfergroupquestions'] = 'Questionnaire préalable au jury (questions)';
+$string['transferdonequestions'] = '{$a} question(s) ;';

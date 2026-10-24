@@ -233,3 +233,150 @@ function thesesynthesis_get_juries(array $links, stdClass $user) {
     }
     return $rows;
 }
+
+/**
+ * Liens vers les pages de l'activité, selon les droits de l'utilisateur.
+ *
+ * @param stdClass $cm
+ * @param context $context
+ * @return string HTML
+ */
+function thesesynthesis_render_navlinks(stdClass $cm, context $context) {
+    $links = [get_string('dashboard', 'mod_these') => new moodle_url('/mod/thesesynthesis/view.php', ['id' => $cm->id])];
+    if (has_capability('mod/thesesynthesis:search', $context)) {
+        $links[get_string('searchtheses', 'mod_thesesynthesis')] =
+            new moodle_url('/mod/thesesynthesis/search.php', ['id' => $cm->id]);
+    }
+    if (has_capability('mod/thesesynthesis:managelinks', $context)) {
+        $links[get_string('managelinks', 'mod_thesesynthesis')] =
+            new moodle_url('/mod/thesesynthesis/administration.php', ['id' => $cm->id]);
+    }
+    if (has_capability('mod/thesesynthesis:managesettings', $context)) {
+        $links[get_string('doctemplates', 'mod_these')] = new moodle_url('/mod/thesesynthesis/doctemplates.php', ['id' => $cm->id]);
+        $links[get_string('griditems', 'mod_these')] = new moodle_url('/mod/thesesynthesis/griditems.php', ['id' => $cm->id]);
+        $links[get_string('questions', 'mod_these')] = new moodle_url('/mod/thesesynthesis/questions.php', ['id' => $cm->id]);
+    }
+    if (has_capability('mod/thesesynthesis:managejurors', $context)) {
+        $links[get_string('jurors', 'mod_these')] = new moodle_url('/mod/thesesynthesis/jurors.php', ['id' => $cm->id]);
+    }
+    return html_writer::div(these_render_actions($links, 'btn btn-secondary mr-1 mb-1'), 'these-navlinks mb-3');
+}
+
+/**
+ * Texte normalisé pour la recherche : minuscules, sans accents.
+ *
+ * @param string $text
+ * @return string
+ */
+function thesesynthesis_normalise($text) {
+    return core_text::strtolower(core_text::specialtoascii((string) $text));
+}
+
+/**
+ * Année de soutenance d'un dossier (retenue, à défaut proposée).
+ *
+ * @param stdClass $dossier
+ * @return int 0 si aucune date.
+ */
+function thesesynthesis_defense_year(stdClass $dossier) {
+    $date = (int) ($dossier->defensedate ?: $dossier->proposeddate);
+    return $date ? (int) userdate($date, '%Y') : 0;
+}
+
+/**
+ * Recherche de thèses dans les activités liées.
+ *
+ * Dans une activité où l'utilisateur voit tous les dossiers (DEVE, bibliothèque, gestionnaire),
+ * tous les dossiers sont cherchés et peuvent être ouverts. Ailleurs, un enseignant ne trouve que
+ * les thèses enregistrées par la DEVE, non confidentielles et non annulées, et n'ouvre que celles
+ * qu'il dirige.
+ *
+ * @param array $links Voir thesesynthesis_get_active_links().
+ * @param int $userid
+ * @param array $filters {text, cmid, status (int|null), year (int), answers (questionid => valeur)}
+ * @param array $questions Questions filtrables (voir these_get_questions()).
+ * @return array Liste d'objets {dossier, link, student, director, canopen, answers, year}
+ */
+function thesesynthesis_search(array $links, $userid, array $filters, array $questions = []) {
+    global $DB;
+
+    $words = array_filter(preg_split('/\s+/', thesesynthesis_normalise($filters['text'] ?? '')), 'strlen');
+    $answerfilters = array_filter((array) ($filters['answers'] ?? []), function ($value) {
+        return trim((string) $value) !== '';
+    });
+    $registered = these_status_rank(THESE_STATUS_SUBJECT_REGISTERED);
+    $rows = [];
+    foreach ($links as $link) {
+        if (!empty($filters['cmid']) && (int) $filters['cmid'] !== (int) $link->cm->id) {
+            continue;
+        }
+        foreach ($DB->get_records('these_dossier', ['theseid' => $link->these->id], 'timemodified DESC') as $dossier) {
+            $status = (int) $dossier->status;
+            $directs = $link->direct && (int) $dossier->directorid === (int) $userid;
+            $public = !$dossier->confidential && $status !== THESE_STATUS_CANCELLED
+                && these_status_rank($status) >= $registered;
+            if (!$link->rights->viewall && !$directs && !$public) {
+                continue;
+            }
+            if (isset($filters['status']) && $filters['status'] !== null && $status !== (int) $filters['status']) {
+                continue;
+            }
+            $year = thesesynthesis_defense_year($dossier);
+            if (!empty($filters['year']) && $year !== (int) $filters['year']) {
+                continue;
+            }
+            $answers = these_get_answers($dossier->id);
+            $matches = true;
+            foreach ($answerfilters as $questionid => $value) {
+                $answer = $answers[(int) $questionid] ?? '';
+                $question = $questions[(int) $questionid] ?? null;
+                if ($question && in_array($question->qtype, ['list', 'multi'], true)) {
+                    $matches = $matches && in_array((string) $value, (array) $answer, true);
+                } else {
+                    $matches = $matches && strpos(
+                        thesesynthesis_normalise(these_answer_text($answer)),
+                        thesesynthesis_normalise(trim($value))
+                    ) !== false;
+                }
+            }
+            if (!$matches) {
+                continue;
+            }
+            $student = $DB->get_record('user', ['id' => $dossier->userid]);
+            $director = $dossier->directorid ? $DB->get_record('user', ['id' => $dossier->directorid]) : null;
+            if ($words) {
+                $haystack = [$dossier->title, $dossier->titleen, $dossier->summary, $dossier->keywords, $dossier->codirectorname,
+                    $dossier->extdirectorname, $student ? fullname($student) : '', $director ? fullname($director) : ''];
+                if ($link->rights->viewall) {
+                    $haystack[] = $dossier->devenumber;
+                    $haystack[] = $dossier->libraryref;
+                }
+                foreach (these_get_jury($dossier->id) as $member) {
+                    $haystack[] = $member->fullname;
+                }
+                foreach ($answers as $answer) {
+                    $haystack[] = these_answer_text($answer);
+                }
+                $haystack = thesesynthesis_normalise(implode(' ', $haystack));
+                foreach ($words as $word) {
+                    if (strpos($haystack, $word) === false) {
+                        continue 2;
+                    }
+                }
+            }
+            $rows[] = (object) [
+                'dossier' => $dossier,
+                'link' => $link,
+                'student' => $student,
+                'director' => $director,
+                'canopen' => $link->rights->viewall || $directs,
+                'answers' => $answers,
+                'year' => $year,
+            ];
+        }
+    }
+    usort($rows, function ($a, $b) {
+        return [$b->year, $a->dossier->title] <=> [$a->year, $b->dossier->title];
+    });
+    return $rows;
+}

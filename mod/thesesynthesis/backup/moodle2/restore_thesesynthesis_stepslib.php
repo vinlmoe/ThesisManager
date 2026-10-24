@@ -42,6 +42,9 @@ class restore_thesesynthesis_activity_structure_step extends restore_activity_st
 
         $paths[] = new restore_path_element('thesesynthesis', '/activity/thesesynthesis');
         $paths[] = new restore_path_element('thesesynthesis_link', '/activity/thesesynthesis/links/link');
+        $paths[] = new restore_path_element('these_doctemplate', '/activity/thesesynthesis/doctemplates/doctemplate');
+        $paths[] = new restore_path_element('these_griditem', '/activity/thesesynthesis/griditems/griditem');
+        $paths[] = new restore_path_element('these_question', '/activity/thesesynthesis/questions/question');
 
         return $this->prepare_activity_structure($paths);
     }
@@ -81,10 +84,57 @@ class restore_thesesynthesis_activity_structure_step extends restore_activity_st
     }
 
     /**
-     * Rattache les fichiers de la description.
+     * Restaure un paramètre partagé (modèle de document, élément de grille, question) : rattaché
+     * à l'instance restaurée.
+     *
+     * @param string $table
+     * @param array $data
+     * @return void
+     */
+    protected function restore_shared($table, $data) {
+        global $DB;
+
+        $data = (object) $data;
+        $oldid = $data->id;
+        $data->theseid = 0;
+        $data->synthesisid = $this->get_new_parentid('thesesynthesis');
+        $newid = $DB->insert_record($table, $data);
+        $this->set_mapping($table, $oldid, $newid);
+    }
+
+    /**
+     * Restaure un modèle de document modifié.
+     *
+     * @param array $data
+     */
+    protected function process_these_doctemplate($data) {
+        $this->restore_shared('these_doctemplate', $data);
+    }
+
+    /**
+     * Restaure un élément de la grille de conformité.
+     *
+     * @param array $data
+     */
+    protected function process_these_griditem($data) {
+        $this->restore_shared('these_griditem', $data);
+    }
+
+    /**
+     * Restaure une question du questionnaire préalable au jury.
+     *
+     * @param array $data
+     */
+    protected function process_these_question($data) {
+        $this->restore_shared('these_question', $data);
+    }
+
+    /**
+     * Rattache les fichiers de la description et les images des modèles.
      */
     protected function after_execute() {
         $this->add_related_files('mod_thesesynthesis', 'intro', null);
+        $this->add_related_files('mod_thesesynthesis', 'docimages', null);
     }
 
     /**

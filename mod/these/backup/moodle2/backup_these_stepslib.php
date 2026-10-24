@@ -59,6 +59,11 @@ class backup_these_activity_structure_step extends backup_activity_structure_ste
             'itemkey', 'section', 'label', 'conditional', 'sortorder', 'timemodified',
         ]);
 
+        $questions = new backup_nested_element('questions');
+        $question = new backup_nested_element('question', ['id'], [
+            'qtype', 'label', 'options', 'required', 'sortorder', 'timemodified',
+        ]);
+
         $dossiers = new backup_nested_element('dossiers');
         $dossier = new backup_nested_element('dossier', ['id'], [
             'userid', 'status', 'statustime', 'title', 'titleen', 'summary', 'keywords',
@@ -76,6 +81,9 @@ class backup_these_activity_structure_step extends backup_activity_structure_ste
             'juryrole', 'fullname', 'jurytitle', 'institution', 'email', 'sortorder', 'timecreated',
             'jurorid', 'jurystatus', 'eligible', 'eligibleby', 'eligibletime', 'notifiedtime',
         ]);
+
+        $answers = new backup_nested_element('answers');
+        $answer = new backup_nested_element('answer', ['id'], ['questionid', 'value', 'timemodified']);
 
         // Le jeton d'une invitation en attente n'est pas sauvegardé : c'est un secret d'accès sans
         // compte, que la DEVE renverra depuis la copie restaurée si besoin.
@@ -96,10 +104,14 @@ class backup_these_activity_structure_step extends backup_activity_structure_ste
         $doctemplates->add_child($doctemplate);
         $these->add_child($griditems);
         $griditems->add_child($griditem);
+        $these->add_child($questions);
+        $questions->add_child($question);
         $these->add_child($dossiers);
         $dossiers->add_child($dossier);
         $dossier->add_child($jurymembers);
         $jurymembers->add_child($jurymember);
+        $dossier->add_child($answers);
+        $answers->add_child($answer);
         $dossier->add_child($signatures);
         $signatures->add_child($signature);
         $dossier->add_child($logs);
@@ -109,10 +121,12 @@ class backup_these_activity_structure_step extends backup_activity_structure_ste
         $emailtemplate->set_source_table('these_email_template', ['theseid' => backup::VAR_PARENTID], 'id ASC');
         $doctemplate->set_source_table('these_doctemplate', ['theseid' => backup::VAR_PARENTID], 'id ASC');
         $griditem->set_source_table('these_griditem', ['theseid' => backup::VAR_PARENTID], 'sortorder ASC, id ASC');
+        $question->set_source_table('these_question', ['theseid' => backup::VAR_PARENTID], 'sortorder ASC, id ASC');
 
         if ($userinfo) {
             $dossier->set_source_table('these_dossier', ['theseid' => backup::VAR_PARENTID], 'id ASC');
             $jurymember->set_source_table('these_jury', ['dossierid' => backup::VAR_PARENTID], 'sortorder ASC, id ASC');
+            $answer->set_source_table('these_answer', ['dossierid' => backup::VAR_PARENTID], 'id ASC');
             $log->set_source_table('these_log', ['dossierid' => backup::VAR_PARENTID], 'id ASC');
             $signature->set_source_table('these_signature', ['dossierid' => backup::VAR_PARENTID], 'id ASC');
         }

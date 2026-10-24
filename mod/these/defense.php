@@ -60,6 +60,9 @@ $mform = new defense_form($PAGE->url, [
     'context' => $context,
     'submitlabel' => $returned ? 'resubmitdefense' : 'submitdefense',
     'signername' => fullname($USER),
+    'questionnaireurl' => these_get_questions(these_settings_scope($these))
+        ? new moodle_url('/mod/these/questionnaire.php', ['id' => $cm->id, 'dossierid' => $dossier->id]) : null,
+    'questionnairemissing' => these_questionnaire_missing($these, $dossier),
 ]);
 
 $formdata = (object) array_merge(['id' => $cm->id, 'dossierid' => $dossier->id], these_jury_form_data($jury));

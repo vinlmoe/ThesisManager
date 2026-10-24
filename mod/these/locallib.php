@@ -1068,6 +1068,7 @@ function these_delete_dossiers(array $dossierids, ?context $context = null) {
     }
     $DB->delete_records_select('these_signature', "dossierid $insql", $inparams);
     $DB->delete_records_select('these_jury', "dossierid $insql", $inparams);
+    $DB->delete_records_select('these_answer', "dossierid $insql", $inparams);
     $DB->delete_records_select('these_log', "dossierid $insql", $inparams);
     $DB->delete_records_select('these_dossier', "id $insql", $inparams);
 }
@@ -2410,6 +2411,7 @@ function these_render_navlinks(stdClass $cm, context $context) {
         $links[get_string('notifications', 'mod_these')] = new moodle_url('/mod/these/notifications.php', ['id' => $cm->id]);
         $links[get_string('doctemplates', 'mod_these')] = new moodle_url('/mod/these/doctemplates.php', ['id' => $cm->id]);
         $links[get_string('griditems', 'mod_these')] = new moodle_url('/mod/these/griditems.php', ['id' => $cm->id]);
+        $links[get_string('questions', 'mod_these')] = new moodle_url('/mod/these/questions.php', ['id' => $cm->id]);
         $links[get_string('jurors', 'mod_these')] = new moodle_url('/mod/these/jurors.php', ['id' => $cm->id]);
         $links[get_string('transfersettings', 'mod_these')] = new moodle_url('/mod/these/settingstransfer.php', ['id' => $cm->id]);
     }
@@ -2591,6 +2593,14 @@ function these_get_dossier_actions(stdClass $cm, stdClass $dossier, stdClass $ri
     if ($rights->student && these_subject_editable($dossier)) {
         $links[get_string('editsubject', 'mod_these')] = new moodle_url('/mod/these/subject.php', $params);
     }
+    // Questionnaire préalable au jury : rempli par l'étudiant avant le dépôt de la soutenance,
+    // corrigé au besoin par la DEVE.
+    if (($rights->student && these_defense_editable($dossier)) || ($rights->deve && $status >= THESE_STATUS_ACTIVE)) {
+        $these = (object) ['id' => $cm->instance, 'name' => ''];
+        if (these_get_questions(these_settings_scope($these))) {
+            $links[get_string('questionnaire', 'mod_these')] = new moodle_url('/mod/these/questionnaire.php', $params);
+        }
+    }
     if ($rights->student && these_defense_editable($dossier)) {
         $links[get_string('depositdefense', 'mod_these')] = new moodle_url('/mod/these/defense.php', $params);
     }
@@ -2717,6 +2727,9 @@ function these_render_dossier(
             $rows[get_string('minutes', 'mod_these')] = these_render_file_links($context, 'pv', $dossier->id);
         }
         $out .= these_render_detail_section(get_string('defense', 'mod_these'), $rows);
+        if ($rights->viewall || $rights->director || $rights->owner) {
+            $out .= these_render_answers((object) ['id' => $dossier->theseid], $dossier);
+        }
         $showemail = $rights->viewall || $rights->director || $rights->owner;
         $out .= these_render_jury(these_get_jury($dossier->id), $showemail, $rights->deve);
         $juryvalidated = (int) $dossier->status >= THESE_STATUS_DEFENSE_VALIDATED && (int) $dossier->status < THESE_STATUS_CLOSED;
@@ -3279,33 +3292,33 @@ function these_grid_sections() {
 }
 
 /**
- * Éléments de la grille de conformité d'une activité, modifiables par la DEVE (griditems.php). Les
- * éléments d'origine (these_grid_items()) sont enregistrés à la première consultation.
+ * Éléments de la grille de conformité d'une portée de paramètres (voir these_settings_scope()),
+ * modifiables par la DEVE. Les éléments d'origine (these_grid_items()) sont enregistrés à la
+ * première consultation.
  *
- * @param int $theseid 0 : éléments d'origine, sans enregistrement (aperçus).
+ * @param stdClass|null $scope null : éléments d'origine, sans enregistrement (aperçus).
  * @return array rubrique => [clé => {itemkey, section, label, conditional, sortorder}]
  */
-function these_get_grid_items($theseid) {
+function these_get_grid_items(?stdClass $scope) {
     global $DB;
 
-    $records = $theseid ? $DB->get_records('these_griditem', ['theseid' => $theseid], 'sortorder ASC, id ASC') : [];
+    $records = $scope ? $DB->get_records('these_griditem', these_scope_conditions($scope), 'sortorder ASC, id ASC') : [];
     if (!$records) {
         $records = [];
         $sortorder = 0;
         foreach (these_grid_items() as $section => $items) {
             foreach ($items as $key => $conditional) {
-                $records[] = (object) [
-                    'theseid' => $theseid,
+                $records[] = (object) array_merge($scope ? these_scope_conditions($scope) : [], [
                     'itemkey' => $key,
                     'section' => $section,
                     'label' => get_string('grid' . $key, 'mod_these'),
                     'conditional' => (int) $conditional,
                     'sortorder' => $sortorder++,
                     'timemodified' => time(),
-                ];
+                ]);
             }
         }
-        if ($theseid) {
+        if ($scope) {
             foreach ($records as $record) {
                 $record->id = $DB->insert_record('these_griditem', $record);
             }
@@ -3320,19 +3333,19 @@ function these_get_grid_items($theseid) {
 }
 
 /**
- * Remplace les éléments de la grille de conformité d'une activité. Un élément gardé conserve sa
- * clé, et donc les réponses déjà données ; un élément supprimé disparaît des grilles et de leurs PDF.
+ * Remplace les éléments de la grille de conformité d'une portée. Un élément gardé conserve sa clé,
+ * et donc les réponses déjà données ; un élément supprimé disparaît des grilles et de leurs PDF.
  *
- * @param int $theseid
+ * @param stdClass $scope Voir these_settings_scope().
  * @param array $items Liste d'objets {itemkey ('' pour un nouvel élément), section, label, conditional}, dans l'ordre ;
- *                     une clé inconnue de l'activité (transfert depuis une autre) est reprise telle quelle.
+ *                     une clé inconnue de la portée (transfert depuis une autre) est reprise telle quelle.
  * @return void
  */
-function these_save_grid_items($theseid, array $items) {
+function these_save_grid_items(stdClass $scope, array $items) {
     global $DB;
 
     $transaction = $DB->start_delegated_transaction();
-    $existing = $DB->get_records_menu('these_griditem', ['theseid' => $theseid], '', 'itemkey, id');
+    $existing = $DB->get_records_menu('these_griditem', these_scope_conditions($scope), '', 'itemkey, id');
     $kept = [];
     $sortorder = 0;
     foreach ($items as $item) {
@@ -3344,15 +3357,14 @@ function these_save_grid_items($theseid, array $items) {
         if (!preg_match('/^[a-zA-Z0-9]{1,40}$/', $key) || isset($kept[$key])) {
             $key = 'item' . random_string(10);
         }
-        $record = (object) [
-            'theseid' => $theseid,
+        $record = (object) array_merge(these_scope_conditions($scope), [
             'itemkey' => $key,
             'section' => in_array($item->section, these_grid_sections(), true) ? $item->section : 'forme',
             'label' => $label,
             'conditional' => empty($item->conditional) ? 0 : 1,
             'sortorder' => $sortorder++,
             'timemodified' => time(),
-        ];
+        ]);
         if (isset($existing[$key])) {
             $record->id = $existing[$key];
             $DB->update_record('these_griditem', $record);
@@ -3880,61 +3892,145 @@ function these_doctemplate_default($type) {
 }
 
 /**
- * Modèle en vigueur d'un document dans une activité : celui modifié par la DEVE, sinon celui
+ * Portée propre à une activité « Gestion des thèses » : ses propres modèles, images, grille et
+ * questionnaire.
+ *
+ * @param stdClass $these
+ * @return stdClass {theseid, synthesisid, shared, component, contextid, cmid, name}
+ */
+function these_local_scope(stdClass $these) {
+    $cm = !empty($these->id) ? get_coursemodule_from_instance('these', $these->id, 0, false, IGNORE_MISSING) : null;
+    return (object) [
+        'theseid' => (int) ($these->id ?? 0),
+        'synthesisid' => 0,
+        'shared' => false,
+        'component' => 'mod_these',
+        'contextid' => $cm ? context_module::instance($cm->id)->id : 0,
+        'cmid' => $cm ? (int) $cm->id : 0,
+        'name' => (string) ($these->name ?? ''),
+    ];
+}
+
+/**
+ * Portée d'une activité « Suivi des thèses » : ses modèles, images, grille et questionnaire valent
+ * pour toutes les activités « Gestion des thèses » qu'elle suit.
+ *
+ * @param int $synthesisid
+ * @return stdClass|null Voir these_local_scope().
+ */
+function these_synthesis_scope($synthesisid) {
+    global $DB;
+
+    $synthesis = $DB->get_record('thesesynthesis', ['id' => $synthesisid]);
+    $cm = $synthesis ? get_coursemodule_from_instance('thesesynthesis', $synthesis->id, 0, false, IGNORE_MISSING) : null;
+    if (!$cm) {
+        return null;
+    }
+    return (object) [
+        'theseid' => 0,
+        'synthesisid' => (int) $synthesis->id,
+        'shared' => true,
+        'component' => 'mod_thesesynthesis',
+        'contextid' => context_module::instance($cm->id)->id,
+        'cmid' => (int) $cm->id,
+        'name' => (string) $synthesis->name,
+    ];
+}
+
+/**
+ * Portée des paramètres en vigueur pour une activité : l'activité « Suivi des thèses » qui la suit
+ * (la plus ancienne si plusieurs la suivent), sinon l'activité elle-même. Les modèles des documents,
+ * leurs images, la grille de conformité et le questionnaire préalable au jury sont ainsi définis une
+ * fois pour toutes les promotions suivies.
+ *
+ * @param stdClass $these
+ * @return stdClass Voir these_local_scope().
+ */
+function these_settings_scope(stdClass $these) {
+    global $DB;
+
+    if (!empty($these->id) && get_config('mod_thesesynthesis', 'version')) {
+        $cm = get_coursemodule_from_instance('these', $these->id, 0, false, IGNORE_MISSING);
+        if ($cm) {
+            $synthesisids = $DB->get_fieldset_sql(
+                "SELECT l.synthesisid
+                   FROM {thesesynthesis_link} l
+                   JOIN {thesesynthesis} t ON t.id = l.synthesisid
+                  WHERE l.thesecmid = :cmid
+               ORDER BY l.synthesisid",
+                ['cmid' => $cm->id]
+            );
+            foreach ($synthesisids as $synthesisid) {
+                if ($scope = these_synthesis_scope($synthesisid)) {
+                    return $scope;
+                }
+            }
+        }
+    }
+    return these_local_scope($these);
+}
+
+/**
+ * Conditions de base de données désignant une portée.
+ *
+ * @param stdClass $scope
+ * @return array
+ */
+function these_scope_conditions(stdClass $scope) {
+    return ['theseid' => (int) $scope->theseid, 'synthesisid' => (int) $scope->synthesisid];
+}
+
+/**
+ * Modèle en vigueur d'un document dans une portée : celui modifié par la DEVE, sinon celui
  * d'origine.
  *
- * @param int $theseid
+ * @param stdClass $scope Voir these_settings_scope().
  * @param string $type
  * @return string
  */
-function these_get_doctemplate($theseid, $type) {
+function these_get_doctemplate(stdClass $scope, $type) {
     global $DB;
 
-    $custom = $DB->get_field('these_doctemplate', 'content', ['theseid' => $theseid, 'doctype' => $type]);
+    $custom = $DB->get_field('these_doctemplate', 'content', these_scope_conditions($scope) + ['doctype' => $type]);
     return is_string($custom) && trim($custom) !== '' ? $custom : these_doctemplate_default($type);
 }
 
 /**
- * Le modèle d'un document a-t-il été modifié dans l'activité ?
+ * Le modèle d'un document a-t-il été modifié dans la portée ?
  *
- * @param int $theseid
+ * @param stdClass $scope
  * @param string $type
  * @return bool
  */
-function these_doctemplate_customised($theseid, $type) {
+function these_doctemplate_customised(stdClass $scope, $type) {
     global $DB;
 
-    return $DB->record_exists('these_doctemplate', ['theseid' => $theseid, 'doctype' => $type]);
+    return $DB->record_exists('these_doctemplate', these_scope_conditions($scope) + ['doctype' => $type]);
 }
 
 /**
- * Enregistre le modèle d'un document de l'activité ; null, ou le modèle d'origine, rétablit
- * celui-ci.
+ * Enregistre le modèle d'un document d'une portée ; null, ou le modèle d'origine, rétablit celui-ci.
  *
- * @param int $theseid
+ * @param stdClass $scope
  * @param string $type
  * @param string|null $content
  * @return void
  */
-function these_set_doctemplate($theseid, $type, $content) {
+function these_set_doctemplate(stdClass $scope, $type, $content) {
     global $DB;
 
     $normalise = function ($text) {
         return trim(str_replace("\r\n", "\n", (string) $text));
     };
-    $existing = $DB->get_record('these_doctemplate', ['theseid' => $theseid, 'doctype' => $type]);
+    $conditions = these_scope_conditions($scope) + ['doctype' => $type];
+    $existing = $DB->get_record('these_doctemplate', $conditions);
     if ($content === null || $normalise($content) === $normalise(these_doctemplate_default($type))) {
         if ($existing) {
             $DB->delete_records('these_doctemplate', ['id' => $existing->id]);
         }
         return;
     }
-    $record = (object) [
-        'theseid' => $theseid,
-        'doctype' => $type,
-        'content' => str_replace("\r\n", "\n", $content),
-        'timemodified' => time(),
-    ];
+    $record = (object) ($conditions + ['content' => str_replace("\r\n", "\n", $content), 'timemodified' => time()]);
     if ($existing) {
         $record->id = $existing->id;
         $DB->update_record('these_doctemplate', $record);
@@ -3955,21 +4051,21 @@ function these_doctemplate_image_name($filename) {
 
 /**
  * Images utilisables dans les modèles : celles fournies avec le module (doctemplates/images/),
- * remplacées ou complétées par celles déposées par la DEVE dans l'activité.
+ * remplacées ou complétées par celles déposées par la DEVE dans la portée.
  *
- * @param context|null $context Contexte de l'activité (null : images du module seules).
+ * @param stdClass|null $scope null : images du module seules.
  * @return array nom => source pour TCPDF ('@' suivi du contenu en base64)
  */
-function these_doctemplate_images(?context $context) {
+function these_doctemplate_images(?stdClass $scope) {
     global $CFG;
 
     $images = [];
     foreach (glob($CFG->dirroot . '/mod/these/doctemplates/images/*.{png,jpg,jpeg}', GLOB_BRACE) ?: [] as $path) {
         $images[these_doctemplate_image_name($path)] = '@' . base64_encode(file_get_contents($path));
     }
-    if ($context) {
+    if ($scope && $scope->contextid) {
         $fs = get_file_storage();
-        foreach ($fs->get_area_files($context->id, 'mod_these', 'docimages', 0, 'filename', false) as $file) {
+        foreach ($fs->get_area_files($scope->contextid, $scope->component, 'docimages', 0, 'filename', false) as $file) {
             if (in_array($file->get_mimetype(), ['image/png', 'image/jpeg'], true)) {
                 $images[these_doctemplate_image_name($file->get_filename())] = '@' . base64_encode($file->get_content());
             }
@@ -4011,7 +4107,7 @@ function these_document_sources(stdClass $these, context $context, stdClass $dos
         'jury' => these_get_jury($dossier->id),
         'signatures' => $signatures,
         'recipient' => null,
-        'context' => $context,
+        'scope' => these_settings_scope($these),
     ];
 }
 
@@ -4058,7 +4154,7 @@ function these_doctemplate_text($text) {
  * contiennent du HTML à insérer par {{{...}}}. La liste complète, avec un exemple de valeur, est
  * présentée dans la page de modification d'un modèle.
  *
- * @param array $src {these, dossier, student, director, jury, signatures, recipient, context}, voir
+ * @param array $src {these, dossier, student, director, jury, signatures, recipient, scope}, voir
  *                   these_document_sources().
  * @return array
  */
@@ -4265,7 +4361,7 @@ function these_build_document_context(array $src) {
     $mark = [];
     $gridsections = [];
     $checkmark = '<span style="font-family:freeserif;">&#10003;</span>';
-    foreach (these_get_grid_items((int) ($these->id ?? 0)) as $section => $items) {
+    foreach (these_get_grid_items($src['scope'] ?? null) as $section => $items) {
         $rows = [];
         foreach ($items as $key => $item) {
             $checked = !empty($griddata[$key]);
@@ -4422,7 +4518,7 @@ function these_build_document_context(array $src) {
         'sigdate' => $sigdate,
         'signer' => $signer,
         'signed' => $signed,
-        'img' => these_doctemplate_images($src['context'] ?? null),
+        'img' => these_doctemplate_images($src['scope'] ?? null),
     ];
 }
 
@@ -4460,7 +4556,7 @@ function these_conclusions_error(stdClass $these, ?context $context, $text) {
     if ($length > THESE_CONCLUSIONS_MAX) {
         return get_string('conclusionstoolong', 'mod_these', (object) ['max' => THESE_CONCLUSIONS_MAX, 'length' => $length]);
     }
-    $data = these_sample_document_context($context, $these);
+    $data = these_sample_document_context(these_settings_scope($these), $these);
     $data['conclusions'] = these_conclusions_context((string) $text);
     try {
         $pages = \mod_these\pdf\html_document::page_count(these_render_doctemplate($these, 'conclusions', $data));
@@ -4471,17 +4567,31 @@ function these_conclusions_error(stdClass $these, ?context $context, $text) {
 }
 
 /**
- * Produit le PDF d'un modèle de document.
+ * Produit le PDF d'un modèle de document, avec le modèle en vigueur pour l'activité (voir
+ * these_settings_scope()).
  *
- * @param stdClass $these Activité, dont le modèle est utilisé.
+ * @param stdClass $these Activité.
  * @param string $type Voir these_doctemplate_types().
  * @param array $data Voir these_build_document_context().
  * @param string|null $template Modèle à utiliser à la place de celui en vigueur (aperçu).
  * @return string Contenu PDF.
  */
 function these_render_doctemplate(stdClass $these, $type, array $data, $template = null) {
+    return these_render_scope_doctemplate(these_settings_scope($these), $type, $data, $template);
+}
+
+/**
+ * Produit le PDF d'un modèle de document d'une portée.
+ *
+ * @param stdClass|null $scope Voir these_settings_scope() ; null : modèle d'origine.
+ * @param string $type
+ * @param array $data
+ * @param string|null $template Modèle à utiliser à la place de celui en vigueur (aperçu).
+ * @return string Contenu PDF.
+ */
+function these_render_scope_doctemplate(?stdClass $scope, $type, array $data, $template = null) {
     return \mod_these\pdf\html_document::render(
-        $template ?? these_get_doctemplate($these->id, $type),
+        $template ?? ($scope ? these_get_doctemplate($scope, $type) : these_doctemplate_default($type)),
         $data,
         these_doctemplate_label($type)
     );
@@ -4531,15 +4641,15 @@ function these_signed_document_pdf(stdClass $these, context $context, stdClass $
 /**
  * Vérifie qu'un modèle produit un document avec les données d'exemple.
  *
- * @param stdClass $these
- * @param context $context Contexte de l'activité (images).
+ * @param stdClass $scope Voir these_settings_scope().
  * @param string $type
  * @param string $content
+ * @param stdClass|null $activity Activité dont reprendre l'établissement dans l'exemple.
  * @return string|null Message d'erreur, ou null si le modèle est utilisable.
  */
-function these_doctemplate_error(stdClass $these, context $context, $type, $content) {
+function these_doctemplate_error(stdClass $scope, $type, $content, ?stdClass $activity = null) {
     try {
-        these_render_doctemplate($these, $type, these_sample_document_context($context, $these), $content);
+        these_render_scope_doctemplate($scope, $type, these_sample_document_context($scope, $activity), $content);
     } catch (\Throwable $e) {
         return get_string('doctplerror', 'mod_these', $e->getMessage());
     }
@@ -4549,11 +4659,11 @@ function these_doctemplate_error(stdClass $these, context $context, $type, $cont
 /**
  * Données fictives pour l'aperçu d'un modèle : un dossier complet, signé à tous les emplacements.
  *
- * @param context|null $context Contexte de l'activité (images déposées par la DEVE).
+ * @param stdClass|null $scope Portée des paramètres (images, grille) ; null : ceux d'origine.
  * @param stdClass|null $activity Activité dont reprendre l'établissement (sinon des valeurs fictives).
  * @return array Voir these_build_document_context().
  */
-function these_sample_document_context(?context $context = null, ?stdClass $activity = null) {
+function these_sample_document_context(?stdClass $scope = null, ?stdClass $activity = null) {
     $now = time();
     $these = $activity ?? (object) [
         'establishmentname' => 'VetAgro Sup', 'establishmentaddress' => "1 avenue Bourgelat\n69280 Marcy-l'Étoile",
@@ -4587,7 +4697,7 @@ function these_sample_document_context(?context $context = null, ?stdClass $acti
             . "Le manuscrit est clair et bien construit.",
         'reportfavorable' => 1,
         'conformitygrid' => json_encode(array_fill_keys(
-            array_merge(...array_map('array_keys', array_values(these_get_grid_items((int) ($activity->id ?? 0))))),
+            array_merge(...array_map('array_keys', array_values(these_get_grid_items($scope)))),
             1
         )),
         'agreement' => json_encode(['defvdate' => make_timestamp(2023, 7, 3), 'mobility' => 1,
@@ -4623,7 +4733,7 @@ function these_sample_document_context(?context $context = null, ?stdClass $acti
         'jury' => $jury,
         'signatures' => $signatures,
         'recipient' => null,
-        'context' => $context,
+        'scope' => $scope,
     ]);
 }
 
@@ -4755,7 +4865,7 @@ function these_settings_activity_fields() {
  * @return string[]
  */
 function these_settings_groups() {
-    return ['activity', 'emails', 'griditems', 'doctemplates', 'docimages'];
+    return ['activity', 'emails', 'griditems', 'questions', 'doctemplates', 'docimages'];
 }
 
 /**
@@ -4784,11 +4894,18 @@ function these_export_settings(stdClass $these, context $context, array $groups)
     }
     if (in_array('griditems', $groups, true)) {
         $data['groups']['griditems'] = [];
-        foreach (these_get_grid_items($these->id) as $items) {
+        foreach (these_get_grid_items(these_local_scope($these)) as $items) {
             foreach ($items as $item) {
                 $data['groups']['griditems'][] = ['itemkey' => $item->itemkey, 'section' => $item->section,
                     'label' => $item->label, 'conditional' => (int) $item->conditional];
             }
+        }
+    }
+    if (in_array('questions', $groups, true)) {
+        $data['groups']['questions'] = [];
+        foreach (these_get_questions(these_local_scope($these)) as $question) {
+            $data['groups']['questions'][] = ['qtype' => $question->qtype, 'label' => $question->label,
+                'options' => $question->options, 'required' => (int) $question->required];
         }
     }
     if (in_array('doctemplates', $groups, true)) {
@@ -4835,13 +4952,14 @@ function these_parse_settings_file($json) {
  * @param context $context
  * @param array $data Voir these_export_settings().
  * @param string[] $groups Groupes à transférer.
- * @return stdClass {activity (bool), emails, griditems, doctemplates, docimages (nombres), skipped (string[])}
+ * @return stdClass {activity (bool), emails, griditems, questions, doctemplates, docimages (nombres),
+ *     skipped (string[])}
  */
 function these_import_settings(stdClass $these, context $context, array $data, array $groups) {
     global $DB;
 
-    $result = (object) ['activity' => false, 'emails' => 0, 'griditems' => 0, 'doctemplates' => 0, 'docimages' => 0,
-        'skipped' => []];
+    $result = (object) ['activity' => false, 'emails' => 0, 'griditems' => 0, 'questions' => 0, 'doctemplates' => 0,
+        'docimages' => 0, 'skipped' => []];
     $source = $data['groups'];
     $transaction = $DB->start_delegated_transaction();
 
@@ -4889,8 +5007,30 @@ function these_import_settings(stdClass $these, context $context, array $data, a
                 'conditional' => !empty($item['conditional']),
             ];
         }
-        these_save_grid_items($these->id, $items);
-        $result->griditems = count(these_get_grid_items($these->id)['fond']) + count(these_get_grid_items($these->id)['forme']);
+        $scope = these_local_scope($these);
+        these_save_grid_items($scope, $items);
+        $result->griditems = count(these_get_grid_items($scope), COUNT_RECURSIVE) - count(these_grid_sections());
+    }
+
+    // Questionnaire : les réponses déjà données aux questions remplacées sont supprimées avec elles.
+    if (in_array('questions', $groups, true) && is_array($source['questions'] ?? null)) {
+        $scope = these_local_scope($these);
+        foreach (array_keys(these_get_questions($scope)) as $questionid) {
+            these_delete_question($scope, $questionid);
+        }
+        foreach ($source['questions'] as $question) {
+            $label = clean_param((string) ($question['label'] ?? ''), PARAM_TEXT);
+            if (trim($label) === '') {
+                continue;
+            }
+            these_save_question($scope, (object) [
+                'qtype' => (string) ($question['qtype'] ?? 'text'),
+                'label' => $label,
+                'options' => clean_param((string) ($question['options'] ?? ''), PARAM_TEXT),
+                'required' => !empty($question['required']),
+            ]);
+            $result->questions++;
+        }
     }
 
     if (in_array('doctemplates', $groups, true) && is_array($source['doctemplates'] ?? null)) {
@@ -4903,11 +5043,11 @@ function these_import_settings(stdClass $these, context $context, array $data, a
                 $result->skipped[] = get_string('transferskippeddoctemplate', 'mod_these', s($type));
                 continue;
             }
-            if (($error = these_doctemplate_error($these, $context, $type, $content)) !== null) {
+            if (($error = these_doctemplate_error(these_local_scope($these), $type, $content, $these)) !== null) {
                 $result->skipped[] = these_doctemplate_label($type) . ' : ' . $error;
                 continue;
             }
-            these_set_doctemplate($these->id, $type, $content);
+            these_set_doctemplate(these_local_scope($these), $type, $content);
             $result->doctemplates++;
         }
     }
@@ -4970,4 +5110,237 @@ function these_settings_transfer_sources(stdClass $these, $userid) {
         }
     }
     return $sources;
+}
+
+// Questionnaire préalable au jury.
+
+/**
+ * Types de questions.
+ *
+ * @return array type => libellé
+ */
+function these_question_types() {
+    $types = [];
+    foreach (['text', 'textarea', 'list', 'multi'] as $type) {
+        $types[$type] = get_string('qtype' . $type, 'mod_these');
+    }
+    return $types;
+}
+
+/**
+ * Questions du questionnaire préalable au jury d'une portée (voir these_settings_scope()), dans
+ * l'ordre.
+ *
+ * @param stdClass $scope
+ * @return array id => question
+ */
+function these_get_questions(stdClass $scope) {
+    global $DB;
+    return $DB->get_records('these_question', these_scope_conditions($scope), 'sortorder ASC, id ASC');
+}
+
+/**
+ * Choix proposés par une question à liste ou à choix multiples.
+ *
+ * @param stdClass $question
+ * @return string[]
+ */
+function these_question_options(stdClass $question) {
+    return array_values(array_unique(array_filter(
+        array_map('trim', preg_split('/\r\n|\r|\n/', (string) $question->options)),
+        'strlen'
+    )));
+}
+
+/**
+ * Enregistre une question d'une portée (ajout en fin de questionnaire, ou modification).
+ *
+ * @param stdClass $scope
+ * @param stdClass $data {id?, qtype, label, options, required}
+ * @return int id
+ */
+function these_save_question(stdClass $scope, stdClass $data) {
+    global $DB;
+
+    $record = (object) array_merge(these_scope_conditions($scope), [
+        'qtype' => array_key_exists($data->qtype, these_question_types()) ? $data->qtype : 'text',
+        'label' => trim((string) $data->label),
+        'options' => in_array($data->qtype, ['list', 'multi'], true) ? trim((string) $data->options) : '',
+        'required' => empty($data->required) ? 0 : 1,
+        'timemodified' => time(),
+    ]);
+    $existing = !empty($data->id) ? $DB->get_record('these_question', ['id' => $data->id] + these_scope_conditions($scope)) : null;
+    if ($existing) {
+        $record->id = $existing->id;
+        $record->sortorder = $existing->sortorder;
+        $DB->update_record('these_question', $record);
+        return (int) $existing->id;
+    }
+    $record->sortorder = (int) $DB->get_field_sql(
+        'SELECT COALESCE(MAX(sortorder), -1) + 1 FROM {these_question} WHERE theseid = :theseid AND synthesisid = :synthesisid',
+        these_scope_conditions($scope)
+    );
+    return (int) $DB->insert_record('these_question', $record);
+}
+
+/**
+ * Supprime une question d'une portée et les réponses qui lui ont été données.
+ *
+ * @param stdClass $scope
+ * @param int $id
+ * @return void
+ */
+function these_delete_question(stdClass $scope, $id) {
+    global $DB;
+    if ($DB->record_exists('these_question', ['id' => $id] + these_scope_conditions($scope))) {
+        $DB->delete_records('these_answer', ['questionid' => $id]);
+        $DB->delete_records('these_question', ['id' => $id]);
+    }
+}
+
+/**
+ * Déplace une question d'un rang vers le haut ou vers le bas.
+ *
+ * @param stdClass $scope
+ * @param int $id
+ * @param int $direction -1 ou 1
+ * @return void
+ */
+function these_move_question(stdClass $scope, $id, $direction) {
+    global $DB;
+
+    $ids = array_keys(these_get_questions($scope));
+    $index = array_search((int) $id, array_map('intval', $ids), true);
+    $target = $index === false ? false : $index + ($direction < 0 ? -1 : 1);
+    if ($target === false || $target < 0 || $target >= count($ids)) {
+        return;
+    }
+    [$ids[$index], $ids[$target]] = [$ids[$target], $ids[$index]];
+    foreach (array_values($ids) as $sortorder => $questionid) {
+        $DB->set_field('these_question', 'sortorder', $sortorder, ['id' => $questionid]);
+    }
+}
+
+/**
+ * Réponses d'un dossier au questionnaire.
+ *
+ * @param int $dossierid
+ * @return array questionid => valeur (texte, ou liste de choix pour un QCM)
+ */
+function these_get_answers($dossierid) {
+    global $DB;
+
+    $answers = [];
+    foreach ($DB->get_records('these_answer', ['dossierid' => $dossierid]) as $answer) {
+        $decoded = json_decode((string) $answer->value, true);
+        $answers[(int) $answer->questionid] = is_array($decoded) ? $decoded : (string) $answer->value;
+    }
+    return $answers;
+}
+
+/**
+ * Enregistre les réponses d'un dossier (formulaire du questionnaire : champs q<id>, ou q<id>_<n>
+ * pour les choix d'un QCM).
+ *
+ * @param stdClass $dossier
+ * @param array $questions Voir these_get_questions().
+ * @param stdClass|array $data
+ * @return void
+ */
+function these_save_answers(stdClass $dossier, array $questions, $data) {
+    global $DB;
+
+    $data = (array) $data;
+    foreach ($questions as $question) {
+        $options = these_question_options($question);
+        if ($question->qtype === 'multi') {
+            $chosen = [];
+            foreach ($options as $n => $option) {
+                if (!empty($data['q' . $question->id . '_' . $n])) {
+                    $chosen[] = $option;
+                }
+            }
+            $value = $chosen ? json_encode($chosen, JSON_UNESCAPED_UNICODE) : '';
+        } else {
+            $value = trim((string) ($data['q' . $question->id] ?? ''));
+            if ($question->qtype === 'list' && !in_array($value, $options, true)) {
+                $value = '';
+            }
+        }
+        $existing = $DB->get_record('these_answer', ['dossierid' => $dossier->id, 'questionid' => $question->id]);
+        if ($value === '') {
+            if ($existing) {
+                $DB->delete_records('these_answer', ['id' => $existing->id]);
+            }
+            continue;
+        }
+        $record = (object) ['dossierid' => $dossier->id, 'questionid' => $question->id, 'value' => $value,
+            'timemodified' => time()];
+        if ($existing) {
+            $record->id = $existing->id;
+            $DB->update_record('these_answer', $record);
+        } else {
+            $DB->insert_record('these_answer', $record);
+        }
+    }
+}
+
+/**
+ * Questions obligatoires sans réponse.
+ *
+ * @param stdClass $these
+ * @param stdClass $dossier
+ * @return string[] Libellés.
+ */
+function these_questionnaire_missing(stdClass $these, stdClass $dossier) {
+    $answers = these_get_answers($dossier->id);
+    $missing = [];
+    foreach (these_get_questions(these_settings_scope($these)) as $question) {
+        $answer = $answers[(int) $question->id] ?? '';
+        if ($question->required && ($answer === '' || $answer === [])) {
+            $missing[] = $question->label;
+        }
+    }
+    return $missing;
+}
+
+/**
+ * Réponse lisible.
+ *
+ * @param mixed $answer Voir these_get_answers().
+ * @return string
+ */
+function these_answer_text($answer) {
+    return is_array($answer) ? implode(' ; ', $answer) : (string) $answer;
+}
+
+/**
+ * Réponses d'un dossier au questionnaire, pour l'affichage (questions en vigueur, puis réponses à
+ * des questions d'une autre portée, si l'activité a changé de suivi).
+ *
+ * @param stdClass $these
+ * @param stdClass $dossier
+ * @return string HTML ('' si le questionnaire est vide et sans réponse)
+ */
+function these_render_answers(stdClass $these, stdClass $dossier) {
+    global $DB;
+
+    $answers = these_get_answers($dossier->id);
+    $questions = these_get_questions(these_settings_scope($these));
+    foreach (array_diff(array_keys($answers), array_keys($questions)) as $questionid) {
+        if ($question = $DB->get_record('these_question', ['id' => $questionid])) {
+            $questions[$questionid] = $question;
+        }
+    }
+    if (!$questions) {
+        return '';
+    }
+    $rows = [];
+    foreach ($questions as $question) {
+        $answer = $answers[(int) $question->id] ?? '';
+        $rows[format_string($question->label)] = $answer === '' || $answer === []
+            ? html_writer::span(get_string('questionnaireunanswered', 'mod_these'), 'text-muted')
+            : format_text(these_answer_text($answer), FORMAT_PLAIN);
+    }
+    return these_render_detail_section(get_string('questionnaire', 'mod_these'), $rows);
 }

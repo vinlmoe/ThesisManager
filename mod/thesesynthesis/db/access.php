@@ -71,4 +71,29 @@ $capabilities = [
             'manager' => CAP_ALLOW,
         ],
     ],
+
+    // Définir les paramètres partagés avec les activités suivies : modèles des documents et leurs
+    // images, grille de conformité, questionnaire préalable au jury (rôle de la DEVE).
+    'mod/thesesynthesis:managesettings' => [
+        'riskbitmask' => RISK_XSS,
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_MODULE,
+        'archetypes' => [
+            'editingteacher' => CAP_ALLOW,
+            'manager' => CAP_ALLOW,
+        ],
+    ],
+
+    // Rechercher des thèses dans les activités suivies (enseignants, DEVE, bibliothèque). Les
+    // enseignants ne voient que les thèses enregistrées et non confidentielles ; la DEVE et la
+    // bibliothèque, toutes celles des activités où elles ont leurs droits.
+    'mod/thesesynthesis:search' => [
+        'captype' => 'read',
+        'contextlevel' => CONTEXT_MODULE,
+        'archetypes' => [
+            'teacher' => CAP_ALLOW,
+            'editingteacher' => CAP_ALLOW,
+            'manager' => CAP_ALLOW,
+        ],
+    ],
 ];
