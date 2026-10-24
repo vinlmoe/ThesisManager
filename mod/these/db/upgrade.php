@@ -270,5 +270,22 @@ function xmldb_these_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2026102900, 'these');
     }
 
+    if ($oldversion < 2026103000) {
+        // Décisions du jury au procès-verbal et circuit des corrections.
+        $table = new xmldb_table('these_dossier');
+        $fields = [
+            new xmldb_field('prizeproposal', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'mention'),
+            new xmldb_field('correctionsrequested', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'prizeproposal'),
+            new xmldb_field('correctionsnote', XMLDB_TYPE_TEXT, null, null, null, null, null, 'correctionsrequested'),
+            new xmldb_field('correctionsdone', XMLDB_TYPE_TEXT, null, null, null, null, null, 'correctionsnote'),
+        ];
+        foreach ($fields as $field) {
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+        }
+        upgrade_mod_savepoint(true, 2026103000, 'these');
+    }
+
     return true;
 }

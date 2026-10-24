@@ -80,6 +80,7 @@ class provider implements
             'bordereau' => 'privacy:metadata:these_dossier:bordereau',
             'conclusions' => 'privacy:metadata:these_dossier:conclusions',
             'reporttext' => 'privacy:metadata:these_dossier:reporttext',
+            'correctionsdone' => 'privacy:metadata:these_dossier:correctionsdone',
             'timecreated' => 'privacy:metadata:these_dossier:timecreated',
         ], 'privacy:metadata:these_dossier');
 
@@ -239,7 +240,10 @@ class provider implements
                     'defensedate' => $dossier->defensedate ? transform::datetime($dossier->defensedate) : null,
                     'defenselocation' => $dossier->defenselocation,
                     'defenseresult' => (int) $dossier->defenseresult ? these_result_label($dossier->defenseresult) : null,
-                    'mention' => $dossier->mention,
+                    'mention' => these_mention_label($dossier->mention),
+                    'prizeproposal' => transform::yesno($dossier->prizeproposal),
+                    'correctionsnote' => $dossier->correctionsnote,
+                    'correctionsdone' => $dossier->correctionsdone,
                     'returncomment' => $dossier->returncomment,
                     'conclusions' => $dossier->conclusions,
                     'personaldata' => these_get_bordereau($dossier),

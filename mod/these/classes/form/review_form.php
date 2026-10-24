@@ -26,10 +26,10 @@ require_once($CFG->dirroot . '/mod/these/locallib.php');
  * commentaire, un bouton de validation et un bouton de renvoi, plus les champs propres à
  * l'étape :
  *
- * - devesubject : numéro d'enregistrement DEVE ;
  * - librarysubject : référence de la notice bibliographique ;
- * - directordefense : rapport du directeur, grille de conformité, agrément scientifique ;
- * - devedefense : date et lieu retenus, jury (modifiables par la DEVE), agrément administratif.
+ * - directordefense : avis du rapport du directeur, grille de conformité, agrément scientifique ;
+ * - devedefense : numéro d'enregistrement DEVE (attribué après le dépôt de la thèse), date et lieu
+ *   retenus, jury (modifiables par la DEVE), agrément administratif.
  *
  * Aux étapes qui signent des documents (voir these_review_steps()), la validation exige la
  * signature de l'acteur, apposée sur tous les documents de l'étape.
@@ -60,29 +60,18 @@ class review_form extends \moodleform {
         $mform->addElement('static', 'stephelp', '', get_string('review' . $stepkey . '_help', 'mod_these'));
 
         switch ($stepkey) {
-            case 'devesubject':
-                $mform->addElement('text', 'devenumber', get_string('devenumber', 'mod_these'), ['size' => 20]);
-                $mform->setType('devenumber', PARAM_TEXT);
-                $mform->addHelpButton('devenumber', 'devenumber', 'mod_these');
-                break;
             case 'librarysubject':
                 $mform->addElement('text', 'libraryref', get_string('libraryref', 'mod_these'), ['size' => 40]);
                 $mform->setType('libraryref', PARAM_TEXT);
                 break;
             case 'directordefense':
-                // Rapport du directeur.
-                $mform->addElement('textarea', 'reporttext', get_string('reporttext', 'mod_these'), ['rows' => 14, 'cols' => 80]);
-                $mform->setType('reporttext', PARAM_TEXT);
-                $mform->addHelpButton('reporttext', 'reporttext', 'mod_these');
-                $mform->addElement('advcheckbox', 'reportfavorable', '', get_string('reportfavorable', 'mod_these'));
-                $mform->addElement(
-                    'filemanager',
-                    'directorreport',
-                    get_string('directorreport', 'mod_these'),
-                    null,
-                    these_filemanager_options('directorreport')
-                );
-                $mform->addHelpButton('directorreport', 'directorreport', 'mod_these');
+                // Rapport du directeur, rédigé sur sa propre page (report.php) et signé ici.
+                $report = $this->_customdata['report'] ?? null;
+                $status = !$report || trim((string) $report->text) === ''
+                    ? get_string('reportnotwritten', 'mod_these')
+                    : get_string($report->favorable ? 'reportwrittenfavorable' : 'reportwrittennotfavorable', 'mod_these');
+                $mform->addElement('static', 'reportstatus', get_string('reporttext', 'mod_these'), $status . ' '
+                    . \html_writer::link($report->url ?? '#', get_string('writereport', 'mod_these')));
                 // Grille de conformité du manuscrit.
                 $mform->addElement('header', 'gridheader', get_string('docgrid', 'mod_these'));
                 $mform->setExpanded('gridheader');
@@ -117,6 +106,9 @@ class review_form extends \moodleform {
                 }
                 break;
             case 'devedefense':
+                $mform->addElement('text', 'devenumber', get_string('devenumber', 'mod_these'), ['size' => 20]);
+                $mform->setType('devenumber', PARAM_TEXT);
+                $mform->addHelpButton('devenumber', 'devenumber', 'mod_these');
                 $mform->addElement('date_time_selector', 'defensedate', get_string('defensedate', 'mod_these'));
                 $mform->addElement('text', 'defenselocation', get_string('defenselocation', 'mod_these'), ['size' => 64]);
                 $mform->setType('defenselocation', PARAM_TEXT);
@@ -196,28 +188,20 @@ class review_form extends \moodleform {
         }
 
         switch ($this->_customdata['stepkey']) {
-            case 'devesubject':
-                $number = trim((string) $data['devenumber']);
-                if ($number === '') {
-                    $errors['devenumber'] = get_string('required');
-                } else if (these_devenumber_taken($this->_customdata['theseid'], $number, $data['dossierid'])) {
-                    $errors['devenumber'] = get_string('devenumbertaken', 'mod_these');
-                }
-                break;
             case 'librarysubject':
                 if (trim((string) $data['libraryref']) === '') {
                     $errors['libraryref'] = get_string('required');
                 }
                 break;
             case 'directordefense':
-                if (trim((string) $data['reporttext']) === '') {
-                    $errors['reporttext'] = get_string('directorreportrequired', 'mod_these');
+                $report = $this->_customdata['report'] ?? null;
+                if (!$report || trim((string) $report->text) === '') {
+                    $errors['reportstatus'] = get_string('directorreportrequired', 'mod_these');
+                } else if (empty($report->favorable)) {
+                    $errors['reportstatus'] = get_string('reportfavorablerequired', 'mod_these');
                 }
                 if (empty($this->_customdata['externaldirector']) && trim((string) ($data['directorfunction'] ?? '')) === '') {
                     $errors['directorfunction'] = get_string('required');
-                }
-                if (empty($data['reportfavorable'])) {
-                    $errors['reportfavorable'] = get_string('reportfavorablerequired', 'mod_these');
                 }
                 foreach (these_get_grid_items($this->_customdata['scope']) as $items) {
                     foreach ($items as $key => $item) {
@@ -228,6 +212,12 @@ class review_form extends \moodleform {
                 }
                 break;
             case 'devedefense':
+                $number = trim((string) $data['devenumber']);
+                if ($number === '') {
+                    $errors['devenumber'] = get_string('required');
+                } else if (these_devenumber_taken($this->_customdata['theseid'], $number, $data['dossierid'])) {
+                    $errors['devenumber'] = get_string('devenumbertaken', 'mod_these');
+                }
                 if (empty($data['agdefvdate'])) {
                     $errors['agdefvdate'] = get_string('required');
                 }

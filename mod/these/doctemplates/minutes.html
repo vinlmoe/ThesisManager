@@ -27,14 +27,16 @@
 <br /><br />
 <b>Composition du jury</b><br />
 <table cellpadding="0" style="line-height:1.5;">
-{{#jury}}  <tr><td width="45mm">{{rolelabel}}</td><td width="125mm">{{name}}{{#institution}} ({{institution}}){{/institution}}</td></tr>
+{{#jury}}  <tr><td width="62mm">{{rolelabel}}</td><td width="108mm">{{name}}{{#institution}} ({{institution}}){{/institution}}</td></tr>
 {{/jury}}</table>
 <br /><br />
 <b>Délibération</b><br /><br />
 Après en avoir délibéré, le jury déclare la thèse de {{student.firstname}} {{student.lastname}} :<br /><br />
-<span style="font-size:13pt;">{{{box.admitted}}}</span> Admise<br />
-<span style="font-size:13pt;">{{{box.adjourned}}}</span> Ajournée<br /><br />
-Mention : {{defense.mention}}{{^defense.mention}}................................................................................{{/defense.mention}}
+<span style="font-size:13pt;">{{{box.admitted}}}</span> Admise&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="font-size:13pt;">{{{box.adjourned}}}</span> Ajournée<br /><br />
+<b>Mention</b> (thèse admise)&nbsp;:&nbsp;&nbsp;<span style="font-size:13pt;">{{{box.honorable}}}</span> Honorable&nbsp;&nbsp;&nbsp;<span style="font-size:13pt;">{{{box.treshonorable}}}</span> Très honorable&nbsp;&nbsp;&nbsp;<span style="font-size:13pt;">{{{box.felicitations}}}</span> Très honorable avec félicitations du jury<br /><br />
+<span style="font-size:13pt;">{{{box.prize}}}</span> Le jury propose la thèse pour un prix de thèse<br />
+<span style="font-size:13pt;">{{{box.corrections}}}</span> Le jury demande des corrections avant le dépôt définitif (à préciser ci-dessous)<br />
+{{#defense.correctionsnote}}{{defense.correctionsnote}}{{/defense.correctionsnote}}{{^defense.correctionsnote}}..................................................................................................................................................<br />..................................................................................................................................................{{/defense.correctionsnote}}
 <br /><br /><br />
 <b>Signatures des membres du jury</b><br /><br />
 <table cellpadding="5" border="1">

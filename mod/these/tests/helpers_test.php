@@ -50,11 +50,11 @@ final class helpers_test extends these_testcase {
         $bademail = $jury;
         $bademail[2] = clone $jury[2];
         $bademail[2]->email = 'pas-une-adresse';
-        $this->assertStringContainsString('Albert Assesseur', these_validate_jury($bademail, 3));
+        $this->assertStringContainsString('Albert Membre', these_validate_jury($bademail, 3));
     }
 
     /**
-     * Les lignes de jury au nom vide sont ignorées, les rôles inconnus ramenés à « assesseur ».
+     * Les lignes de jury au nom vide sont ignorées, les rôles inconnus ramenés à « membre du jury ».
      */
     public function test_extract_submitted_jury(): void {
         $members = these_extract_submitted_jury([
@@ -170,7 +170,7 @@ final class helpers_test extends these_testcase {
         foreach ($jury as $i => $member) {
             $this->assertEquals([$member->juryrole], $mform->getElement("juryrole[$i]")->getValue());
         }
-        // Ligne vide supplémentaire : sans valeur, elle affiche la première option, « Assesseur ».
+        // Ligne vide supplémentaire : sans valeur, elle affiche la première option, « Membre du jury ».
         $this->assertNull($mform->getElement('juryrole[' . count($jury) . ']')->getValue());
         $this->assertEquals('member', array_key_first(these_jury_role_options()));
     }

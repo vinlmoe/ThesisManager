@@ -20,7 +20,7 @@
 </table>
 <br /><br />
 Madame, Monsieur,<br /><br />
-{{#recipient.jury}}<div style="text-align:justify;">Nous avons l’honneur de vous convoquer, en qualité de <b>{{recipient.rolelabel}}</b> du jury, à la soutenance de la thèse d’exercice vétérinaire de <b>{{student.firstname}} {{student.lastname}}</b>, qui aura lieu le <b>{{defense.longdate}}</b> à <b>{{defense.time}}</b>, {{defense.location}}.</div>{{/recipient.jury}}
+{{#recipient.jury}}<div style="text-align:justify;">Nous avons l’honneur de vous convoquer, en qualité de <b>{{recipient.rolelabel}}</b>, à la soutenance de la thèse d’exercice vétérinaire de <b>{{student.firstname}} {{student.lastname}}</b>, qui aura lieu le <b>{{defense.longdate}}</b> à <b>{{defense.time}}</b>, {{defense.location}}.</div>{{/recipient.jury}}
 {{^recipient.jury}}<div style="text-align:justify;">Nous avons l’honneur de vous convoquer à la soutenance de votre thèse d’exercice vétérinaire, qui aura lieu le <b>{{defense.longdate}}</b> à <b>{{defense.time}}</b>, {{defense.location}}.</div>{{/recipient.jury}}
 <br />
 <table cellpadding="4">
@@ -39,7 +39,7 @@ Madame, Monsieur,<br /><br />
 <br /><br />
 <b>Composition du jury</b><br />
 <table cellpadding="0" style="line-height:1.5;">
-{{#jury}}  <tr><td width="45mm">{{rolelabel}}</td><td width="125mm">{{name}}{{#institution}} ({{institution}}){{/institution}}</td></tr>
+{{#jury}}  <tr><td width="62mm">{{rolelabel}}</td><td width="108mm">{{name}}{{#institution}} ({{institution}}){{/institution}}</td></tr>
 {{/jury}}</table>
 <br /><br />
 Veuillez agréer, Madame, Monsieur, l’expression de nos salutations distinguées.

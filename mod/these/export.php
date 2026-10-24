@@ -100,7 +100,7 @@ if ($dataformat !== '') {
             'defenselocation' => $dossier->defenselocation,
             'jury' => implode(' ; ', $jury),
             'result' => (int) $dossier->defenseresult ? these_result_label($dossier->defenseresult) : '',
-            'mention' => $dossier->mention,
+            'mention' => these_mention_label($dossier->mention),
         ];
     });
     die();

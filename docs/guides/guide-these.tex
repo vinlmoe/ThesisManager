@@ -4,9 +4,9 @@
 
 % Version du guide : à mettre à jour à chaque modification, avec une ligne dans l'historique.
 \newcommand{\titreguide}{Guide de la gestion des thèses}
-\newcommand{\versionguide}{1.5}
-\newcommand{\dateguide}{23 octobre 2026}
-\newcommand{\versionthese}{0.6.0}
+\newcommand{\versionguide}{1.7}
+\newcommand{\dateguide}{24 octobre 2026}
+\newcommand{\versionthese}{0.8.0}
 
 \usepackage{guide-commun}
 \usepackage{tikz}
@@ -37,6 +37,12 @@ activité, modifiés par la DEVE. \\
 1.5 & 24 octobre 2026 & Annuaire du jury, éligibilité et accès du jury ; grille de
 conformité modifiable ; conclusions sur une page ; suivi des thèses de plusieurs
 promotions. \\
+1.6 & 24 octobre 2026 & Modèles, grille et questionnaire définis dans l'activité
+de suivi ; questionnaire préalable au jury ; recherche des thèses. \\
+1.7 & 24 octobre 2026 & Numéro DEVE attribué après le dépôt de la thèse ;
+\og membre du jury\fg{} au lieu d'\og assesseur\fg{} ; rapport du directeur
+rédigé dans un formulaire ; décisions du jury au procès-verbal (mention, prix de
+thèse) et circuit des corrections. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -54,11 +60,17 @@ la soutenance\fg{}. Quatre acteurs y interviennent :
   \item l'\textbf{étudiant}, qui dépose son sujet puis ses documents de soutenance ;
   \item le \textbf{directeur de thèse}, qui valide le sujet, puis la soutenance
         en y joignant son rapport ;
-  \item la \textbf{DEVE}, qui enregistre le sujet, valide le dossier complet,
-        génère les documents de soutenance et dépose le procès-verbal ;
+  \item la \textbf{DEVE}, qui enregistre le sujet, valide le dossier complet et
+        lui attribue son numéro, génère les documents de soutenance et dépose le
+        procès-verbal ;
   \item la \textbf{bibliothèque}, qui inscrit le sujet au référentiel
         documentaire puis atteste la conformité du manuscrit.
 \end{itemize}
+
+Si le jury demande des corrections, l'étudiant dépose son manuscrit corrigé,
+que le directeur, la bibliothèque puis la DEVE valident avant la clôture du
+dossier.
+
 
 \begin{figure}[H]
 \centering
@@ -69,19 +81,21 @@ la soutenance\fg{}. Quatre acteurs y interviennent :
   fleche/.style={-{Stealth}, thick, moodle}]
   \node[etape] (s1) {\textbf{1. Étudiant}\\dépôt du sujet};
   \node[etape, right=of s1] (s2) {\textbf{2. Directeur}\\validation};
-  \node[etape, right=of s2] (s3) {\textbf{3. DEVE}\\numéro};
+  \node[etape, right=of s2] (s3) {\textbf{3. DEVE}\\enregistrement};
   \node[etape, right=of s3] (s4) {\textbf{4. Bibliothèque}\\notice};
   \node[etape, below=8mm of s1] (d1) {\textbf{1. Étudiant}\\manuscrit, jury};
   \node[etape, right=of d1] (d2) {\textbf{2. Directeur}\\validation\\+ rapport};
-  \node[etape, right=of d2] (d3) {\textbf{3. DEVE}\\dossier complet};
+  \node[etape, right=of d2] (d3) {\textbf{3. DEVE}\\dossier complet\\+ numéro};
   \node[etape, right=of d3] (d4) {\textbf{4. Bibliothèque}\\conformité};
-  \node[etape, below=8mm of d3] (d5) {\textbf{5. DEVE}\\documents};
-  \node[etape, right=of d5] (d6) {\textbf{6. DEVE}\\procès-verbal};
+  \node[etape, below=6mm of d4] (d5) {\textbf{5. DEVE}\\documents};
+  \node[etape, left=of d5] (d6) {\textbf{6. DEVE}\\procès-verbal};
+  \node[etape, left=of d6] (d7) {\textbf{7. Corrections}\\si demandées};
   \draw[fleche] (s1) -- (s2); \draw[fleche] (s2) -- (s3); \draw[fleche] (s3) -- (s4);
   \draw[fleche, dashed] (s4.south) -- node[right, font=\scriptsize\itshape]{dossier dormant} ++(0,-4mm) -| (d1.north);
   \draw[fleche] (d1) -- (d2); \draw[fleche] (d2) -- (d3); \draw[fleche] (d3) -- (d4);
-  \draw[fleche] (d4.south) |- (d5.east);
+  \draw[fleche] (d4) -- (d5);
   \draw[fleche] (d5) -- (d6);
+  \draw[fleche, dashed] (d6) -- (d7);
   \node[font=\footnotesize\bfseries\sffamily, left=2mm of s1, rotate=90, anchor=south] {Sujet};
   \node[font=\footnotesize\bfseries\sffamily, left=2mm of d1, rotate=90, anchor=south] {Soutenance};
 \end{tikzpicture}
@@ -95,7 +109,7 @@ soutenance. Aucune relance n'est envoyée pendant cette période.
 \subsection{Statuts d'un dossier}
 
 \begin{center}
-\small
+\footnotesize
 \begin{tabularx}{\linewidth}{@{}l X l@{}}
 \toprule
 \textbf{Statut} & \textbf{Signification} & \textbf{En attente de} \\
@@ -112,7 +126,11 @@ soutenance. Aucune relance n'est envoyée pendant cette période.
 \statut{Dossier validé par la DEVE} & Phase 2, étape 4 & Bibliothèque \\
 \statut{Manuscrit conforme} & Documents à générer et transmettre & DEVE \\
 \statut{Soutenance programmée} & Procès-verbal attendu & DEVE \\
-\statut{Dossier clôturé} & Procès-verbal déposé & -- \\
+\statut{Corrections demandées par le jury} & Manuscrit corrigé à déposer & Étudiant \\
+\statut{Corrections déposées} & Corrections à valider & Directeur \\
+\statut{Corrections validées par le directeur} & Corrections à valider & Bibliothèque \\
+\statut{Corrections validées par la bibliothèque} & Validation et clôture & DEVE \\
+\statut{Dossier clôturé} & Procès-verbal déposé, corrections éventuelles validées & -- \\
 \statut{Dossier abandonné} & Clos par la DEVE, peut être rouvert & -- \\
 \bottomrule
 \end{tabularx}
@@ -300,6 +318,25 @@ paragraphes) sont refusées avec un message.
 
 \capture{09_etudiant_soutenance}{Dépôt des documents de soutenance.}
 
+\paragraph{Questionnaire préalable au jury.} Si un questionnaire est défini
+(section~\ref{sec:questionnaire}), le bouton \bouton{Questionnaire préalable au
+jury} apparaît dans votre dossier : réponses courtes ou longues, listes et choix
+multiples. Le dépôt de la soutenance n'est accepté qu'une fois les questions
+obligatoires remplies ; le formulaire de dépôt indique celles qui manquent. Vos
+réponses figurent au dossier, sont communiquées au jury et servent à retrouver
+les thèses.
+
+\capture[0.8\linewidth]{52_questionnaire_etudiant}{Questionnaire préalable au jury, rempli par l'étudiant.}
+
+\paragraph{Corrections demandées par le jury.} Si le jury demande des
+corrections, vous êtes prévenu par courriel et le bouton \bouton{Déposer les
+corrections} apparaît : vous y déposez le manuscrit corrigé (PDF) et décrivez
+les corrections apportées, en regard des corrections demandées. Votre directeur,
+la bibliothèque puis la DEVE les valident ; chacun peut vous renvoyer le dépôt
+avec un motif, et votre nouveau dépôt revient directement à lui.
+
+\capture[0.8\linewidth]{55_corrections_depot}{Dépôt du manuscrit corrigé.}
+
 \begin{attention}
 Le rapport de votre directeur et la grille de conformité ne sont pas visibles
 depuis votre dossier : ils sont destinés au jury et à l'administration. Toute
@@ -319,14 +356,24 @@ qu'il dirige.
 \begin{description}
   \item[Phase 1] \bouton{Examiner la proposition de sujet} : valider, ou
         renvoyer à l'étudiant avec un commentaire.
-  \item[Phase 2] \bouton{Valider la soutenance et déposer le rapport} : la
-        validation de la proposition (date, jury) et le rapport se font
-        \emph{en une seule étape} : texte du rapport, avis favorable,
-        fonction (pour la fiche d'agréments), grille de conformité, puis une
-        signature unique qui vaut pour le rapport, la grille, les conclusions
-        et la partie scientifique de la fiche d'agréments. Un directeur
-        extérieur signe par le lien reçu par courriel.
+  \item[Phase 2] \bouton{Rédiger le rapport} : le rapport sur le manuscrit
+        s'écrit directement dans un formulaire, s'enregistre en plusieurs fois
+        et se prévisualise en PDF ; il doit tenir sur une page avec la
+        signature (4\,000 caractères au plus, mise en page vérifiée). L'avis
+        favorable s'y coche, des pièces jointes peuvent compléter le rapport.
+  \item[] \bouton{Valider la soutenance et déposer le rapport} : la validation
+        de la proposition (date, jury) exige un rapport rédigé avec avis
+        favorable ; elle reprend la fonction (pour la fiche d'agréments) et la
+        grille de conformité, puis une signature unique qui vaut pour le
+        rapport, la grille, les conclusions et la partie scientifique de la
+        fiche d'agréments. Un directeur extérieur signe par le lien reçu par
+        courriel.
+  \item[Corrections] \bouton{Valider les corrections (directeur)} : si le jury
+        a demandé des corrections, vérifier le manuscrit corrigé, puis valider
+        ou renvoyer à l'étudiant.
 \end{description}
+
+\capture[0.85\linewidth]{53_rapport_directeur}{Rédaction du rapport du directeur.}
 
 \capture{11_directeur_rapport}{Validation de la soutenance avec le rapport du directeur.}
 
@@ -346,16 +393,18 @@ des documents (section~\ref{sec:modeles}), au transfert des paramètres
 
 \subsection{Enregistrer le sujet (phase 1, étape 3)}
 
-\bouton{Enregistrer le sujet (DEVE)} propose le numéro suivant de l'année
-(format \texttt{AAAA-NNN}), modifiable mais unique dans l'activité. La
-validation transmet le sujet à la bibliothèque. Un renvoi peut être adressé à
+\bouton{Enregistrer le sujet (DEVE)} vise le sujet et le transmet à la
+bibliothèque. Le numéro d'enregistrement n'est pas encore attribué : il le
+sera après le dépôt de la thèse (étape suivante). Un renvoi peut être adressé à
 l'étudiant ou au directeur.
 
 \capture{06_deve_enregistrement}{Enregistrement du sujet par la DEVE.}
 
 \subsection{Valider le dossier de soutenance (phase 2, étape 3)}
 
-La DEVE vérifie le dossier complet (manuscrit, documents, rapport du directeur)
+La DEVE vérifie le dossier complet (manuscrit, documents, rapport du directeur),
+\textbf{attribue le numéro d'enregistrement} (le suivant de l'année, au format
+\texttt{AAAA-NNN}, est proposé ; il est modifiable mais unique dans l'activité)
 et arrête la date, le lieu et le jury, qu'elle peut modifier. Elle
 \textbf{valide l'éligibilité} de chaque membre votant en cochant \bouton{Éligibilité
 vérifiée} (déjà cochée pour les enseignants de l'annuaire dont le statut convient
@@ -409,9 +458,27 @@ la transmission n'est possible qu'après une nouvelle génération.
 
 \subsection{Déposer le procès-verbal (phase 2, étape 6)}
 
-Après la soutenance, \bouton{Déposer le procès-verbal} : PV signé
-(obligatoire), résultat (admis, ajourné) et mention éventuelle. Le dépôt clôt le
-dossier ; l'étudiant et le directeur sont prévenus.
+Le procès-verbal généré propose au jury des cases à cocher : thèse admise ou
+ajournée ; mention \emph{honorable}, \emph{très honorable} ou \emph{très
+honorable avec félicitations du jury} ; proposition pour un prix de thèse ;
+corrections demandées, à préciser.
+
+Après la soutenance, \bouton{Déposer le procès-verbal} : la DEVE dépose le PV
+signé par le jury, \textbf{scanné} (PDF ou images, obligatoire), et
+\textbf{reporte les décisions cochées} : résultat, mention (obligatoire pour une
+thèse admise), proposition pour un prix, corrections demandées et leur nature.
+Une thèse ajournée ne reçoit ni mention, ni proposition de prix, ni corrections.
+
+\begin{itemize}
+  \item Sans corrections, le dépôt \textbf{clôt le dossier} ; l'étudiant et le
+        directeur sont prévenus, avec les décisions du jury.
+  \item Avec corrections, le dossier passe en \statut{Corrections demandées par
+        le jury} : l'étudiant dépose son manuscrit corrigé, que le directeur, la
+        bibliothèque puis la DEVE valident (\bouton{Valider les corrections et
+        clore le dossier (DEVE)}). Chacun peut renvoyer le dépôt à l'étudiant.
+\end{itemize}
+
+\capture[0.85\linewidth]{54_pv_decisions}{Dépôt du procès-verbal scanné et décisions du jury.}
 
 \subsection{Autres actions}
 
@@ -436,6 +503,9 @@ dossier ; l'étudiant et le directeur sont prévenus.
         présentation) et valider, ou renvoyer le dossier à l'étudiant avec le
         motif. L'attestation de conformité est ensuite téléchargeable en PDF
         depuis le dossier.
+  \item[Corrections] \bouton{Valider les corrections (bibliothèque)} : si le
+        jury a demandé des corrections, vérifier la forme du manuscrit corrigé
+        avant son dépôt définitif, puis valider ou renvoyer à l'étudiant.
 \end{description}
 
 \capture{13_bibliotheque_conformite}{Contrôle de conformité du manuscrit.}
@@ -488,9 +558,22 @@ Attestation de conformité & Bibliothèque & Bibliothèque \\
 
 \subsection{Modèles des documents}\label{sec:modeles}
 
-La mise en page de chaque document est un \textbf{modèle modifiable par la DEVE
-dans l'activité}, comme les courriels : bouton \bouton{Modèles des documents}
-de la barre de navigation. Chaque activité a ses propres modèles ; une activité
+La mise en page de chaque document est un \textbf{modèle modifiable par la DEVE},
+comme les courriels : bouton \bouton{Modèles des documents} de la barre de
+navigation.
+
+\begin{astuce}
+Quand une activité \og Suivi des thèses\fg{} suit l'activité
+(section~\ref{sec:suivi}), les modèles des documents et leurs images, la grille
+de conformité et le questionnaire préalable au jury \textbf{se définissent dans
+l'activité de suivi} et valent pour toutes les promotions qu'elle suit : les
+pages correspondantes de l'activité \og Gestion des thèses\fg{} renvoient alors
+vers elle. Si plusieurs activités de suivi suivent la même promotion, la plus
+ancienne l'emporte. Une activité qui n'est suivie par aucune garde ses propres
+paramètres, décrits ci-dessous.
+\end{astuce}
+
+Sans activité de suivi, chaque activité a ses propres modèles ; une activité
 nouvelle (ou restaurée sans eux) part des modèles d'origine, et la sauvegarde de
 l'activité emporte ses modèles et ses images. La page liste les documents,
 indique ceux dont le modèle a été modifié et propose pour chacun
@@ -546,6 +629,22 @@ le sont à leur prochaine génération).
 
 \capture[0.8\linewidth]{48_grille_elements}{Éléments de la grille de conformité.}
 
+\subsection{Questionnaire préalable au jury}\label{sec:questionnaire}
+
+\bouton{Questionnaire préalable au jury} (DEVE, ou activité de suivi) définit
+les questions posées à l'étudiant avant le dépôt de sa soutenance. Chaque
+question a un type (\emph{réponse courte}, \emph{réponse longue}, \emph{liste}
+à un choix, \emph{QCM} à plusieurs choix), un libellé, ses choix (un par ligne,
+au moins deux pour une liste ou un QCM) et peut être obligatoire. Les questions
+se modifient, se réordonnent et se suppriment ; supprimer une question supprime
+les réponses déjà données. La DEVE peut corriger les réponses d'un dossier.
+
+\capture[0.85\linewidth]{51_questionnaire_questions}{Questions du questionnaire préalable au jury.}
+
+Les réponses figurent au dossier (étudiant, directeur, DEVE, bibliothèque), sur
+la page d'accès du jury, et servent à la recherche des thèses
+(section~\ref{sec:recherche}).
+
 \subsection{Transfert des paramètres}\label{sec:transfert}
 
 Le bouton \bouton{Transfert des paramètres} de la barre de navigation (DEVE)
@@ -558,6 +657,8 @@ au lieu de tout ressaisir. Cinq groupes se transfèrent, au choix :
         service, délai de relance) ;
   \item les courriels personnalisés ;
   \item les éléments de la grille de conformité ;
+  \item les questions du questionnaire préalable au jury (les réponses déjà
+        données aux questions remplacées sont supprimées) ;
   \item les modèles des documents ;
   \item les images des modèles.
 \end{itemize}
@@ -653,7 +754,7 @@ l'ont retenu. L'annuaire s'importe aussi d'un fichier CSV (colonnes
 \texttt{title}, \texttt{lastname}, \texttt{firstname}, \texttt{email},
 \texttt{status}, \texttt{institution}).
 
-\subsection{Suivi des thèses de plusieurs promotions}
+\subsection{Suivi des thèses de plusieurs promotions}\label{sec:suivi}
 
 Le module complémentaire \textbf{Suivi des thèses} (\texttt{mod\_thesesynthesis})
 s'installe à côté de la gestion des thèses, comme le suivi des stages. Dans un
@@ -672,7 +773,38 @@ thèses\fg{} (une par promotion) à suivre. Chacun y trouve :
 \capture[0.85\linewidth]{49_suivi_theses}{Suivi des thèses : jurys d'un enseignant.}
 
 L'activité ne stocke aucune donnée de thèse : elle relit les dossiers dans les
-activités liées, et seulement là où l'utilisateur a ses droits.
+activités liées, et seulement là où l'utilisateur a ses droits. Elle porte en
+revanche les \textbf{paramètres partagés} des promotions suivies : modèles des
+documents et images, grille de conformité et questionnaire préalable au jury
+(capacité \texttt{mod/thesesynthesis:managesettings}, attribuée par défaut aux
+enseignants éditeurs, donc à la DEVE inscrite comme telle dans le cours de
+suivi).
+
+\subsection{Rechercher des thèses}\label{sec:recherche}
+
+\bouton{Rechercher des thèses}, dans l'activité de suivi, cherche dans toutes
+les promotions suivies : texte libre (titre, résumé, mots-clés, noms de
+l'étudiant, du directeur et des membres du jury, réponses au questionnaire,
+sans tenir compte des accents), promotion, année de soutenance, statut, et
+réponse à chaque question du questionnaire (un choix pour une liste ou un QCM,
+un texte contenu pour une question ouverte). Chaque résultat se déplie sur ses
+mots-clés, son résumé et ses réponses.
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}l X@{}}
+\toprule
+\textbf{Utilisateur} & \textbf{Thèses trouvées} \\
+\midrule
+DEVE, bibliothèque & Tous les dossiers des activités où ils ont leurs droits,
+ouvrables depuis la recherche. \\
+Enseignant & Les thèses dont le sujet est enregistré par la DEVE, non
+confidentielles et non abandonnées ; il n'ouvre que celles qu'il dirige. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\capture[0.85\linewidth]{56_recherche_theses}{Recherche des thèses par texte et par réponse au questionnaire.}
 
 % ===========================================================================
 \section{Courriels et relances}

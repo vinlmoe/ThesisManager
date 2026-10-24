@@ -17,8 +17,9 @@
 /**
  * Étapes de validation du circuit (voir these_review_steps()) : validation ou renvoi du sujet par
  * le directeur, enregistrement par la DEVE puis par la bibliothèque ; validation de la soutenance
- * et dépôt du rapport par le directeur, validation du dossier complet par la DEVE, attestation de
- * conformité par la bibliothèque.
+ * et avis du directeur sur son rapport, validation du dossier complet et attribution du numéro par
+ * la DEVE, attestation de conformité par la bibliothèque ; après une soutenance avec corrections,
+ * validation des corrections par le directeur, la bibliothèque et la DEVE.
  *
  * L'étape traitée est déterminée par le statut du dossier : la page refuse l'accès à quiconque
  * n'est pas l'acteur attendu à cette étape.
@@ -83,29 +84,19 @@ $mform = new review_form($PAGE->url, [
     'signs' => implode(', ', $signs),
     'signername' => fullname($USER),
     'externaldirector' => !empty($dossier->externaldirector),
+    'report' => (object) [
+        'text' => (string) $dossier->reporttext,
+        'favorable' => !empty($dossier->reportfavorable),
+        'url' => new moodle_url('/mod/these/report.php', ['id' => $cm->id, 'dossierid' => $dossier->id]),
+    ],
 ]);
 
 $formdata = (object) ['id' => $cm->id, 'dossierid' => $dossier->id];
 switch ($step['key']) {
-    case 'devesubject':
-        $formdata->devenumber = $dossier->devenumber ?: these_suggest_devenumber($these->id);
-        break;
     case 'librarysubject':
         $formdata->libraryref = $dossier->libraryref;
         break;
     case 'directordefense':
-        $draftitemid = file_get_submitted_draft_itemid('directorreport');
-        file_prepare_draft_area(
-            $draftitemid,
-            $context->id,
-            'mod_these',
-            'directorreport',
-            $dossier->id,
-            these_filemanager_options('directorreport')
-        );
-        $formdata->directorreport = $draftitemid;
-        $formdata->reporttext = $dossier->reporttext;
-        $formdata->reportfavorable = $dossier->reportfavorable;
         $formdata->ethicsnumber = $dossier->ethicsnumber;
         $formdata->directorfunction = these_get_agreement($dossier)['directorfunction'] ?? '';
         foreach (these_get_grid($dossier) as $item => $checked) {
@@ -113,6 +104,7 @@ switch ($step['key']) {
         }
         break;
     case 'devedefense':
+        $formdata->devenumber = $dossier->devenumber ?: these_suggest_devenumber($these->id);
         $formdata->defensedate = $dossier->defensedate ?: $dossier->proposeddate;
         $formdata->defenselocation = $dossier->defenselocation;
         $formdata = (object) array_merge((array) $formdata, these_jury_form_data($jury));
@@ -143,23 +135,10 @@ if ($mform->is_cancelled()) {
 
     $fields = [];
     switch ($step['key']) {
-        case 'devesubject':
-            $fields['devenumber'] = trim($data->devenumber);
-            break;
         case 'librarysubject':
             $fields['libraryref'] = trim($data->libraryref);
             break;
         case 'directordefense':
-            file_save_draft_area_files(
-                $data->directorreport,
-                $context->id,
-                'mod_these',
-                'directorreport',
-                $dossier->id,
-                these_filemanager_options('directorreport')
-            );
-            $fields['reporttext'] = trim($data->reporttext);
-            $fields['reportfavorable'] = (int) !empty($data->reportfavorable);
             $fields['ethicsnumber'] = trim($data->ethicsnumber);
             $grid = [];
             foreach (these_get_grid_items(these_settings_scope($these)) as $items) {
@@ -175,6 +154,7 @@ if ($mform->is_cancelled()) {
             ]));
             break;
         case 'devedefense':
+            $fields['devenumber'] = trim($data->devenumber);
             $fields['defensedate'] = (int) $data->defensedate;
             $fields['defenselocation'] = trim($data->defenselocation);
             $fields['agreement'] = json_encode(array_merge(these_get_agreement($dossier), [

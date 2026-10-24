@@ -38,7 +38,7 @@ define('THESE_STATUS_SUBJECT_SUBMITTED', 10);
 define('THESE_STATUS_SUBJECT_RETURNED', 15);
 /** Sujet validé par le directeur, en attente d'enregistrement par la DEVE (phase 1, étape 3). */
 define('THESE_STATUS_SUBJECT_APPROVED', 20);
-/** Sujet enregistré par la DEVE (numéro attribué), en attente de la bibliothèque (phase 1, étape 4). */
+/** Sujet enregistré par la DEVE, en attente de la bibliothèque (phase 1, étape 4). */
 define('THESE_STATUS_SUBJECT_REGISTERED', 30);
 /**
  * Sujet enregistré par la bibliothèque : dossier ouvert et actif, « dormant » jusqu'au dépôt des
@@ -54,13 +54,21 @@ define('THESE_STATUS_DEFENSE_SUBMITTED', 50);
 define('THESE_STATUS_DEFENSE_RETURNED', 55);
 /** Soutenance validée par le directeur, rapport joint, en attente de la DEVE (phase 2, étape 3). */
 define('THESE_STATUS_DEFENSE_APPROVED', 60);
-/** Dossier complet validé par la DEVE, en attente de la bibliothèque (phase 2, étape 4). */
+/** Dossier complet validé et numéroté par la DEVE, en attente de la bibliothèque (phase 2, étape 4). */
 define('THESE_STATUS_DEFENSE_VALIDATED', 70);
 /** Manuscrit déclaré conforme : documents de soutenance à générer et transmettre (phase 2, étape 5). */
 define('THESE_STATUS_CONFORM', 80);
 /** Documents transmis au jury et à l'université : soutenance programmée, PV attendu (étape 6). */
 define('THESE_STATUS_SCHEDULED', 90);
-/** Procès-verbal déposé : dossier clôturé. */
+/** PV déposé, corrections demandées par le jury : l'étudiant dépose le manuscrit corrigé. */
+define('THESE_STATUS_CORRECTIONS', 92);
+/** Manuscrit corrigé déposé, en attente du directeur. */
+define('THESE_STATUS_CORRECTIONS_SUBMITTED', 94);
+/** Corrections validées par le directeur, en attente de la bibliothèque. */
+define('THESE_STATUS_CORRECTIONS_APPROVED', 96);
+/** Corrections validées par la bibliothèque, en attente de la DEVE, qui clôt le dossier. */
+define('THESE_STATUS_CORRECTIONS_CONFORM', 98);
+/** Procès-verbal déposé (et corrections éventuelles validées) : dossier clôturé. */
 define('THESE_STATUS_CLOSED', 100);
 
 /** Dossier abandonné (clos par la DEVE avant son terme) : la DEVE peut le rouvrir. */
@@ -81,7 +89,7 @@ define('THESE_LIST_PERPAGE', 40);
  * these_dossier.id), et qui peut les consulter en plus de l'étudiant, de son directeur, de la DEVE
  * et de la bibliothèque. Voir these_can_view_filearea().
  */
-define('THESE_FILEAREAS', ['subjectdocs', 'manuscript', 'defensedocs', 'directorreport', 'generated', 'pv']);
+define('THESE_FILEAREAS', ['subjectdocs', 'manuscript', 'defensedocs', 'directorreport', 'generated', 'pv', 'corrections']);
 
 /**
  * Returns the list of features supported by this module.

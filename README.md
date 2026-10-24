@@ -24,36 +24,49 @@ soutenance ». Quatre acteurs interviennent :
 
 ```
 Phase 1 — sujet
-Étudiant ──fiche de sujet──▶ Directeur ──validation──▶ DEVE ──n° d'enregistrement──▶ Bibliothèque ──notice──▶ dossier actif
+Étudiant ──fiche de sujet──▶ Directeur ──validation──▶ DEVE ──enregistrement──▶ Bibliothèque ──notice──▶ dossier actif
    ▲                            │                        │                                │
    └────────── renvoi avec commentaires (le dossier revient ensuite à l'étape qui l'a renvoyé)
 
         … dossier « dormant », parfois plusieurs années …
 
 Phase 2 — soutenance
-Étudiant ──manuscrit, date, jury──▶ Directeur ──validation + rapport (une seule étape)──▶ DEVE ──dossier complet──▶
+Étudiant ──questionnaire, manuscrit, date, jury──▶ Directeur ──rapport rédigé + validation──▶ DEVE ──dossier complet, n° d'enregistrement──▶
 Bibliothèque ──conformité du manuscrit──▶ DEVE ──convocations, feuille de jury, PV à signer──▶ jury et université
-                                          DEVE ──dépôt du procès-verbal──▶ dossier clôturé
+                                          DEVE ──PV scanné, décisions du jury──▶ dossier clôturé
+                                                      └── corrections demandées : Étudiant ──manuscrit corrigé──▶ Directeur ──▶ Bibliothèque ──▶ DEVE ──▶ dossier clôturé
 ```
 
 - Chaque étape de validation peut **renvoyer** le dossier, motif obligatoire :
   à l'étudiant (à sa nouvelle soumission, le dossier revient directement à
   l'étape qui l'a renvoyé) ou, pour la DEVE, au directeur de thèse.
-- Le directeur **valide la soutenance et rédige son rapport en une seule
-  étape** (avis, grille de conformité, signature unique) ; le rapport n'est
-  pas communiqué à l'étudiant.
+- Le **numéro d'enregistrement DEVE** est attribué après le dépôt de la thèse,
+  à la validation du dossier de soutenance.
+- Le directeur **rédige son rapport dans un formulaire** (brouillon, aperçu PDF,
+  une page au plus), puis valide la soutenance (avis, grille de conformité,
+  signature unique) ; le rapport n'est pas communiqué à l'étudiant.
+- **Procès-verbal** : la DEVE dépose le PV scanné et reporte les décisions
+  cochées par le jury : admis ou ajourné, mention (honorable, très honorable,
+  très honorable avec félicitations du jury), proposition pour un prix de
+  thèse, corrections demandées. Des corrections ouvrent un circuit : manuscrit
+  corrigé déposé par l'étudiant, validé par le directeur, la bibliothèque et la
+  DEVE avant la clôture.
+- **Questionnaire préalable au jury** modifiable (réponses courtes ou longues,
+  listes, QCM), rempli par l'étudiant avant le dépôt de la soutenance.
 - Les **documents officiels** (E01 sujet, E02 agréments, E03 fiche
   signalétique, bordereau ABES, rapport, grille, conclusions) sont reconstitués
   dans la mise en forme de l'établissement et **signés dans le module** (tracé,
   empreinte du contenu, liens de signature pour les signataires extérieurs). Le
   contrat de diffusion reprend le PDF déposé par l'administrateur, entre une
   page de données et choix et une page de signatures.
-- Chaque document est produit à partir d'un **modèle modifiable par la DEVE
-  dans l'activité** (HTML et balises `{{...}}`, aperçu PDF, retour au modèle
-  d'origine, images propres à l'activité).
+- Chaque document est produit à partir d'un **modèle modifiable par la DEVE**
+  (HTML et balises `{{...}}`, aperçu PDF, retour au modèle d'origine, images).
+  Modèles, grille et questionnaire se définissent **dans l'activité de suivi**,
+  qui les impose aux promotions suivies ; une activité non suivie garde les
+  siens.
 - **Transfert des paramètres** d'une activité à une autre, ou par fichier
-  (paramètres de l'activité, courriels, grille de conformité, modèles et
-  images des documents).
+  (paramètres de l'activité, courriels, grille de conformité, questionnaire,
+  modèles et images des documents).
 - **Annuaire du jury** commun à toutes les promotions (titre Dr/Pr, statut) :
   les formulaires de jury y puisent ; seuls les maîtres de conférences HDR, les
   professeurs et les émérites peuvent présider ; la DEVE valide l'éligibilité,
@@ -61,7 +74,9 @@ Bibliothèque ──conformité du manuscrit──▶ DEVE ──convocations, f
 - **Grille de conformité** modifiable par la DEVE ; **conclusions** limitées à
   une page avec les signatures.
 - **Suivi des thèses** (`mod_thesesynthesis`) : les thèses de plusieurs
-  promotions dans un seul cours, et pour chaque enseignant ses jurys.
+  promotions dans un seul cours, pour chaque enseignant ses jurys, et la
+  **recherche des thèses** (texte, année, réponses au questionnaire) pour les
+  enseignants, la DEVE et la bibliothèque.
 - La bibliothèque dispose d'un rôle propre (« Bibliothèque (thèses) »), et les
   rôles DEVE et Bibliothèque se choisissent dans l'administration du site.
 - La DEVE **génère** la convocation de l'étudiant et de chaque membre du jury,
@@ -78,8 +93,11 @@ Bibliothèque ──conformité du manuscrit──▶ DEVE ──convocations, f
 ## Qualité
 
 - Style : standard Moodle (`moodlehq/moodle-cs`), sans avertissement.
-- Tests PHPUnit (59 + 2 tests) : circuit complet, renvois, droits, relances,
-  documents générés, signatures, modèles, transfert des paramètres, annuaire et jury, grille, conclusions, suivi multi-promotions, import, confidentialité, sauvegarde/restauration.
+- Tests PHPUnit (63 + 4 tests) : circuit complet, corrections, rapport, renvois,
+  droits, relances, documents générés, signatures, modèles, paramètres partagés,
+  questionnaire, recherche, transfert des paramètres, annuaire et jury, grille,
+  conclusions, suivi multi-promotions, import, confidentialité,
+  sauvegarde/restauration.
 - CI GitHub Actions : phpcs, lint, validation du plugin, savepoints, PHPDoc,
   PHPUnit sur Moodle 4.5 / PostgreSQL.
 

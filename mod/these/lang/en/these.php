@@ -159,7 +159,7 @@ $string['subjectnoteditable'] = 'The subject can no longer be edited: it has bee
 $string['editsubject'] = 'Edit the subject';
 $string['registration'] = 'Registrations';
 $string['devenumber'] = 'Registrar number';
-$string['devenumber_help'] = 'Registration number of the subject. The suggested number is the next one of the current year '
+$string['devenumber_help'] = 'Registration number of the thesis, assigned after the defence submission. The suggested number is the next one of the current year '
     . '(YYYY-NNN format); it can be changed but must remain unique in the activity.';
 $string['devenumbertaken'] = 'This number is already used by another file.';
 $string['libraryref'] = 'Bibliographic record reference';
@@ -195,7 +195,7 @@ $string['defenseresult'] = 'Result';
 $string['resultadmitted'] = 'Admitted';
 $string['resultadjourned'] = 'Adjourned';
 $string['mention'] = 'Distinction';
-$string['mention_help'] = 'Optional: distinction or jury congratulations, as written in the minutes.';
+$string['mention_help'] = 'Distinction awarded by the jury to an admitted thesis: honourable, very honourable, very honourable with the jury\'s congratulations.';
 $string['minutes'] = 'Defence minutes';
 
 // Jury.
@@ -206,8 +206,8 @@ $string['juryhelp'] = 'One row per member. Preferably choose the teacher from th
     . 'then validates the eligibility of each member; members are then notified by email and receive a link to the file documents.';
 $string['juryrole'] = 'Role';
 $string['juryrolepresident'] = 'Chair';
-$string['juryroledirector'] = 'Director (assessor)';
-$string['juryrolemember'] = 'Assessor';
+$string['juryroledirector'] = 'Thesis director (jury member)';
+$string['juryrolemember'] = 'Jury member';
 $string['juryroleguest'] = 'Guest member';
 $string['juryname'] = 'Name';
 $string['jurytitle'] = 'Title or position';
@@ -285,17 +285,18 @@ $string['reviewdirectorsubject'] = 'Review the subject proposal';
 $string['reviewdirectorsubject_help'] = 'Approve the subject so that the registrar can register it, or return it to the student with '
     . 'your comments: the student can correct it and submit it again.';
 $string['reviewdevesubject'] = 'Register the subject (registrar)';
-$string['reviewdevesubject_help'] = 'Assign the registration number: the subject is then sent to the library. A return can be '
+$string['reviewdevesubject_help'] = 'Check the subject: it is then sent to the library. The registration number is assigned after '
+    . 'the thesis submission, when the defence file is validated. A return can be '
     . 'addressed to the student or to the director; when resubmitted, the file comes straight back here.';
 $string['reviewlibrarysubject'] = 'Record the subject (library)';
 $string['reviewlibrarysubject_help'] = 'Enter the reference of the record created in the library catalogue. This opens the file, '
     . 'which stays active until the defence documents are submitted.';
 $string['reviewdirectordefense'] = 'Approve the defence and upload the report';
-$string['reviewdirectordefense_help'] = 'Approve the defence proposal (date, jury) by uploading your report on the manuscript, in a '
-    . 'single step. You can also return the file to the student with your comments.';
+$string['reviewdirectordefense_help'] = 'Approve the defence proposal (date, jury) once your report on the manuscript is written '
+    . '("Write the report"): your signature is applied to the report on approval. You can also return the file to the student with your comments.';
 $string['reviewdevedefense'] = 'Validate the defence file (registrar)';
-$string['reviewdevedefense_help'] = 'Check the complete file (manuscript, documents, director report) and set the date, location '
-    . 'and jury. Validation sends the manuscript to the library for the compliance check.';
+$string['reviewdevedefense_help'] = 'Check the complete file (manuscript, documents, director report), assign the registration '
+    . 'number and set the date, location and jury. Validation sends the manuscript to the library for the compliance check.';
 $string['reviewlibraryconformity'] = 'Check manuscript compliance';
 $string['reviewlibraryconformity_help'] = 'Check the manuscript format, presentation standards and legal deposit requirements. '
     . 'Validation issues the compliance certificate; a non-compliant manuscript is returned to the student with the reason.';
@@ -455,7 +456,7 @@ Open the file: {$a->url}';
 $string['emailsubjectactivesubject'] = 'Thesis of {$a->student}: subject registered';
 $string['emailsubjectactivebody'] = 'Hello,
 
-The thesis subject of {$a->student} has been registered by the registrar (number {$a->devenumber}) and by the library. The file is open and stays active until the defence documents are submitted.
+The thesis subject of {$a->student} has been registered by the registrar and by the library. The file is open and stays active until the defence documents are submitted.
 
 Subject: {$a->title}
 
@@ -947,3 +948,67 @@ $string['questionnairefill'] = 'Fill in the questionnaire';
 $string['questionnairerequired'] = 'Fill in the pre-jury questionnaire before submitting the defence.';
 $string['transfergroupquestions'] = 'Pre-jury questionnaire (questions)';
 $string['transferdonequestions'] = '{$a} question(s);';
+
+// Director report written in the module.
+$string['writereport'] = 'Write the report';
+$string['writereport_desc'] = 'Write your report on the manuscript: it is printed in the PDF report, which must fit on one page with '
+    . 'your signature. You can save it several times and preview it; you sign it when approving the defence.';
+$string['reportsave'] = 'Save the report';
+$string['reportsaved'] = 'Report saved.';
+$string['reportnoteditable'] = 'The report can only be written before the director approves the defence.';
+$string['reportnotwritten'] = 'Report not written.';
+$string['reportwrittenfavorable'] = 'Report written, favourable opinion.';
+$string['reportwrittennotfavorable'] = 'Report written, without a favourable opinion.';
+$string['reporttoolong'] = 'The report has {$a->length} characters for at most {$a->max}: it must fit on one page with the signature.';
+$string['reportonepage'] = 'The report does not fit on one page with the signature: shorten it.';
+$string['logreportsaved'] = 'Director report saved';
+
+// Minutes: jury decisions.
+$string['minutesscan'] = 'Signed minutes (scan)';
+$string['minutesscan_help'] = 'The minutes signed by the jury members, scanned (PDF or images), on which the jury ticked its decisions.';
+$string['jurydecisions'] = 'Jury decisions';
+$string['jurydecisions_help'] = 'Report the decisions ticked by the jury on the minutes. Without corrections, the file is closed; if '
+    . 'the jury requests corrections, the student submits the corrected manuscript, which the director, the library and then the '
+    . 'registrar approve before closing.';
+$string['mentionhonorable'] = 'Honourable';
+$string['mentiontreshonorable'] = 'Very honourable';
+$string['mentionfelicitations'] = 'Very honourable with the jury\'s congratulations';
+$string['prizeproposal'] = 'Proposed for a thesis prize';
+$string['correctionsrequested'] = 'Corrections requested by the jury';
+$string['recordminutes'] = 'Save the minutes';
+$string['correctionsopened'] = 'Minutes saved: the student is asked to submit the corrected manuscript.';
+
+// Corrections circuit.
+$string['corrections'] = 'Corrections';
+$string['correctionsnote'] = 'Requested corrections';
+$string['correctionsnote_help'] = 'Corrections requested by the jury, as written in the minutes: they are sent to the student.';
+$string['correctionsdone'] = 'Corrections made';
+$string['correctionsdone_help'] = 'Describe the corrections made to the manuscript, point by point.';
+$string['correctedmanuscript'] = 'Corrected manuscript';
+$string['correctedmanuscriptrequired'] = 'The corrected manuscript is required.';
+$string['depositcorrections'] = 'Submit the corrections';
+$string['correctionsnotexpected'] = 'No correction is expected for this file.';
+$string['correctionssubmittedmsg'] = 'Corrections submitted: your thesis director has been notified.';
+$string['statuscorrections'] = 'Corrections requested by the jury';
+$string['statuscorrectionssubmitted'] = 'Corrections submitted, awaiting the director';
+$string['statuscorrectionsapproved'] = 'Corrections approved by the director, awaiting the library';
+$string['statuscorrectionsconform'] = 'Corrections approved by the library, awaiting the registrar';
+$string['stepcorrections'] = 'Corrections, if any';
+$string['reviewdirectorcorrections'] = 'Approve the corrections (director)';
+$string['reviewdirectorcorrections_help'] = 'Check that the corrected manuscript addresses the corrections requested by the jury. You '
+    . 'can also return it to the student with your comments.';
+$string['reviewlibrarycorrections'] = 'Approve the corrections (library)';
+$string['reviewlibrarycorrections_help'] = 'Check the format of the corrected manuscript before its final deposit. A non-compliant '
+    . 'manuscript is returned to the student with the reason.';
+$string['reviewdevecorrections'] = 'Approve the corrections and close the file (registrar)';
+$string['reviewdevecorrections_help'] = 'Approving the corrections closes the file; the student and the director are notified.';
+$string['validatedirectorcorrections'] = 'Approve the corrections';
+$string['validatelibrarycorrections'] = 'Approve the corrections';
+$string['validatedevecorrections'] = 'Approve and close the file';
+$string['logminutescorrections'] = 'Minutes uploaded, corrections requested';
+$string['logcorrectionssubmitted'] = 'Corrected manuscript submitted';
+$string['logcorrectionsresubmitted'] = 'Corrected manuscript submitted again';
+$string['logvalidateddirectorcorrections'] = 'Corrections approved by the director';
+$string['logvalidatedlibrarycorrections'] = 'Corrections approved by the library';
+$string['logvalidateddevecorrections'] = 'Corrections approved by the registrar, file closed';
+$string['privacy:metadata:these_dossier:correctionsdone'] = 'Corrections made, described by the student.';
