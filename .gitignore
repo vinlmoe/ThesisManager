@@ -1,1 +1,16 @@
 .DS_Store
+
+# Guide PDF : produit par la CI (artefact et pièce jointe des versions), jamais versionné.
+docs/guides/*.pdf
+docs/guides/*.aux
+docs/guides/*.log
+docs/guides/*.out
+docs/guides/*.toc
+docs/guides/*.fls
+docs/guides/*.fdb_latexmk
+docs/guides/*.synctex.gz
+
+# Éditeurs.
+.idea/
+.vscode/
+*.swp

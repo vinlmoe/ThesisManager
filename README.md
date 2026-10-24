@@ -14,7 +14,7 @@ sauvegarde/restauration et l'API de confidentialité.
 
 | Module | Rôle | Documentation |
 |---|---|---|
-| [`mod/these`](mod/these) | **Gestion des thèses** : sujet, soutenance, jury, documents de soutenance, procès-verbal, registre. | [`mod/these/INSTALL.md`](mod/these/INSTALL.md), [guide PDF](docs/guides/guide-these.pdf) |
+| [`mod/these`](mod/these) | **Gestion des thèses** : sujet, soutenance, jury, documents de soutenance, procès-verbal, registre. | [`mod/these/INSTALL.md`](mod/these/INSTALL.md), [guide PDF](https://github.com/vinlmoe/ThesisManager/releases/latest) |
 | [`mod/thesesynthesis`](mod/thesesynthesis) | **Suivi des thèses** : vue unique de plusieurs promotions pour les directeurs, la DEVE, la bibliothèque et les membres de jury ; annuaire du jury. | [`mod/thesesynthesis/INSTALL.md`](mod/thesesynthesis/INSTALL.md) |
 
 ## Le circuit
@@ -102,18 +102,24 @@ Bibliothèque ──conformité du manuscrit──▶ DEVE ──convocations, f
 ## Qualité
 
 - Style : standard Moodle (`moodlehq/moodle-cs`), sans avertissement.
-- Tests PHPUnit (68 + 4 tests) : circuit complet, corrections, rapport, renvois,
-  droits, relances, documents générés, signatures, modèles, paramètres partagés,
-  questionnaire, recherche, transfert des paramètres, annuaire et jury, grille,
-  conclusions, suivi multi-promotions, import, confidentialité,
-  sauvegarde/restauration.
+- Tests PHPUnit (75 + 4 tests) : circuit complet, corrections, rapport, renvois,
+  droits, relances, documents générés, signatures et scellés, modèles,
+  paramètres partagés, questionnaire, recherche, transfert des paramètres,
+  annuaire et jury, liens à jeton, opérations concurrentes, grille, conclusions,
+  suivi multi-promotions, import, confidentialité, sauvegarde/restauration.
+- Tests Behat : création et consultation d'un dossier, liens invalides.
 - CI GitHub Actions : phpcs, lint, validation du plugin, savepoints, PHPDoc,
-  PHPUnit sur Moodle 4.5 / PostgreSQL.
+  PHPUnit et Behat sur Moodle 4.1 LTS (PHP 8.0, MariaDB) et Moodle 4.5 LTS
+  (PHP 8.2, PostgreSQL) ; production du guide PDF.
+- Contribution : voir [`CONTRIBUTING.md`](CONTRIBUTING.md) ; évolutions dans
+  [`CHANGES.md`](CHANGES.md).
 
 ## Documentation
 
 - [`mod/these/INSTALL.md`](mod/these/INSTALL.md) : installation, rôles,
   paramétrage.
-- [`docs/guides/guide-these.pdf`](docs/guides/guide-these.pdf) (source LaTeX
-  `guide-these.tex`) : circuit, paramétrage et utilisation par acteur, avec
-  captures d'écran.
+- Guide PDF : circuit, paramétrage et utilisation par acteur, avec captures
+  d'écran. Il est joint à chaque
+  [version publiée](https://github.com/vinlmoe/ThesisManager/releases/latest)
+  et produit par la CI à chaque modification (artefact `guide-these`) depuis
+  son source LaTeX [`docs/guides/guide-these.tex`](docs/guides/guide-these.tex).

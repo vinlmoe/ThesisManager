@@ -95,10 +95,31 @@ modifié peut être ramené à son origine (`doctemplates/<document>.html`). Les
 logos fournis (`doctemplates/images/`) se remplacent en déposant, dans la même
 page, une image du même nom (*Images des modèles*).
 
-Chaque signature (tracé, nom, date, empreinte SHA-256 du contenu signé) est
-annulée si le contenu signé change ; modifier un modèle ne l'annule pas. Les
-signataires extérieurs reçoivent un lien personnel par courriel ; la DEVE suit
-les signatures (*Suivi des signatures*), relance ou fait signer sur place.
+Chaque signature (tracé, nom, date, empreinte SHA-256 du contenu signé et de sa
+mise en forme) est annulée si le contenu signé change, ou si le modèle du
+document change avant que toutes les signatures soient apposées. Un document
+entièrement signé est **scellé** : son PDF est conservé tel quel, l'empreinte
+SHA-256 de ses octets est inscrite à l'historique du dossier, et une
+modification ultérieure d'un modèle, d'une image ou du contrat type ne le change
+plus. Le contrat de diffusion n'est scellé qu'avec un contrat type lisible ; à
+défaut, le dossier affiche un avertissement à la DEVE.
+
+Les signataires extérieurs reçoivent un lien personnel par courriel, valable
+60 jours ; la DEVE suit les signatures (*Suivi des signatures*), relance (un
+nouveau lien remplace le précédent) ou fait signer sur place. Le lien d'accès du
+jury vaut jusqu'à 60 jours après la soutenance et cesse à la clôture ou à
+l'abandon du dossier ; un membre du jury qui a un compte Moodle à la même adresse
+consulte aussi les documents depuis *Suivi des thèses*, sans lien. Seule
+l'empreinte des jetons de ces liens est conservée en base.
+
+**Valeur des signatures.** Le tracé apposé dans le module est une signature
+électronique *simple* au sens du règlement eIDAS : elle identifie le signataire
+(compte Moodle ou lien personnel reçu à son adresse), date la signature et la lie
+au contenu signé par son empreinte, mais ne repose pas sur un certificat
+qualifié. Il revient à l'établissement de décider pour quels documents elle
+suffit (procès-verbal, contrat de diffusion) ; les documents qui exigent une
+signature avancée ou qualifiée doivent être signés hors du module et déposés
+signés.
 
 ## 3 bis (suite). Grille de conformité, conclusions
 
