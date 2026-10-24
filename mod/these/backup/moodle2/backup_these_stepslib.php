@@ -69,6 +69,7 @@ class backup_these_activity_structure_step extends backup_activity_structure_ste
             'userid', 'status', 'statustime', 'title', 'titleen', 'summary', 'keywords',
             'directorid', 'codirectorname', 'devenumber', 'libraryref',
             'proposeddate', 'defensedate', 'defenselocation', 'defenseresult', 'mention',
+            'prizeproposal', 'correctionsrequested', 'correctionsnote', 'correctionsdone',
             'studyyear', 'confidential', 'directortitle', 'externaldirector', 'extdirectorname', 'extdirectorgrade',
             'extdirectorinstitution', 'extdirectoremail', 'commitments', 'ethicsnumber', 'bordereau', 'conclusions',
             'reporttext', 'reportfavorable', 'conformitygrid', 'agreement',

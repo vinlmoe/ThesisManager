@@ -94,7 +94,16 @@
         <FIELD NAME="defenselocation" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="defenseresult" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
             COMMENT="Voir les constantes THESE_RESULT_*"/>
-        <FIELD NAME="mention" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="mention" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"
+            COMMENT="Mention décernée par le jury (honorable, treshonorable, felicitations)"/>
+        <FIELD NAME="prizeproposal" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
+            COMMENT="Thèse proposée par le jury pour un prix de thèse"/>
+        <FIELD NAME="correctionsrequested" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
+            COMMENT="Corrections demandées par le jury au procès-verbal"/>
+        <FIELD NAME="correctionsnote" TYPE="text" NOTNULL="false" SEQUENCE="false"
+            COMMENT="Corrections demandées par le jury, reportées par la DEVE"/>
+        <FIELD NAME="correctionsdone" TYPE="text" NOTNULL="false" SEQUENCE="false"
+            COMMENT="Corrections apportées, décrites par l'étudiant au dépôt du manuscrit corrigé"/>
         <FIELD NAME="returnstatus" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
             COMMENT="Statut repris à la nouvelle soumission d'un dossier renvoyé à l'étudiant"/>
         <FIELD NAME="returncomment" TYPE="text" NOTNULL="false" SEQUENCE="false"

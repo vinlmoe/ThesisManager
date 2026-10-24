@@ -160,7 +160,7 @@ $string['subjectnoteditable'] = "Le sujet n'est plus modifiable : il a été sou
 $string['editsubject'] = 'Modifier le sujet';
 $string['registration'] = 'Enregistrements';
 $string['devenumber'] = "Numéro d'enregistrement DEVE";
-$string['devenumber_help'] = "Numéro d'ordre attribué au sujet. Le numéro proposé est le suivant de l'année en cours (format AAAA-NNN) ; "
+$string['devenumber_help'] = "Numéro d'ordre attribué à la thèse après le dépôt de la soutenance. Le numéro proposé est le suivant de l'année en cours (format AAAA-NNN) ; "
     . "il peut être modifié, mais doit rester unique dans l'activité.";
 $string['devenumbertaken'] = 'Ce numéro est déjà attribué à un autre dossier.';
 $string['libraryref'] = 'Référence de la notice bibliographique';
@@ -196,7 +196,7 @@ $string['defenseresult'] = 'Résultat';
 $string['resultadmitted'] = 'Admis';
 $string['resultadjourned'] = 'Ajourné';
 $string['mention'] = 'Mention';
-$string['mention_help'] = 'Facultatif : mention ou félicitations du jury, telles que portées au procès-verbal.';
+$string['mention_help'] = 'Mention décernée par le jury à une thèse admise : honorable, très honorable, très honorable avec félicitations du jury.';
 $string['minutes'] = 'Procès-verbal de soutenance';
 
 // Jury.
@@ -208,8 +208,8 @@ $string['juryhelp'] = "Une ligne par membre. Choisissez de préférence l'enseig
     . "prévenus par courriel et reçoivent un lien d'accès aux documents du dossier.";
 $string['juryrole'] = 'Rôle';
 $string['juryrolepresident'] = 'Président';
-$string['juryroledirector'] = 'Directeur (assesseur)';
-$string['juryrolemember'] = 'Assesseur';
+$string['juryroledirector'] = 'Directeur de thèse (membre du jury)';
+$string['juryrolemember'] = 'Membre du jury';
 $string['juryroleguest'] = 'Membre invité';
 $string['juryname'] = 'Nom';
 $string['jurytitle'] = 'Titre ou qualité';
@@ -290,17 +290,18 @@ $string['reviewdirectorsubject'] = 'Examiner la proposition de sujet';
 $string['reviewdirectorsubject_help'] = "Validez le sujet pour qu'il soit enregistré par la DEVE, ou renvoyez-le à l'étudiant avec vos "
     . "commentaires : il pourra le corriger et vous le soumettre de nouveau.";
 $string['reviewdevesubject'] = 'Enregistrer le sujet (DEVE)';
-$string['reviewdevesubject_help'] = "Attribuez le numéro d'enregistrement : le sujet est ensuite transmis à la bibliothèque. Un renvoi "
+$string['reviewdevesubject_help'] = "Vérifiez le sujet : il est ensuite transmis à la bibliothèque. Le numéro d'enregistrement DEVE "
+    . "sera attribué après le dépôt de la thèse, à la validation du dossier de soutenance. Un renvoi "
     . "peut être adressé à l'étudiant ou au directeur ; à sa nouvelle soumission, le dossier revient directement ici.";
 $string['reviewlibrarysubject'] = 'Enregistrer le sujet (bibliothèque)';
 $string['reviewlibrarysubject_help'] = "Indiquez la référence de la notice créée dans le référentiel documentaire. L'enregistrement ouvre "
     . "le dossier, qui reste actif jusqu'au dépôt des documents de soutenance.";
 $string['reviewdirectordefense'] = 'Valider la soutenance et déposer le rapport';
-$string['reviewdirectordefense_help'] = "Validez la proposition de soutenance (date, jury) en déposant votre rapport sur le manuscrit, en "
-    . "une seule étape. Vous pouvez aussi renvoyer le dossier à l'étudiant avec vos commentaires.";
+$string['reviewdirectordefense_help'] = "Validez la proposition de soutenance (date, jury) après avoir rédigé votre rapport sur le "
+    . "manuscrit (« Rédiger le rapport ») : votre signature est apposée sur le rapport à la validation. Vous pouvez aussi renvoyer le dossier à l'étudiant avec vos commentaires.";
 $string['reviewdevedefense'] = 'Valider le dossier de soutenance (DEVE)';
-$string['reviewdevedefense_help'] = "Vérifiez le dossier complet (manuscrit, documents, rapport du directeur) et arrêtez la date, le lieu "
-    . "et le jury. La validation transmet le manuscrit à la bibliothèque pour contrôle de conformité.";
+$string['reviewdevedefense_help'] = "Vérifiez le dossier complet (manuscrit, documents, rapport du directeur), attribuez le numéro "
+    . "d'enregistrement DEVE et arrêtez la date, le lieu et le jury. La validation transmet le manuscrit à la bibliothèque pour contrôle de conformité.";
 $string['reviewlibraryconformity'] = 'Contrôler la conformité du manuscrit';
 $string['reviewlibraryconformity_help'] = "Vérifiez la forme du manuscrit, les normes de présentation et les conditions du dépôt légal. "
     . "La validation délivre l'attestation de conformité ; un manuscrit non conforme est renvoyé à l'étudiant avec le motif.";
@@ -461,7 +462,7 @@ Accéder au dossier : {$a->url}';
 $string['emailsubjectactivesubject'] = 'Thèse de {$a->student} : sujet enregistré';
 $string['emailsubjectactivebody'] = 'Bonjour,
 
-Le sujet de thèse de {$a->student} est enregistré par la DEVE (numéro {$a->devenumber}) et par la bibliothèque. Le dossier est ouvert : il restera actif jusqu\'au dépôt des documents de soutenance.
+Le sujet de thèse de {$a->student} est enregistré par la DEVE et par la bibliothèque. Le dossier est ouvert : il restera actif jusqu\'au dépôt des documents de soutenance.
 
 Sujet : {$a->title}
 
@@ -955,3 +956,70 @@ $string['questionnairefill'] = 'Remplir le questionnaire';
 $string['questionnairerequired'] = 'Remplissez le questionnaire préalable au jury avant de déposer la soutenance.';
 $string['transfergroupquestions'] = 'Questionnaire préalable au jury (questions)';
 $string['transferdonequestions'] = '{$a} question(s) ;';
+
+// Rapport du directeur rédigé dans le module.
+$string['writereport'] = 'Rédiger le rapport';
+$string['writereport_desc'] = "Rédigez votre rapport sur le manuscrit : il est imprimé dans le rapport PDF, qui doit tenir sur une "
+    . "page avec votre signature. Vous pouvez l'enregistrer en plusieurs fois et le prévisualiser ; vous le signerez en validant la "
+    . 'soutenance.';
+$string['reportsave'] = 'Enregistrer le rapport';
+$string['reportsaved'] = 'Rapport enregistré.';
+$string['reportnoteditable'] = "Le rapport ne peut être rédigé qu'avant la validation de la soutenance par le directeur.";
+$string['reportnotwritten'] = 'Rapport non rédigé.';
+$string['reportwrittenfavorable'] = 'Rapport rédigé, avis favorable.';
+$string['reportwrittennotfavorable'] = 'Rapport rédigé, sans avis favorable.';
+$string['reporttoolong'] = 'Le rapport compte {$a->length} caractères pour {$a->max} au plus : il doit tenir sur une page avec la signature.';
+$string['reportonepage'] = 'Le rapport ne tient pas sur une page avec la signature : raccourcissez-le.';
+$string['logreportsaved'] = 'Rapport du directeur enregistré';
+
+// Procès-verbal : décisions du jury.
+$string['minutesscan'] = 'Procès-verbal signé (scan)';
+$string['minutesscan_help'] = 'Le procès-verbal signé par les membres du jury, scanné (PDF ou images), sur lequel le jury a coché ses '
+    . 'décisions.';
+$string['jurydecisions'] = 'Décisions du jury';
+$string['jurydecisions_help'] = 'Reportez les décisions cochées par le jury sur le procès-verbal. Sans corrections, le dossier est '
+    . "clos ; si le jury demande des corrections, l'étudiant dépose son manuscrit corrigé, que le directeur, la bibliothèque puis "
+    . 'la DEVE valident avant la clôture.';
+$string['mentionhonorable'] = 'Honorable';
+$string['mentiontreshonorable'] = 'Très honorable';
+$string['mentionfelicitations'] = 'Très honorable avec félicitations du jury';
+$string['prizeproposal'] = 'Proposition pour un prix de thèse';
+$string['correctionsrequested'] = 'Corrections demandées par le jury';
+$string['recordminutes'] = 'Enregistrer le procès-verbal';
+$string['correctionsopened'] = "Procès-verbal enregistré : l'étudiant est invité à déposer son manuscrit corrigé.";
+
+// Circuit des corrections.
+$string['corrections'] = 'Corrections';
+$string['correctionsnote'] = 'Corrections demandées';
+$string['correctionsnote_help'] = 'Corrections demandées par le jury, telles que portées au procès-verbal : elles sont communiquées à '
+    . "l'étudiant.";
+$string['correctionsdone'] = 'Corrections apportées';
+$string['correctionsdone_help'] = 'Décrivez les corrections apportées au manuscrit, point par point.';
+$string['correctedmanuscript'] = 'Manuscrit corrigé';
+$string['correctedmanuscriptrequired'] = 'Le manuscrit corrigé est obligatoire.';
+$string['depositcorrections'] = 'Déposer les corrections';
+$string['correctionsnotexpected'] = "Aucune correction n'est attendue pour ce dossier.";
+$string['correctionssubmittedmsg'] = 'Corrections déposées : votre directeur de thèse est prévenu.';
+$string['statuscorrections'] = 'Corrections demandées par le jury';
+$string['statuscorrectionssubmitted'] = 'Corrections déposées, en attente du directeur';
+$string['statuscorrectionsapproved'] = 'Corrections validées par le directeur, en attente de la bibliothèque';
+$string['statuscorrectionsconform'] = 'Corrections validées par la bibliothèque, en attente de la DEVE';
+$string['stepcorrections'] = 'Corrections éventuelles';
+$string['reviewdirectorcorrections'] = 'Valider les corrections (directeur)';
+$string['reviewdirectorcorrections_help'] = "Vérifiez que le manuscrit corrigé répond aux corrections demandées par le jury. Vous pouvez "
+    . "aussi le renvoyer à l'étudiant avec vos commentaires.";
+$string['reviewlibrarycorrections'] = 'Valider les corrections (bibliothèque)';
+$string['reviewlibrarycorrections_help'] = 'Vérifiez la forme du manuscrit corrigé avant son dépôt définitif. Un manuscrit non conforme '
+    . "est renvoyé à l'étudiant avec le motif.";
+$string['reviewdevecorrections'] = 'Valider les corrections et clore le dossier (DEVE)';
+$string['reviewdevecorrections_help'] = "La validation des corrections clôt le dossier ; l'étudiant et son directeur sont prévenus.";
+$string['validatedirectorcorrections'] = 'Valider les corrections';
+$string['validatelibrarycorrections'] = 'Valider les corrections';
+$string['validatedevecorrections'] = 'Valider et clore le dossier';
+$string['logminutescorrections'] = 'Procès-verbal déposé, corrections demandées';
+$string['logcorrectionssubmitted'] = 'Manuscrit corrigé déposé';
+$string['logcorrectionsresubmitted'] = 'Manuscrit corrigé déposé de nouveau';
+$string['logvalidateddirectorcorrections'] = 'Corrections validées par le directeur';
+$string['logvalidatedlibrarycorrections'] = 'Corrections validées par la bibliothèque';
+$string['logvalidateddevecorrections'] = 'Corrections validées par la DEVE, dossier clos';
+$string['privacy:metadata:these_dossier:correctionsdone'] = "Corrections apportées, décrites par l'étudiant.";

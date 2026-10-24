@@ -15,8 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Dépôt du procès-verbal de soutenance par la DEVE (phase 2, étape 6) : PV signé, résultat et
- * mention. Le dépôt clôt le dossier.
+ * Dépôt du procès-verbal de soutenance par la DEVE (phase 2, étape 6) : PV signé par le jury et
+ * scanné, décisions du jury (résultat, mention, proposition pour un prix, corrections). Sans
+ * corrections, le dépôt clôt le dossier ; avec corrections, il ouvre le circuit des corrections.
  *
  * @package   mod_these
  * @copyright 2026 Sébastien Lefebvre
@@ -58,14 +59,22 @@ $mform->set_data((object) [
     'dossierid' => $dossier->id,
     'pv' => $draftitemid,
     'defenseresult' => THESE_RESULT_ADMITTED,
+    'mention' => '',
 ]);
 
 if ($mform->is_cancelled()) {
     redirect($dossierurl);
 } else if ($data = $mform->get_data()) {
     file_save_draft_area_files($data->pv, $context->id, 'mod_these', 'pv', $dossier->id, these_filemanager_options('pv'));
-    these_close_dossier($these, $cm, $dossier, $USER->id, $data->defenseresult, $data->mention, trim((string) $data->remark));
-    redirect($dossierurl, get_string('dossierclosed', 'mod_these'), null, \core\output\notification::NOTIFY_SUCCESS);
+    $dossier = these_record_minutes($these, $cm, $dossier, $USER->id, (object) [
+        'result' => (int) $data->defenseresult,
+        'mention' => (string) ($data->mention ?? ''),
+        'prizeproposal' => !empty($data->prizeproposal),
+        'correctionsrequested' => !empty($data->correctionsrequested),
+        'correctionsnote' => (string) ($data->correctionsnote ?? ''),
+    ], trim((string) $data->remark));
+    $message = (int) $dossier->status === THESE_STATUS_CLOSED ? 'dossierclosed' : 'correctionsopened';
+    redirect($dossierurl, get_string($message, 'mod_these'), null, \core\output\notification::NOTIFY_SUCCESS);
 }
 
 echo $OUTPUT->header();

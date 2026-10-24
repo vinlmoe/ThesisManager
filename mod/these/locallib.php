@@ -54,7 +54,8 @@ function these_all_statuses() {
         THESE_STATUS_SUBJECT_APPROVED, THESE_STATUS_SUBJECT_REGISTERED, THESE_STATUS_ACTIVE,
         THESE_STATUS_DEFENSE_SUBMITTED, THESE_STATUS_DEFENSE_RETURNED, THESE_STATUS_DEFENSE_APPROVED,
         THESE_STATUS_DEFENSE_VALIDATED, THESE_STATUS_CONFORM, THESE_STATUS_SCHEDULED,
-        THESE_STATUS_CLOSED, THESE_STATUS_CANCELLED,
+        THESE_STATUS_CORRECTIONS, THESE_STATUS_CORRECTIONS_SUBMITTED, THESE_STATUS_CORRECTIONS_APPROVED,
+        THESE_STATUS_CORRECTIONS_CONFORM, THESE_STATUS_CLOSED, THESE_STATUS_CANCELLED,
     ];
 }
 
@@ -78,6 +79,10 @@ function these_status_label($status) {
         THESE_STATUS_DEFENSE_VALIDATED => 'statusdefensevalidated',
         THESE_STATUS_CONFORM => 'statusconform',
         THESE_STATUS_SCHEDULED => 'statusscheduled',
+        THESE_STATUS_CORRECTIONS => 'statuscorrections',
+        THESE_STATUS_CORRECTIONS_SUBMITTED => 'statuscorrectionssubmitted',
+        THESE_STATUS_CORRECTIONS_APPROVED => 'statuscorrectionsapproved',
+        THESE_STATUS_CORRECTIONS_CONFORM => 'statuscorrectionsconform',
         THESE_STATUS_CLOSED => 'statusclosed',
         THESE_STATUS_CANCELLED => 'statuscancelled',
     ];
@@ -97,6 +102,7 @@ function these_status_badgeclass($status) {
             return 'badge-light';
         case THESE_STATUS_SUBJECT_RETURNED:
         case THESE_STATUS_DEFENSE_RETURNED:
+        case THESE_STATUS_CORRECTIONS:
             return 'badge-warning';
         case THESE_STATUS_ACTIVE:
             return 'badge-success';
@@ -150,17 +156,21 @@ function these_step_actor($status) {
         case THESE_STATUS_SUBJECT_RETURNED:
         case THESE_STATUS_ACTIVE:
         case THESE_STATUS_DEFENSE_RETURNED:
+        case THESE_STATUS_CORRECTIONS:
             return 'student';
         case THESE_STATUS_SUBJECT_SUBMITTED:
         case THESE_STATUS_DEFENSE_SUBMITTED:
+        case THESE_STATUS_CORRECTIONS_SUBMITTED:
             return 'director';
         case THESE_STATUS_SUBJECT_APPROVED:
         case THESE_STATUS_DEFENSE_APPROVED:
         case THESE_STATUS_CONFORM:
         case THESE_STATUS_SCHEDULED:
+        case THESE_STATUS_CORRECTIONS_CONFORM:
             return 'deve';
         case THESE_STATUS_SUBJECT_REGISTERED:
         case THESE_STATUS_DEFENSE_VALIDATED:
+        case THESE_STATUS_CORRECTIONS_APPROVED:
             return 'library';
         default:
             return null;
@@ -224,7 +234,33 @@ function these_review_steps() {
             'next' => THESE_STATUS_CONFORM, 'returnto' => ['student'],
             'sign' => ['library' => ['conformity']], 'request' => [],
         ],
+        // Corrections demandées par le jury : validées tour à tour avant la clôture du dossier.
+        THESE_STATUS_CORRECTIONS_SUBMITTED => [
+            'key' => 'directorcorrections', 'actor' => 'director',
+            'next' => THESE_STATUS_CORRECTIONS_APPROVED, 'returnto' => ['student'],
+            'sign' => [], 'request' => [],
+        ],
+        THESE_STATUS_CORRECTIONS_APPROVED => [
+            'key' => 'librarycorrections', 'actor' => 'library',
+            'next' => THESE_STATUS_CORRECTIONS_CONFORM, 'returnto' => ['student'],
+            'sign' => [], 'request' => [],
+        ],
+        THESE_STATUS_CORRECTIONS_CONFORM => [
+            'key' => 'devecorrections', 'actor' => 'deve',
+            'next' => THESE_STATUS_CLOSED, 'returnto' => ['student'],
+            'sign' => [], 'request' => [],
+        ],
     ];
+}
+
+/**
+ * Indique si un statut appartient au circuit des corrections demandées par le jury.
+ *
+ * @param int $status
+ * @return bool
+ */
+function these_in_corrections($status) {
+    return (int) $status >= THESE_STATUS_CORRECTIONS && (int) $status < THESE_STATUS_CLOSED;
 }
 
 /**
@@ -254,6 +290,8 @@ function these_progress_steps() {
         ['label' => get_string('stepdocuments', 'mod_these'), 'actor' => 'deve',
             'done' => THESE_STATUS_SCHEDULED],
         ['label' => get_string('stepminutes', 'mod_these'), 'actor' => 'deve',
+            'done' => THESE_STATUS_CORRECTIONS],
+        ['label' => get_string('stepcorrections', 'mod_these'), 'actor' => 'student',
             'done' => THESE_STATUS_CLOSED],
     ];
 }
@@ -300,9 +338,52 @@ function these_result_label($result) {
 }
 
 /**
+ * Mentions que le jury peut décerner.
+ *
+ * @return array clé => libellé
+ */
+function these_mention_options() {
+    return [
+        'honorable' => get_string('mentionhonorable', 'mod_these'),
+        'treshonorable' => get_string('mentiontreshonorable', 'mod_these'),
+        'felicitations' => get_string('mentionfelicitations', 'mod_these'),
+    ];
+}
+
+/**
+ * Libellé d'une mention (une mention saisie librement avant la liste fermée est rendue telle quelle).
+ *
+ * @param string|null $mention
+ * @return string
+ */
+function these_mention_label($mention) {
+    return these_mention_options()[(string) $mention] ?? (string) $mention;
+}
+
+/**
+ * Décisions du jury, lisibles : résultat, mention, proposition pour un prix, corrections.
+ *
+ * @param stdClass $dossier
+ * @return string
+ */
+function these_decision_label(stdClass $dossier) {
+    $parts = [these_result_label($dossier->defenseresult)];
+    if ((string) $dossier->mention !== '') {
+        $parts[] = get_string('mention', 'mod_these') . ' ' . core_text::strtolower(these_mention_label($dossier->mention));
+    }
+    if (!empty($dossier->prizeproposal)) {
+        $parts[] = get_string('prizeproposal', 'mod_these');
+    }
+    if (!empty($dossier->correctionsrequested)) {
+        $parts[] = get_string('correctionsrequested', 'mod_these');
+    }
+    return implode(' ; ', $parts);
+}
+
+/**
  * Rôles possibles d'un membre du jury.
  *
- * « Assesseur » vient en premier : c'est le rôle proposé d'office sur une ligne vide du
+ * « Membre du jury » vient en premier : c'est le rôle proposé d'office sur une ligne vide du
  * formulaire, une ligne qui proposerait « Président » rendrait le jury invalide dès qu'on la
  * remplirait sans penser à changer le rôle. (Une valeur par défaut posée par repeat_elements()
  * écraserait en revanche les rôles déjà enregistrés au rechargement du formulaire.)
@@ -628,6 +709,8 @@ function these_submission_target(stdClass $dossier) {
             return (int) $dossier->returnstatus ?: THESE_STATUS_SUBJECT_SUBMITTED;
         case THESE_STATUS_DEFENSE_RETURNED:
             return (int) $dossier->returnstatus ?: THESE_STATUS_DEFENSE_SUBMITTED;
+        case THESE_STATUS_CORRECTIONS:
+            return (int) $dossier->returnstatus ?: THESE_STATUS_CORRECTIONS_SUBMITTED;
         default:
             return null;
     }
@@ -651,6 +734,37 @@ function these_subject_editable(stdClass $dossier) {
  */
 function these_defense_editable(stdClass $dossier) {
     return in_array((int) $dossier->status, [THESE_STATUS_ACTIVE, THESE_STATUS_DEFENSE_RETURNED], true);
+}
+
+/**
+ * Indique si le rapport du directeur peut être rédigé : tant que le directeur n'a pas validé la
+ * soutenance.
+ *
+ * @param stdClass $dossier
+ * @return bool
+ */
+function these_report_editable(stdClass $dossier) {
+    return (int) $dossier->status === THESE_STATUS_DEFENSE_SUBMITTED;
+}
+
+/**
+ * Enregistre le rapport du directeur (sans changer le statut du dossier). Les signatures déjà
+ * apposées sur un rapport modifié sont invalidées.
+ *
+ * @param stdClass $dossier
+ * @param int $userid
+ * @param string $text
+ * @param bool $favorable
+ * @return stdClass Le dossier à jour.
+ */
+function these_save_report(stdClass $dossier, $userid, $text, $favorable) {
+    $dossier = these_set_status($dossier, $dossier->status, $userid, 'reportsaved', '', [
+        'reporttext' => trim((string) $text),
+        'reportfavorable' => $favorable ? 1 : 0,
+    ]);
+    $cm = get_coursemodule_from_instance('these', $dossier->theseid, 0, false, MUST_EXIST);
+    these_refresh_signatures(context_module::instance($cm->id), $dossier);
+    return $dossier;
 }
 
 /**
@@ -940,6 +1054,8 @@ function these_validate_step(
 
     if ((int) $dossier->status === THESE_STATUS_ACTIVE) {
         these_notify_subject_active($these, $cm, $dossier);
+    } else if ((int) $dossier->status === THESE_STATUS_CLOSED) {
+        these_notify_closed($these, $cm, $dossier);
     } else {
         these_notify_actor($these, $cm, $dossier);
     }
@@ -974,7 +1090,10 @@ function these_return_dossier(stdClass $these, stdClass $cm, stdClass $dossier, 
         'returnedby' => $userid,
         'returntime' => time(),
     ];
-    if ($target === 'student') {
+    if ($target === 'student' && these_in_corrections($dossier->status)) {
+        $tostatus = THESE_STATUS_CORRECTIONS;
+        $fields['returnstatus'] = (int) $dossier->status;
+    } else if ($target === 'student') {
         $tostatus = $phase === 1 ? THESE_STATUS_SUBJECT_RETURNED : THESE_STATUS_DEFENSE_RETURNED;
         $fields['returnstatus'] = (int) $dossier->status;
     } else {
@@ -1016,24 +1135,75 @@ function these_reopen_dossier(stdClass $dossier, $userid, $comment = '') {
 }
 
 /**
- * Dépose le procès-verbal de soutenance et clôt le dossier (phase 2, étape 6). Le fichier est
- * enregistré par l'appelant.
+ * Enregistre les décisions du jury reportées par la DEVE depuis le procès-verbal scanné (le fichier
+ * est enregistré par l'appelant) : résultat, mention, proposition pour un prix de thèse,
+ * corrections demandées. Sans corrections, le dossier est clos ; avec corrections, l'étudiant doit
+ * déposer son manuscrit corrigé, que le directeur, la bibliothèque et la DEVE valident avant la
+ * clôture.
+ *
+ * Une thèse ajournée ne reçoit ni mention, ni proposition de prix, ni corrections.
  *
  * @param stdClass $these
  * @param stdClass $cm
  * @param stdClass $dossier
  * @param int $userid
- * @param int $result Voir THESE_RESULT_*.
- * @param string $mention
+ * @param stdClass $decision {result, mention, prizeproposal, correctionsrequested, correctionsnote}
  * @param string $remark
- * @return stdClass
+ * @return stdClass Le dossier à jour.
  */
-function these_close_dossier(stdClass $these, stdClass $cm, stdClass $dossier, $userid, $result, $mention, $remark = '') {
-    $dossier = these_set_status($dossier, THESE_STATUS_CLOSED, $userid, 'closed', $remark, [
-        'defenseresult' => (int) $result,
-        'mention' => trim((string) $mention),
-    ]);
+function these_record_minutes(stdClass $these, stdClass $cm, stdClass $dossier, $userid, stdClass $decision, $remark = '') {
+    $admitted = (int) $decision->result === THESE_RESULT_ADMITTED;
+    $mention = (string) ($decision->mention ?? '');
+    $corrections = $admitted && !empty($decision->correctionsrequested);
+    $fields = [
+        'defenseresult' => (int) $decision->result,
+        'mention' => $admitted && array_key_exists($mention, these_mention_options()) ? $mention : '',
+        'prizeproposal' => $admitted && !empty($decision->prizeproposal) ? 1 : 0,
+        'correctionsrequested' => $corrections ? 1 : 0,
+        'correctionsnote' => $corrections ? trim((string) ($decision->correctionsnote ?? '')) : '',
+    ];
+    if ($corrections) {
+        $dossier = these_set_status(
+            $dossier,
+            THESE_STATUS_CORRECTIONS,
+            $userid,
+            'minutescorrections',
+            $remark,
+            array_merge($fields, these_cleared_return_fields())
+        );
+        these_notify_actor($these, $cm, $dossier);
+        return $dossier;
+    }
+    $dossier = these_set_status($dossier, THESE_STATUS_CLOSED, $userid, 'closed', $remark, $fields);
     these_notify_closed($these, $cm, $dossier);
+    return $dossier;
+}
+
+/**
+ * Dépôt du manuscrit corrigé par l'étudiant (les fichiers sont enregistrés par l'appelant) : le
+ * dossier passe au directeur, ou revient à l'étape qui l'avait renvoyé.
+ *
+ * @param stdClass $these
+ * @param stdClass $cm
+ * @param stdClass $dossier
+ * @param int $userid
+ * @param string $done Corrections apportées.
+ * @return stdClass Le dossier à jour.
+ */
+function these_submit_corrections(stdClass $these, stdClass $cm, stdClass $dossier, $userid, $done) {
+    if ((int) $dossier->status !== THESE_STATUS_CORRECTIONS) {
+        throw new coding_exception('Dépôt des corrections impossible au statut ' . $dossier->status);
+    }
+    $resubmitted = !empty($dossier->returnstatus);
+    $dossier = these_set_status(
+        $dossier,
+        these_submission_target($dossier),
+        $userid,
+        $resubmitted ? 'correctionsresubmitted' : 'correctionssubmitted',
+        '',
+        array_merge(['correctionsdone' => trim((string) $done)], these_cleared_return_fields())
+    );
+    these_notify_actor($these, $cm, $dossier);
     return $dossier;
 }
 
@@ -1564,6 +1734,11 @@ function these_filemanager_options($filearea) {
         case 'directorreport':
             $options['accepted_types'] = ['.pdf', '.doc', '.docx', '.odt'];
             break;
+        case 'pv':
+            // Procès-verbal signé par le jury, scanné en un PDF ou en images.
+            $options['maxfiles'] = 5;
+            $options['accepted_types'] = ['.pdf', '.jpg', '.jpeg', '.png'];
+            break;
     }
     return $options;
 }
@@ -1655,7 +1830,7 @@ function these_get_email_definitions() {
         'subjectactive' => [
             'subjectstring' => 'emailsubjectactivesubject',
             'bodystring' => 'emailsubjectactivebody',
-            'vars' => ['student', 'activity', 'title', 'devenumber', 'url'],
+            'vars' => ['student', 'activity', 'title', 'url'],
         ],
         'convocation' => [
             'subjectstring' => 'emailconvocationsubject',
@@ -1973,7 +2148,6 @@ function these_notify_returned(stdClass $these, stdClass $cm, stdClass $dossier,
  */
 function these_notify_subject_active(stdClass $these, stdClass $cm, stdClass $dossier) {
     $vars = these_email_base_vars($these, $cm, $dossier);
-    $vars['devenumber'] = (string) $dossier->devenumber;
     return these_send_email($these, 'subjectactive', these_get_student_and_director($dossier), $vars);
 }
 
@@ -1987,7 +2161,7 @@ function these_notify_subject_active(stdClass $these, stdClass $cm, stdClass $do
  */
 function these_notify_closed(stdClass $these, stdClass $cm, stdClass $dossier) {
     $vars = these_email_base_vars($these, $cm, $dossier);
-    $vars['result'] = these_result_label($dossier->defenseresult);
+    $vars['result'] = these_decision_label($dossier);
     return these_send_email($these, 'closed', these_get_student_and_director($dossier), $vars);
 }
 
@@ -2105,7 +2279,7 @@ function these_document_data(stdClass $these, stdClass $dossier) {
         'today' => userdate(time(), get_string('strftimedate', 'langconfig')),
         'jury' => these_get_jury($dossier->id),
         'result' => these_result_label($dossier->defenseresult),
-        'mention' => (string) $dossier->mention,
+        'mention' => these_mention_label($dossier->mention),
     ];
 }
 
@@ -2604,6 +2778,12 @@ function these_get_dossier_actions(stdClass $cm, stdClass $dossier, stdClass $ri
     if ($rights->student && these_defense_editable($dossier)) {
         $links[get_string('depositdefense', 'mod_these')] = new moodle_url('/mod/these/defense.php', $params);
     }
+    if ($rights->student && $status === THESE_STATUS_CORRECTIONS) {
+        $links[get_string('depositcorrections', 'mod_these')] = new moodle_url('/mod/these/corrections.php', $params);
+    }
+    if ($rights->director && these_report_editable($dossier)) {
+        $links[get_string('writereport', 'mod_these')] = new moodle_url('/mod/these/report.php', $params);
+    }
     $steps = these_review_steps();
     if (isset($steps[$status]) && !empty($rights->{$steps[$status]['actor']})) {
         $links[get_string('review' . $steps[$status]['key'], 'mod_these')] = new moodle_url('/mod/these/review.php', $params);
@@ -2721,12 +2901,21 @@ function these_render_dossier(
                 these_render_file_links($context, 'directorreport', $dossier->id);
         }
         $rows[get_string('generateddocuments', 'mod_these')] = these_render_file_links($context, 'generated', $dossier->id);
-        if ($status === THESE_STATUS_CLOSED) {
+        if ($status === THESE_STATUS_CLOSED || these_in_corrections($status)) {
             $rows[get_string('defenseresult', 'mod_these')] = these_result_label($dossier->defenseresult);
-            $rows[get_string('mention', 'mod_these')] = s((string) $dossier->mention);
+            $rows[get_string('mention', 'mod_these')] = s(these_mention_label($dossier->mention));
+            $rows[get_string('prizeproposal', 'mod_these')] = $dossier->prizeproposal ? get_string('yes') : null;
             $rows[get_string('minutes', 'mod_these')] = these_render_file_links($context, 'pv', $dossier->id);
         }
         $out .= these_render_detail_section(get_string('defense', 'mod_these'), $rows);
+        if (!empty($dossier->correctionsrequested)) {
+            $out .= these_render_detail_section(get_string('corrections', 'mod_these'), [
+                get_string('correctionsnote', 'mod_these') => format_text((string) $dossier->correctionsnote, FORMAT_PLAIN),
+                get_string('correctionsdone', 'mod_these') => trim((string) $dossier->correctionsdone) !== ''
+                    ? format_text((string) $dossier->correctionsdone, FORMAT_PLAIN) : null,
+                get_string('correctedmanuscript', 'mod_these') => these_render_file_links($context, 'corrections', $dossier->id),
+            ]);
+        }
         if ($rights->viewall || $rights->director || $rights->owner) {
             $out .= these_render_answers((object) ['id' => $dossier->theseid], $dossier);
         }
@@ -4282,7 +4471,10 @@ function these_build_document_context(array $src) {
         'location' => (string) $d->defenselocation,
         'visio' => !empty($b['visio']),
         'result' => these_result_label($d->defenseresult),
-        'mention' => (string) $d->mention,
+        'mention' => these_mention_label($d->mention),
+        'prizeproposal' => !empty($d->prizeproposal),
+        'corrections' => !empty($d->correctionsrequested),
+        'correctionsnote' => (string) ($d->correctionsnote ?? ''),
     ];
 
     // Cursus déclaré par l'étudiant (fiche signalétique) et agrément administratif de la DEVE.
@@ -4351,12 +4543,7 @@ function these_build_document_context(array $src) {
     }));
 
     // Rapport, grille et conclusions du directeur.
-    $report = [
-        'text' => trim((string) $d->reporttext),
-        'html' => these_doctemplate_text($d->reporttext),
-        'favorable' => !empty($d->reportfavorable),
-        'favorabletext' => get_string('pdfreportfavorable', 'mod_these'),
-    ];
+    $report = these_report_context($d->reporttext, !empty($d->reportfavorable));
     $grid = [];
     $mark = [];
     $gridsections = [];
@@ -4457,6 +4644,11 @@ function these_build_document_context(array $src) {
         'commitethics' => (bool) ($commitments & THESE_COMMIT_ETHICS),
         'admitted' => (int) $d->defenseresult === THESE_RESULT_ADMITTED,
         'adjourned' => (int) $d->defenseresult === THESE_RESULT_ADJOURNED,
+        'honorable' => (string) $d->mention === 'honorable',
+        'treshonorable' => (string) $d->mention === 'treshonorable',
+        'felicitations' => (string) $d->mention === 'felicitations',
+        'prize' => !empty($d->prizeproposal),
+        'corrections' => !empty($d->correctionsrequested),
     ] + $years;
 
     return [
@@ -4564,6 +4756,49 @@ function these_conclusions_error(stdClass $these, ?context $context, $text) {
         return null;
     }
     return $pages > 1 ? get_string('conclusionsonepage', 'mod_these') : null;
+}
+
+/** Longueur maximale du rapport du directeur, qui doit tenir sur une page avec la signature. */
+define('THESE_REPORT_MAX', 4000);
+
+/**
+ * Vérifie que le rapport du directeur tient sur une page, signature comprise : longueur maximale,
+ * puis mise en page réelle avec le modèle en vigueur.
+ *
+ * @param stdClass $these
+ * @param string $text
+ * @param bool $favorable Avis favorable (imprimé sous le rapport).
+ * @return string|null Message d'erreur, ou null s'il tient.
+ */
+function these_report_error(stdClass $these, $text, $favorable = true) {
+    $length = core_text::strlen(trim((string) $text));
+    if ($length > THESE_REPORT_MAX) {
+        return get_string('reporttoolong', 'mod_these', (object) ['max' => THESE_REPORT_MAX, 'length' => $length]);
+    }
+    $data = these_sample_document_context(these_settings_scope($these), $these);
+    $data['report'] = these_report_context($text, $favorable);
+    try {
+        $pages = \mod_these\pdf\html_document::page_count(these_render_doctemplate($these, 'report', $data));
+    } catch (\Throwable $e) {
+        return null;
+    }
+    return $pages > 1 ? get_string('reportonepage', 'mod_these') : null;
+}
+
+/**
+ * Données du rapport du directeur pour les modèles de documents.
+ *
+ * @param string|null $text
+ * @param bool $favorable
+ * @return array {text, html, favorable, favorabletext}
+ */
+function these_report_context($text, $favorable) {
+    return [
+        'text' => trim((string) $text),
+        'html' => these_doctemplate_text($text),
+        'favorable' => (bool) $favorable,
+        'favorabletext' => get_string('pdfreportfavorable', 'mod_these'),
+    ];
 }
 
 /**

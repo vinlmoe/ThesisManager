@@ -81,10 +81,13 @@ cadres, libellés, cases à cocher) et remplis avec les données du dossier. Le
 contrat de diffusion est assemblé ainsi : page de données et choix, modèle
 déposé par l'administrateur tel quel, page de signatures.
 
-Chaque document est produit à partir d'un **modèle modifiable par la DEVE dans
-l'activité** (bouton *Modèles des documents* de la barre de navigation, comme les
-courriels). Chaque activité a ses propres modèles, sauvegardés et restaurés avec
-elle. Un modèle est du HTML (interprété par TCPDF) avec des balises Mustache
+Chaque document est produit à partir d'un **modèle modifiable par la DEVE**
+(bouton *Modèles des documents* de la barre de navigation, comme les courriels).
+Si une activité *Suivi des thèses* suit l'activité, les modèles et leurs images,
+la grille de conformité et le questionnaire préalable au jury se définissent
+dans l'activité de suivi et valent pour toutes les promotions suivies (la plus
+ancienne activité de suivi l'emporte) ; sinon, chaque activité a les siens,
+sauvegardés et restaurés avec elle. Un modèle est du HTML (interprété par TCPDF) avec des balises Mustache
 (`{{student.lastname}}`, `{{{sig.director}}}`, `{{#jury}}…{{/jury}}`) ; la page
 de modification liste toutes les variables, propose un aperçu PDF avec des
 données fictives et refuse un modèle qui ne produit pas de document. Un modèle
@@ -129,13 +132,31 @@ les signatures (*Suivi des signatures*), relance ou fait signer sur place.
   dossier.
 - **Suivi multi-promotions** : voir le module `mod_thesesynthesis`.
 
+## 3 bis (compléments). Questionnaire, rapport, procès-verbal, corrections
+
+- **Questionnaire préalable au jury** (DEVE, *Questionnaire préalable au jury*) :
+  réponse courte, réponse longue, liste, QCM ; questions obligatoires exigées au
+  dépôt de la soutenance. Réponses visibles au dossier et sur la page du jury,
+  utilisées par la recherche des thèses (`mod_thesesynthesis`).
+- **Numéro d'enregistrement DEVE** : attribué à la validation du dossier de
+  soutenance (après le dépôt de la thèse), et non plus à l'enregistrement du sujet.
+- **Rapport du directeur** : rédigé sur sa propre page (*Rédiger le rapport*),
+  enregistrable en plusieurs fois, aperçu PDF, une page au plus ; la validation
+  de la soutenance exige un rapport rédigé avec avis favorable.
+- **Procès-verbal** : PV signé scanné (PDF ou images) et décisions du jury
+  (admis/ajourné, mention honorable, très honorable ou très honorable avec
+  félicitations du jury, proposition pour un prix de thèse, corrections
+  demandées). Avec corrections, l'étudiant dépose son manuscrit corrigé
+  (*Déposer les corrections*), validé par le directeur, la bibliothèque puis la
+  DEVE, qui clôt le dossier.
+
 ## 3 ter. Transfert des paramètres
 
 *Transfert des paramètres* (DEVE, barre de navigation de l'activité) reprend les
 paramètres d'une autre activité dont on est la DEVE, ou d'un fichier de
 paramètres (JSON) exporté depuis la même page : paramètres de l'activité
 (établissement, signataire, lieu, jury minimum, adresses de service, relances),
-courriels personnalisés, grille de conformité, modèles et images des documents. Chaque groupe coché
+courriels personnalisés, grille de conformité, questionnaire, modèles et images des documents. Chaque groupe coché
 remplace celui de l'activité ; les dossiers ne sont jamais transférés. Pratique
 à l'ouverture d'un nouveau cours, ou pour passer d'une plateforme de test à la
 production.
@@ -156,6 +177,10 @@ production.
 | 70 | Dossier validé par la DEVE | Bibliothèque |
 | 80 | Manuscrit conforme | DEVE (documents) |
 | 90 | Soutenance programmée | DEVE (procès-verbal) |
+| 92 | Corrections demandées par le jury | Étudiant |
+| 94 | Corrections déposées | Directeur |
+| 96 | Corrections validées par le directeur | Bibliothèque |
+| 98 | Corrections validées par la bibliothèque | DEVE (clôture) |
 | 100 | Dossier clôturé | — |
 | -1 | Dossier abandonné | — |
 

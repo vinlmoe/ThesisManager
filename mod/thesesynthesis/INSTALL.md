@@ -5,7 +5,7 @@ plusieurs promotions, chacune gérée dans sa propre activité « Gestion des
 thèses », sans naviguer d'un cours à l'autre. Il reprend le principe du suivi
 des stages (`mod_stagesynthesis`).
 
-- **Prérequis** : `mod_these` 0.6.0 ou plus (dépendance déclarée dans
+- **Prérequis** : `mod_these` 0.7.0 ou plus (dépendance déclarée dans
   `version.php`).
 
 ## Installation
@@ -26,7 +26,10 @@ php admin/cli/upgrade.php
 4. Depuis l'activité, **Promotions suivies** : cocher les activités « Gestion
    des thèses » (une par promotion) à suivre. Seules sont proposées celles où
    vous voyez tous les dossiers (DEVE, bibliothèque).
-5. **Annuaire du jury** : y saisir (ou importer en CSV) les enseignants pouvant
+5. **Modèles des documents**, **Grille de conformité**, **Questionnaire
+   préalable au jury** : définis ici, ils s'appliquent à toutes les promotions
+   suivies (les pages correspondantes des activités suivies renvoient ici).
+6. **Annuaire du jury** : y saisir (ou importer en CSV) les enseignants pouvant
    diriger une thèse ou siéger au jury, avec leur titre et leur statut.
 
 ## Ce que voit chacun
@@ -39,8 +42,14 @@ php admin/cli/upgrade.php
   que la DEVE a validé le jury.
 - **Dossiers suivis** : ses thèses dirigées, ou tous les dossiers pour la DEVE
   et la bibliothèque, filtrables par promotion, statut et recherche.
+- **Rechercher des thèses** : texte libre (titre, résumé, mots-clés, noms,
+  jury, réponses au questionnaire), promotion, année de soutenance, statut et
+  réponses au questionnaire. La DEVE et la bibliothèque trouvent tous les
+  dossiers des promotions où elles ont leurs droits ; un enseignant, les thèses
+  enregistrées, non confidentielles et non abandonnées, et celles qu'il dirige.
 
-L'activité ne stocke ni droit ni donnée de thèse : tout est relu à l'affichage
+L'activité ne stocke ni droit ni donnée de thèse (seulement les paramètres
+partagés : modèles, images, grille, questionnaire) : tout est relu à l'affichage
 dans les activités liées, et seulement là où l'utilisateur a toujours ses
 droits à la source.
 
@@ -52,3 +61,5 @@ droits à la source.
 | `mod/thesesynthesis:addinstance` | — | ✅ | ✅ |
 | `mod/thesesynthesis:managelinks` — choisir les promotions suivies | — | ✅ | ✅ |
 | `mod/thesesynthesis:managejurors` — tenir l'annuaire du jury | — | ✅ | ✅ |
+| `mod/thesesynthesis:managesettings` — modèles, grille, questionnaire partagés | — | ✅ | ✅ |
+| `mod/thesesynthesis:search` — rechercher des thèses | ✅ | ✅ | ✅ |
