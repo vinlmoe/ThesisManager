@@ -562,6 +562,44 @@ function these_render_dossier(
 }
 
 /**
+ * Ligne de l'export du registre pour un dossier, telle que l'utilisateur courant peut la voir : le
+ * sujet d'une thèse confidentielle n'y figure que pour qui le connaît (voir these_subject_field()).
+ *
+ * @param stdClass $dossier
+ * @param context $context Contexte de l'activité.
+ * @param stdClass|null $student
+ * @param stdClass|null $director
+ * @return array Colonnes de l'export (voir export.php).
+ */
+function these_register_row(stdClass $dossier, context $context, ?stdClass $student, ?stdClass $director) {
+    $roles = these_jury_role_options();
+    $dateformat = get_string('strftimedatetimeshort', 'langconfig');
+    $jury = array_map(function ($member) use ($roles) {
+        return ($roles[$member->juryrole] ?? $member->juryrole) . ' : ' . $member->fullname;
+    }, these_get_jury($dossier->id));
+    $embargo = these_embargo_until($dossier);
+    return [
+        'devenumber' => $dossier->devenumber,
+        'student' => $student ? fullname($student) : '',
+        'email' => $student ? $student->email : '',
+        'title' => these_subject_field($dossier, 'title', $context),
+        'titleen' => these_subject_field($dossier, 'titleen', $context),
+        'keywords' => these_subject_field($dossier, 'keywords', $context),
+        'director' => $director ? fullname($director) : '',
+        'codirector' => $dossier->codirectorname,
+        'libraryref' => $dossier->libraryref,
+        'status' => these_status_label($dossier->status),
+        'statustime' => userdate($dossier->statustime, $dateformat),
+        'defensedate' => $dossier->defensedate ? userdate($dossier->defensedate, $dateformat) : '',
+        'defenselocation' => $dossier->defenselocation,
+        'jury' => implode(' ; ', $jury),
+        'result' => (int) $dossier->defenseresult ? these_result_label($dossier->defenseresult) : '',
+        'mention' => these_mention_label($dossier->mention),
+        'embargo' => $embargo ? userdate($embargo, get_string('strftimedatefullshort', 'langconfig')) : '',
+    ];
+}
+
+/**
  * Diffusion de la thèse choisie au dépôt de la soutenance : mode de diffusion et demande d'embargo,
  * avec sa date de fin (voir these_embargo_until()). Le motif de l'embargo, qui peut révéler le sujet,
  * n'est montré qu'à qui connaît le sujet.

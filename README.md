@@ -109,7 +109,7 @@ Bibliothèque ──conformité du manuscrit──▶ DEVE ──convocations, f
 ## Qualité
 
 - Style : standard Moodle (`moodlehq/moodle-cs`), sans avertissement.
-- Tests PHPUnit (82 + 5 tests) : circuit complet, corrections, rapport, renvois,
+- Tests PHPUnit (88 + 6 tests) : circuit complet, corrections, rapport, renvois,
   droits, relances, documents générés, signatures et scellés, modèles,
   paramètres partagés, questionnaire, recherche, transfert des paramètres,
   annuaire et jury, liens à jeton, opérations concurrentes, planning, thèses

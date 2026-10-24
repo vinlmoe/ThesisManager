@@ -186,14 +186,14 @@ function these_can_view_filearea($filearea, stdClass $rights) {
     if (!these_can_view_dossier($rights)) {
         return false;
     }
-    if ($filearea === 'directorreport') {
-        return $rights->director || $rights->viewall;
-    }
     // Thèse confidentielle : sans connaître le sujet, seuls le manuscrit et le manuscrit corrigé
     // restent accessibles (la bibliothèque en atteste la conformité) ; les autres fichiers portent
-    // le titre.
+    // le titre. Contrôle à faire avant toute autre règle de zone.
     if (isset($rights->knowssubject) && !$rights->knowssubject) {
         return in_array($filearea, ['manuscript', 'corrections'], true);
+    }
+    if ($filearea === 'directorreport') {
+        return $rights->director || $rights->viewall;
     }
     return true;
 }

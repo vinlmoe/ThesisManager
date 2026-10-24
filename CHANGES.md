@@ -20,6 +20,24 @@ quand il change), de la plus récente à la plus ancienne. Une version publiée 
   contrat de diffusion, au dossier et à l'export. Elle remplace la date
   d'embargo libre ; une date déjà saisie vaut jusqu'au prochain enregistrement.
 
+### Corrections
+
+- Thèse confidentielle : le rapport du directeur restait téléchargeable par la
+  bibliothèque et les détenteurs de `mod/these:viewall` (règle de zone vérifiée
+  avant celle de la confidentialité). Relevé par les nouveaux tests d'accès.
+
+### Tests
+
+- `confidentiality_access_test` : pour chaque profil (étudiant, DEVE, directeur,
+  membre du jury par adresse ou par l'annuaire ; bibliothèque, `viewall`, autre
+  directeur, autre étudiant, ancien directeur, ancien membre du jury, utilisateur
+  sans rôle), marqueurs dans chaque donnée qui révèle le sujet, vérifiés absents
+  ou présents dans les droits, les fichiers de chaque zone, les documents
+  signés, la page du dossier, les listes, la recherche, l'export du registre,
+  le planning (page, tableur, PDF) et les courriels (comptes et boîtes de
+  service). Recherche et liste du suivi multi-promotions.
+- L'export du registre passe par `these_register_row()`, testable.
+
 ## mod_these 0.10.0 (2026103102), mod_thesesynthesis 0.3.0 (2026102902)
 
 ### Nouveautés
