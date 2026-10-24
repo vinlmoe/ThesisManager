@@ -53,6 +53,7 @@ $mform = new \mod_these\form\dossier_edit_form($PAGE->url, [
     'theseid' => $these->id,
     'minjury' => $these->minjury,
     'jurycount' => count($jury),
+    'jurorids' => array_map('intval', array_column($jury, 'jurorid')),
 ]);
 $formdata = (object) array_merge((array) $dossier, these_jury_form_data($jury));
 $formdata->id = $cm->id;
@@ -70,15 +71,23 @@ if ($mform->is_cancelled()) {
     $fields['directorid'] = (int) $data->directorid;
     $fields['defensedate'] = (int) ($data->defensedate ?? 0);
 
-    $newjury = these_extract_submitted_jury($data);
-    $oldjury = array_map(function ($member) {
-        return [$member->juryrole, $member->fullname, $member->jurytitle, $member->institution, $member->email];
-    }, $jury);
-    $jurychanged = $oldjury !== array_map(function ($member) {
-        return [$member->juryrole, $member->fullname, $member->jurytitle, $member->institution, $member->email];
+    $newjury = these_extract_submitted_jury($data, true);
+    $signature = function ($member) {
+        return [$member->juryrole, $member->fullname, $member->jurytitle, $member->institution, $member->email,
+            (int) ($member->jurorid ?? 0), (string) ($member->jurystatus ?? '')];
+    };
+    $jurychanged = array_map($signature, $jury) !== array_map($signature, $newjury);
+    $eligibilitychanged = array_map(function ($member) {
+        return (int) !empty($member->eligible);
+    }, $jury) !== array_map(function ($member) {
+        return (int) !empty($member->eligible);
     }, $newjury);
-    if ($jurychanged) {
-        these_save_jury($dossier->id, $newjury);
+    if ($jurychanged || $eligibilitychanged) {
+        these_save_jury($dossier->id, $newjury, $USER->id);
+        // Jury déjà validé par la DEVE : les nouveaux membres sont prévenus à leur tour.
+        if ((int) $dossier->status >= THESE_STATUS_DEFENSE_VALIDATED) {
+            these_notify_jury($these, $cm, $dossier);
+        }
     }
     $defensechanged = $jurychanged || $fields['defensedate'] !== (int) $dossier->defensedate
         || $fields['defenselocation'] !== (string) $dossier->defenselocation;

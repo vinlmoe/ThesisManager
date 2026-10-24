@@ -15,6 +15,7 @@ sauvegarde/restauration et l'API de confidentialité.
 | Module | Rôle | Documentation |
 |---|---|---|
 | [`mod/these`](mod/these) | **Gestion des thèses** : sujet, soutenance, jury, documents de soutenance, procès-verbal, registre. | [`mod/these/INSTALL.md`](mod/these/INSTALL.md), [guide PDF](docs/guides/guide-these.pdf) |
+| [`mod/thesesynthesis`](mod/thesesynthesis) | **Suivi des thèses** : vue unique de plusieurs promotions pour les directeurs, la DEVE, la bibliothèque et les membres de jury ; annuaire du jury. | [`mod/thesesynthesis/INSTALL.md`](mod/thesesynthesis/INSTALL.md) |
 
 ## Le circuit
 
@@ -51,7 +52,16 @@ Bibliothèque ──conformité du manuscrit──▶ DEVE ──convocations, f
   dans l'activité** (HTML et balises `{{...}}`, aperçu PDF, retour au modèle
   d'origine, images propres à l'activité).
 - **Transfert des paramètres** d'une activité à une autre, ou par fichier
-  (paramètres de l'activité, courriels, modèles et images des documents).
+  (paramètres de l'activité, courriels, grille de conformité, modèles et
+  images des documents).
+- **Annuaire du jury** commun à toutes les promotions (titre Dr/Pr, statut) :
+  les formulaires de jury y puisent ; seuls les maîtres de conférences HDR, les
+  professeurs et les émérites peuvent présider ; la DEVE valide l'éligibilité,
+  puis les membres sont prévenus et reçoivent un lien d'accès aux documents.
+- **Grille de conformité** modifiable par la DEVE ; **conclusions** limitées à
+  une page avec les signatures.
+- **Suivi des thèses** (`mod_thesesynthesis`) : les thèses de plusieurs
+  promotions dans un seul cours, et pour chaque enseignant ses jurys.
 - La bibliothèque dispose d'un rôle propre (« Bibliothèque (thèses) »), et les
   rôles DEVE et Bibliothèque se choisissent dans l'administration du site.
 - La DEVE **génère** la convocation de l'étudiant et de chaque membre du jury,
@@ -68,8 +78,8 @@ Bibliothèque ──conformité du manuscrit──▶ DEVE ──convocations, f
 ## Qualité
 
 - Style : standard Moodle (`moodlehq/moodle-cs`), sans avertissement.
-- Tests PHPUnit (53 tests) : circuit complet, renvois, droits, relances,
-  documents générés, signatures, modèles, transfert des paramètres, import, confidentialité, sauvegarde/restauration.
+- Tests PHPUnit (59 + 2 tests) : circuit complet, renvois, droits, relances,
+  documents générés, signatures, modèles, transfert des paramètres, annuaire et jury, grille, conclusions, suivi multi-promotions, import, confidentialité, sauvegarde/restauration.
 - CI GitHub Actions : phpcs, lint, validation du plugin, savepoints, PHPDoc,
   PHPUnit sur Moodle 4.5 / PostgreSQL.
 

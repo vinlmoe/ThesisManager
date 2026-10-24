@@ -80,6 +80,8 @@ jobs:
       - name: Install Moodle
         id: moodle_install
         run: |
+          mkdir -p ci-extra-plugins
+          cp -R mod/thesesynthesis ci-extra-plugins/thesesynthesis
           moodle-plugin-ci install \
             --moodle=moodle \
             --branch=MOODLE_405_STABLE \
@@ -87,13 +89,15 @@ jobs:
             --db-host=127.0.0.1 \
             --db-name=moodle \
             --db-user=postgres \
-            --plugin=mod/these
+            --plugin=mod/these \
+            --extra-plugins=ci-extra-plugins
 
       - name: PHP lint
         if: ${{ !cancelled() && steps.moodle_install.outcome == 'success' }}
         run: |
           check_status=0
           moodle-plugin-ci phplint mod/these || check_status=1
+          moodle-plugin-ci phplint mod/thesesynthesis || check_status=1
           exit "$check_status"
 
       - name: Plugin validation
@@ -101,6 +105,7 @@ jobs:
         run: |
           check_status=0
           moodle-plugin-ci validate mod/these || check_status=1
+          moodle-plugin-ci validate mod/thesesynthesis || check_status=1
           exit "$check_status"
 
       - name: Upgrade savepoints
@@ -108,6 +113,7 @@ jobs:
         run: |
           check_status=0
           moodle-plugin-ci savepoints mod/these || check_status=1
+          moodle-plugin-ci savepoints mod/thesesynthesis || check_status=1
           exit "$check_status"
 
       - name: PHPDoc for mod_these
@@ -115,11 +121,17 @@ jobs:
         continue-on-error: true
         run: moodle-plugin-ci phpdoc --max-warnings=0 mod/these
 
+      - name: PHPDoc for mod_thesesynthesis
+        if: ${{ !cancelled() && steps.moodle_install.outcome == 'success' }}
+        continue-on-error: true
+        run: moodle-plugin-ci phpdoc --max-warnings=0 mod/thesesynthesis
+
       - name: Mustache templates
         if: ${{ !cancelled() && steps.moodle_install.outcome == 'success' }}
         run: |
           check_status=0
           moodle-plugin-ci mustache mod/these || check_status=1
+          moodle-plugin-ci mustache mod/thesesynthesis || check_status=1
           exit "$check_status"
 
       - name: PHPUnit
@@ -127,4 +139,5 @@ jobs:
         run: |
           check_status=0
           moodle-plugin-ci phpunit mod/these || check_status=1
+          moodle-plugin-ci phpunit mod/thesesynthesis || check_status=1
           exit "$check_status"

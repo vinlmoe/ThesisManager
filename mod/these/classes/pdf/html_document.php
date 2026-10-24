@@ -173,6 +173,16 @@ class html_document extends \pdf {
     }
 
     /**
+     * Nombre de pages d'un PDF produit par render().
+     *
+     * @param string $pdf
+     * @return int
+     */
+    public static function page_count($pdf) {
+        return preg_match_all('#/Type\s*/Page[^s]#', $pdf);
+    }
+
+    /**
      * En-tête de page : section « header » du modèle.
      *
      * @return void

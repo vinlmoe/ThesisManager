@@ -54,6 +54,11 @@ class backup_these_activity_structure_step extends backup_activity_structure_ste
         $doctemplates = new backup_nested_element('doctemplates');
         $doctemplate = new backup_nested_element('doctemplate', ['id'], ['doctype', 'content', 'timemodified']);
 
+        $griditems = new backup_nested_element('griditems');
+        $griditem = new backup_nested_element('griditem', ['id'], [
+            'itemkey', 'section', 'label', 'conditional', 'sortorder', 'timemodified',
+        ]);
+
         $dossiers = new backup_nested_element('dossiers');
         $dossier = new backup_nested_element('dossier', ['id'], [
             'userid', 'status', 'statustime', 'title', 'titleen', 'summary', 'keywords',
@@ -69,6 +74,7 @@ class backup_these_activity_structure_step extends backup_activity_structure_ste
         $jurymembers = new backup_nested_element('jurymembers');
         $jurymember = new backup_nested_element('jurymember', ['id'], [
             'juryrole', 'fullname', 'jurytitle', 'institution', 'email', 'sortorder', 'timecreated',
+            'jurorid', 'jurystatus', 'eligible', 'eligibleby', 'eligibletime', 'notifiedtime',
         ]);
 
         // Le jeton d'une invitation en attente n'est pas sauvegardé : c'est un secret d'accès sans
@@ -88,6 +94,8 @@ class backup_these_activity_structure_step extends backup_activity_structure_ste
         $emailtemplates->add_child($emailtemplate);
         $these->add_child($doctemplates);
         $doctemplates->add_child($doctemplate);
+        $these->add_child($griditems);
+        $griditems->add_child($griditem);
         $these->add_child($dossiers);
         $dossiers->add_child($dossier);
         $dossier->add_child($jurymembers);
@@ -100,6 +108,7 @@ class backup_these_activity_structure_step extends backup_activity_structure_ste
         $these->set_source_table('these', ['id' => backup::VAR_ACTIVITYID]);
         $emailtemplate->set_source_table('these_email_template', ['theseid' => backup::VAR_PARENTID], 'id ASC');
         $doctemplate->set_source_table('these_doctemplate', ['theseid' => backup::VAR_PARENTID], 'id ASC');
+        $griditem->set_source_table('these_griditem', ['theseid' => backup::VAR_PARENTID], 'sortorder ASC, id ASC');
 
         if ($userinfo) {
             $dossier->set_source_table('these_dossier', ['theseid' => backup::VAR_PARENTID], 'id ASC');
@@ -112,6 +121,7 @@ class backup_these_activity_structure_step extends backup_activity_structure_ste
         $dossier->annotate_ids('user', 'directorid');
         $dossier->annotate_ids('user', 'returnedby');
         $log->annotate_ids('user', 'userid');
+        $jurymember->annotate_ids('user', 'eligibleby');
         $signature->annotate_ids('user', 'userid');
         $signature->annotate_files('mod_these', 'signature', 'id');
 

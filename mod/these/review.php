@@ -78,6 +78,7 @@ $mform = new review_form($PAGE->url, [
     'theseid' => $these->id,
     'minjury' => $these->minjury,
     'jurycount' => count($jury),
+    'jurorids' => array_map('intval', array_column($jury, 'jurorid')),
     'signs' => implode(', ', $signs),
     'signername' => fullname($USER),
     'externaldirector' => !empty($dossier->externaldirector),
@@ -160,7 +161,7 @@ if ($mform->is_cancelled()) {
             $fields['reportfavorable'] = (int) !empty($data->reportfavorable);
             $fields['ethicsnumber'] = trim($data->ethicsnumber);
             $grid = [];
-            foreach (these_grid_items() as $items) {
+            foreach (these_get_grid_items($these->id) as $items) {
                 foreach (array_keys($items) as $item) {
                     $grid[$item] = (int) !empty($data->{'grid_' . $item});
                 }
@@ -181,7 +182,7 @@ if ($mform->is_cancelled()) {
                 'a6notyet' => (int) !empty($data->aga6notyet),
                 'a6date' => !empty($data->aga6notyet) ? 0 : (int) $data->aga6date,
             ]));
-            these_save_jury($dossier->id, these_extract_submitted_jury($data));
+            these_save_jury($dossier->id, these_extract_submitted_jury($data, true), $USER->id);
             break;
     }
     these_validate_step(
@@ -193,7 +194,14 @@ if ($mform->is_cancelled()) {
         $remark,
         $signs ? these_signature_from_form($data) : null
     );
-    redirect($dossierurl, get_string('stepvalidated', 'mod_these'), null, \core\output\notification::NOTIFY_SUCCESS);
+    $message = get_string('stepvalidated', 'mod_these');
+    if ($step['key'] === 'devedefense') {
+        // Éligibilité validée : les membres du jury sont prévenus et reçoivent l'accès aux documents.
+        $notified = these_notify_jury($these, $cm, $DB->get_record('these_dossier', ['id' => $dossier->id]));
+        $message .= ' ' . get_string('jurynotified', 'mod_these', $notified->sent)
+            . ($notified->missing ? ' ' . get_string('jurynotifiedmissing', 'mod_these', implode(', ', $notified->missing)) : '');
+    }
+    redirect($dossierurl, $message, null, \core\output\notification::NOTIFY_SUCCESS);
 }
 
 $student = $DB->get_record('user', ['id' => $dossier->userid]);

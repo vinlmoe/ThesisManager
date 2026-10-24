@@ -70,7 +70,7 @@ class dossier_edit_form extends \moodleform {
         $mform->addElement('text', 'defenselocation', get_string('defenselocation', 'mod_these'), ['size' => 64]);
         $mform->setType('defenselocation', PARAM_TEXT);
 
-        these_add_jury_fields($this, $mform, $this->_customdata['jurycount'] ?? 0);
+        these_add_jury_fields($this, $mform, $this->_customdata['jurycount'] ?? 0, true, $this->_customdata['jurorids'] ?? []);
 
         $this->add_action_buttons();
     }

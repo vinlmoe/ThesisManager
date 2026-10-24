@@ -54,7 +54,10 @@ $jury = these_get_jury($dossier->id);
 $returned = (int) $dossier->status === THESE_STATUS_DEFENSE_RETURNED;
 $mform = new defense_form($PAGE->url, [
     'jurycount' => count($jury),
+    'jurorids' => array_map('intval', array_column($jury, 'jurorid')),
     'minjury' => $these->minjury,
+    'these' => $these,
+    'context' => $context,
     'submitlabel' => $returned ? 'resubmitdefense' : 'submitdefense',
     'signername' => fullname($USER),
 ]);
@@ -90,9 +93,16 @@ $formdata->defenselocation = $dossier->defenselocation ?: $these->defaultlocatio
 // Le directeur figure presque toujours au jury : il est proposé d'office au premier dépôt.
 if (empty($jury) && $dossier->directorid && ($director = $DB->get_record('user', ['id' => $dossier->directorid]))) {
     $formdata->juryrole = [1 => 'director'];
-    $formdata->juryname = [1 => fullname($director)];
-    $formdata->juryemail = [1 => $director->email];
-    $formdata->juryinstitution = [1 => $these->establishmentname];
+    $juror = \mod_these\local\jurors::find_by_email($director->email);
+    if ($juror) {
+        // Directeur présent dans l'annuaire du jury : choisi dans la liste.
+        $formdata->jurorid = [1 => $juror->id];
+    } else {
+        $formdata->juryname = [1 => fullname($director)];
+        $formdata->jurytitle = [1 => (string) $dossier->directortitle];
+        $formdata->juryemail = [1 => $director->email];
+        $formdata->juryinstitution = [1 => $these->establishmentname];
+    }
 }
 $mform->set_data($formdata);
 

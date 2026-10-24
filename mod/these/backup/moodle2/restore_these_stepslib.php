@@ -41,6 +41,7 @@ class restore_these_activity_structure_step extends restore_activity_structure_s
         $paths[] = new restore_path_element('these', '/activity/these');
         $paths[] = new restore_path_element('these_email_template', '/activity/these/emailtemplates/emailtemplate');
         $paths[] = new restore_path_element('these_doctemplate', '/activity/these/doctemplates/doctemplate');
+        $paths[] = new restore_path_element('these_griditem', '/activity/these/griditems/griditem');
         if ($this->get_setting_value('userinfo')) {
             $paths[] = new restore_path_element('these_dossier', '/activity/these/dossiers/dossier');
             $paths[] = new restore_path_element('these_jury', '/activity/these/dossiers/dossier/jurymembers/jurymember');
@@ -98,6 +99,19 @@ class restore_these_activity_structure_step extends restore_activity_structure_s
     }
 
     /**
+     * Restaure un élément de la grille de conformité.
+     *
+     * @param array $data
+     */
+    protected function process_these_griditem($data) {
+        global $DB;
+
+        $data = (object) $data;
+        $data->theseid = $this->get_new_parentid('these');
+        $DB->insert_record('these_griditem', $data);
+    }
+
+    /**
      * Identifiant d'utilisateur restauré, 0 si l'utilisateur n'a pas été restauré (ou n'existait
      * pas : 0 désigne le système dans l'historique).
      *
@@ -146,6 +160,13 @@ class restore_these_activity_structure_step extends restore_activity_structure_s
         if (!$data->dossierid) {
             return;
         }
+        // L'annuaire du jury est propre au site : un enseignant absent de cet annuaire devient un
+        // membre saisi. Le jeton d'accès n'est pas sauvegardé (secret d'accès sans compte).
+        if (!empty($data->jurorid) && !$DB->record_exists('these_juror', ['id' => $data->jurorid])) {
+            $data->jurorid = 0;
+        }
+        $data->eligibleby = $this->map_user($data->eligibleby ?? 0);
+        unset($data->accesstoken);
         $DB->insert_record('these_jury', $data);
     }
 

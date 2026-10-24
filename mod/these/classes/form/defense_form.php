@@ -70,7 +70,7 @@ class defense_form extends \moodleform {
         $mform->setType('defenselocation', PARAM_TEXT);
         $mform->addElement('advcheckbox', 'bvisio', '', get_string('visio', 'mod_these'));
 
-        these_add_jury_fields($this, $mform, $this->_customdata['jurycount'] ?? 0);
+        these_add_jury_fields($this, $mform, $this->_customdata['jurycount'] ?? 0, false, $this->_customdata['jurorids'] ?? []);
 
         // Identité et coordonnées : communes au bordereau ABES, à la fiche signalétique et au
         // contrat de diffusion.
@@ -128,7 +128,11 @@ class defense_form extends \moodleform {
 
         // Conclusions, signées ensuite par le directeur, le président du jury et les autorités.
         $mform->addElement('header', 'conclusionsheader', get_string('docconclusions', 'mod_these'));
-        $mform->addElement('textarea', 'conclusions', get_string('conclusionstext', 'mod_these'), ['rows' => 14, 'cols' => 80]);
+        $mform->addElement('textarea', 'conclusions', get_string('conclusionstext', 'mod_these'), [
+            'rows' => 14,
+            'cols' => 80,
+            'maxlength' => THESE_CONCLUSIONS_MAX,
+        ]);
         $mform->setType('conclusions', PARAM_TEXT);
         $mform->addHelpButton('conclusions', 'conclusionstext', 'mod_these');
 
@@ -193,6 +197,16 @@ class defense_form extends \moodleform {
             $isnumber = in_array($field, ['bnbpages', 'bnbrefs'], true);
             if ($value === '' || ($isnumber && (int) $value <= 0)) {
                 $errors[$field] = get_string('required');
+            }
+        }
+        if (!isset($errors['conclusions'])) {
+            $conclusionserror = these_conclusions_error(
+                $this->_customdata['these'],
+                $this->_customdata['context'] ?? null,
+                (string) $data['conclusions']
+            );
+            if ($conclusionserror !== null) {
+                $errors['conclusions'] = $conclusionserror;
             }
         }
         if (!isset($errors['bpersonalemail']) && !validate_email($data['bpersonalemail'])) {

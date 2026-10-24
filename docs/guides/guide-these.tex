@@ -4,9 +4,9 @@
 
 % Version du guide : à mettre à jour à chaque modification, avec une ligne dans l'historique.
 \newcommand{\titreguide}{Guide de la gestion des thèses}
-\newcommand{\versionguide}{1.4}
+\newcommand{\versionguide}{1.5}
 \newcommand{\dateguide}{23 octobre 2026}
-\newcommand{\versionthese}{0.5.0}
+\newcommand{\versionthese}{0.6.0}
 
 \usepackage{guide-commun}
 \usepackage{tikz}
@@ -34,6 +34,9 @@ formulaires officiels ; modèles des documents modifiables dans l'administration
 1.3 & 23 octobre 2026 & Modèles et images des documents propres à chaque
 activité, modifiés par la DEVE. \\
 1.4 & 24 octobre 2026 & Transfert des paramètres entre activités et par fichier. \\
+1.5 & 24 octobre 2026 & Annuaire du jury, éligibilité et accès du jury ; grille de
+conformité modifiable ; conclusions sur une page ; suivi des thèses de plusieurs
+promotions. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -278,11 +281,22 @@ agir.
 Une fois le dossier actif, le bouton \bouton{Déposer les documents de
 soutenance} permet de déposer le manuscrit (PDF, obligatoire), les autres
 documents, de proposer une date, un lieu et le jury : un président et au moins
-le nombre de membres votants fixé dans l'activité. Le directeur est proposé
-d'office comme membre du jury. Le même écran recueille les données du
-bordereau ABES (identité, cursus, mots-clés, résumé), le texte des conclusions
-et vos choix de diffusion pour le contrat (confidentialité, embargo), avant
-votre signature. Le dépôt peut se préparer en plusieurs fois.
+le nombre de membres votants fixé dans l'activité. Chaque membre se choisit de
+préférence dans l'\textbf{annuaire du jury} (section~\ref{sec:annuaire}) ; un
+membre extérieur ou un invité se décrit en choisissant \og Membre extérieur ou
+invité\fg{} (nom, titre, statut, établissement, adresse). Seuls les maîtres de
+conférences HDR, les professeurs et les émérites peuvent présider. Le directeur
+est proposé d'office. Le même écran recueille les données du bordereau ABES
+(identité, cursus, mots-clés, résumé), le texte des conclusions et vos choix de
+diffusion pour le contrat (confidentialité, embargo), avant votre signature. Le
+dépôt peut se préparer en plusieurs fois.
+
+\begin{astuce}
+Les conclusions doivent tenir \textbf{sur une page avec les signatures} :
+2\,200 caractères au plus, paragraphes séparés par une ligne vide. Au dépôt, la
+mise en page réelle est vérifiée ; des conclusions trop longues (ou en trop de
+paragraphes) sont refusées avec un message.
+\end{astuce}
 
 \capture{09_etudiant_soutenance}{Dépôt des documents de soutenance.}
 
@@ -342,8 +356,23 @@ l'étudiant ou au directeur.
 \subsection{Valider le dossier de soutenance (phase 2, étape 3)}
 
 La DEVE vérifie le dossier complet (manuscrit, documents, rapport du directeur)
-et arrête la date, le lieu et le jury, qu'elle peut modifier. La validation
-transmet le manuscrit à la bibliothèque.
+et arrête la date, le lieu et le jury, qu'elle peut modifier. Elle
+\textbf{valide l'éligibilité} de chaque membre votant en cochant \bouton{Éligibilité
+vérifiée} (déjà cochée pour les enseignants de l'annuaire dont le statut convient
+à leur rôle ; à vérifier pour les membres extérieurs). Un président qui n'est ni
+maître de conférences HDR, ni professeur, ni émérite est refusé.
+
+\capture[0.85\linewidth]{46_jury_eligibilite}{Jury : enseignants de l'annuaire, membre extérieur et invité ; validation de l'éligibilité par la DEVE.}
+
+La validation transmet le manuscrit à la bibliothèque et \textbf{prévient les
+membres du jury} par courriel : chacun reçoit un lien personnel vers les
+documents du dossier (manuscrit, documents déposés, rapport du directeur, grille
+de conformité, conclusions, fiche signalétique), sans compte Moodle. Le tableau
+du jury du dossier indique l'éligibilité et la date de notification de chacun ;
+\bouton{Renvoyer l'accès au jury} renvoie le courriel à tous. Un membre ajouté
+plus tard par la DEVE est prévenu à son tour.
+
+\capture[0.75\linewidth]{50_acces_jury}{Accès d'un membre du jury aux documents du dossier.}
 
 \subsection{Générer et transmettre les documents (phase 2, étape 5)}
 
@@ -503,17 +532,32 @@ modèle n'annule aucune signature : seules les données signées sont couvertes
 par l'empreinte, pas leur mise en page.
 \end{attention}
 
+\subsection{Grille de conformité}\label{sec:grille}
+
+Les éléments de la grille de conformité remplie par le directeur se modifient
+dans chaque activité : \bouton{Grille de conformité} de la barre de navigation
+(DEVE). Pour chaque élément : rubrique (fond ou forme), libellé, et \og Selon la
+thèse\fg{} s'il peut rester non coché. Vider un libellé supprime l'élément ; les
+lignes vides en bas de liste en ajoutent ; \bouton{Rétablir la grille d'origine}
+revient à la grille de 08-2024. La grille en PDF est produite à partir du
+formulaire rempli par le directeur et des éléments en vigueur : une
+modification met à jour les grilles (les documents de soutenance déjà générés
+le sont à leur prochaine génération).
+
+\capture[0.8\linewidth]{48_grille_elements}{Éléments de la grille de conformité.}
+
 \subsection{Transfert des paramètres}\label{sec:transfert}
 
 Le bouton \bouton{Transfert des paramètres} de la barre de navigation (DEVE)
 reprend dans l'activité les paramètres d'une autre : à l'ouverture d'un
 nouveau cours ou d'une nouvelle année, on part ainsi de l'activité précédente
-au lieu de tout ressaisir. Quatre groupes se transfèrent, au choix :
+au lieu de tout ressaisir. Cinq groupes se transfèrent, au choix :
 \begin{itemize}
   \item les paramètres de l'activité (établissement, adresse, ville,
         signataire, lieu de soutenance par défaut, jury minimum, adresses de
         service, délai de relance) ;
   \item les courriels personnalisés ;
+  \item les éléments de la grille de conformité ;
   \item les modèles des documents ;
   \item les images des modèles.
 \end{itemize}
@@ -572,6 +616,63 @@ scientifique du directeur.
 
 Les documents, dans leur état de signature, sont joints aux documents de
 soutenance générés et à l'archive transmise à l'université.
+
+% ===========================================================================
+\section{Annuaire du jury et suivi des thèses}
+
+\subsection{Annuaire du jury}\label{sec:annuaire}
+
+L'annuaire réunit les enseignants pouvant diriger une thèse ou siéger au jury,
+\textbf{communs à toutes les activités et à toutes les promotions}. La DEVE le
+tient depuis \bouton{Annuaire du jury} (barre de navigation d'une activité
+\og Gestion des thèses\fg{}, ou activité \og Suivi des thèses\fg{}). Chaque
+enseignant a un titre (Dr ou Pr), un statut et un établissement :
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}X c c@{}}
+\toprule
+\textbf{Statut} & \textbf{Directeur, membre} & \textbf{Président} \\
+\midrule
+Ingénieur de recherche & oui & non \\
+Maître de conférences, maître de conférences stagiaire & oui & non \\
+Maître de conférences HDR & oui & oui \\
+Professeur stagiaire & oui & non \\
+Professeur & oui & oui \\
+Professeur émérite, maître de conférences émérite & oui & oui \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\capture[0.85\linewidth]{47_annuaire_jury}{Annuaire du jury.}
+
+Les formulaires de jury (étudiant, DEVE) y puisent : choisir un enseignant
+préremplit son titre, son statut, son établissement et son adresse. Un
+enseignant retiré (non actif) n'est plus proposé mais reste dans les jurys qui
+l'ont retenu. L'annuaire s'importe aussi d'un fichier CSV (colonnes
+\texttt{title}, \texttt{lastname}, \texttt{firstname}, \texttt{email},
+\texttt{status}, \texttt{institution}).
+
+\subsection{Suivi des thèses de plusieurs promotions}
+
+Le module complémentaire \textbf{Suivi des thèses} (\texttt{mod\_thesesynthesis})
+s'installe à côté de la gestion des thèses, comme le suivi des stages. Dans un
+cours dédié, où sont inscrits les directeurs, les enseignants membres de jury,
+la DEVE et la bibliothèque, on ajoute une activité \og Suivi des thèses\fg{}
+puis on coche, dans \bouton{Promotions suivies}, les activités \og Gestion des
+thèses\fg{} (une par promotion) à suivre. Chacun y trouve :
+\begin{description}
+  \item[À traiter] les dossiers qui l'attendent, toutes promotions confondues ;
+  \item[Mes jurys] les jurys où il siège, avec la date, le lieu et l'accès aux
+        documents dès la validation du jury par la DEVE ;
+  \item[Dossiers suivis] ses thèses dirigées, ou tous les dossiers pour la DEVE
+        et la bibliothèque, filtrables par promotion, statut et recherche.
+\end{description}
+
+\capture[0.85\linewidth]{49_suivi_theses}{Suivi des thèses : jurys d'un enseignant.}
+
+L'activité ne stocke aucune donnée de thèse : elle relit les dossiers dans les
+activités liées, et seulement là où l'utilisateur a ses droits.
 
 % ===========================================================================
 \section{Courriels et relances}

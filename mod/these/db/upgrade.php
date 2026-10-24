@@ -151,5 +151,69 @@ function xmldb_these_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2026102600, 'these');
     }
 
+    if ($oldversion < 2026102800) {
+        // Annuaire du jury, éligibilité et accès des membres du jury, grille de conformité modifiable.
+        $table = new xmldb_table('these_jury');
+        $fields = [
+            new xmldb_field('jurorid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'timecreated'),
+            new xmldb_field('jurystatus', XMLDB_TYPE_CHAR, '20', null, null, null, null, 'jurorid'),
+            new xmldb_field('eligible', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'jurystatus'),
+            new xmldb_field('eligibleby', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'eligible'),
+            new xmldb_field('eligibletime', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'eligibleby'),
+            new xmldb_field('accesstoken', XMLDB_TYPE_CHAR, '64', null, null, null, null, 'eligibletime'),
+            new xmldb_field('notifiedtime', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'accesstoken'),
+        ];
+        foreach ($fields as $field) {
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+        }
+        foreach (
+            [
+            new xmldb_index('accesstoken', XMLDB_INDEX_NOTUNIQUE, ['accesstoken']),
+            new xmldb_index('jurorid', XMLDB_INDEX_NOTUNIQUE, ['jurorid']),
+            ] as $index
+        ) {
+            if (!$dbman->index_exists($table, $index)) {
+                $dbman->add_index($table, $index);
+            }
+        }
+
+        $table = new xmldb_table('these_griditem');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('theseid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('itemkey', XMLDB_TYPE_CHAR, '40', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('section', XMLDB_TYPE_CHAR, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('label', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null);
+        $table->add_field('conditional', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('sortorder', XMLDB_TYPE_INTEGER, '4', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('theseid', XMLDB_KEY_FOREIGN, ['theseid'], 'these', ['id']);
+        $table->add_index('theseid_itemkey', XMLDB_INDEX_UNIQUE, ['theseid', 'itemkey']);
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        $table = new xmldb_table('these_juror');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('title', XMLDB_TYPE_CHAR, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('lastname', XMLDB_TYPE_CHAR, '100', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('firstname', XMLDB_TYPE_CHAR, '100', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('email', XMLDB_TYPE_CHAR, '100', null, null, null, null);
+        $table->add_field('status', XMLDB_TYPE_CHAR, '20', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('institution', XMLDB_TYPE_CHAR, '255', null, null, null, null);
+        $table->add_field('active', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1');
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_index('email', XMLDB_INDEX_NOTUNIQUE, ['email']);
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        upgrade_mod_savepoint(true, 2026102800, 'these');
+    }
+
     return true;
 }
