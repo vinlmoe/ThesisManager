@@ -64,6 +64,7 @@ if ($dataformat !== '') {
         'jury' => get_string('jury', 'mod_these'),
         'result' => get_string('defenseresult', 'mod_these'),
         'mention' => get_string('mention', 'mod_these'),
+        'embargo' => get_string('embargoexport', 'mod_these'),
     ];
     $dossiers = these_get_dossiers($these->id);
     $students = $DB->get_records_list('user', 'id', array_column($dossiers, 'userid'));
@@ -77,7 +78,8 @@ if ($dataformat !== '') {
         $students,
         $directors,
         $roles,
-        $dateformat
+        $dateformat,
+        $context
     ) {
         $student = $students[$dossier->userid] ?? null;
         $director = $directors[$dossier->directorid] ?? null;
@@ -88,9 +90,9 @@ if ($dataformat !== '') {
             'devenumber' => $dossier->devenumber,
             'student' => $student ? fullname($student) : '',
             'email' => $student ? $student->email : '',
-            'title' => $dossier->title,
-            'titleen' => $dossier->titleen,
-            'keywords' => $dossier->keywords,
+            'title' => these_subject_field($dossier, 'title', $context),
+            'titleen' => these_subject_field($dossier, 'titleen', $context),
+            'keywords' => these_subject_field($dossier, 'keywords', $context),
             'director' => $director ? fullname($director) : '',
             'codirector' => $dossier->codirectorname,
             'libraryref' => $dossier->libraryref,
@@ -101,6 +103,8 @@ if ($dataformat !== '') {
             'jury' => implode(' ; ', $jury),
             'result' => (int) $dossier->defenseresult ? these_result_label($dossier->defenseresult) : '',
             'mention' => these_mention_label($dossier->mention),
+            'embargo' => these_embargo_until($dossier)
+                ? userdate(these_embargo_until($dossier), get_string('strftimedatefullshort', 'langconfig')) : '',
         ];
     });
     die();

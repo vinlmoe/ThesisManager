@@ -310,24 +310,69 @@ function these_email_base_vars(stdClass $these, stdClass $cm, stdClass $dossier)
 /**
  * Envoie un courriel à une liste de destinataires.
  *
+ * Pour une thèse confidentielle, les destinataires qui ne doivent pas connaître le sujet (voir
+ * these_user_knows_subject()) reçoivent « Thèse confidentielle » à la place du titre.
+ *
  * @param stdClass $these
  * @param string $emailkey
  * @param array $recipients
  * @param array $vars
  * @param string $attachment Chemin d'une pièce jointe (dans le répertoire temporaire de Moodle).
  * @param string $attachname Nom de la pièce jointe.
+ * @param stdClass|null $dossier Dossier dont le courriel cite le titre.
  * @return int Nombre de courriels partis.
  */
-function these_send_email(stdClass $these, $emailkey, array $recipients, array $vars, $attachment = '', $attachname = '') {
-    $text = these_resolve_email_text($these->id, $emailkey, $vars);
+function these_send_email(
+    stdClass $these,
+    $emailkey,
+    array $recipients,
+    array $vars,
+    $attachment = '',
+    $attachname = '',
+    ?stdClass $dossier = null
+) {
     $noreply = core_user::get_noreply_user();
+    $text = these_resolve_email_text($these->id, $emailkey, $vars);
+    $masked = null;
     $sent = 0;
     foreach ($recipients as $recipient) {
-        if (email_to_user($recipient, $noreply, $text->subject, $text->body, '', $attachment, $attachname)) {
+        $message = $text;
+        if ($dossier !== null && !these_recipient_knows_subject($these, $dossier, $recipient)) {
+            if ($masked === null) {
+                $hidden = get_string('confidentialtitle', 'mod_these');
+                $masked = these_resolve_email_text($these->id, $emailkey, array_merge($vars, array_intersect_key(
+                    ['title' => $hidden, 'oldtitle' => $hidden],
+                    $vars
+                )));
+            }
+            $message = $masked;
+        }
+        if (email_to_user($recipient, $noreply, $message->subject, $message->body, '', $attachment, $attachname)) {
             $sent++;
         }
     }
     return $sent;
+}
+
+/**
+ * Indique si le destinataire d'un courriel peut connaître le sujet d'une thèse : un compte qui le
+ * connaît (voir these_user_knows_subject()), ou la boîte de service de la DEVE.
+ *
+ * @param stdClass $these
+ * @param stdClass $dossier
+ * @param stdClass $recipient Compte Moodle, ou destinataire sans compte (voir these_make_external_user()).
+ * @return bool
+ */
+function these_recipient_knows_subject(stdClass $these, stdClass $dossier, stdClass $recipient) {
+    if (empty($dossier->confidential)) {
+        return true;
+    }
+    if ((int) $recipient->id > 0) {
+        $cm = get_coursemodule_from_instance('these', $these->id, 0, false, MUST_EXIST);
+        return these_user_knows_subject($dossier, context_module::instance($cm->id), $recipient->id);
+    }
+    $deveemail = core_text::strtolower(trim((string) ($these->deveemail ?? '')));
+    return $deveemail !== '' && core_text::strtolower(trim((string) $recipient->email)) === $deveemail;
 }
 
 /**
@@ -346,7 +391,7 @@ function these_notify_actor(stdClass $these, stdClass $cm, stdClass $dossier) {
     }
     $vars = these_email_base_vars($these, $cm, $dossier);
     $vars['status'] = these_status_label($dossier->status);
-    return these_send_email($these, 'actionrequired', $recipients, $vars);
+    return these_send_email($these, 'actionrequired', $recipients, $vars, '', '', $dossier);
 }
 
 /**
@@ -369,7 +414,7 @@ function these_notify_returned(stdClass $these, stdClass $cm, stdClass $dossier,
     }
     $vars = these_email_base_vars($these, $cm, $dossier);
     $vars['comment'] = $comment;
-    return these_send_email($these, 'returned', [$user], $vars);
+    return these_send_email($these, 'returned', [$user], $vars, '', '', $dossier);
 }
 
 /**
@@ -382,7 +427,7 @@ function these_notify_returned(stdClass $these, stdClass $cm, stdClass $dossier,
  */
 function these_notify_subject_active(stdClass $these, stdClass $cm, stdClass $dossier) {
     $vars = these_email_base_vars($these, $cm, $dossier);
-    return these_send_email($these, 'subjectactive', these_get_student_and_director($dossier), $vars);
+    return these_send_email($these, 'subjectactive', these_get_student_and_director($dossier), $vars, '', '', $dossier);
 }
 
 /**
@@ -396,7 +441,7 @@ function these_notify_subject_active(stdClass $these, stdClass $cm, stdClass $do
 function these_notify_closed(stdClass $these, stdClass $cm, stdClass $dossier) {
     $vars = these_email_base_vars($these, $cm, $dossier);
     $vars['result'] = these_decision_label($dossier);
-    return these_send_email($these, 'closed', these_get_student_and_director($dossier), $vars);
+    return these_send_email($these, 'closed', these_get_student_and_director($dossier), $vars, '', '', $dossier);
 }
 
 /**
@@ -467,7 +512,7 @@ function these_send_reminder(stdClass $these, stdClass $cm, stdClass $dossier) {
     $vars = these_email_base_vars($these, $cm, $dossier);
     $vars['status'] = these_status_label($dossier->status);
     $vars['days'] = (int) floor((time() - $dossier->statustime) / DAYSECS);
-    if (!these_send_email($these, 'reminder', $recipients, $vars)) {
+    if (!these_send_email($these, 'reminder', $recipients, $vars, '', '', $dossier)) {
         return false;
     }
     $DB->set_field('these_dossier', 'remindertime', time(), ['id' => $dossier->id]);

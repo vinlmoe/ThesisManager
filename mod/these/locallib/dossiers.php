@@ -433,6 +433,14 @@ function these_extract_bordereau(stdClass $data, array $existing) {
             $bordereau[$field] = is_string($value) ? trim($value) : $value;
         }
     }
+    // L'embargo dure désormais THESE_EMBARGO_YEARS ans après la soutenance (voir these_embargo_until()) :
+    // une date saisie avec l'ancien formulaire ne vaut plus dès que l'étudiant enregistre le nouveau.
+    if (property_exists($data, 'bembargo') && !property_exists($data, 'bembargountil')) {
+        $bordereau['embargountil'] = 0;
+    }
+    if (empty($bordereau['embargo'])) {
+        unset($bordereau['embargoreason']);
+    }
     return $bordereau;
 }
 
@@ -762,7 +770,7 @@ function these_adjourn_dossier(stdClass $these, stdClass $cm, stdClass $dossier,
             'senttime' => 0,
         ], these_cleared_return_fields()));
         $vars = these_email_base_vars($these, $cm, $dossier);
-        these_send_email($these, 'adjourned', these_get_student_and_director($dossier), $vars);
+        these_send_email($these, 'adjourned', these_get_student_and_director($dossier), $vars, '', '', $dossier);
         return $dossier;
     });
 }

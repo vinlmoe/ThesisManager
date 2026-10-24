@@ -115,7 +115,9 @@ echo html_writer::empty_tag('input', ['type' => 'text', 'name' => 'search', 'val
 echo html_writer::empty_tag('input', ['type' => 'submit', 'value' => get_string('filter'), 'class' => 'btn btn-secondary']);
 echo html_writer::end_tag('form');
 
-$filters = ['search' => $search];
+// La DEVE connaît le sujet de toutes les thèses, un directeur (sans droit de tout voir) celui des
+// siennes : eux seuls cherchent aussi dans le titre des thèses confidentielles.
+$filters = ['search' => $search, 'confidentialsubjects' => $rights->deve || !$rights->viewall];
 if ($statusfilter !== '') {
     $filters['status'] = (int) $statusfilter;
 }

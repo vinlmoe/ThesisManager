@@ -72,7 +72,8 @@ $table = function (array $rows) {
         $table->data[] = [
             format_string($row->link->course->shortname ?: $row->link->course->fullname),
             s($row->student ? fullname($row->student) : '-'),
-            format_string($row->dossier->title),
+            $row->knowssubject ? format_string($row->dossier->title)
+                : html_writer::tag('em', get_string('confidentialtitle', 'mod_these')),
             s($row->director ? fullname($row->director) : '-'),
             these_render_status_badge($row->dossier->status),
             $row->actor ? these_actor_label($row->actor) : '-',

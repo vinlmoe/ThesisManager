@@ -196,7 +196,8 @@ foreach ($rows as $row) {
                 . s(these_answer_text($row->answers[(int) $question->id]));
         }
     }
-    $title = format_string($row->dossier->title);
+    $title = $row->knowssubject ? format_string($row->dossier->title)
+        : html_writer::tag('em', get_string('confidentialtitle', 'mod_these'));
     if ($details) {
         $title = html_writer::tag('details', html_writer::tag('summary', $title)
             . html_writer::div(implode(html_writer::empty_tag('br'), $details), 'small mt-1'));

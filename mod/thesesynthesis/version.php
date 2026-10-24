@@ -25,11 +25,11 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'mod_thesesynthesis';
-$plugin->version   = 2026102902;
+$plugin->version   = 2026102903;
 $plugin->requires  = 2022041900; // Moodle 4.0+.
 $plugin->maturity  = MATURITY_BETA;
-$plugin->release   = '0.3.0';
+$plugin->release   = '0.3.1';
 $plugin->dependencies = [
     // Annuaire du jury, paramètres partagés (modèles, grille, questionnaire).
-    'mod_these' => 2026103102,
+    'mod_these' => 2026103103,
 ];

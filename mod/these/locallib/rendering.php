@@ -31,7 +31,9 @@
  *
  * @param int $theseid
  * @param array $filters status (int|null), directorid (int|null), search (string), queue (string[]
- *                       acteurs dont on veut les dossiers en attente), queuedirectorid (int).
+ *                       acteurs dont on veut les dossiers en attente), queuedirectorid (int),
+ *                       confidentialsubjects (bool : la recherche porte aussi sur le titre des thèses
+ *                       confidentielles, pour qui connaît leur sujet).
  * @return array Dossiers avec les champs de nom de l'étudiant et du directeur.
  */
 function these_get_dossiers($theseid, array $filters = []) {
@@ -53,7 +55,12 @@ function these_get_dossiers($theseid, array $filters = []) {
     }
     if (!empty($filters['search'])) {
         $like = '%' . $DB->sql_like_escape($filters['search']) . '%';
-        $where[] = '(' . $DB->sql_like('d.title', ':s1', false, false)
+        // Le titre d'une thèse confidentielle n'est cherché que pour qui connaît tous les sujets.
+        $titlematch = $DB->sql_like('d.title', ':s1', false, false);
+        if (empty($filters['confidentialsubjects'])) {
+            $titlematch = "(d.confidential = 0 AND $titlematch)";
+        }
+        $where[] = '(' . $titlematch
             . ' OR ' . $DB->sql_like($DB->sql_fullname('su.firstname', 'su.lastname'), ':s2', false, false)
             . ' OR ' . $DB->sql_like('d.devenumber', ':s3', false, false) . ')';
         $params['s1'] = $like;
@@ -310,9 +317,11 @@ function these_render_jury(array $members, $showemail = true, $staff = false) {
  * @param bool $staffview Vue du personnel (directeur, DEVE, bibliothèque) : sinon, le motif d'un
  *                        renvoi de la DEVE au directeur, qui ne s'adresse pas à l'étudiant, est
  *                        masqué (voir these_render_dossier()).
+ * @param bool $knowssubject L'utilisateur connaît le sujet : sinon, l'ancien titre cité par un
+ *                           changement de sujet d'une thèse confidentielle est masqué.
  * @return string HTML
  */
-function these_render_history($dossierid, $staffview = true) {
+function these_render_history($dossierid, $staffview = true, $knowssubject = true) {
     global $DB;
 
     $logs = $DB->get_records('these_log', ['dossierid' => $dossierid], 'timecreated DESC, id DESC');
@@ -337,7 +346,8 @@ function these_render_history($dossierid, $staffview = true) {
             $strman->string_exists($actionkey, 'mod_these') ? get_string($actionkey, 'mod_these') : s($log->logaction),
             $by,
             these_status_label($log->tostatus),
-            $staffview || $log->logaction !== 'returnedtodirector' ? format_text((string) $log->remark, FORMAT_PLAIN) : '',
+            ($staffview || $log->logaction !== 'returnedtodirector') && ($knowssubject || $log->logaction !== 'subjectchanged')
+                ? format_text((string) $log->remark, FORMAT_PLAIN) : '',
         ];
         $table->data[] = $row;
     }
@@ -473,18 +483,26 @@ function these_render_dossier(
     $student = $DB->get_record('user', ['id' => $dossier->userid]);
     $director = $dossier->directorid ? $DB->get_record('user', ['id' => $dossier->directorid]) : null;
 
+    // Thèse confidentielle : sujet masqué pour qui ne doit pas le connaître.
+    $knows = $rights->knowssubject;
+    $confidential = !empty($dossier->confidential)
+        ? html_writer::span(get_string('confidentialbadge', 'mod_these'), 'badge badge-danger') : null;
     $out .= these_render_detail_section(get_string('subject', 'mod_these'), [
         get_string('student', 'mod_these') => $student ? fullname($student) : '-',
-        get_string('subjecttitle', 'mod_these') => format_string($dossier->title) ?: '-',
-        get_string('subjecttitleen', 'mod_these') => format_string((string) $dossier->titleen),
-        get_string('subjectsummary', 'mod_these') => format_text((string) $dossier->summary, FORMAT_PLAIN),
-        get_string('subjectkeywords', 'mod_these') => s((string) $dossier->keywords),
+        get_string('subjecttitle', 'mod_these') => $knows ? (format_string($dossier->title) ?: '-')
+            : html_writer::tag('em', get_string('confidentialtitle', 'mod_these')),
+        get_string('confidentialitylabel', 'mod_these') => $confidential,
+        get_string('subjecttitleen', 'mod_these') => $knows ? format_string((string) $dossier->titleen) : null,
+        get_string('subjectsummary', 'mod_these') => $knows ? format_text((string) $dossier->summary, FORMAT_PLAIN) : null,
+        get_string('subjectkeywords', 'mod_these') => $knows ? s((string) $dossier->keywords) : null,
         get_string('director', 'mod_these') => $director ? fullname($director) : '-',
         get_string('codirector', 'mod_these') => s((string) $dossier->codirectorname),
-        get_string('subjectdocs', 'mod_these') => these_render_file_links($context, 'subjectdocs', $dossier->id),
+        get_string('subjectdocs', 'mod_these') => these_can_view_filearea('subjectdocs', $rights)
+            ? these_render_file_links($context, 'subjectdocs', $dossier->id) : null,
     ]);
+    $out .= these_render_embargo($dossier, $rights);
 
-    if ($rights->viewall || $rights->director || $rights->owner) {
+    if ($knows && ($rights->viewall || $rights->director || $rights->owner)) {
         $out .= these_render_subject_history($context, $dossier);
     }
     $out .= these_render_detail_section(get_string('registration', 'mod_these'), [
@@ -493,37 +511,37 @@ function these_render_dossier(
     ]);
 
     if (these_rank_reached($dossier, THESE_STATUS_ACTIVE) || $dossier->proposeddate) {
+        $files = function ($filearea) use ($context, $dossier, $rights) {
+            return these_can_view_filearea($filearea, $rights) ? these_render_file_links($context, $filearea, $dossier->id) : null;
+        };
         $dateformat = get_string('strftimedaydatetime', 'langconfig');
         $rows = [
             get_string('proposeddate', 'mod_these') =>
                 $dossier->proposeddate ? userdate($dossier->proposeddate, $dateformat) : null,
             get_string('defensedate', 'mod_these') => $dossier->defensedate ? userdate($dossier->defensedate, $dateformat) : null,
             get_string('defenselocation', 'mod_these') => s((string) $dossier->defenselocation),
-            get_string('manuscript', 'mod_these') => these_render_file_links($context, 'manuscript', $dossier->id),
-            get_string('defensedocs', 'mod_these') => these_render_file_links($context, 'defensedocs', $dossier->id),
+            get_string('manuscript', 'mod_these') => $files('manuscript'),
+            get_string('defensedocs', 'mod_these') => $files('defensedocs'),
         ];
-        if (these_can_view_filearea('directorreport', $rights)) {
-            $rows[get_string('directorreport', 'mod_these')] =
-                these_render_file_links($context, 'directorreport', $dossier->id);
-        }
-        $rows[get_string('generateddocuments', 'mod_these')] = these_render_file_links($context, 'generated', $dossier->id);
+        $rows[get_string('directorreport', 'mod_these')] = $files('directorreport');
+        $rows[get_string('generateddocuments', 'mod_these')] = $files('generated');
         if ($status === THESE_STATUS_CLOSED || these_in_corrections($status)) {
             $rows[get_string('defenseresult', 'mod_these')] = these_result_label($dossier->defenseresult);
             $rows[get_string('mention', 'mod_these')] = s(these_mention_label($dossier->mention));
             $rows[get_string('prizeproposal', 'mod_these')] = $dossier->prizeproposal ? get_string('yes') : null;
-            $rows[get_string('minutes', 'mod_these')] = these_render_file_links($context, 'pv', $dossier->id);
+            $rows[get_string('minutes', 'mod_these')] = $files('pv');
         }
-        $rows[get_string('minutesadjourned', 'mod_these')] = these_render_file_links($context, 'pvadjourned', $dossier->id);
+        $rows[get_string('minutesadjourned', 'mod_these')] = $files('pvadjourned');
         $out .= these_render_detail_section(get_string('defense', 'mod_these'), $rows);
         if (!empty($dossier->correctionsrequested)) {
             $out .= these_render_detail_section(get_string('corrections', 'mod_these'), [
                 get_string('correctionsnote', 'mod_these') => format_text((string) $dossier->correctionsnote, FORMAT_PLAIN),
                 get_string('correctionsdone', 'mod_these') => trim((string) $dossier->correctionsdone) !== ''
                     ? format_text((string) $dossier->correctionsdone, FORMAT_PLAIN) : null,
-                get_string('correctedmanuscript', 'mod_these') => these_render_file_links($context, 'corrections', $dossier->id),
+                get_string('correctedmanuscript', 'mod_these') => $files('corrections'),
             ]);
         }
-        if ($rights->viewall || $rights->director || $rights->owner) {
+        if ($knows && ($rights->viewall || $rights->director || $rights->owner)) {
             $out .= these_render_answers((object) ['id' => $dossier->theseid], $dossier);
         }
         $showemail = $rights->viewall || $rights->director || $rights->owner;
@@ -539,8 +557,42 @@ function these_render_dossier(
     }
 
     $out .= these_render_signed_documents($cm, $context, $dossier, $rights);
-    $out .= these_render_history($dossier->id, $rights->viewall || $rights->director);
+    $out .= these_render_history($dossier->id, $rights->viewall || $rights->director, $rights->knowssubject);
     return $out;
+}
+
+/**
+ * Diffusion de la thèse choisie au dépôt de la soutenance : mode de diffusion et demande d'embargo,
+ * avec sa date de fin (voir these_embargo_until()). Le motif de l'embargo, qui peut révéler le sujet,
+ * n'est montré qu'à qui connaît le sujet.
+ *
+ * @param stdClass $dossier
+ * @param stdClass $rights Voir these_get_rights().
+ * @return string HTML
+ */
+function these_render_embargo(stdClass $dossier, stdClass $rights) {
+    $bordereau = these_get_bordereau($dossier);
+    if (!$bordereau) {
+        return '';
+    }
+    $diffusion = (string) ($bordereau['diffusion'] ?? '');
+    $rows = [
+        get_string('diffusion', 'mod_these') => in_array($diffusion, ['internet', 'restricted'], true)
+            ? get_string('diffusion' . $diffusion, 'mod_these') : null,
+    ];
+    if (!empty($bordereau['embargo'])) {
+        $until = these_embargo_until($dossier);
+        $rows[get_string('embargo', 'mod_these')] = html_writer::span($until
+            ? get_string('embargorequested', 'mod_these', (object) [
+                'years' => THESE_EMBARGO_YEARS,
+                'until' => userdate($until, get_string('strftimedate', 'langconfig')),
+            ])
+            : get_string('embargorequestednodate', 'mod_these', THESE_EMBARGO_YEARS), 'badge badge-warning');
+        if ($rights->knowssubject && trim((string) ($bordereau['embargoreason'] ?? '')) !== '') {
+            $rows[get_string('embargoreason', 'mod_these')] = format_text((string) $bordereau['embargoreason'], FORMAT_PLAIN);
+        }
+    }
+    return these_render_detail_section(get_string('diffusion', 'mod_these'), $rows);
 }
 
 /**
@@ -563,6 +615,9 @@ function these_rank_reached(stdClass $dossier, $status) {
  * @return string HTML
  */
 function these_render_dossier_table(array $dossiers, stdClass $cm) {
+    global $USER;
+
+    $context = context_module::instance($cm->id);
     if (empty($dossiers)) {
         return html_writer::div(get_string('nodossiers', 'mod_these'), 'alert alert-info');
     }
@@ -586,9 +641,12 @@ function these_render_dossier_table(array $dossiers, stdClass $cm) {
             $director->$field = $dossier->{'director' . $field} ?? '';
         }
         $url = new moodle_url('/mod/these/dossier.php', ['id' => $cm->id, 'dossierid' => $dossier->id]);
+        $title = these_user_knows_subject($dossier, $context, $USER->id)
+            ? (shorten_text(format_string($dossier->title), 90) ?: '-')
+            : html_writer::tag('em', get_string('confidentialtitle', 'mod_these'));
         $table->data[] = [
             fullname($student),
-            shorten_text(format_string($dossier->title), 90) ?: '-',
+            $title,
             $dossier->directorid ? fullname($director) : '-',
             s((string) $dossier->devenumber),
             these_render_status_badge($dossier->status),

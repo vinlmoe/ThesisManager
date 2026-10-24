@@ -181,7 +181,7 @@ function these_document_content(stdClass $dossier, $doctype, $slot = '') {
         case 'contract':
             $student = these_get_bordereau($dossier);
             $keys = ['birthname', 'firstnames', 'birthdate', 'street', 'postcode', 'city', 'country', 'personalemail',
-                'confidentialuntil', 'embargo', 'embargountil', 'diffusion'];
+                'confidentialuntil', 'embargo', 'embargountil', 'embargoreason', 'diffusion'];
             return $common + [
                 'student' => array_intersect_key($student, array_flip($keys)),
                 'confidential' => (int) ($dossier->confidential ?? 0),
@@ -246,6 +246,11 @@ function these_document_available(stdClass $dossier, $doctype) {
 function these_can_view_document($doctype, stdClass $rights) {
     if (!these_can_view_dossier($rights)) {
         return false;
+    }
+    // Thèse confidentielle : sans connaître le sujet, seule l'attestation de conformité, que la
+    // bibliothèque signe, reste accessible.
+    if (isset($rights->knowssubject) && !$rights->knowssubject) {
+        return $doctype === 'conformity' && $rights->library;
     }
     if (these_document_definitions()[$doctype]['staffonly']) {
         return $rights->director || $rights->viewall;
@@ -326,10 +331,36 @@ function these_bordereau_fields() {
         // Bordereau ABES.
         'nbvolumes', 'nbpages', 'nbrefs', 'summaryfr', 'summaryen', 'keywords',
         // Contrat de diffusion.
-        'confidentialuntil', 'embargo', 'embargountil', 'diffusion',
+        'confidentialuntil', 'embargo', 'embargountil', 'embargoreason', 'diffusion',
         // Soutenance.
         'visio',
     ];
+}
+
+/** Durée de l'embargo de diffusion qu'un étudiant peut demander, en années après la soutenance. */
+define('THESE_EMBARGO_YEARS', 5);
+
+/**
+ * Fin de l'embargo de diffusion d'une thèse : THESE_EMBARGO_YEARS ans après la soutenance (date
+ * arrêtée, à défaut date proposée). Un embargo enregistré avant cette règle garde sa date.
+ *
+ * @param stdClass $dossier
+ * @return int 0 sans embargo, ou tant que la soutenance n'a pas de date.
+ */
+function these_embargo_until(stdClass $dossier) {
+    $bordereau = these_get_bordereau($dossier);
+    if (empty($bordereau['embargo'])) {
+        return 0;
+    }
+    if (!empty($bordereau['embargountil'])) {
+        return (int) $bordereau['embargountil'];
+    }
+    $defense = (int) ($dossier->defensedate ?: $dossier->proposeddate);
+    if (!$defense) {
+        return 0;
+    }
+    $date = usergetdate($defense);
+    return make_timestamp($date['year'] + THESE_EMBARGO_YEARS, $date['mon'], $date['mday']);
 }
 
 /** Longueur maximale d'un résumé du bordereau, espaces compris. */

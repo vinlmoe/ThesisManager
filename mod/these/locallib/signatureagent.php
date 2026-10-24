@@ -200,7 +200,7 @@ function these_request_agent_signatures(stdClass $these, stdClass $cm, stdClass 
     $vars['name'] = fullname($agent);
     $vars['document'] = implode(', ', $labels);
     $vars['url'] = (new moodle_url('/mod/these/mysignatures.php'))->out(false);
-    these_send_email($these, 'agentsignature', [$agent], $vars);
+    these_send_email($these, 'agentsignature', [$agent], $vars, '', '', $dossier);
     these_log(
         $dossier->id,
         0,

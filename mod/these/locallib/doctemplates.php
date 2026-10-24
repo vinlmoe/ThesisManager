@@ -434,6 +434,9 @@ function these_build_document_context(array $src) {
         'summaryhtml' => these_doctemplate_text($d->summary),
         'keywords' => implode(' ; ', $keywords),
         'confidential' => !empty($d->confidential),
+        // Titre à imprimer sur un document destiné à des personnes qui ne connaissent pas le sujet
+        // d'une thèse confidentielle (attestation de conformité de la bibliothèque).
+        'publictitle' => !empty($d->confidential) ? get_string('confidentialtitle', 'mod_these') : (string) $d->title,
         'studyyear' => (string) $d->studyyear,
         'devenumber' => (string) $d->devenumber,
         'libraryref' => (string) $d->libraryref,
@@ -568,7 +571,9 @@ function these_build_document_context(array $src) {
         'confidential' => !empty($d->confidential),
         'confidentialuntil' => !empty($d->confidential) ? $day($b['confidentialuntil'] ?? 0) : '',
         'embargo' => $embargo,
-        'embargountil' => $embargo ? $day($b['embargountil'] ?? 0) : '',
+        'embargountil' => $embargo ? $day(these_embargo_until($d)) : '',
+        'embargoyears' => THESE_EMBARGO_YEARS,
+        'embargoreason' => $embargo ? trim((string) ($b['embargoreason'] ?? '')) : '',
         'internet' => ($b['diffusion'] ?? '') === 'internet',
         'restricted' => ($b['diffusion'] ?? '') === 'restricted',
         'templatemissing' => false,

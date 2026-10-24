@@ -140,7 +140,7 @@ function thesesynthesis_get_active_links($synthesisid, $userid) {
  * @param array $links Voir thesesynthesis_get_active_links().
  * @param int $userid
  * @param array $filters {status (int|null), search (string), cmid (int)}
- * @return array Liste d'objets {dossier, link, student, director, actor, todo}
+ * @return array Liste d'objets {dossier, link, student, director, actor, todo, knowssubject}
  */
 function thesesynthesis_get_dossiers(array $links, $userid, array $filters = []) {
     global $DB;
@@ -166,10 +166,13 @@ function thesesynthesis_get_dossiers(array $links, $userid, array $filters = [])
                 continue;
             }
             $student = $DB->get_record('user', ['id' => $dossier->userid]);
+            // Thèse confidentielle : titre masqué, et absent de la recherche, pour qui ne doit pas le
+            // connaître.
+            $knows = these_user_knows_subject($dossier, $link->context, $userid);
             $search = core_text::strtolower(trim((string) ($filters['search'] ?? '')));
             if (
-                $search !== '' && strpos(core_text::strtolower(($student ? fullname($student) : '') . ' ' . $dossier->title
-                    . ' ' . $dossier->devenumber), $search) === false
+                $search !== '' && strpos(core_text::strtolower(($student ? fullname($student) : '') . ' '
+                    . ($knows ? $dossier->title : '') . ' ' . $dossier->devenumber), $search) === false
             ) {
                 continue;
             }
@@ -184,6 +187,7 @@ function thesesynthesis_get_dossiers(array $links, $userid, array $filters = [])
                 'director' => $dossier->directorid ? $DB->get_record('user', ['id' => $dossier->directorid]) : null,
                 'actor' => $actor,
                 'todo' => $todo,
+                'knowssubject' => $knows,
             ];
         }
     }
@@ -298,7 +302,8 @@ function thesesynthesis_defense_year(stdClass $dossier) {
  * @param int $userid
  * @param array $filters {text, cmid, status (int|null), year (int), answers (questionid => valeur)}
  * @param array $questions Questions filtrables (voir these_get_questions()).
- * @return array Liste d'objets {dossier, link, student, director, canopen, answers, year}
+ * @return array Liste d'objets {dossier, link, student, director, canopen, answers, year,
+ *                     knowssubject}
  */
 function thesesynthesis_search(array $links, $userid, array $filters, array $questions = []) {
     global $DB;
@@ -319,6 +324,12 @@ function thesesynthesis_search(array $links, $userid, array $filters, array $que
             $public = !$dossier->confidential && $status !== THESE_STATUS_CANCELLED
                 && these_status_rank($status) >= $registered;
             if (!$link->rights->viewall && !$directs && !$public) {
+                continue;
+            }
+            // Thèse confidentielle dont l'utilisateur ne connaît pas le sujet : ni le sujet ni les
+            // réponses au questionnaire n'entrent dans la recherche.
+            $knows = these_user_knows_subject($dossier, $link->context, $userid);
+            if (!$knows && $answerfilters) {
                 continue;
             }
             if (isset($filters['status']) && $filters['status'] !== null && $status !== (int) $filters['status']) {
@@ -348,8 +359,11 @@ function thesesynthesis_search(array $links, $userid, array $filters, array $que
             $student = $DB->get_record('user', ['id' => $dossier->userid]);
             $director = $dossier->directorid ? $DB->get_record('user', ['id' => $dossier->directorid]) : null;
             if ($words) {
-                $haystack = [$dossier->title, $dossier->titleen, $dossier->summary, $dossier->keywords, $dossier->codirectorname,
-                    $dossier->extdirectorname, $student ? fullname($student) : '', $director ? fullname($director) : ''];
+                $haystack = [$dossier->codirectorname, $dossier->extdirectorname, $student ? fullname($student) : '',
+                    $director ? fullname($director) : ''];
+                if ($knows) {
+                    array_push($haystack, $dossier->title, $dossier->titleen, $dossier->summary, $dossier->keywords);
+                }
                 if ($link->rights->viewall) {
                     $haystack[] = $dossier->devenumber;
                     $haystack[] = $dossier->libraryref;
@@ -357,7 +371,7 @@ function thesesynthesis_search(array $links, $userid, array $filters, array $que
                 foreach (these_get_jury($dossier->id) as $member) {
                     $haystack[] = $member->fullname;
                 }
-                foreach ($answers as $answer) {
+                foreach ($knows ? $answers : [] as $answer) {
                     $haystack[] = these_answer_text($answer);
                 }
                 $haystack = thesesynthesis_normalise(implode(' ', $haystack));
@@ -373,7 +387,8 @@ function thesesynthesis_search(array $links, $userid, array $filters, array $que
                 'student' => $student,
                 'director' => $director,
                 'canopen' => $link->rights->viewall || $directs,
-                'answers' => $answers,
+                'answers' => $knows ? $answers : [],
+                'knowssubject' => $knows,
                 'year' => $year,
             ];
         }

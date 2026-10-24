@@ -123,6 +123,9 @@ function these_get_rights(context $context, ?stdClass $dossier, $userid) {
     $rights->student = $rights->owner && has_capability('mod/these:submit', $context, $userid);
     $rights->director = $dossier !== null && (int) $dossier->directorid === (int) $userid
         && has_capability('mod/these:direct', $context, $userid);
+    // Thèse confidentielle : son sujet n'est connu que de l'étudiant, de la DEVE, du directeur et du
+    // jury (voir these_user_knows_subject()).
+    $rights->knowssubject = $dossier === null || these_user_knows_subject($dossier, $context, $userid);
     return $rights;
 }
 
@@ -186,6 +189,12 @@ function these_can_view_filearea($filearea, stdClass $rights) {
     if ($filearea === 'directorreport') {
         return $rights->director || $rights->viewall;
     }
+    // Thèse confidentielle : sans connaître le sujet, seuls le manuscrit et le manuscrit corrigé
+    // restent accessibles (la bibliothèque en atteste la conformité) ; les autres fichiers portent
+    // le titre.
+    if (isset($rights->knowssubject) && !$rights->knowssubject) {
+        return in_array($filearea, ['manuscript', 'corrections'], true);
+    }
     return true;
 }
 
@@ -225,4 +234,75 @@ function these_new_token() {
  */
 function these_token_hash($token) {
     return hash('sha256', (string) $token);
+}
+
+/**
+ * Indique si un utilisateur peut connaître le sujet d'une thèse (titre, titre anglais, résumé,
+ * mots-clés). Une thèse confidentielle n'est connue que de l'étudiant, de la DEVE, du directeur de
+ * thèse et des membres du jury ; pour tous les autres (bibliothèque, autres enseignants, détenteurs
+ * de mod/these:viewall), le sujet est masqué partout.
+ *
+ * @param stdClass $dossier
+ * @param context $context Contexte de l'activité du dossier.
+ * @param int $userid
+ * @return bool
+ */
+function these_user_knows_subject(stdClass $dossier, context $context, $userid) {
+    if (empty($dossier->confidential)) {
+        return true;
+    }
+    if (!$userid) {
+        return false;
+    }
+    if ((int) $dossier->userid === (int) $userid || (int) $dossier->directorid === (int) $userid) {
+        return true;
+    }
+    return has_capability('mod/these:managedeve', $context, $userid)
+        || these_user_has_service_role($context, $userid, 'deve')
+        || these_user_in_jury($dossier->id, $userid);
+}
+
+/**
+ * Indique si un utilisateur siège au jury d'un dossier, reconnu à son adresse ou à celle de sa fiche
+ * dans l'annuaire du jury.
+ *
+ * @param int $dossierid
+ * @param int $userid
+ * @return bool
+ */
+function these_user_in_jury($dossierid, $userid) {
+    global $DB;
+
+    $email = core_text::strtolower(trim((string) $DB->get_field('user', 'email', ['id' => $userid])));
+    if ($email === '') {
+        return false;
+    }
+    return $DB->record_exists_sql(
+        "SELECT 1
+           FROM {these_jury} j
+      LEFT JOIN {these_juror} r ON r.id = j.jurorid
+          WHERE j.dossierid = :dossierid
+                AND (LOWER(j.email) = :email1 OR LOWER(r.email) = :email2)",
+        ['dossierid' => $dossierid, 'email1' => $email, 'email2' => $email]
+    );
+}
+
+/**
+ * Valeur d'un champ du sujet telle qu'un utilisateur peut la voir : le texte brut, ou, pour une
+ * thèse confidentielle dont il ne connaît pas le sujet, « Thèse confidentielle » à la place du
+ * titre et rien pour les autres champs.
+ *
+ * @param stdClass $dossier
+ * @param string $field title, titleen, summary ou keywords.
+ * @param context $context Contexte de l'activité du dossier.
+ * @param int|null $userid Utilisateur (l'utilisateur courant par défaut).
+ * @return string Texte brut, à échapper par l'appelant.
+ */
+function these_subject_field(stdClass $dossier, $field, context $context, $userid = null) {
+    global $USER;
+
+    if (these_user_knows_subject($dossier, $context, $userid ?? $USER->id)) {
+        return (string) $dossier->$field;
+    }
+    return $field === 'title' ? get_string('confidentialtitle', 'mod_these') : '';
 }

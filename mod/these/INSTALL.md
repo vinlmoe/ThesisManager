@@ -153,7 +153,29 @@ signés.
   dossier.
 - **Suivi multi-promotions** : voir le module `mod_thesesynthesis`.
 
-## 3 bis (compléments). Questionnaire, rapport, procès-verbal, corrections
+## 3 bis (compléments). Thèse confidentielle, embargo
+
+- **Thèse confidentielle** (case de la fiche de sujet) : le sujet (titre, titre
+  anglais, résumé, mots-clés) n'est connu que de l'étudiant, de la DEVE (rôle ou
+  `mod/these:managedeve`), du directeur de thèse et des membres du jury
+  (reconnus à leur adresse ou à celle de leur fiche de l'annuaire). Pour tous les
+  autres, dont la bibliothèque et les détenteurs de `mod/these:viewall`, il est
+  remplacé par « Thèse confidentielle » dans le dossier, les listes, le planning,
+  la recherche (y compris dans *Suivi des thèses*), l'export du registre et les
+  courriels ; le questionnaire, l'ancien titre d'un changement de sujet et les
+  fichiers ou documents qui portent le titre leur sont masqués. La bibliothèque
+  garde le manuscrit et le manuscrit corrigé, dont elle atteste la conformité ;
+  l'attestation imprime « Thèse confidentielle » (variable
+  `{{thesis.publictitle}}` des modèles). Les signataires extérieurs (direction
+  générale, CCEM, université) voient les documents qu'ils signent.
+- **Embargo de diffusion** : au dépôt de la soutenance, l'étudiant peut demander
+  un embargo de 5 ans (`THESE_EMBARGO_YEARS`), motif obligatoire. La fin de
+  l'embargo est calculée à partir de la date de soutenance (arrêtée, à défaut
+  proposée) et reportée au contrat de diffusion, que le directeur vise ; elle
+  figure au dossier (rubrique *Diffusion*) et dans l'export du registre. Le motif
+  n'est montré qu'à qui connaît le sujet.
+
+## 3 bis (autres compléments). Questionnaire, rapport, procès-verbal, corrections
 
 - **Questionnaire préalable au jury** (DEVE, *Questionnaire préalable au jury*) :
   réponse courte, réponse longue, liste, QCM ; questions obligatoires exigées au

@@ -29,7 +29,7 @@ class behat_mod_these_generator extends behat_generator_base {
      * | these1   | student1 | scheduled | Leptospirose | ##monday next week 14:00## | Amphithéâtre A  |
      *
      * Le statut est le nom d'une constante THESE_STATUS_* en minuscules (draft par défaut) ; titre,
-     * date et lieu de soutenance sont facultatifs.
+     * date et lieu de soutenance, confidentialité (confidential : 0 ou 1) sont facultatifs.
      *
      * @return array
      */
@@ -63,6 +63,9 @@ class behat_mod_these_generator extends behat_generator_base {
             if (isset($data[$field])) {
                 $record[$field] = $data[$field];
             }
+        }
+        if (isset($data['confidential'])) {
+            $record['confidential'] = (int) $data['confidential'];
         }
         if (isset($data['defensedate'])) {
             $record['defensedate'] = $record['proposeddate'] = (int) $data['defensedate'];

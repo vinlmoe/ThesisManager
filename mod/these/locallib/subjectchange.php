@@ -170,7 +170,7 @@ function these_change_subject(
         $vars = these_email_base_vars($these, $cm, $dossier);
         $vars['oldtitle'] = format_string($oldtitle);
         $vars['reason'] = trim((string) $reason);
-        these_send_email($these, 'subjectchanged', array_values($recipients), $vars);
+        these_send_email($these, 'subjectchanged', array_values($recipients), $vars, '', '', $dossier);
         // Le (nouveau) directeur est attendu pour valider le nouveau sujet.
         these_notify_actor($these, $cm, $dossier);
         return $dossier;

@@ -4,6 +4,22 @@ Format : une section par version publiée de `mod_these` (et de `mod_thesesynthe
 quand il change), de la plus récente à la plus ancienne. Une version publiée est
 étiquetée `vX.Y.Z` ; la CI joint alors le guide PDF à la publication GitHub.
 
+## mod_these 0.11.0 (2026103103), mod_thesesynthesis 0.3.1 (2026102903)
+
+### Nouveautés
+
+- **Thèse confidentielle** : le sujet (titre, titre anglais, résumé, mots-clés)
+  n'est connu que de l'étudiant, de la DEVE, du directeur et du jury. Pour les
+  autres (bibliothèque, autres enseignants, `mod/these:viewall`), il est
+  remplacé par « Thèse confidentielle » dans le dossier, les listes, le
+  planning, la recherche, l'export et les courriels ; les fichiers et documents
+  qui portent le titre leur sont masqués, sauf le manuscrit et l'attestation de
+  conformité de la bibliothèque. La case existait mais ne masquait rien.
+- **Demande d'embargo de diffusion de 5 ans** au dépôt de la soutenance, motivée ;
+  la fin de l'embargo est calculée depuis la date de soutenance et reportée au
+  contrat de diffusion, au dossier et à l'export. Elle remplace la date
+  d'embargo libre ; une date déjà saisie vaut jusqu'au prochain enregistrement.
+
 ## mod_these 0.10.0 (2026103102), mod_thesesynthesis 0.3.0 (2026102902)
 
 ### Nouveautés

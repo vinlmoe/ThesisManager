@@ -203,7 +203,11 @@ function these_defense_row(stdClass $defense) {
         'date' => userdate($dossier->defensedate, get_string('strftimedatefullshort', 'langconfig')),
         'time' => userdate($dossier->defensedate, get_string('strftimetime', 'langconfig')),
         'student' => $defense->student ? fullname($defense->student) : '',
-        'title' => format_string($dossier->title, true, ['context' => $defense->source->context, 'escape' => false]),
+        'title' => format_string(
+            these_subject_field($dossier, 'title', $defense->source->context),
+            true,
+            ['context' => $defense->source->context, 'escape' => false]
+        ),
         'director' => $director,
         'president' => $defense->president ? $name($defense->president) : '',
         'jury' => implode(', ', array_map(function ($member) use ($name, $roles) {
