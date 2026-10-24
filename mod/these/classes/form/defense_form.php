@@ -155,6 +155,20 @@ class defense_form extends \moodleform {
         ]);
         $mform->addHelpButton('bdiffusion', 'bdiffusion', 'mod_these');
 
+        // Questionnaire préalable au jury : ses questions obligatoires conditionnent le dépôt.
+        if (!empty($this->_customdata['questionnaireurl'])) {
+            $mform->addElement('header', 'questionnaireheader', get_string('questionnaire', 'mod_these'));
+            $mform->setExpanded('questionnaireheader');
+            $missing = $this->_customdata['questionnairemissing'] ?? [];
+            $status = $missing
+                ? get_string('questionnairemissing', 'mod_these', implode(' ; ', array_map('format_string', $missing)))
+                : get_string('questionnairecomplete', 'mod_these');
+            $mform->addElement('static', 'questionnairestatus', '', $status . ' ' . \html_writer::link(
+                $this->_customdata['questionnaireurl'],
+                get_string('questionnairefill', 'mod_these')
+            ));
+        }
+
         these_add_signature_fields($mform, $this->_customdata['signername'], get_string('signdefenseintro', 'mod_these'));
 
         $buttons = [];
@@ -166,7 +180,8 @@ class defense_form extends \moodleform {
     }
 
     /**
-     * À la soumission : manuscrit déposé, date à venir, lieu renseigné et jury valide.
+     * À la soumission : manuscrit déposé, date à venir, lieu renseigné, jury valide et questionnaire
+     * préalable au jury rempli.
      *
      * @param array $data
      * @param array $files
@@ -225,6 +240,9 @@ class defense_form extends \moodleform {
         }
         if (empty($data['ba6notyet']) && empty($data['ba6date'])) {
             $errors['ba6date'] = get_string('a6required', 'mod_these');
+        }
+        if (!empty($this->_customdata['questionnairemissing'])) {
+            $errors['questionnairestatus'] = get_string('questionnairerequired', 'mod_these');
         }
         return array_merge($errors, these_signature_errors($data));
     }

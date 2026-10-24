@@ -90,24 +90,7 @@ $table = function (array $rows) {
 echo $OUTPUT->header();
 echo $OUTPUT->heading(format_string($synthesis->name));
 
-$actions = [];
-if (has_capability('mod/thesesynthesis:managelinks', $context)) {
-    $actions[] = html_writer::link(
-        new moodle_url('/mod/thesesynthesis/administration.php', ['id' => $cm->id]),
-        get_string('managelinks', 'mod_thesesynthesis'),
-        ['class' => 'btn btn-secondary mr-1 mb-1']
-    );
-}
-if (has_capability('mod/thesesynthesis:managejurors', $context)) {
-    $actions[] = html_writer::link(
-        new moodle_url('/mod/thesesynthesis/jurors.php', ['id' => $cm->id]),
-        get_string('jurors', 'mod_these'),
-        ['class' => 'btn btn-secondary mr-1 mb-1']
-    );
-}
-if ($actions) {
-    echo html_writer::div(implode(' ', $actions), 'mb-3');
-}
+echo thesesynthesis_render_navlinks($cm, $context);
 if (!$links) {
     echo $OUTPUT->notification(get_string('nolinks', 'mod_thesesynthesis'), 'info');
     echo $OUTPUT->footer();

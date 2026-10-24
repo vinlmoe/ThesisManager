@@ -60,3 +60,17 @@ $string['allpromotions'] = 'All cohorts';
 $string['allstatuses'] = 'All statuses';
 $string['privacy:metadata'] = 'The thesis follow-up activity stores no personal data: it reads the files in the linked thesis '
     . 'management activities.';
+
+// Shared settings and search.
+$string['thesesynthesis:managesettings'] = 'Define the document templates, grid and questionnaire of the followed activities';
+$string['thesesynthesis:search'] = 'Search theses';
+$string['searchtheses'] = 'Search theses';
+$string['searchtheses_desc'] = 'Search in the followed "Thesis management" activities: the text is searched in the title, summary, '
+    . 'keywords, names of the student, director and jury members, and answers to the pre-jury questionnaire. The DEVE and the '
+    . 'library find every record of the activities where they have their rights; teachers find theses registered by the DEVE '
+    . 'and not confidential, and those they direct.';
+$string['searchtext'] = 'Text';
+$string['defenseyear'] = 'Defence year';
+$string['allyears'] = 'All years';
+$string['searchresults'] = '{$a} thesis/theses found';
+$string['searchnoresult'] = 'No thesis matches the search.';

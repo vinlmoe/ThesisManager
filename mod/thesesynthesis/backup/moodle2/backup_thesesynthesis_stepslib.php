@@ -27,7 +27,9 @@
  * Décrit l'arbre XML (thesesynthesis.xml) d'une instance de mod_thesesynthesis.
  *
  * L'activité n'a pas de données de suivi propres : toute la synthèse est lue dans les activités
- * mod_these liées. Seuls l'instance et la liste de ces liens sont donc sauvegardés.
+ * mod_these liées. Sont sauvegardés l'instance, la liste de ces liens et les paramètres partagés
+ * avec les activités suivies : modèles des documents et leurs images, grille de conformité,
+ * questionnaire préalable au jury.
  *
  * @package   mod_thesesynthesis
  * @copyright 2026 Sébastien Lefebvre
@@ -48,13 +50,36 @@ class backup_thesesynthesis_activity_structure_step extends backup_activity_stru
         $links = new backup_nested_element('links');
         $link = new backup_nested_element('link', ['id'], ['thesecmid', 'timecreated']);
 
+        $doctemplates = new backup_nested_element('doctemplates');
+        $doctemplate = new backup_nested_element('doctemplate', ['id'], ['doctype', 'content', 'timemodified']);
+
+        $griditems = new backup_nested_element('griditems');
+        $griditem = new backup_nested_element('griditem', ['id'], [
+            'itemkey', 'section', 'label', 'conditional', 'sortorder', 'timemodified',
+        ]);
+
+        $questions = new backup_nested_element('questions');
+        $question = new backup_nested_element('question', ['id'], [
+            'qtype', 'label', 'options', 'required', 'sortorder', 'timemodified',
+        ]);
+
         $thesesynthesis->add_child($links);
         $links->add_child($link);
+        $thesesynthesis->add_child($doctemplates);
+        $doctemplates->add_child($doctemplate);
+        $thesesynthesis->add_child($griditems);
+        $griditems->add_child($griditem);
+        $thesesynthesis->add_child($questions);
+        $questions->add_child($question);
 
         $thesesynthesis->set_source_table('thesesynthesis', ['id' => backup::VAR_ACTIVITYID]);
         $link->set_source_table('thesesynthesis_link', ['synthesisid' => backup::VAR_PARENTID], 'id');
+        $doctemplate->set_source_table('these_doctemplate', ['synthesisid' => backup::VAR_PARENTID], 'id ASC');
+        $griditem->set_source_table('these_griditem', ['synthesisid' => backup::VAR_PARENTID], 'sortorder ASC, id ASC');
+        $question->set_source_table('these_question', ['synthesisid' => backup::VAR_PARENTID], 'sortorder ASC, id ASC');
 
         $thesesynthesis->annotate_files('mod_thesesynthesis', 'intro', null);
+        $thesesynthesis->annotate_files('mod_thesesynthesis', 'docimages', null);
 
         return $this->prepare_activity_structure($thesesynthesis);
     }

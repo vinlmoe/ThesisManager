@@ -27,8 +27,6 @@
 require(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/these/locallib.php');
 
-use mod_these\form\griditems_form;
-
 $id = required_param('id', PARAM_INT);
 
 $cm = get_coursemodule_from_id('these', $id, 0, false, MUST_EXIST);
@@ -44,50 +42,19 @@ $PAGE->set_title(format_string($these->name) . ' - ' . get_string('griditems', '
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($context);
 
-$items = [];
-foreach (these_get_grid_items($these->id) as $sectionitems) {
-    foreach ($sectionitems as $item) {
-        $items[] = $item;
-    }
+$scope = these_settings_scope($these);
+if ($scope->shared) {
+    echo $OUTPUT->header();
+    echo $OUTPUT->heading(get_string('griditems', 'mod_these'));
+    echo these_render_navlinks($cm, $context);
+    echo \mod_these\local\doctemplates_page::shared_notice($scope, get_string('griditems', 'mod_these'));
+    echo $OUTPUT->footer();
+    exit;
 }
-$mform = new griditems_form($PAGE->url, ['count' => count($items)]);
-$formdata = ['id' => $cm->id, 'itemkey' => [], 'section' => [], 'label' => [], 'conditional' => []];
-foreach ($items as $i => $item) {
-    $formdata['itemkey'][$i] = $item->itemkey;
-    $formdata['section'][$i] = $item->section;
-    $formdata['label'][$i] = $item->label;
-    $formdata['conditional'][$i] = $item->conditional;
-}
-$mform->set_data($formdata);
-
-if ($mform->is_cancelled()) {
-    redirect(new moodle_url('/mod/these/dashboard.php', ['id' => $cm->id]));
-} else if ($data = $mform->get_data()) {
-    if (!empty($data->resetbutton)) {
-        $DB->delete_records('these_griditem', ['theseid' => $these->id]);
-    } else {
-        $submitted = [];
-        foreach ((array) $data->label as $i => $label) {
-            $submitted[] = (object) [
-                'itemkey' => $data->itemkey[$i] ?? '',
-                'section' => $data->section[$i] ?? 'forme',
-                'label' => $label,
-                'conditional' => $data->conditional[$i] ?? 0,
-            ];
-        }
-        these_save_grid_items($these->id, $submitted);
-    }
-    redirect($PAGE->url, get_string('griditemssaved', 'mod_these'), null, \core\output\notification::NOTIFY_SUCCESS);
-}
-
-echo $OUTPUT->header();
-echo $OUTPUT->heading(get_string('griditems', 'mod_these'));
-echo these_render_navlinks($cm, $context);
-echo html_writer::div(get_string('griditems_desc', 'mod_these'), 'mb-3');
-echo html_writer::div(html_writer::link(
+\mod_these\local\griditems_page::output(
+    $scope,
+    $PAGE->url,
     new moodle_url('/mod/these/doctemplates.php', ['id' => $cm->id, 'type' => 'grid', 'action' => 'preview']),
-    get_string('doctplpreview', 'mod_these'),
-    ['class' => 'btn btn-secondary', 'target' => '_blank']
-), 'mb-3');
-$mform->display();
-echo $OUTPUT->footer();
+    new moodle_url('/mod/these/dashboard.php', ['id' => $cm->id]),
+    these_render_navlinks($cm, $context)
+);

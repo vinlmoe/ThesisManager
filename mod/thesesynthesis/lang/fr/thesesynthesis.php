@@ -61,3 +61,17 @@ $string['allpromotions'] = 'Toutes les promotions';
 $string['allstatuses'] = 'Tous les statuts';
 $string['privacy:metadata'] = "L'activité Suivi des thèses ne stocke aucune donnée personnelle : elle relit les dossiers dans les "
     . "activités « Gestion des thèses » liées.";
+
+// Paramètres partagés et recherche.
+$string['thesesynthesis:managesettings'] = 'Définir les modèles des documents, la grille et le questionnaire des activités suivies';
+$string['thesesynthesis:search'] = 'Rechercher des thèses';
+$string['searchtheses'] = 'Rechercher des thèses';
+$string['searchtheses_desc'] = 'Recherche dans les activités « Gestion des thèses » suivies : le texte est cherché dans le titre, le '
+    . "résumé, les mots-clés, les noms de l'étudiant, du directeur et des membres du jury, et les réponses au questionnaire "
+    . 'préalable au jury. La DEVE et la bibliothèque trouvent tous les dossiers des activités où elles ont leurs droits ; les '
+    . "enseignants, les thèses enregistrées par la DEVE et non confidentielles, ainsi que celles qu'ils dirigent.";
+$string['searchtext'] = 'Texte';
+$string['defenseyear'] = 'Année de soutenance';
+$string['allyears'] = 'Toutes les années';
+$string['searchresults'] = '{$a} thèse(s) trouvée(s)';
+$string['searchnoresult'] = 'Aucune thèse ne correspond à la recherche.';

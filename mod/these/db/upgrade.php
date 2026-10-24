@@ -215,5 +215,60 @@ function xmldb_these_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2026102800, 'these');
     }
 
+    if ($oldversion < 2026102900) {
+        // Modèles et grille partageables par une activité « Suivi des thèses », questionnaire
+        // préalable au jury.
+        foreach (
+            ['these_doctemplate' => ['theseid_doctype', 'owner_doctype', 'doctype'],
+                'these_griditem' => ['theseid_itemkey', 'owner_itemkey', 'itemkey']] as $tablename => [$old, $new, $key]
+        ) {
+            $table = new xmldb_table($tablename);
+            $field = new xmldb_field('synthesisid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'theseid');
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+            $index = new xmldb_index($old, XMLDB_INDEX_UNIQUE, ['theseid', $key]);
+            if ($dbman->index_exists($table, $index)) {
+                $dbman->drop_index($table, $index);
+            }
+            $index = new xmldb_index($new, XMLDB_INDEX_UNIQUE, ['theseid', 'synthesisid', $key]);
+            if (!$dbman->index_exists($table, $index)) {
+                $dbman->add_index($table, $index);
+            }
+        }
+
+        $table = new xmldb_table('these_question');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('theseid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('synthesisid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('qtype', XMLDB_TYPE_CHAR, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('label', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null);
+        $table->add_field('options', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('required', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('sortorder', XMLDB_TYPE_INTEGER, '4', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_index('owner', XMLDB_INDEX_NOTUNIQUE, ['theseid', 'synthesisid']);
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        $table = new xmldb_table('these_answer');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('dossierid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('questionid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('value', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('dossierid', XMLDB_KEY_FOREIGN, ['dossierid'], 'these_dossier', ['id']);
+        $table->add_key('questionid', XMLDB_KEY_FOREIGN, ['questionid'], 'these_question', ['id']);
+        $table->add_index('dossier_question', XMLDB_INDEX_UNIQUE, ['dossierid', 'questionid']);
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        upgrade_mod_savepoint(true, 2026102900, 'these');
+    }
+
     return true;
 }

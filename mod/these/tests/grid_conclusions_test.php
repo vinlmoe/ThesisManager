@@ -39,7 +39,7 @@ final class grid_conclusions_test extends these_testcase {
     public function test_grid_items(): void {
         $this->resetAfterTest();
         $this->setup_activity();
-        $items = these_get_grid_items($this->these->id);
+        $items = these_get_grid_items(these_local_scope($this->these));
         $this->assertCount(6, $items['fond']);
         $this->assertCount(15, $items['forme']);
         $this->assertTrue((bool) $items['fond']['tool']->conditional);
@@ -54,9 +54,9 @@ final class grid_conclusions_test extends these_testcase {
         $list[1]->label = '';
         $list[] = (object) ['itemkey' => '', 'section' => 'forme', 'label' => 'Le manuscrit compte moins de 150 pages.',
             'conditional' => 0];
-        these_save_grid_items($this->these->id, $list);
+        these_save_grid_items(these_local_scope($this->these), $list);
 
-        $items = these_get_grid_items($this->these->id);
+        $items = these_get_grid_items(these_local_scope($this->these));
         $this->assertSame('La question de recherche est clairement formulée.', $items['fond']['question']->label);
         $this->assertArrayNotHasKey('answer', $items['fond']);
         $this->assertCount(16, $items['forme']);
@@ -76,7 +76,7 @@ final class grid_conclusions_test extends these_testcase {
 
         // Les autres activités gardent la grille d'origine.
         $other = $this->getDataGenerator()->create_module('these', ['course' => $this->course->id]);
-        $this->assertArrayHasKey('answer', these_get_grid_items($other->id)['fond']);
+        $this->assertArrayHasKey('answer', these_get_grid_items(these_local_scope($other))['fond']);
     }
 
     /**

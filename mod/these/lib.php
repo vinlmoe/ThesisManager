@@ -161,6 +161,7 @@ function these_delete_instance($id) {
     $DB->delete_records('these_email_template', ['theseid' => $id]);
     $DB->delete_records('these_doctemplate', ['theseid' => $id]);
     $DB->delete_records('these_griditem', ['theseid' => $id]);
+    $DB->delete_records('these_question', ['theseid' => $id]);
     $DB->delete_records('these', ['id' => $id]);
 
     return true;

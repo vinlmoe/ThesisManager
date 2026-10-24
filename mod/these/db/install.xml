@@ -229,7 +229,10 @@
     <TABLE NAME="these_doctemplate" COMMENT="Modèle de document modifié par la DEVE pour une instance">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="theseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="theseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"
+            COMMENT="Activité Gestion des thèses propriétaire, 0 pour un modèle d'une activité Suivi des thèses"/>
+        <FIELD NAME="synthesisid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
+            COMMENT="Activité Suivi des thèses propriétaire (modèle partagé par les activités qu'elle suit), 0 sinon"/>
         <FIELD NAME="doctype" TYPE="char" LENGTH="20" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="content" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
@@ -239,13 +242,16 @@
         <KEY NAME="theseid" TYPE="foreign" FIELDS="theseid" REFTABLE="these" REFFIELDS="id"/>
       </KEYS>
       <INDEXES>
-        <INDEX NAME="theseid_doctype" UNIQUE="true" FIELDS="theseid, doctype"/>
+        <INDEX NAME="owner_doctype" UNIQUE="true" FIELDS="theseid, synthesisid, doctype"/>
       </INDEXES>
     </TABLE>
     <TABLE NAME="these_griditem" COMMENT="Élément de la grille de conformité d'une instance, modifiable par la DEVE">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="theseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="theseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"
+            COMMENT="Activité Gestion des thèses propriétaire, 0 pour une grille d'une activité Suivi des thèses"/>
+        <FIELD NAME="synthesisid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
+            COMMENT="Activité Suivi des thèses propriétaire (grille partagée), 0 sinon"/>
         <FIELD NAME="itemkey" TYPE="char" LENGTH="40" NOTNULL="true" SEQUENCE="false"
             COMMENT="Clé de l'élément dans la grille remplie (these_dossier.conformitygrid)"/>
         <FIELD NAME="section" TYPE="char" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="fond ou forme"/>
@@ -260,7 +266,7 @@
         <KEY NAME="theseid" TYPE="foreign" FIELDS="theseid" REFTABLE="these" REFFIELDS="id"/>
       </KEYS>
       <INDEXES>
-        <INDEX NAME="theseid_itemkey" UNIQUE="true" FIELDS="theseid, itemkey"/>
+        <INDEX NAME="owner_itemkey" UNIQUE="true" FIELDS="theseid, synthesisid, itemkey"/>
       </INDEXES>
     </TABLE>
     <TABLE NAME="these_juror" COMMENT="Annuaire des enseignants pouvant diriger une thèse ou siéger au jury, commun à toutes les instances">
@@ -282,6 +288,45 @@
       </KEYS>
       <INDEXES>
         <INDEX NAME="email" UNIQUE="false" FIELDS="email"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="these_question" COMMENT="Question du questionnaire préalable au jury, rempli par l'étudiant">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="theseid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
+            COMMENT="Activité Gestion des thèses propriétaire, 0 pour une question d'une activité Suivi des thèses"/>
+        <FIELD NAME="synthesisid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
+            COMMENT="Activité Suivi des thèses propriétaire (questionnaire partagé), 0 sinon"/>
+        <FIELD NAME="qtype" TYPE="char" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="text, textarea, list ou multi"/>
+        <FIELD NAME="label" TYPE="text" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="options" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Choix proposés, un par ligne"/>
+        <FIELD NAME="required" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="sortorder" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="owner" UNIQUE="false" FIELDS="theseid, synthesisid"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="these_answer" COMMENT="Réponse d'un étudiant au questionnaire préalable au jury">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="dossierid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="questionid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="value" TYPE="text" NOTNULL="false" SEQUENCE="false"
+            COMMENT="Texte, choix, ou liste JSON des choix (QCM)"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="dossierid" TYPE="foreign" FIELDS="dossierid" REFTABLE="these_dossier" REFFIELDS="id"/>
+        <KEY NAME="questionid" TYPE="foreign" FIELDS="questionid" REFTABLE="these_question" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="dossier_question" UNIQUE="true" FIELDS="dossierid, questionid"/>
       </INDEXES>
     </TABLE>
   </TABLES>

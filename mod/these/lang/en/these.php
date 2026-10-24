@@ -515,6 +515,10 @@ $string['privacy:metadata:these_juror:firstname'] = 'First name of the teacher.'
 $string['privacy:metadata:these_juror:email'] = 'Email address of the teacher.';
 $string['privacy:metadata:these_juror:status'] = 'Status (rank) of the teacher.';
 $string['privacy:metadata:these_juror:institution'] = 'Institution of the teacher.';
+$string['privacy:metadata:these_answer'] = "Student answers to the pre-jury questionnaire.";
+$string['privacy:metadata:these_answer:questionid'] = 'Question.';
+$string['privacy:metadata:these_answer:value'] = 'Answer.';
+$string['privacy:metadata:these_answer:timemodified'] = 'Time of the answer.';
 $string['privacy:metadata:these_log'] = 'History of actions on a file.';
 $string['privacy:metadata:these_log:userid'] = 'Author of the action.';
 $string['privacy:metadata:these_log:logaction'] = 'Action performed.';
@@ -900,3 +904,46 @@ $string['transferskipped'] = 'Items not taken:';
 $string['transferskippedemail'] = 'unknown email "{$a}"';
 $string['transferskippeddoctemplate'] = 'unknown document "{$a}"';
 $string['transferskippedimage'] = 'unreadable or duplicate image "{$a}"';
+
+// Settings shared by a "Thesis follow-up" activity.
+$string['sharedsettings'] = 'This activity is followed by the "Thesis follow-up" activity {$a->name}, where "{$a->what}" is '
+    . 'defined for every followed cohort: edit it there.';
+$string['doctemplatesshared_desc'] = 'Document templates shared by every "Thesis management" activity followed by this activity: '
+    . 'each cohort produces its documents from them. Tags and layout are described in the guide; the preview uses sample data.';
+$string['griditemsshared_desc'] = 'Conformity grid items shared by every "Thesis management" activity followed by this activity. '
+    . 'Changing an item updates the PDF grids produced afterwards.';
+
+// Pre-jury questionnaire.
+$string['questions'] = 'Pre-jury questionnaire';
+$string['questions_desc'] = 'Questions asked to the student before the defence submission: short answer, long answer, list or '
+    . 'multiple choice. Required questions condition the submission; answers appear in the record, are shown to the jury and are '
+    . 'used to search theses.';
+$string['questionsshared_desc'] = 'Questions shared by every "Thesis management" activity followed by this activity, asked to the '
+    . 'student before the defence submission. Required questions condition the submission; answers are used to search theses.';
+$string['questionsnone'] = 'No question is defined.';
+$string['questionadd'] = 'Add a question';
+$string['questionedit'] = 'Edit the question';
+$string['questiontype'] = 'Question type';
+$string['questionlabel'] = 'Question';
+$string['questionoptions'] = 'Choices';
+$string['questionoptions_help'] = 'One choice per line. A list accepts a single choice, a multiple-choice question several.';
+$string['questionoptionsrequired'] = 'Enter at least two choices, one per line.';
+$string['questionrequired'] = 'Answer required';
+$string['questionsaved'] = 'Question saved.';
+$string['questiondeleted'] = 'Question deleted.';
+$string['questiondeleteconfirm'] = 'Delete the question "{$a->label}" and the {$a->answers} answer(s) already given?';
+$string['qtypetext'] = 'Short answer';
+$string['qtypetextarea'] = 'Long answer';
+$string['qtypelist'] = 'List (one choice)';
+$string['qtypemulti'] = 'Multiple choice';
+$string['questionnaire'] = 'Pre-jury questionnaire';
+$string['questionnaire_desc'] = 'Answer these questions before submitting the defence. Your answers appear in the record and are '
+    . 'shown to the jury; they are also used to find theses.';
+$string['questionnairesaved'] = 'Answers saved.';
+$string['questionnaireunanswered'] = 'No answer';
+$string['questionnairemissing'] = 'Required questions without an answer: {$a}.';
+$string['questionnairecomplete'] = 'Questionnaire completed.';
+$string['questionnairefill'] = 'Fill in the questionnaire';
+$string['questionnairerequired'] = 'Fill in the pre-jury questionnaire before submitting the defence.';
+$string['transfergroupquestions'] = 'Pre-jury questionnaire (questions)';
+$string['transferdonequestions'] = '{$a} question(s);';

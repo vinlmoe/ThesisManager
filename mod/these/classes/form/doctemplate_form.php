@@ -71,10 +71,10 @@ class doctemplate_form extends \moodleform {
         $errors = parent::validation($data, $files);
         if (empty($errors['content'])) {
             $error = these_doctemplate_error(
-                $this->_customdata['these'],
-                $this->_customdata['context'],
+                $this->_customdata['scope'],
                 $data['type'],
-                (string) $data['content']
+                (string) $data['content'],
+                $this->_customdata['activity'] ?? null
             );
             if ($error !== null) {
                 $errors['content'] = $error;

@@ -76,6 +76,7 @@ $mform = new review_form($PAGE->url, [
     'stepkey' => $step['key'],
     'returnto' => $step['returnto'],
     'theseid' => $these->id,
+    'scope' => these_settings_scope($these),
     'minjury' => $these->minjury,
     'jurycount' => count($jury),
     'jurorids' => array_map('intval', array_column($jury, 'jurorid')),
@@ -161,7 +162,7 @@ if ($mform->is_cancelled()) {
             $fields['reportfavorable'] = (int) !empty($data->reportfavorable);
             $fields['ethicsnumber'] = trim($data->ethicsnumber);
             $grid = [];
-            foreach (these_get_grid_items($these->id) as $items) {
+            foreach (these_get_grid_items(these_settings_scope($these)) as $items) {
                 foreach (array_keys($items) as $item) {
                     $grid[$item] = (int) !empty($data->{'grid_' . $item});
                 }

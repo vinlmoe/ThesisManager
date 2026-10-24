@@ -108,6 +108,12 @@ class provider implements
             'institution' => 'privacy:metadata:these_juror:institution',
         ], 'privacy:metadata:these_juror');
 
+        $collection->add_database_table('these_answer', [
+            'questionid' => 'privacy:metadata:these_answer:questionid',
+            'value' => 'privacy:metadata:these_answer:value',
+            'timemodified' => 'privacy:metadata:these_answer:timemodified',
+        ], 'privacy:metadata:these_answer');
+
         $collection->add_database_table('these_log', [
             'userid' => 'privacy:metadata:these_log:userid',
             'logaction' => 'privacy:metadata:these_log:logaction',
@@ -252,6 +258,19 @@ class provider implements
                     writer::with_context($context)->export_data(
                         array_merge($subcontext, [get_string('jury', 'mod_these')]),
                         (object) ['jury' => $jury]
+                    );
+                }
+                $answers = [];
+                foreach (these_get_answers($dossier->id) as $questionid => $answer) {
+                    $answers[] = (object) [
+                        'question' => (string) $DB->get_field('these_question', 'label', ['id' => $questionid]),
+                        'answer' => these_answer_text($answer),
+                    ];
+                }
+                if ($answers) {
+                    writer::with_context($context)->export_data(
+                        array_merge($subcontext, [get_string('questionnaire', 'mod_these')]),
+                        (object) ['answers' => $answers]
                     );
                 }
                 $history = array_map(function ($log) {

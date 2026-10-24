@@ -90,6 +90,16 @@ function thesesynthesis_delete_instance($id) {
         return false;
     }
 
+    // Paramètres partagés avec les activités suivies (les images sont supprimées avec le contexte).
+    // Les réponses données aux questions sont supprimées avec elles.
+    $questionids = $DB->get_fieldset_select('these_question', 'id', 'synthesisid = ?', [$id]);
+    if ($questionids) {
+        [$insql, $params] = $DB->get_in_or_equal($questionids);
+        $DB->delete_records_select('these_answer', "questionid $insql", $params);
+    }
+    $DB->delete_records('these_question', ['synthesisid' => $id]);
+    $DB->delete_records('these_doctemplate', ['synthesisid' => $id]);
+    $DB->delete_records('these_griditem', ['synthesisid' => $id]);
     $DB->delete_records('thesesynthesis_link', ['synthesisid' => $id]);
     $DB->delete_records('thesesynthesis', ['id' => $id]);
 

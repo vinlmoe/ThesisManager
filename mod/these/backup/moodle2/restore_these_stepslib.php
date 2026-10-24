@@ -42,9 +42,11 @@ class restore_these_activity_structure_step extends restore_activity_structure_s
         $paths[] = new restore_path_element('these_email_template', '/activity/these/emailtemplates/emailtemplate');
         $paths[] = new restore_path_element('these_doctemplate', '/activity/these/doctemplates/doctemplate');
         $paths[] = new restore_path_element('these_griditem', '/activity/these/griditems/griditem');
+        $paths[] = new restore_path_element('these_question', '/activity/these/questions/question');
         if ($this->get_setting_value('userinfo')) {
             $paths[] = new restore_path_element('these_dossier', '/activity/these/dossiers/dossier');
             $paths[] = new restore_path_element('these_jury', '/activity/these/dossiers/dossier/jurymembers/jurymember');
+            $paths[] = new restore_path_element('these_answer', '/activity/these/dossiers/dossier/answers/answer');
             $paths[] = new restore_path_element('these_log', '/activity/these/dossiers/dossier/logs/log');
             $paths[] = new restore_path_element(
                 'these_signature',
@@ -109,6 +111,44 @@ class restore_these_activity_structure_step extends restore_activity_structure_s
         $data = (object) $data;
         $data->theseid = $this->get_new_parentid('these');
         $DB->insert_record('these_griditem', $data);
+    }
+
+    /**
+     * Restaure une question du questionnaire préalable au jury.
+     *
+     * @param array $data
+     */
+    protected function process_these_question($data) {
+        global $DB;
+
+        $data = (object) $data;
+        $oldid = $data->id;
+        $data->theseid = $this->get_new_parentid('these');
+        $data->synthesisid = 0;
+        $newid = $DB->insert_record('these_question', $data);
+        $this->set_mapping('these_question', $oldid, $newid);
+    }
+
+    /**
+     * Restaure une réponse au questionnaire. Une réponse à une question de l'activité « Suivi des
+     * thèses » est conservée si la question existe sur ce site (restauration sur le même site).
+     *
+     * @param array $data
+     */
+    protected function process_these_answer($data) {
+        global $DB;
+
+        $data = (object) $data;
+        $data->dossierid = $this->get_new_parentid('these_dossier');
+        $questionid = $this->get_mappingid('these_question', $data->questionid, 0);
+        if (!$questionid && $DB->record_exists_select('these_question', 'id = ? AND synthesisid > 0', [$data->questionid])) {
+            $questionid = $data->questionid;
+        }
+        if (!$data->dossierid || !$questionid) {
+            return;
+        }
+        $data->questionid = $questionid;
+        $DB->insert_record('these_answer', $data);
     }
 
     /**

@@ -109,6 +109,7 @@ foreach (these_get_jury($dossier->id) as $juror) {
 }
 echo $OUTPUT->heading(get_string('jury', 'mod_these'), 3);
 echo html_writer::table($jury);
+echo these_render_answers($these, $dossier);
 
 $links = [];
 foreach ($allowed['areas'] as $filearea) {
