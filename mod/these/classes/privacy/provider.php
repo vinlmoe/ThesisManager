@@ -77,14 +77,51 @@ class provider implements
             'defenseresult' => 'privacy:metadata:these_dossier:defenseresult',
             'returncomment' => 'privacy:metadata:these_dossier:returncomment',
             'returnedby' => 'privacy:metadata:these_dossier:returnedby',
+            'bordereau' => 'privacy:metadata:these_dossier:bordereau',
+            'conclusions' => 'privacy:metadata:these_dossier:conclusions',
+            'reporttext' => 'privacy:metadata:these_dossier:reporttext',
+            'correctionsdone' => 'privacy:metadata:these_dossier:correctionsdone',
             'timecreated' => 'privacy:metadata:these_dossier:timecreated',
         ], 'privacy:metadata:these_dossier');
+
+        $collection->add_database_table('these_signature', [
+            'userid' => 'privacy:metadata:these_signature:userid',
+            'signername' => 'privacy:metadata:these_signature:signername',
+            'signeremail' => 'privacy:metadata:these_signature:signeremail',
+            'ipaddress' => 'privacy:metadata:these_signature:ipaddress',
+            'timesigned' => 'privacy:metadata:these_signature:timesigned',
+        ], 'privacy:metadata:these_signature');
 
         $collection->add_database_table('these_jury', [
             'fullname' => 'privacy:metadata:these_jury:fullname',
             'email' => 'privacy:metadata:these_jury:email',
             'institution' => 'privacy:metadata:these_jury:institution',
+            'jurystatus' => 'privacy:metadata:these_jury:jurystatus',
         ], 'privacy:metadata:these_jury');
+
+        // Annuaire du jury : enseignants désignés par leur nom et leur adresse, sans lien avec un compte.
+        $collection->add_database_table('these_juror', [
+            'title' => 'privacy:metadata:these_juror:title',
+            'lastname' => 'privacy:metadata:these_juror:lastname',
+            'firstname' => 'privacy:metadata:these_juror:firstname',
+            'email' => 'privacy:metadata:these_juror:email',
+            'status' => 'privacy:metadata:these_juror:status',
+            'institution' => 'privacy:metadata:these_juror:institution',
+        ], 'privacy:metadata:these_juror');
+
+        $collection->add_database_table('these_subjecthistory', [
+            'title' => 'privacy:metadata:these_subjecthistory:title',
+            'summary' => 'privacy:metadata:these_subjecthistory:summary',
+            'reason' => 'privacy:metadata:these_subjecthistory:reason',
+            'changedby' => 'privacy:metadata:these_subjecthistory:changedby',
+            'timecreated' => 'privacy:metadata:these_subjecthistory:timecreated',
+        ], 'privacy:metadata:these_subjecthistory');
+
+        $collection->add_database_table('these_answer', [
+            'questionid' => 'privacy:metadata:these_answer:questionid',
+            'value' => 'privacy:metadata:these_answer:value',
+            'timemodified' => 'privacy:metadata:these_answer:timemodified',
+        ], 'privacy:metadata:these_answer');
 
         $collection->add_database_table('these_log', [
             'userid' => 'privacy:metadata:these_log:userid',
@@ -118,7 +155,8 @@ class provider implements
                  WHERE d.userid = :userid1
                     OR d.directorid = :userid2
                     OR d.returnedby = :userid3
-                    OR EXISTS (SELECT 1 FROM {these_log} l WHERE l.dossierid = d.id AND l.userid = :userid4)";
+                    OR EXISTS (SELECT 1 FROM {these_log} l WHERE l.dossierid = d.id AND l.userid = :userid4)
+                    OR EXISTS (SELECT 1 FROM {these_signature} sg WHERE sg.dossierid = d.id AND sg.userid = :userid5)";
     }
 
     /**
@@ -136,7 +174,12 @@ class provider implements
             'userid2' => $userid,
             'userid3' => $userid,
             'userid4' => $userid,
+            'userid5' => $userid,
         ]);
+        // Signature enregistrée, dans le contexte de l'utilisateur.
+        if (these_get_saved_signature($userid) !== null) {
+            $contextlist->add_user_context($userid);
+        }
         return $contextlist;
     }
 
@@ -148,6 +191,10 @@ class provider implements
      */
     public static function get_users_in_context(userlist $userlist) {
         $context = $userlist->get_context();
+        if ($context instanceof \context_user && these_get_saved_signature($context->instanceid) !== null) {
+            $userlist->add_user($context->instanceid);
+            return;
+        }
         if (!$context instanceof context_module) {
             return;
         }
@@ -165,6 +212,12 @@ class provider implements
                                              JOIN {these_dossier} d ON d.theseid = cm.instance
                                              JOIN {these_log} l ON l.dossierid = d.id
                                             WHERE cm.id = :instanceid", $params);
+        $userlist->add_from_sql('userid', "SELECT sg.userid
+                                             FROM {course_modules} cm
+                                             JOIN {modules} m ON m.id = cm.module AND m.name = :modname
+                                             JOIN {these_dossier} d ON d.theseid = cm.instance
+                                             JOIN {these_signature} sg ON sg.dossierid = d.id
+                                            WHERE cm.id = :instanceid", $params);
     }
 
     /**
@@ -179,6 +232,15 @@ class provider implements
 
         $user = $contextlist->get_user();
         foreach ($contextlist->get_contexts() as $context) {
+            if ($context instanceof \context_user && (int) $context->instanceid === (int) $user->id) {
+                writer::with_context($context)->export_area_files(
+                    [get_string('signaturesaved', 'mod_these')],
+                    'mod_these',
+                    'savedsignature',
+                    0
+                );
+                continue;
+            }
             if (!$context instanceof context_module) {
                 continue;
             }
@@ -203,8 +265,13 @@ class provider implements
                     'defensedate' => $dossier->defensedate ? transform::datetime($dossier->defensedate) : null,
                     'defenselocation' => $dossier->defenselocation,
                     'defenseresult' => (int) $dossier->defenseresult ? these_result_label($dossier->defenseresult) : null,
-                    'mention' => $dossier->mention,
+                    'mention' => these_mention_label($dossier->mention),
+                    'prizeproposal' => transform::yesno($dossier->prizeproposal),
+                    'correctionsnote' => $dossier->correctionsnote,
+                    'correctionsdone' => $dossier->correctionsdone,
                     'returncomment' => $dossier->returncomment,
+                    'conclusions' => $dossier->conclusions,
+                    'personaldata' => these_get_bordereau($dossier),
                     'timecreated' => transform::datetime($dossier->timecreated),
                 ]);
                 $jury = array_map(function ($member) {
@@ -220,6 +287,35 @@ class provider implements
                     writer::with_context($context)->export_data(
                         array_merge($subcontext, [get_string('jury', 'mod_these')]),
                         (object) ['jury' => $jury]
+                    );
+                }
+                $previous = array_values(array_map(function ($entry) {
+                    return (object) [
+                        'title' => $entry->title,
+                        'summary' => $entry->summary,
+                        'keywords' => $entry->keywords,
+                        'director' => $entry->directorname,
+                        'reason' => $entry->reason,
+                        'time' => transform::datetime($entry->timecreated),
+                    ];
+                }, these_get_subject_history($dossier->id)));
+                if ($previous) {
+                    writer::with_context($context)->export_data(
+                        array_merge($subcontext, [get_string('subjecthistory', 'mod_these')]),
+                        (object) ['subjects' => $previous]
+                    );
+                }
+                $answers = [];
+                foreach (these_get_answers($dossier->id) as $questionid => $answer) {
+                    $answers[] = (object) [
+                        'question' => (string) $DB->get_field('these_question', 'label', ['id' => $questionid]),
+                        'answer' => these_answer_text($answer),
+                    ];
+                }
+                if ($answers) {
+                    writer::with_context($context)->export_data(
+                        array_merge($subcontext, [get_string('questionnaire', 'mod_these')]),
+                        (object) ['answers' => $answers]
                     );
                 }
                 $history = array_map(function ($log) {
@@ -244,6 +340,27 @@ class provider implements
             }
 
             self::export_staff_data($context, $cm, $user->id);
+
+            // Signatures apposées par l'utilisateur, dans son dossier comme dans ceux des autres.
+            $signatures = $DB->get_records_sql(
+                "SELECT sg.*, d.title
+                   FROM {these_signature} sg
+                   JOIN {these_dossier} d ON d.id = sg.dossierid
+                  WHERE d.theseid = :theseid AND sg.userid = :userid AND sg.timesigned > 0",
+                ['theseid' => $cm->instance, 'userid' => $user->id]
+            );
+            foreach ($signatures as $signature) {
+                $subcontext = [get_string('signatures', 'mod_these'), $signature->id];
+                writer::with_context($context)->export_data($subcontext, (object) [
+                    'dossier' => $signature->title,
+                    'document' => these_document_label($signature->doctype),
+                    'slot' => these_slot_label($signature->slot),
+                    'signername' => $signature->signername,
+                    'ipaddress' => $signature->ipaddress,
+                    'timesigned' => transform::datetime($signature->timesigned),
+                ]);
+                writer::with_context($context)->export_area_files($subcontext, 'mod_these', 'signature', $signature->id);
+            }
         }
     }
 
@@ -299,6 +416,10 @@ class provider implements
     public static function delete_data_for_all_users_in_context(context $context) {
         global $DB;
 
+        if ($context instanceof \context_user) {
+            these_delete_saved_signature($context->instanceid);
+            return;
+        }
         if (!$context instanceof context_module) {
             return;
         }
@@ -343,6 +464,13 @@ class provider implements
     protected static function delete_users_in_context(context $context, array $userids) {
         global $DB;
 
+        if ($context instanceof \context_user) {
+            if (in_array((int) $context->instanceid, array_map('intval', $userids), true)) {
+                these_delete_saved_signature($context->instanceid);
+            }
+            return;
+        }
+
         if (!$context instanceof context_module || empty($userids)) {
             return;
         }
@@ -375,5 +503,18 @@ class provider implements
             "UPDATE {these_log} SET userid = 0, remark = '' WHERE dossierid $dsql AND userid $insql",
             array_merge($dparams, $inparams)
         );
+        // Signatures du personnel dans les dossiers d'autrui : l'image et l'identité sont effacées,
+        // la date de signature est conservée (le document reste marqué comme signé à cette date).
+        $signatures = $DB->get_records_select(
+            'these_signature',
+            "dossierid $dsql AND userid $insql",
+            array_merge($dparams, $inparams)
+        );
+        foreach ($signatures as $signature) {
+            get_file_storage()->delete_area_files($context->id, 'mod_these', 'signature', $signature->id);
+            $DB->update_record('these_signature', (object) [
+                'id' => $signature->id, 'userid' => 0, 'signername' => '', 'signeremail' => '', 'ipaddress' => '',
+            ]);
+        }
     }
 }

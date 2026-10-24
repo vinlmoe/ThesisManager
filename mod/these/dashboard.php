@@ -39,9 +39,7 @@ $these = $DB->get_record('these', ['id' => $cm->instance], '*', MUST_EXIST);
 
 require_login($course, true, $cm);
 $context = context_module::instance($cm->id);
-require_capability('mod/these:view', $context);
-
-$rights = these_get_rights($context, null, $USER->id);
+$rights = these_require_view($context);
 $isdirector = has_capability('mod/these:direct', $context);
 if (!$rights->viewall && !$isdirector) {
     redirect(new moodle_url('/mod/these/view.php', ['id' => $cm->id]));

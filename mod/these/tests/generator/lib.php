@@ -69,7 +69,7 @@ class mod_these_generator extends testing_module_generator {
     }
 
     /**
-     * Jury valide : un président, le directeur et un assesseur (trois membres votants), plus un
+     * Jury valide : un président, le directeur et un membre du jury (trois membres votants), plus un
      * invité sans adresse de courriel.
      *
      * @return array Membres au format de these_save_jury().
@@ -77,13 +77,13 @@ class mod_these_generator extends testing_module_generator {
     public function default_jury() {
         return [
             (object) ['juryrole' => 'president', 'fullname' => 'Paul Président', 'jurytitle' => 'Professeur',
-                'institution' => 'Faculté de médecine', 'email' => 'president@example.com'],
+                'institution' => 'Faculté de médecine', 'email' => 'president@example.com', 'jurystatus' => 'pr'],
             (object) ['juryrole' => 'director', 'fullname' => 'Dora Directrice', 'jurytitle' => 'Maître de conférences',
-                'institution' => 'École vétérinaire', 'email' => 'directrice@example.com'],
-            (object) ['juryrole' => 'member', 'fullname' => 'Albert Assesseur', 'jurytitle' => 'Professeur',
-                'institution' => 'École vétérinaire', 'email' => 'assesseur@example.com'],
+                'institution' => 'École vétérinaire', 'email' => 'directrice@example.com', 'jurystatus' => 'mcf'],
+            (object) ['juryrole' => 'member', 'fullname' => 'Albert Membre', 'jurytitle' => 'Professeur',
+                'institution' => 'École vétérinaire', 'email' => 'membre@example.com', 'jurystatus' => 'pr'],
             (object) ['juryrole' => 'guest', 'fullname' => 'Iris Invitée', 'jurytitle' => 'Docteur vétérinaire',
-                'institution' => 'Clinique', 'email' => ''],
+                'institution' => 'Clinique', 'email' => '', 'jurystatus' => 'other'],
         ];
     }
 }

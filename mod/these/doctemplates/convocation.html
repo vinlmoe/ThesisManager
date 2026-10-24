@@ -1,0 +1,52 @@
+<!--@page margins="48,20,15,20" header="10" font="freesans" size="10.5" lineheight="1.35"-->
+<!--@header-->
+<table cellpadding="0">
+  <tr>
+    <td width="2mm"></td>
+    <td width="110mm"><img src="{{img.marianne}}" height="25mm" /></td>
+    <td width="58mm"><br /><br /><img src="{{img.vetagrosup}}" height="20mm" /></td>
+  </tr>
+</table>
+<!--@body-->
+<div style="text-align:right;font-size:9pt;"><b>Direction des Études et de la Vie Étudiante</b></div>
+<br />
+<div style="text-align:center;font-size:14pt;font-weight:bold;">CONVOCATION À LA SOUTENANCE<br /><span style="font-size:11pt;">Thèse d’exercice vétérinaire</span></div>
+<br />
+<table cellpadding="0">
+  <tr>
+    <td width="90mm"></td>
+    <td width="80mm"><b>{{recipient.name}}</b>{{#recipient.institution}}<br />{{recipient.institution}}{{/recipient.institution}}</td>
+  </tr>
+</table>
+<br /><br />
+Madame, Monsieur,<br /><br />
+{{#recipient.jury}}<div style="text-align:justify;">Nous avons l’honneur de vous convoquer, en qualité de <b>{{recipient.rolelabel}}</b>, à la soutenance de la thèse d’exercice vétérinaire de <b>{{student.firstname}} {{student.lastname}}</b>, qui aura lieu le <b>{{defense.longdate}}</b> à <b>{{defense.time}}</b>, {{defense.location}}.</div>{{/recipient.jury}}
+{{^recipient.jury}}<div style="text-align:justify;">Nous avons l’honneur de vous convoquer à la soutenance de votre thèse d’exercice vétérinaire, qui aura lieu le <b>{{defense.longdate}}</b> à <b>{{defense.time}}</b>, {{defense.location}}.</div>{{/recipient.jury}}
+<br />
+<table cellpadding="4">
+  <tr>
+    <td style="border:0.5pt solid #000000;">
+      <table cellpadding="0" style="line-height:1.5;">
+        <tr><td width="45mm"><b>Thèse de :</b></td><td width="120mm">{{student.lastname}} {{student.firstname}}</td></tr>
+        <tr><td width="45mm"><b>Titre :</b></td><td width="120mm">{{thesis.title}}</td></tr>
+        <tr><td width="45mm"><b>Directeur de thèse :</b></td><td width="120mm">{{thesisdirector.name}}</td></tr>
+        <tr><td width="45mm"><b>Date et heure :</b></td><td width="120mm">{{defense.longdate}} à {{defense.time}}</td></tr>
+        <tr><td width="45mm"><b>Lieu :</b></td><td width="120mm">{{defense.location}}</td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<br /><br />
+<b>Composition du jury</b><br />
+<table cellpadding="0" style="line-height:1.5;">
+{{#jury}}  <tr><td width="62mm">{{rolelabel}}</td><td width="108mm">{{name}}{{#institution}} ({{institution}}){{/institution}}</td></tr>
+{{/jury}}</table>
+<br /><br />
+Veuillez agréer, Madame, Monsieur, l’expression de nos salutations distinguées.
+<br /><br /><br />
+<table cellpadding="0">
+  <tr>
+    <td width="90mm"></td>
+    <td width="80mm" align="center">{{establishment.city}}, le {{today}}<br /><br /><b>{{establishment.signatoryname}}</b><br />{{establishment.signatorytitle}}</td>
+  </tr>
+</table>

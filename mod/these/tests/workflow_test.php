@@ -34,7 +34,8 @@ require_once(__DIR__ . '/these_testcase.php');
  * @covers     ::these_save_defense
  * @covers     ::these_generate_documents
  * @covers     ::these_transmit_documents
- * @covers     ::these_close_dossier
+ * @covers     ::these_record_minutes
+ * @covers     ::these_submit_corrections
  */
 final class workflow_test extends these_testcase {
     /**
@@ -72,12 +73,11 @@ final class workflow_test extends these_testcase {
         $this->assertContains($this->deve->email, array_column($sink->get_messages(), 'to'));
         $sink->clear();
 
-        // Étape 3 : enregistrement DEVE avec numéro.
-        $number = these_suggest_devenumber($this->these->id);
-        these_validate_step($this->these, $this->cm, $dossier, $this->deve->id, ['devenumber' => $number]);
+        // Étape 3 : enregistrement DEVE, sans numéro (attribué après le dépôt de la thèse).
+        these_validate_step($this->these, $this->cm, $dossier, $this->deve->id);
         $dossier = $this->reload($dossier->id);
         $this->assertEquals(THESE_STATUS_SUBJECT_REGISTERED, $dossier->status);
-        $this->assertEquals($number, $dossier->devenumber);
+        $this->assertEmpty($dossier->devenumber);
         $this->assertContains($this->librarian->email, array_column($sink->get_messages(), 'to'));
         $sink->clear();
 
@@ -105,7 +105,7 @@ final class workflow_test extends these_testcase {
         $sink = $this->redirectEmails();
 
         $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
-            'status' => THESE_STATUS_ACTIVE, 'directorid' => $this->director->id, 'devenumber' => '2026-001',
+            'status' => THESE_STATUS_ACTIVE, 'directorid' => $this->director->id,
         ]);
 
         // Étape 1 : dépôt et soumission, avec le jury proposé.
@@ -122,18 +122,23 @@ final class workflow_test extends these_testcase {
         $dossier = $this->reload($dossier->id);
         $this->assertEquals(THESE_STATUS_DEFENSE_APPROVED, $dossier->status);
         $date = time() + 40 * DAYSECS;
-        these_validate_step($this->these, $this->cm, $dossier, $this->deve->id, ['defensedate' => $date]);
+        $number = these_suggest_devenumber($this->these->id);
+        these_validate_step($this->these, $this->cm, $dossier, $this->deve->id, ['defensedate' => $date,
+            'devenumber' => $number]);
         $dossier = $this->reload($dossier->id);
         $this->assertEquals(THESE_STATUS_DEFENSE_VALIDATED, $dossier->status);
+        $this->assertEquals($number, $dossier->devenumber);
         $this->assertEquals($date, $dossier->defensedate);
         these_validate_step($this->these, $this->cm, $dossier, $this->librarian->id);
         $dossier = $this->reload($dossier->id);
         $this->assertEquals(THESE_STATUS_CONFORM, $dossier->status);
         $sink->clear();
 
-        // Étape 5 : convocation étudiant, une par membre du jury, feuille de jury, PV.
+        // Étape 5 : convocation étudiant, une par membre du jury, feuille de jury, PV, et les
+        // documents de l'établissement disponibles (ici le dépôt de sujet et l'attestation de
+        // conformité, les autres n'ayant pas été renseignés par ce raccourci de test).
         $files = these_generate_documents($this->these, $this->context, $dossier, $this->deve->id);
-        $this->assertCount(7, $files);
+        $this->assertCount(9, $files);
         foreach ($files as $file) {
             $this->assertStringStartsWith('%PDF', $file->get_content());
         }
@@ -151,12 +156,21 @@ final class workflow_test extends these_testcase {
         $this->assertEquals(THESE_STATUS_SCHEDULED, $dossier->status);
         $sink->clear();
 
-        // Étape 6 : procès-verbal, dossier clôturé.
-        these_close_dossier($this->these, $this->cm, $dossier, $this->deve->id, THESE_RESULT_ADMITTED, 'Félicitations');
+        // Étape 6 : procès-verbal sans corrections, dossier clôturé.
+        these_record_minutes($this->these, $this->cm, $dossier, $this->deve->id, (object) [
+            'result' => THESE_RESULT_ADMITTED, 'mention' => 'felicitations', 'prizeproposal' => true,
+            'correctionsrequested' => false, 'correctionsnote' => 'ignoré',
+        ]);
         $dossier = $this->reload($dossier->id);
         $this->assertEquals(THESE_STATUS_CLOSED, $dossier->status);
         $this->assertEquals(THESE_RESULT_ADMITTED, $dossier->defenseresult);
-        $this->assertCount(2, $sink->get_messages());
+        $this->assertSame('felicitations', $dossier->mention);
+        $this->assertEquals(1, $dossier->prizeproposal);
+        $this->assertSame('', (string) $dossier->correctionsnote);
+        $messages = $sink->get_messages();
+        $this->assertCount(2, $messages);
+        $body = preg_replace('/\s+/', ' ', quoted_printable_decode($messages[0]->body));
+        $this->assertStringContainsString(\core_text::strtolower(get_string('mentionfelicitations', 'mod_these')), $body);
         $this->assertNull(these_step_actor($dossier->status));
         $this->assertTrue($DB->record_exists('these_log', ['dossierid' => $dossier->id, 'logaction' => 'closed']));
     }
@@ -205,5 +219,138 @@ final class workflow_test extends these_testcase {
         $this->assertStringContainsString(fullname($this->student), $message->subject);
         $body = quoted_printable_decode($message->body);
         $this->assertStringContainsString(these_status_label(THESE_STATUS_SUBJECT_SUBMITTED), $body);
+    }
+
+    /**
+     * Procès-verbal avec corrections : dépôt du manuscrit corrigé, renvoi par la bibliothèque,
+     * nouveau dépôt revenant à la bibliothèque, puis clôture par la DEVE.
+     */
+    public function test_corrections_circuit(): void {
+        $this->setup_activity();
+        $sink = $this->redirectEmails();
+        $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
+            'status' => THESE_STATUS_SCHEDULED, 'directorid' => $this->director->id,
+        ]);
+
+        $dossier = these_record_minutes($this->these, $this->cm, $dossier, $this->deve->id, (object) [
+            'result' => THESE_RESULT_ADMITTED, 'mention' => 'treshonorable', 'prizeproposal' => false,
+            'correctionsrequested' => true, 'correctionsnote' => 'Reprendre la discussion.',
+        ]);
+        $this->assertEquals(THESE_STATUS_CORRECTIONS, $dossier->status);
+        $this->assertEquals('student', these_step_actor($dossier->status));
+        $this->assertEquals([$this->student->email], array_column($sink->get_messages(), 'to'));
+        $sink->clear();
+
+        // Dépôt des corrections : au directeur.
+        $dossier = these_submit_corrections($this->these, $this->cm, $dossier, $this->student->id, 'Discussion reprise.');
+        $this->assertEquals(THESE_STATUS_CORRECTIONS_SUBMITTED, $dossier->status);
+        $this->assertEquals([$this->director->email], array_column($sink->get_messages(), 'to'));
+        these_validate_step($this->these, $this->cm, $dossier, $this->director->id);
+        $dossier = $this->reload($dossier->id);
+        $this->assertEquals(THESE_STATUS_CORRECTIONS_APPROVED, $dossier->status);
+
+        // Renvoi par la bibliothèque, puis nouveau dépôt qui revient directement à elle.
+        these_return_dossier($this->these, $this->cm, $dossier, $this->librarian->id, 'student', 'Pagination.');
+        $dossier = $this->reload($dossier->id);
+        $this->assertEquals(THESE_STATUS_CORRECTIONS, $dossier->status);
+        $dossier = these_submit_corrections($this->these, $this->cm, $dossier, $this->student->id, 'Pagination reprise.');
+        $this->assertEquals(THESE_STATUS_CORRECTIONS_APPROVED, $dossier->status);
+        these_validate_step($this->these, $this->cm, $dossier, $this->librarian->id);
+        $dossier = $this->reload($dossier->id);
+        $this->assertEquals(THESE_STATUS_CORRECTIONS_CONFORM, $dossier->status);
+        $sink->clear();
+
+        // Validation par la DEVE : dossier clos, étudiant et directeur prévenus.
+        these_validate_step($this->these, $this->cm, $dossier, $this->deve->id);
+        $dossier = $this->reload($dossier->id);
+        $this->assertEquals(THESE_STATUS_CLOSED, $dossier->status);
+        $this->assertSame('Pagination reprise.', $dossier->correctionsdone);
+        $this->assertCount(2, $sink->get_messages());
+        $this->assertStringContainsString(get_string('correctionsrequested', 'mod_these'), these_decision_label($dossier));
+    }
+
+    /**
+     * Rapport du directeur : enregistré sans changer le statut, limité à une page.
+     */
+    public function test_director_report(): void {
+        $this->setup_activity();
+        $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
+            'status' => THESE_STATUS_DEFENSE_SUBMITTED, 'directorid' => $this->director->id,
+        ]);
+        $this->assertTrue(these_report_editable($dossier));
+        $dossier = these_save_report($dossier, $this->director->id, "  Travail rigoureux.  ", true);
+        $dossier = $this->reload($dossier->id);
+        $this->assertEquals(THESE_STATUS_DEFENSE_SUBMITTED, $dossier->status);
+        $this->assertSame('Travail rigoureux.', $dossier->reporttext);
+        $this->assertEquals(1, $dossier->reportfavorable);
+
+        $this->assertNull(these_report_error($this->these, str_repeat('Une phrase du rapport. ', 40)));
+        $this->assertNotNull(these_report_error($this->these, str_repeat('Une phrase du rapport. ', 150)));
+        $this->assertNotNull(these_report_error($this->these, str_repeat("Paragraphe.\n\n", 60)));
+        $this->assertFalse(these_report_editable((object) ['status' => THESE_STATUS_DEFENSE_APPROVED]));
+    }
+
+    /**
+     * Ajournement : retour en phase de soutenance, PV archivé, documents et signatures de la
+     * soutenance supprimés (pas ceux du sujet), accès du jury révoqués ; nouveau dépôt possible.
+     */
+    public function test_adjournment(): void {
+        global $DB;
+        $this->setup_activity();
+        $sink = $this->redirectEmails();
+        $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
+            'status' => THESE_STATUS_SCHEDULED, 'directorid' => $this->director->id, 'devenumber' => '2026-004',
+            'reporttext' => 'Rapport.', 'reportfavorable' => 1, 'documentstime' => time(), 'senttime' => time(),
+        ]);
+        these_save_jury($dossier->id, $this->generator->default_jury());
+        $DB->set_field('these_jury', 'notifiedtime', time(), ['dossierid' => $dossier->id]);
+        $DB->set_field('these_jury', 'accesstoken', 'jeton', ['dossierid' => $dossier->id]);
+        $png = these_sample_signature_image();
+        these_sign_document($this->context, $dossier, 'subject', 'student', $this->student->id, 'Étudiant', $png);
+        these_sign_document($this->context, $dossier, 'report', 'director', $this->director->id, 'Directeur', $png);
+        $fs = get_file_storage();
+        $file = ['contextid' => $this->context->id, 'component' => 'mod_these', 'itemid' => $dossier->id, 'filepath' => '/'];
+        $fs->create_file_from_string($file + ['filearea' => 'pv', 'filename' => 'pv.pdf'], '%PDF-1.4');
+        $fs->create_file_from_string($file + ['filearea' => 'generated', 'filename' => 'convocation.pdf'], '%PDF-1.4');
+
+        $dossier = these_record_minutes($this->these, $this->cm, $dossier, $this->deve->id, (object) [
+            'result' => THESE_RESULT_ADJOURNED, 'mention' => 'honorable', 'prizeproposal' => true,
+            'correctionsrequested' => true, 'correctionsnote' => 'x',
+        ]);
+        $dossier = $this->reload($dossier->id);
+        $this->assertEquals(THESE_STATUS_ACTIVE, $dossier->status);
+        $this->assertTrue(these_is_adjourned($dossier));
+        $this->assertTrue(these_defense_editable($dossier));
+        $this->assertSame('', (string) $dossier->mention);
+        $this->assertEquals(0, $dossier->prizeproposal);
+        $this->assertEquals(0, $dossier->correctionsrequested);
+        $this->assertEquals(0, $dossier->reportfavorable);
+        $this->assertEquals(0, $dossier->documentstime);
+        $this->assertSame('2026-004', $dossier->devenumber);
+        $this->assertSame('Rapport.', $dossier->reporttext);
+
+        // PV archivé, documents générés supprimés.
+        $this->assertCount(0, these_get_files($this->context, 'pv', $dossier->id));
+        $this->assertCount(0, these_get_files($this->context, 'generated', $dossier->id));
+        $archived = these_get_files($this->context, 'pvadjourned', $dossier->id);
+        $this->assertCount(1, $archived);
+        $this->assertStringStartsWith('ajournement-', $archived[0]->get_filename());
+        // Signature du sujet conservée, celle du rapport supprimée ; jury à prévenir de nouveau.
+        $this->assertSame(['subject:student'], array_keys(these_get_signatures($dossier->id)));
+        foreach (these_get_jury($dossier->id) as $member) {
+            $this->assertEquals(0, $member->notifiedtime);
+            $this->assertEmpty($member->accesstoken);
+        }
+        $recipients = array_column($sink->get_messages(), 'to');
+        sort($recipients);
+        $expected = [$this->student->email, $this->director->email];
+        sort($expected);
+        $this->assertEquals($expected, $recipients);
+        $this->assertTrue($DB->record_exists('these_log', ['dossierid' => $dossier->id, 'logaction' => 'adjourned']));
+
+        // Nouveau dépôt de soutenance : de nouveau chez le directeur.
+        these_save_defense($this->these, $this->cm, $dossier, $this->defense_data(), true, $this->student->id);
+        $dossier = $this->reload($dossier->id);
+        $this->assertEquals(THESE_STATUS_DEFENSE_SUBMITTED, $dossier->status);
     }
 }

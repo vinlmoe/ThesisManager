@@ -35,7 +35,7 @@ $these = $DB->get_record('these', ['id' => $cm->instance], '*', MUST_EXIST);
 
 require_login($course, true, $cm);
 $context = context_module::instance($cm->id);
-require_capability('mod/these:view', $context);
+$rights = these_require_view($context);
 
 // L'activité déclare FEATURE_COMPLETION_TRACKS_VIEWS : la consultation est enregistrée avant la
 // redirection du personnel, qui n'affiche jamais cette page.
@@ -46,10 +46,7 @@ $completion->set_module_viewed($cm);
 // personnel, qui détient souvent aussi la capacité de dépôt par héritage) y est invité à proposer
 // un sujet.
 $dossier = these_get_user_dossier($these->id, $USER->id);
-$isstaff = has_any_capability(
-    ['mod/these:viewall', 'mod/these:managedeve', 'mod/these:managelibrary', 'mod/these:direct'],
-    $context
-);
+$isstaff = $rights->viewall || has_capability('mod/these:direct', $context);
 if (!$dossier && ($isstaff || !has_capability('mod/these:submit', $context))) {
     redirect(new moodle_url('/mod/these/dashboard.php', ['id' => $cm->id]));
 }

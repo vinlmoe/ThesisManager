@@ -40,10 +40,22 @@ class restore_these_activity_structure_step extends restore_activity_structure_s
         $paths = [];
         $paths[] = new restore_path_element('these', '/activity/these');
         $paths[] = new restore_path_element('these_email_template', '/activity/these/emailtemplates/emailtemplate');
+        $paths[] = new restore_path_element('these_doctemplate', '/activity/these/doctemplates/doctemplate');
+        $paths[] = new restore_path_element('these_griditem', '/activity/these/griditems/griditem');
+        $paths[] = new restore_path_element('these_question', '/activity/these/questions/question');
         if ($this->get_setting_value('userinfo')) {
             $paths[] = new restore_path_element('these_dossier', '/activity/these/dossiers/dossier');
             $paths[] = new restore_path_element('these_jury', '/activity/these/dossiers/dossier/jurymembers/jurymember');
+            $paths[] = new restore_path_element('these_answer', '/activity/these/dossiers/dossier/answers/answer');
+            $paths[] = new restore_path_element(
+                'these_subjecthistory',
+                '/activity/these/dossiers/dossier/subjecthistory/previoussubject'
+            );
             $paths[] = new restore_path_element('these_log', '/activity/these/dossiers/dossier/logs/log');
+            $paths[] = new restore_path_element(
+                'these_signature',
+                '/activity/these/dossiers/dossier/signatures/signature'
+            );
         }
         return $this->prepare_activity_structure($paths);
     }
@@ -75,6 +87,90 @@ class restore_these_activity_structure_step extends restore_activity_structure_s
         $data->theseid = $this->get_new_parentid('these');
         $newid = $DB->insert_record('these_email_template', $data);
         $this->set_mapping('these_email_template', $oldid, $newid);
+    }
+
+    /**
+     * Restaure un modèle de document modifié.
+     *
+     * @param array $data
+     */
+    protected function process_these_doctemplate($data) {
+        global $DB;
+
+        $data = (object) $data;
+        $oldid = $data->id;
+        $data->theseid = $this->get_new_parentid('these');
+        $newid = $DB->insert_record('these_doctemplate', $data);
+        $this->set_mapping('these_doctemplate', $oldid, $newid);
+    }
+
+    /**
+     * Restaure un élément de la grille de conformité.
+     *
+     * @param array $data
+     */
+    protected function process_these_griditem($data) {
+        global $DB;
+
+        $data = (object) $data;
+        $data->theseid = $this->get_new_parentid('these');
+        $DB->insert_record('these_griditem', $data);
+    }
+
+    /**
+     * Restaure une question du questionnaire préalable au jury.
+     *
+     * @param array $data
+     */
+    protected function process_these_question($data) {
+        global $DB;
+
+        $data = (object) $data;
+        $oldid = $data->id;
+        $data->theseid = $this->get_new_parentid('these');
+        $data->synthesisid = 0;
+        $newid = $DB->insert_record('these_question', $data);
+        $this->set_mapping('these_question', $oldid, $newid);
+    }
+
+    /**
+     * Restaure une réponse au questionnaire. Une réponse à une question de l'activité « Suivi des
+     * thèses » est conservée si la question existe sur ce site (restauration sur le même site).
+     *
+     * @param array $data
+     */
+    protected function process_these_answer($data) {
+        global $DB;
+
+        $data = (object) $data;
+        $data->dossierid = $this->get_new_parentid('these_dossier');
+        $questionid = $this->get_mappingid('these_question', $data->questionid, 0);
+        if (!$questionid && $DB->record_exists_select('these_question', 'id = ? AND synthesisid > 0', [$data->questionid])) {
+            $questionid = $data->questionid;
+        }
+        if (!$data->dossierid || !$questionid) {
+            return;
+        }
+        $data->questionid = $questionid;
+        $DB->insert_record('these_answer', $data);
+    }
+
+    /**
+     * Restaure un sujet précédent (changement de sujet).
+     *
+     * @param array $data
+     */
+    protected function process_these_subjecthistory($data) {
+        global $DB;
+
+        $data = (object) $data;
+        $data->dossierid = $this->get_new_parentid('these_dossier');
+        if (!$data->dossierid) {
+            return;
+        }
+        $data->directorid = $this->map_user($data->directorid);
+        $data->changedby = $this->map_user($data->changedby);
+        $DB->insert_record('these_subjecthistory', $data);
     }
 
     /**
@@ -126,6 +222,13 @@ class restore_these_activity_structure_step extends restore_activity_structure_s
         if (!$data->dossierid) {
             return;
         }
+        // L'annuaire du jury est propre au site : un enseignant absent de cet annuaire devient un
+        // membre saisi. Le jeton d'accès n'est pas sauvegardé (secret d'accès sans compte).
+        if (!empty($data->jurorid) && !$DB->record_exists('these_juror', ['id' => $data->jurorid])) {
+            $data->jurorid = 0;
+        }
+        $data->eligibleby = $this->map_user($data->eligibleby ?? 0);
+        unset($data->accesstoken);
         $DB->insert_record('these_jury', $data);
     }
 
@@ -147,12 +250,34 @@ class restore_these_activity_structure_step extends restore_activity_structure_s
     }
 
     /**
+     * Restaure une signature.
+     *
+     * @param array $data
+     */
+    protected function process_these_signature($data) {
+        global $DB;
+
+        $data = (object) $data;
+        $oldid = $data->id;
+        $data->dossierid = $this->get_new_parentid('these_dossier');
+        if (!$data->dossierid) {
+            return;
+        }
+        $data->userid = $this->map_user($data->userid);
+        $data->token = null;
+        $newid = $DB->insert_record('these_signature', $data);
+        $this->set_mapping('these_signature', $oldid, $newid, true);
+    }
+
+    /**
      * Restaure les fichiers une fois tous les identifiants connus.
      */
     protected function after_execute() {
         $this->add_related_files('mod_these', 'intro', null);
+        $this->add_related_files('mod_these', 'docimages', null);
         foreach (THESE_FILEAREAS as $filearea) {
             $this->add_related_files('mod_these', $filearea, 'these_dossier');
         }
+        $this->add_related_files('mod_these', 'signature', 'these_signature');
     }
 }

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="mod/these/db" VERSION="20261023" COMMENT="XMLDB file for module mod_these"
+<XMLDB PATH="mod/these/db" VERSION="20261024" COMMENT="XMLDB file for module mod_these"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
@@ -56,6 +56,33 @@
         <FIELD NAME="directorid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="codirectorname" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"
             COMMENT="Co-directeur éventuel, en texte libre (il peut être extérieur à l'établissement)"/>
+        <FIELD NAME="studyyear" TYPE="char" LENGTH="4" NOTNULL="false" SEQUENCE="false"
+            COMMENT="Année d'études au dépôt du sujet (A2 à A6)"/>
+        <FIELD NAME="confidential" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
+            COMMENT="Thèse confidentielle : le titre ne doit pas être divulgué"/>
+        <FIELD NAME="directortitle" TYPE="char" LENGTH="50" NOTNULL="false" SEQUENCE="false"
+            COMMENT="Titre du directeur (Dr, Pr...)"/>
+        <FIELD NAME="externaldirector" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
+            COMMENT="Directeur extérieur à l'établissement : directorid désigne alors le membre référent"/>
+        <FIELD NAME="extdirectorname" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="extdirectorgrade" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="extdirectorinstitution" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="extdirectoremail" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="commitments" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
+            COMMENT="Engagements de l'étudiant cochés au dépôt du sujet (masque de bits)"/>
+        <FIELD NAME="ethicsnumber" TYPE="char" LENGTH="50" NOTNULL="false" SEQUENCE="false"
+            COMMENT="Numéro de l'avis favorable du comité d'éthique"/>
+        <FIELD NAME="bordereau" TYPE="text" NOTNULL="false" SEQUENCE="false"
+            COMMENT="Bordereau de thèse (ABES) renseigné par l'étudiant, en JSON"/>
+        <FIELD NAME="conclusions" TYPE="text" NOTNULL="false" SEQUENCE="false"
+            COMMENT="Conclusions de la thèse, à signer par le directeur, le président et les autorités"/>
+        <FIELD NAME="reporttext" TYPE="text" NOTNULL="false" SEQUENCE="false"
+            COMMENT="Rapport du directeur de thèse"/>
+        <FIELD NAME="reportfavorable" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="conformitygrid" TYPE="text" NOTNULL="false" SEQUENCE="false"
+            COMMENT="Grille de conformité renseignée par le directeur, en JSON"/>
+        <FIELD NAME="agreement" TYPE="text" NOTNULL="false" SEQUENCE="false"
+            COMMENT="Agrément administratif renseigné par la DEVE, en JSON"/>
         <FIELD NAME="devenumber" TYPE="char" LENGTH="50" NOTNULL="false" SEQUENCE="false"
             COMMENT="Numéro d'enregistrement attribué par la DEVE"/>
         <FIELD NAME="libraryref" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"
@@ -67,7 +94,16 @@
         <FIELD NAME="defenselocation" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="defenseresult" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
             COMMENT="Voir les constantes THESE_RESULT_*"/>
-        <FIELD NAME="mention" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="mention" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"
+            COMMENT="Mention décernée par le jury (honorable, treshonorable, felicitations)"/>
+        <FIELD NAME="prizeproposal" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
+            COMMENT="Thèse proposée par le jury pour un prix de thèse"/>
+        <FIELD NAME="correctionsrequested" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
+            COMMENT="Corrections demandées par le jury au procès-verbal"/>
+        <FIELD NAME="correctionsnote" TYPE="text" NOTNULL="false" SEQUENCE="false"
+            COMMENT="Corrections demandées par le jury, reportées par la DEVE"/>
+        <FIELD NAME="correctionsdone" TYPE="text" NOTNULL="false" SEQUENCE="false"
+            COMMENT="Corrections apportées, décrites par l'étudiant au dépôt du manuscrit corrigé"/>
         <FIELD NAME="returnstatus" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
             COMMENT="Statut repris à la nouvelle soumission d'un dossier renvoyé à l'étudiant"/>
         <FIELD NAME="returncomment" TYPE="text" NOTNULL="false" SEQUENCE="false"
@@ -110,11 +146,26 @@
         <FIELD NAME="email" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="sortorder" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="jurorid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
+            COMMENT="Enseignant de l'annuaire du jury (these_juror), 0 pour un membre extérieur ou un invité"/>
+        <FIELD NAME="jurystatus" TYPE="char" LENGTH="20" NOTNULL="false" SEQUENCE="false"
+            COMMENT="Statut (corps) du membre : celui de l'annuaire, ou celui déclaré pour un membre extérieur"/>
+        <FIELD NAME="eligible" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
+            COMMENT="Éligibilité validée par la DEVE"/>
+        <FIELD NAME="eligibleby" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="eligibletime" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="accesstoken" TYPE="char" LENGTH="64" NOTNULL="false" SEQUENCE="false"
+            COMMENT="Jeton d'accès du membre aux documents du dossier"/>
+        <FIELD NAME="notifiedtime" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
         <KEY NAME="dossierid" TYPE="foreign" FIELDS="dossierid" REFTABLE="these_dossier" REFFIELDS="id"/>
       </KEYS>
+      <INDEXES>
+        <INDEX NAME="accesstoken" UNIQUE="false" FIELDS="accesstoken"/>
+        <INDEX NAME="jurorid" UNIQUE="false" FIELDS="jurorid"/>
+      </INDEXES>
     </TABLE>
 
     <TABLE NAME="these_log" COMMENT="Historique du circuit d'un dossier : qui a fait quoi, quand, avec quel commentaire">
@@ -135,6 +186,38 @@
       </KEYS>
     </TABLE>
 
+    <TABLE NAME="these_signature" COMMENT="Signature électronique d'un document de dossier, demandée ou apposée">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="dossierid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="doctype" TYPE="char" LENGTH="20" NOTNULL="true" SEQUENCE="false"
+            COMMENT="Document signé : voir these_document_definitions()"/>
+        <FIELD NAME="slot" TYPE="char" LENGTH="20" NOTNULL="true" SEQUENCE="false"
+            COMMENT="Emplacement de signature : voir these_document_definitions()"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
+            COMMENT="Signataire ; 0 pour un signataire sans compte (lien à jeton)"/>
+        <FIELD NAME="signername" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="signeremail" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="token" TYPE="char" LENGTH="64" NOTNULL="false" SEQUENCE="false"
+            COMMENT="Secret du lien de signature sans compte, effacé une fois la signature apposée"/>
+        <FIELD NAME="requesttime" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timesigned" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
+            COMMENT="0 tant que la signature est seulement demandée"/>
+        <FIELD NAME="contenthash" TYPE="char" LENGTH="64" NOTNULL="false" SEQUENCE="false"
+            COMMENT="Empreinte SHA-256 du contenu du document au moment de la signature"/>
+        <FIELD NAME="ipaddress" TYPE="char" LENGTH="45" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="dossierid" TYPE="foreign" FIELDS="dossierid" REFTABLE="these_dossier" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="dossier_doc_slot" UNIQUE="true" FIELDS="dossierid, doctype, slot"/>
+        <INDEX NAME="token" UNIQUE="false" FIELDS="token"/>
+      </INDEXES>
+    </TABLE>
+
     <TABLE NAME="these_email_template" COMMENT="Texte de courriel personnalisé par la DEVE pour une instance">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
@@ -151,6 +234,133 @@
       <INDEXES>
         <INDEX NAME="theseid_emailkey" UNIQUE="true" FIELDS="theseid, emailkey"/>
       </INDEXES>
+    </TABLE>
+    <TABLE NAME="these_doctemplate" COMMENT="Modèle de document modifié par la DEVE pour une instance">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="theseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"
+            COMMENT="Activité Gestion des thèses propriétaire, 0 pour un modèle d'une activité Suivi des thèses"/>
+        <FIELD NAME="synthesisid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
+            COMMENT="Activité Suivi des thèses propriétaire (modèle partagé par les activités qu'elle suit), 0 sinon"/>
+        <FIELD NAME="doctype" TYPE="char" LENGTH="20" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="content" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="theseid" TYPE="foreign" FIELDS="theseid" REFTABLE="these" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="owner_doctype" UNIQUE="true" FIELDS="theseid, synthesisid, doctype"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="these_griditem" COMMENT="Élément de la grille de conformité d'une instance, modifiable par la DEVE">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="theseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"
+            COMMENT="Activité Gestion des thèses propriétaire, 0 pour une grille d'une activité Suivi des thèses"/>
+        <FIELD NAME="synthesisid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
+            COMMENT="Activité Suivi des thèses propriétaire (grille partagée), 0 sinon"/>
+        <FIELD NAME="itemkey" TYPE="char" LENGTH="40" NOTNULL="true" SEQUENCE="false"
+            COMMENT="Clé de l'élément dans la grille remplie (these_dossier.conformitygrid)"/>
+        <FIELD NAME="section" TYPE="char" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="fond ou forme"/>
+        <FIELD NAME="label" TYPE="text" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="conditional" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
+            COMMENT="1 : ne s'applique qu'à certaines thèses, peut rester non coché"/>
+        <FIELD NAME="sortorder" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="theseid" TYPE="foreign" FIELDS="theseid" REFTABLE="these" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="owner_itemkey" UNIQUE="true" FIELDS="theseid, synthesisid, itemkey"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="these_juror" COMMENT="Annuaire des enseignants pouvant diriger une thèse ou siéger au jury, commun à toutes les instances">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="title" TYPE="char" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Dr ou Pr"/>
+        <FIELD NAME="lastname" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="firstname" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="email" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true" SEQUENCE="false"
+            COMMENT="ir, mcf, mcfhdr, mcfstag, prstag, pr, premerite, mcfemerite"/>
+        <FIELD NAME="institution" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="active" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="email" UNIQUE="false" FIELDS="email"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="these_question" COMMENT="Question du questionnaire préalable au jury, rempli par l'étudiant">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="theseid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
+            COMMENT="Activité Gestion des thèses propriétaire, 0 pour une question d'une activité Suivi des thèses"/>
+        <FIELD NAME="synthesisid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
+            COMMENT="Activité Suivi des thèses propriétaire (questionnaire partagé), 0 sinon"/>
+        <FIELD NAME="qtype" TYPE="char" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="text, textarea, list ou multi"/>
+        <FIELD NAME="label" TYPE="text" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="options" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Choix proposés, un par ligne"/>
+        <FIELD NAME="required" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="sortorder" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="owner" UNIQUE="false" FIELDS="theseid, synthesisid"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="these_answer" COMMENT="Réponse d'un étudiant au questionnaire préalable au jury">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="dossierid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="questionid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="value" TYPE="text" NOTNULL="false" SEQUENCE="false"
+            COMMENT="Texte, choix, ou liste JSON des choix (QCM)"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="dossierid" TYPE="foreign" FIELDS="dossierid" REFTABLE="these_dossier" REFFIELDS="id"/>
+        <KEY NAME="questionid" TYPE="foreign" FIELDS="questionid" REFTABLE="these_question" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="dossier_question" UNIQUE="true" FIELDS="dossierid, questionid"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="these_subjecthistory" COMMENT="Sujets précédents d'un dossier, archivés à chaque changement de sujet">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="dossierid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="title" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="titleen" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="summary" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="keywords" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="studyyear" TYPE="char" LENGTH="4" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="confidential" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="directorid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="directorname" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"
+            COMMENT="Nom du directeur au moment du changement (directeur extérieur compris)"/>
+        <FIELD NAME="codirectorname" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="libraryref" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="reason" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Motif du changement"/>
+        <FIELD NAME="changedby" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="dossierid" TYPE="foreign" FIELDS="dossierid" REFTABLE="these_dossier" REFFIELDS="id"/>
+      </KEYS>
     </TABLE>
   </TABLES>
 </XMLDB>

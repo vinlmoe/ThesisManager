@@ -1,0 +1,87 @@
+<!--@page margins="33,15,15,25" header="12" footer="19" font="freesans" size="9.3" lineheight="1.2"-->
+<!--@header-->
+<img src="{{img.abes}}" width="53mm" />
+<!--@footer-->
+<div style="text-align:right;font-family:freeserif;font-size:9pt;">{{pagenumber}}</div>
+<!--@body-->
+<div style="text-align:center;font-weight:bold;line-height:1.3;"><br />BORDEREAU DE THÈSE<br />D’EXERCICE VETERINAIRE</div>
+<br /><br />
+<div style="font-weight:bold;"><i>ÉTABLISSEMENT HABILITE A DELIVRER LA THESE D’EXERCICE : VETAGRO SUP</i></div>
+<br /><br />
+<hr style="height:0.5mm;" />
+<div style="text-align:center;"><i>A REMPLIR EN MAJUSCULES PAR LE DOCTORANT</i></div>
+<br />
+<table cellpadding="0" style="line-height:1.3;">
+  <tr><td width="170mm"><b>1. AUTEUR</b></td></tr>
+  <tr><td width="77mm"><b>NOM DE NAISSANCE</b></td><td width="93mm">{{student.lastname}}</td></tr>
+  <tr><td width="77mm"><b>PRÉNOM(S)</b></td><td width="93mm"><span style="text-transform:uppercase;">{{student.firstname}}</span></td></tr>
+  <tr><td width="77mm"><b>NOM D’USAGE</b></td><td width="93mm">{{student.usagename}}</td></tr>
+  <tr><td width="123mm"><b>NOM FIGURANT SUR LA PUBLICATION,</b> <i>si différent des deux précédents</i></td><td width="47mm">{{student.publicationname}}</td></tr>
+  <tr><td width="77mm"><b>DATE DE NAISSANCE (Format JJMMAAAA)</b></td><td width="93mm">{{student.birthdatecompact}}</td></tr>
+  <tr><td width="77mm"><b>NATIONALITE</b></td><td width="93mm"><span style="text-transform:uppercase;">{{student.nationality}}</span></td></tr>
+</table>
+<div style="font-size:5pt;"> </div>
+<hr style="height:0.5mm;" />
+<div style="font-size:9pt;"> </div>
+<table cellpadding="0" style="line-height:1.3;">
+  <tr><td width="170mm"><b>2. ADRESSE</b></td></tr>
+  <tr><td width="18mm"><b>N° et RUE</b></td><td width="152mm"><span style="text-transform:uppercase;">{{student.street}}</span></td></tr>
+  <tr><td width="26mm"><b>CODE POSTAL</b></td><td width="49mm">{{student.postcode}}</td><td width="11mm"><b>PAYS</b></td><td width="84mm"><span style="text-transform:uppercase;">{{student.country}}</span></td></tr>
+  <tr><td width="11mm"><b>VILLE</b></td><td width="159mm"><span style="text-transform:uppercase;">{{student.city}}</span></td></tr>
+  <tr><td width="46mm"><b>ADRESSE ÉLECTRONIQUE</b></td><td width="124mm">{{student.personalemail}}</td></tr>
+</table>
+<div style="font-size:5pt;"> </div>
+<hr style="height:0.5mm;" />
+<div style="font-size:9pt;"> </div>
+<table cellpadding="0">
+  <tr>
+    <td width="50mm"><b>3. DATE DE SOUTENANCE</b></td>
+    <td width="26mm"><b>ANNÉE (AAAA)</b></td>
+    <td width="11mm">{{defense.year}}</td>
+    <td width="19mm"><b>MOIS (MM)</b></td>
+    <td width="10mm">{{defense.month}}</td>
+    <td width="17mm"><b>JOUR (JJ)</b></td>
+    <td width="37mm">{{defense.day}}</td>
+  </tr>
+</table>
+<div style="font-size:5pt;"> </div>
+<hr style="height:0.5mm;" />
+<div style="font-size:9pt;"> </div>
+<table cellpadding="0" style="line-height:1.3;">
+  <tr><td width="170mm"><b>4. DIRECTEUR DE THÈSE</b> <span style="font-size:6pt;"><b>(= membre du jury)</b></span><br /></td></tr>
+  <tr><td width="11mm"><b>NOM</b></td><td width="159mm">{{director.lastname}}</td></tr>
+  <tr><td width="22mm"><b>PRÉNOM(S)</b></td><td width="148mm"><span style="text-transform:uppercase;">{{director.firstname}}</span></td></tr>
+</table>
+<br /><div style="font-size:5pt;"> </div>
+<hr style="height:0.5mm;" />
+<div style="font-size:9pt;"> </div>
+<b>5. INDICATIONS BIBLIOGRAPHIQUES :</b><br /><br />
+<b>Nombre de volumes :</b> {{abes.nbvolumes}}&nbsp;&nbsp;<b>Nombre total de pages :</b> {{abes.nbpages}}<br />
+<b>Nombre de références bibliographiques :</b> {{abes.nbrefs}}<br /><br />
+AUCUN TEXTE MANUSCRIT N’EST ADMIS. DACTYLOGRAPHIER OU COLLER LE TEXTE IMPRIMÉ DANS LES ZONES PRÉVUES
+<br pagebreak="true" />
+<b>TITRE DE LA THÈSE</b> <i>(tel qu’il figure sur la page de titre)</i> <b>:</b><br />
+<i>Transcrire en toutes lettres les symboles spéciaux</i><br /><br />
+<table cellpadding="6"><tr><td height="23mm" style="border:0.5pt solid #000000;font-size:10.5pt;">{{thesis.title}}</td></tr></table>
+<br /><br /><br /><br />
+<b>TITRE DE LA THESE EN ANGLAIS (obligatoire)</b> <i>:</i><br />
+<i>Transcrire en toutes lettres les symboles spéciaux.</i><br /><br />
+<table cellpadding="6"><tr><td height="23mm" style="border:0.5pt solid #000000;font-size:10.5pt;">{{thesis.titleen}}</td></tr></table>
+<br /><br /><br /><br />
+<b>RESUME DE LA THESE EN FRANÇAIS</b><br /><br />
+<i>Chaque cadre doit contenir un résumé de 1700 caractères maximum, espaces compris. En cas de dépassement, la coupure sera automatique.</i><br /><br /><br />
+<table cellpadding="6"><tr><td width="172mm" height="90mm" style="border:0.5pt solid #000000;font-size:9.5pt;text-align:justify;">{{{abes.summaryfrhtml}}}</td></tr></table>
+<br pagebreak="true" />
+<b>RESUMÉ DE LA THÈSE EN ANGLAIS (non obligatoire)</b><br /><br />
+<table cellpadding="6"><tr><td width="172mm" height="53mm" style="border:0.5pt solid #000000;font-size:9.5pt;text-align:justify;">{{{abes.summaryenhtml}}}</td></tr></table>
+<br /><br /><br /><br />
+<b>PROPOSITION DE MOTS-CLÉS (en français) :</b> <span style="font-size:6.5pt;"><b>identiques à ceux de la 4° page de couverture</b></span><br /><br /><br />
+<table cellpadding="0">
+  <tr><td width="4mm"><b>1</b></td><td width="83mm">{{abes.kw1}}</td><td width="4mm"><b>5</b></td><td width="79mm">{{abes.kw5}}</td></tr>
+  <tr><td width="4mm"><b>2</b></td><td width="83mm">{{abes.kw2}}</td><td width="4mm"><b>6</b></td><td width="79mm">{{abes.kw6}}</td></tr>
+  <tr><td width="4mm"><b>3</b></td><td width="83mm">{{abes.kw3}}</td><td width="4mm"><b>7</b></td><td width="79mm">{{abes.kw7}}</td></tr>
+  <tr><td width="4mm"><b>4</b></td><td width="83mm">{{abes.kw4}}</td><td width="4mm"><b>8</b></td><td width="79mm">{{abes.kw8}}</td></tr>
+</table>
+<br /><br /><br /><br /><br /><br /><br /><br />
+<b>DATE ET SIGNATURE DE L’AUTEUR</b><br /><br />
+<table cellpadding="6"><tr><td width="66mm" height="20mm" style="border:0.5pt solid #000000;">{{sigdate.student}}<br />{{{sig.student}}}</td></tr></table>

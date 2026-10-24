@@ -55,6 +55,7 @@ $mform = new subject_form($PAGE->url, [
     'directors' => these_director_options($context, $dossier ? $dossier->directorid : 0),
     'submitlabel' => $returned ? 'resubmitsubject' : 'submitsubject',
     'allowdraft' => true,
+    'signername' => fullname($USER),
 ]);
 
 $draftitemid = file_get_submitted_draft_itemid('subjectdocs');
@@ -70,6 +71,11 @@ $formdata = $dossier ? clone $dossier : new stdClass();
 $formdata->id = $cm->id;
 $formdata->dossierid = $dossier ? $dossier->id : 0;
 $formdata->subjectdocs = $draftitemid;
+$commitments = $dossier ? (int) $dossier->commitments : 0;
+$formdata->commitguide = $commitments & THESE_COMMIT_GUIDE ? 1 : 0;
+$formdata->commitduplicate = $commitments & THESE_COMMIT_DUPLICATE ? 1 : 0;
+$formdata->commitethics = $commitments & THESE_COMMIT_ETHICS ? 1 : 0;
+unset($formdata->signaturedata);
 $mform->set_data($formdata);
 
 if ($mform->is_cancelled()) {
@@ -87,7 +93,7 @@ if ($mform->is_cancelled()) {
         these_filemanager_options('subjectdocs')
     );
     $submit = !empty($data->submitsubject);
-    these_save_subject($these, $cm, $dossier, $data, $submit, $USER->id);
+    these_save_subject($these, $cm, $dossier, $data, $submit, $USER->id, $submit ? these_signature_from_form($data) : null);
     redirect(
         $viewurl,
         get_string($submit ? 'subjectsubmittedmsg' : 'draftsaved', 'mod_these'),

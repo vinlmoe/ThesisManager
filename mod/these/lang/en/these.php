@@ -140,7 +140,7 @@ $string['subjecttitleen'] = 'English title';
 $string['subjectsummary'] = 'Abstract';
 $string['subjectsummary_help'] = 'Presentation of the subject: background, objectives, planned approach (about one page).';
 $string['subjectkeywords'] = 'Keywords';
-$string['subjectkeywords_help'] = 'Keywords separated by commas or semicolons.';
+$string['subjectkeywords_help'] = '3 to 5 keywords separated by semicolons, preferably from the HeTOP terminology.';
 $string['director'] = 'Thesis director';
 $string['director_help'] = 'Teacher directing the thesis. Only teachers enrolled in this course and allowed to direct theses are '
     . 'listed: if yours is missing, contact the registrar.';
@@ -157,10 +157,9 @@ $string['subjectsubmittedmsg'] = 'Subject submitted.';
 $string['subjectnoteditable'] = 'The subject can no longer be edited: it has been submitted. It becomes editable again if the file '
     . 'is returned to you.';
 $string['editsubject'] = 'Edit the subject';
-$string['subjectsheet'] = 'Subject sheet (PDF)';
 $string['registration'] = 'Registrations';
 $string['devenumber'] = 'Registrar number';
-$string['devenumber_help'] = 'Registration number of the subject. The suggested number is the next one of the current year '
+$string['devenumber_help'] = 'Registration number of the thesis, assigned after the defence submission. The suggested number is the next one of the current year '
     . '(YYYY-NNN format); it can be changed but must remain unique in the activity.';
 $string['devenumbertaken'] = 'This number is already used by another file.';
 $string['libraryref'] = 'Bibliographic record reference';
@@ -196,17 +195,19 @@ $string['defenseresult'] = 'Result';
 $string['resultadmitted'] = 'Admitted';
 $string['resultadjourned'] = 'Adjourned';
 $string['mention'] = 'Distinction';
-$string['mention_help'] = 'Optional: distinction or jury congratulations, as written in the minutes.';
+$string['mention_help'] = 'Distinction awarded by the jury to an admitted thesis: honourable, very honourable, very honourable with the jury\'s congratulations.';
 $string['minutes'] = 'Defence minutes';
 
 // Jury.
 $string['jury'] = 'Jury';
-$string['juryhelp'] = 'One row per member. Leave the name empty to ignore a row. The email address is used to send each member a '
-    . 'notice; without an address, the notice must be delivered by other means.';
+$string['juryhelp'] = 'One row per member. Preferably choose the teacher from the jury directory: title, status, institution '
+    . 'and address are taken from it. For an external member or a guest, choose "External member or guest" and fill in the row '
+    . '(the status is required for a voting member). Only HDR associate professors, professors and emeriti may chair. The registrar '
+    . 'then validates the eligibility of each member; members are then notified by email and receive a link to the file documents.';
 $string['juryrole'] = 'Role';
 $string['juryrolepresident'] = 'Chair';
-$string['juryroledirector'] = 'Director (assessor)';
-$string['juryrolemember'] = 'Assessor';
+$string['juryroledirector'] = 'Thesis director (jury member)';
+$string['juryrolemember'] = 'Jury member';
 $string['juryroleguest'] = 'Guest member';
 $string['juryname'] = 'Name';
 $string['jurytitle'] = 'Title or position';
@@ -216,6 +217,67 @@ $string['juryaddmembers'] = 'Add rows';
 $string['juryonepresident'] = 'The jury must have exactly one chair.';
 $string['juryminmembers'] = 'The jury must have at least {$a} voting members (chair included, guests excluded).';
 $string['juryinvalidemail'] = 'Invalid email address for {$a}.';
+$string['juryjuror'] = 'Teacher from the directory';
+$string['juryjuror_help'] = 'Teacher chosen from the jury directory kept by the registrar. For an external member (another '
+    . 'institution, practitioner) or a guest, choose "External member or guest" and fill in the fields that appear.';
+$string['juryexternal'] = '— External member or guest (to fill in) —';
+$string['jurystatus'] = 'Status';
+$string['jurystatus_help'] = 'Rank of the teacher. All may supervise a thesis or sit on the jury; only HDR associate professors, '
+    . 'professors and emeriti (professors and associate professors) may chair.';
+$string['jurystatusir'] = 'Research engineer';
+$string['jurystatusmcf'] = 'Associate professor';
+$string['jurystatusmcfhdr'] = 'Associate professor (HDR)';
+$string['jurystatusmcfstag'] = 'Probationary associate professor';
+$string['jurystatusprstag'] = 'Probationary professor';
+$string['jurystatuspr'] = 'Professor';
+$string['jurystatuspremerite'] = 'Emeritus professor';
+$string['jurystatusmcfemerite'] = 'Emeritus associate professor';
+$string['jurystatusother'] = 'Other (practitioner, researcher...)';
+$string['jurystatusrequired'] = 'Give the status of {$a} (external member).';
+$string['juryduplicate'] = '{$a} appears twice in the jury.';
+$string['jurypresidentnoteligible'] = '{$a} cannot chair the jury: only HDR associate professors, professors and emeriti can.';
+$string['juryeligiblecheck'] = 'Eligibility checked (registrar)';
+$string['juryeligiblehelp'] = 'Tick the eligibility of each voting member once checked (already ticked for directory teachers whose '
+    . 'status suits their role). On validation, jury members are notified by email and receive a link to the file documents.';
+$string['juryeligiblerequired'] = 'The eligibility of {$a} is not validated.';
+$string['jurynotified'] = '{$a} jury member(s) notified.';
+$string['jurynotifiedmissing'] = 'Without address, to notify by other means: {$a}.';
+$string['juryeligibilityok'] = 'Eligible';
+$string['juryeligibilitytocheck'] = 'To be checked by the registrar';
+$string['juryeligibilityko'] = 'Not eligible for this role';
+$string['juryeligibilityvalidated'] = 'Eligibility validated';
+$string['jurynotifiedon'] = 'Notified on {$a}';
+$string['juryresendaccess'] = 'Send the jury access again';
+$string['juryaccessresent'] = '{$a} jury member(s) notified again.';
+$string['juryaccess'] = 'Jury access';
+$string['juryaccessintro'] = 'Hello {$a->name}, you are appointed as {$a->role} of the jury of this thesis. Below are the defence '
+    . 'details and the file documents.';
+$string['juryaccessinvalid'] = 'This access link is not (or no longer) valid. Contact the registrar.';
+$string['juryaccessdocuments'] = 'Documents';
+$string['juryaccessnodocuments'] = 'No document is available yet.';
+
+// Jury directory.
+$string['jurors'] = 'Jury directory';
+$string['jurors_desc'] = 'Teachers who may supervise a thesis or sit on a jury, shared by all activities and all cohorts. Jury forms '
+    . 'draw on it to be prefilled. A withdrawn (inactive) teacher is no longer offered but stays in the juries that chose them.';
+$string['jurortitle'] = 'Title';
+$string['juroractive'] = 'Offered in jury forms';
+$string['juroractiveyes'] = 'Active';
+$string['juroractiveno'] = 'Withdrawn';
+$string['jurorpresident'] = 'May chair';
+$string['juroradd'] = 'Add a teacher';
+$string['juroredit'] = 'Edit a teacher';
+$string['jurorsaved'] = 'The teacher has been saved.';
+$string['jurordeleted'] = 'The teacher has been removed from the directory.';
+$string['jurordeleteconfirm'] = 'Remove {$a} from the directory? Juries that chose them keep them.';
+$string['jurorsnone'] = 'The directory is empty.';
+$string['jurorimport'] = 'Import a CSV file';
+$string['jurorimportfile'] = 'CSV file';
+$string['jurorimportfile_help'] = 'Columns: title (Dr or Pr), lastname, firstname, email, status, institution, separated by commas '
+    . 'or semicolons. The status is the key (ir, mcf, mcfhdr, mcfstag, prstag, pr, premerite, mcfemerite) or the label. A teacher '
+    . 'already present (same address, or same names) is updated.';
+$string['jurorimportdone'] = '{$a->created} teacher(s) added, {$a->updated} updated.';
+$string['jurorimportbadline'] = 'Line {$a} ignored: wrong title, names, status or address.';
 $string['jurysheet'] = 'Jury sheet';
 
 // Review steps.
@@ -223,17 +285,18 @@ $string['reviewdirectorsubject'] = 'Review the subject proposal';
 $string['reviewdirectorsubject_help'] = 'Approve the subject so that the registrar can register it, or return it to the student with '
     . 'your comments: the student can correct it and submit it again.';
 $string['reviewdevesubject'] = 'Register the subject (registrar)';
-$string['reviewdevesubject_help'] = 'Assign the registration number: the subject is then sent to the library. A return can be '
+$string['reviewdevesubject_help'] = 'Check the subject: it is then sent to the library. The registration number is assigned after '
+    . 'the thesis submission, when the defence file is validated. A return can be '
     . 'addressed to the student or to the director; when resubmitted, the file comes straight back here.';
 $string['reviewlibrarysubject'] = 'Record the subject (library)';
 $string['reviewlibrarysubject_help'] = 'Enter the reference of the record created in the library catalogue. This opens the file, '
     . 'which stays active until the defence documents are submitted.';
 $string['reviewdirectordefense'] = 'Approve the defence and upload the report';
-$string['reviewdirectordefense_help'] = 'Approve the defence proposal (date, jury) by uploading your report on the manuscript, in a '
-    . 'single step. You can also return the file to the student with your comments.';
+$string['reviewdirectordefense_help'] = 'Approve the defence proposal (date, jury) once your report on the manuscript is written '
+    . '("Write the report"): your signature is applied to the report on approval. You can also return the file to the student with your comments.';
 $string['reviewdevedefense'] = 'Validate the defence file (registrar)';
-$string['reviewdevedefense_help'] = 'Check the complete file (manuscript, documents, director report) and set the date, location '
-    . 'and jury. Validation sends the manuscript to the library for the compliance check.';
+$string['reviewdevedefense_help'] = 'Check the complete file (manuscript, documents, director report), assign the registration '
+    . 'number and set the date, location and jury. Validation sends the manuscript to the library for the compliance check.';
 $string['reviewlibraryconformity'] = 'Check manuscript compliance';
 $string['reviewlibraryconformity_help'] = 'Check the manuscript format, presentation standards and legal deposit requirements. '
     . 'Validation issues the compliance certificate; a non-compliant manuscript is returned to the student with the reason.';
@@ -245,7 +308,6 @@ $string['validatedevedefense'] = 'Validate the file';
 $string['validatelibraryconformity'] = 'Certify compliance';
 $string['conformitychecked'] = 'The manuscript is compliant (format, legal deposit, presentation standards)';
 $string['conformitycheckrequired'] = 'Tick the box to certify compliance, or return the file.';
-$string['conformitycertificate'] = 'Compliance certificate (PDF)';
 $string['reviewremark'] = 'Comment';
 $string['reviewremark_help'] = 'Optional when validating (it is recorded in the file history). Required to return the file: it is the '
     . 'reason sent to the recipient.';
@@ -394,7 +456,7 @@ Open the file: {$a->url}';
 $string['emailsubjectactivesubject'] = 'Thesis of {$a->student}: subject registered';
 $string['emailsubjectactivebody'] = 'Hello,
 
-The thesis subject of {$a->student} has been registered by the registrar (number {$a->devenumber}) and by the library. The file is open and stays active until the defence documents are submitted.
+The thesis subject of {$a->student} has been registered by the registrar and by the library. The file is open and stays active until the defence documents are submitted.
 
 Subject: {$a->title}
 
@@ -426,20 +488,6 @@ Subject: {$a->title}
 
 Open the file: {$a->url}';
 
-// PDF documents.
-$string['pdfdoneat'] = 'Done at {$a->city}, on {$a->date}';
-$string['pdfconvocationstudent'] = 'Dear student,
-
-You are invited to the public defence of your veterinary thesis on {$a->date} at {$a->time}, {$a->location}, before the jury below.';
-$string['pdfconvocationjury'] = 'Dear colleague,
-
-You are invited, as {$a->role}, to the jury of the veterinary thesis defence of {$a->student}, on {$a->date} at {$a->time}, {$a->location}.';
-$string['pdfconformitytext'] = 'The library certifies that the thesis manuscript of {$a->student} complies with the presentation standards and legal deposit requirements of the institution, as of {$a->date}.';
-$string['pdfsignature'] = 'Signature';
-$string['pdfsignatures'] = 'Signatures of the jury members';
-$string['pdfdeliberation'] = 'Deliberation';
-$string['pdfminutestext'] = 'After deliberation, the jury declares the thesis of {$a->student}:';
-
 // Tasks and privacy.
 $string['taskreminders'] = 'Reminders for pending thesis files';
 $string['staffactions'] = 'Actions on thesis files';
@@ -460,13 +508,588 @@ $string['privacy:metadata:these_jury'] = 'Jury members proposed or set for a def
 $string['privacy:metadata:these_jury:fullname'] = 'Jury member name.';
 $string['privacy:metadata:these_jury:email'] = 'Jury member email address.';
 $string['privacy:metadata:these_jury:institution'] = 'Jury member institution.';
+$string['privacy:metadata:these_jury:jurystatus'] = 'Status (rank) of the jury member.';
+$string['privacy:metadata:these_juror'] = 'Directory of teachers who may supervise a thesis or sit on a jury, kept by the registrar (not linked to a Moodle account).';
+$string['privacy:metadata:these_juror:title'] = 'Title of the teacher (Dr or Pr).';
+$string['privacy:metadata:these_juror:lastname'] = 'Last name of the teacher.';
+$string['privacy:metadata:these_juror:firstname'] = 'First name of the teacher.';
+$string['privacy:metadata:these_juror:email'] = 'Email address of the teacher.';
+$string['privacy:metadata:these_juror:status'] = 'Status (rank) of the teacher.';
+$string['privacy:metadata:these_juror:institution'] = 'Institution of the teacher.';
+$string['privacy:metadata:these_answer'] = "Student answers to the pre-jury questionnaire.";
+$string['privacy:metadata:these_answer:questionid'] = 'Question.';
+$string['privacy:metadata:these_answer:value'] = 'Answer.';
+$string['privacy:metadata:these_answer:timemodified'] = 'Time of the answer.';
 $string['privacy:metadata:these_log'] = 'History of actions on a file.';
 $string['privacy:metadata:these_log:userid'] = 'Author of the action.';
 $string['privacy:metadata:these_log:logaction'] = 'Action performed.';
 $string['privacy:metadata:these_log:remark'] = 'Comment entered with the action.';
 $string['privacy:metadata:these_log:timecreated'] = 'Date of the action.';
-$string['privacy:metadata:core_files'] = 'Files of the thesis files: subject attachments, manuscript, defence documents, director report, generated documents, minutes.';
+$string['privacy:metadata:core_files'] = 'Files of the thesis files: subject attachments, manuscript, defence documents, director report, generated documents, minutes, corrected manuscript, saved signature of the user.';
 $string['privacy:metadata:jury'] = 'Jury members receive their notice by email, mentioning the student, the subject and the defence date.';
 $string['privacy:metadata:jury:student'] = 'Student name.';
 $string['privacy:metadata:jury:title'] = 'Thesis title.';
 $string['privacy:metadata:jury:defensedate'] = 'Defence date and location.';
+
+// Service roles (site settings).
+$string['settingsroles'] = 'Service roles';
+$string['settingsroles_desc'] = 'Just as the registrar is recognised by the "Teacher" role, the library is recognised by the role chosen '
+    . 'here. The role can be assigned in the course, its category or at site level (it then gives access to all thesis activities '
+    . 'without enrolment). The module capabilities are also taken into account.';
+$string['deverole'] = 'Registrar role';
+$string['deverole_desc'] = 'Role whose holders act as the registrar in thesis activities.';
+$string['libraryrole'] = 'Library role';
+$string['libraryrole_desc'] = 'Role whose holders act as the library. By default, the internal "Library (theses)" role created when '
+    . 'the module is installed.';
+$string['libraryrolename'] = 'Library (theses)';
+$string['libraryroledescription'] = 'Internal role of the thesis management module: recording subjects in the library catalogue and '
+    . 'certifying manuscripts. Assign it at site, category or course level.';
+
+// Documents (site settings).
+$string['settingsdocuments'] = 'Documents and signatories';
+$string['settingsdocuments_desc'] = 'Header and signatories of the institution documents produced by the module. Signatories without '
+    . 'a Moodle account (general management, CCEM, university presidency) receive a signing link by email if their address is set; '
+    . 'otherwise the registrar collects their signature in person.';
+$string['doctplimages'] = 'Template images';
+$string['doctplimages_help'] = 'Images (PNG or JPEG) usable in the document templates as {{img.name}}, name being the file name in '
+    . 'lower case, without extension or special characters. An image with the same name as one provided with the module '
+    . '(marianne, vetagrosup, lyon1, bulyon1, abes) replaces it in the documents of this activity.';
+$string['settingsdevename'] = 'Head of studies: name';
+$string['settingsdevename_desc'] = 'Name of the head of studies and student life (agreement form).';
+$string['settingsdevetitle'] = 'Head of studies: title';
+$string['settingsdevetitle_desc'] = 'Title printed on the agreement form (without article).';
+$string['settingscontracttemplate'] = 'Electronic distribution contract template (PDF)';
+$string['settingscontracttemplate_desc'] = 'The official contract (ENS-INI-P308-E04), as is. The module adds before it a page with the '
+    . 'author\'s data and choices, and after it a signature page.';
+$string['settingsinstitution'] = 'Institution';
+$string['settingsinstitution_desc'] = 'Short name used in the documents.';
+$string['settingshetopurl'] = 'HeTOP link';
+$string['settingshetopurl_desc'] = 'Reference terminology for subject keywords.';
+$string['settingsdgtitle'] = 'General management (title)';
+$string['settingsdgtitle_desc'] = '';
+$string['settingsdgname'] = 'General management (name)';
+$string['settingsdgname_desc'] = '';
+$string['settingsdgemail'] = 'General management (email)';
+$string['settingsdgemail_desc'] = 'Address receiving signing links; empty: signature collected in person by the registrar.';
+$string['settingsvisaplace'] = 'Place of approval';
+$string['settingsvisaplace_desc'] = '"Seen, at …" of the conclusions, "Done at" of the distribution contract.';
+$string['settingsccemname'] = 'CCEM (name)';
+$string['settingsccemname_desc'] = '';
+$string['settingsccememail'] = 'CCEM (email)';
+$string['settingsccememail_desc'] = 'Address receiving signing links; empty: signature collected in person by the registrar.';
+$string['settingsucbltitle'] = 'University presidency (title)';
+$string['settingsucbltitle_desc'] = '';
+$string['settingsucblname'] = 'University presidency (name)';
+$string['settingsucblname_desc'] = '';
+$string['settingsucblemail'] = 'University presidency (email)';
+$string['settingsucblemail_desc'] = 'Address receiving signing links; empty: signature collected in person by the registrar.';
+
+// Subject form.
+$string['studyyear'] = 'Year of study';
+$string['confidential'] = 'Confidential thesis, do not disclose the title';
+$string['hetoplink'] = 'Search keywords in HeTOP';
+$string['keywordscount'] = 'Enter 3 to 5 keywords, separated by semicolons.';
+$string['subjectapproval'] = 'Subject approval';
+$string['externaldirector'] = 'The thesis director is external to the institution';
+$string['externaldirector_help'] = 'The external director, without a Moodle account, signs the form from a link received by email. '
+    . 'Then choose below, as director in the module, the member of the institution who follows the thesis: this member validates '
+    . 'the steps and signs as member.';
+$string['directortitle'] = 'Director title';
+$string['directortitle_help'] = 'Dr, Pr… as it must appear on the documents.';
+$string['extdirectorname'] = 'External director: title, name';
+$string['extdirectorgrade'] = 'Grade';
+$string['extdirectorinstitution'] = 'Institution';
+$string['extdirectoremail'] = 'Email address';
+$string['commitments'] = 'Student commitments';
+$string['commitguide'] = 'I have read the thesis guide';
+$string['commitduplicate'] = 'I have checked that the subject has not been the subject of a veterinary thesis in one of the schools '
+    . 'and is not that of a thesis being written';
+$string['commitethics'] = 'If necessary: submit the protocol to the ethics committee before starting the work';
+$string['commitrequired'] = 'This commitment is required.';
+$string['subjectnotice'] = 'A veterinary clinical research centre can support you (methodology, regulations, logistics) for clinical '
+    . 'research. For theses in humanities and social sciences, supervision must involve a specialist of the field, who will be a '
+    . 'jury member.';
+
+// Signature.
+$string['signature'] = 'Signature';
+$string['signaturedraw'] = 'Draw your signature';
+$string['signatureclear'] = 'Clear';
+$string['signername'] = 'Signatory name';
+$string['signatureconsent'] = 'I certify the information is accurate and electronically sign the document(s) above.';
+$string['signatureconsentrequired'] = 'Tick the box to sign.';
+$string['signaturemissing'] = 'Draw your signature in the box above.';
+$string['signsubjectintro'] = 'Submitting signs the thesis subject form.';
+$string['signdefenseintro'] = 'Submitting signs the thesis record form and the electronic distribution contract.';
+$string['signreviewintro'] = 'Validation signs: {$a}.';
+$string['signexternalintro'] = 'Read each document (links above) before signing: your signature will be applied to all of them.';
+$string['signaturepending'] = 'Pending';
+$string['signaturerequestedon'] = 'Requested on {$a}';
+$string['signedby'] = 'Signed by {$a->name} on {$a->date}';
+$string['signeddocuments'] = 'Signed documents';
+$string['signatures'] = 'Signatures';
+$string['document'] = 'Document';
+$string['downloadpdf'] = 'PDF';
+$string['managesignatures'] = 'Signature tracking';
+$string['externalsigners'] = 'Signatories without an account';
+$string['signer'] = 'Signatory';
+$string['noemail'] = 'no address';
+$string['documentstosign'] = 'Documents to sign';
+$string['resendsignature'] = 'Send the link';
+$string['signinperson'] = 'Sign in person';
+$string['signaturerequestsent'] = 'Signing link sent.';
+$string['signaturesrecorded'] = 'Signature recorded. Thank you.';
+$string['signpagetitle'] = 'Signing thesis documents';
+$string['signpageintro'] = 'Signing as {$a->slot} the documents of the thesis of {$a->student}: "{$a->title}".';
+$string['signinvalidtoken'] = 'This link is no longer valid: the documents have already been signed, or a new invitation was sent.';
+$string['signnothingpending'] = 'No document is waiting for a signature.';
+$string['signdocuments'] = 'Sign the documents';
+
+// Documents and signature slots.
+$string['docsubject'] = 'Thesis subject form';
+$string['docbordereau'] = 'Thesis record form (ABES)';
+$string['docreport'] = 'Director report';
+$string['docgrid'] = 'Thesis compliance grid';
+$string['docagreement'] = 'Administrative and scientific approval form';
+$string['docsignaletique'] = 'Student information form';
+$string['doccontract'] = 'Electronic distribution contract';
+$string['docconformity'] = 'Compliance certificate (library)';
+$string['docconclusions'] = 'Conclusions';
+$string['slotstudent'] = 'Student';
+$string['slotdirector'] = 'Thesis director';
+$string['slotextdirector'] = 'External thesis director';
+$string['slotdeve'] = 'Registrar';
+$string['slotdgrep'] = 'General management (represented by the registrar)';
+$string['slotlibrary'] = 'Library';
+$string['slotpresident'] = 'Jury chair';
+$string['slotdg'] = 'General management';
+$string['slotccem'] = 'CCEM president';
+$string['slotucbl'] = 'University presidency';
+
+// Defence submission: student data.
+$string['visio'] = 'Videoconference';
+$string['identity'] = 'Identity and contact details';
+$string['identityhelp'] = 'This information feeds the thesis record form, the student information form and the distribution '
+    . 'contract.';
+$string['bbirthname'] = 'Birth name';
+$string['bfirstnames'] = 'First name(s)';
+$string['busagename'] = 'Usual name';
+$string['bpublicationname'] = 'Name on the publication (if different)';
+$string['bbirthdate'] = 'Date of birth';
+$string['bbirthplace'] = 'Place of birth';
+$string['bbirthdept'] = 'Department no.';
+$string['bnationality'] = 'Nationality';
+$string['bstreet'] = 'Permanent address (number and street)';
+$string['bpostcode'] = 'Postcode';
+$string['bcity'] = 'City';
+$string['bcountry'] = 'Country';
+$string['bphone'] = 'Phone';
+$string['bpersonalemail'] = 'Personal email';
+$string['bpersonalemail_help'] = 'Personal, long-lasting address, different from the institution one.';
+$string['bemailconsent'] = 'I agree that my email may be used for accreditation purposes and shared with institutional partners';
+$string['cursus'] = 'Curriculum';
+$string['bdefvdate'] = 'DEFV obtained on';
+$string['bschool'] = 'at';
+$string['schoolother'] = 'Other institution';
+$string['ba6date'] = 'Final year (A6) validated on';
+$string['ba6notyet'] = 'I have not yet validated my final year (A6)';
+$string['a6required'] = 'Enter the A6 validation date, or tick the box if it is not validated yet.';
+$string['bnbvolumes'] = 'Number of volumes';
+$string['bnbpages'] = 'Total number of pages';
+$string['bnbrefs'] = 'Number of references';
+$string['bsummaryfr'] = 'Abstract in French';
+$string['bsummaryen'] = 'Abstract in English (optional)';
+$string['bsummary'] = 'Abstract';
+$string['bsummary_help'] = '1700 characters maximum, spaces included.';
+$string['summarytoolong'] = 'The abstract exceeds {$a} characters.';
+$string['bkeywords'] = 'Keywords (in French)';
+$string['bkeywords_help'] = 'Identical to those of the back cover, 8 maximum.';
+$string['conclusionstext'] = 'Conclusions text';
+$string['conclusionstext_help'] = 'The conclusions as they will appear in the manuscript. They must fit on one page with the '
+    . 'signatures (about 2,200 characters at most; separate paragraphs with a blank line). They will be signed by the director, the '
+    . 'jury president, the general management and the CCEM president.';
+$string['conclusionstoolong'] = 'The conclusions have {$a->length} characters for {$a->max} at most: they must fit on one page with the signatures.';
+$string['conclusionsonepage'] = 'The conclusions do not fit on one page with the signatures: shorten them or use fewer paragraphs.';
+$string['contracthelp'] = 'Author choices for the electronic distribution contract (articles 2 and 4). A confidential thesis (box '
+    . 'ticked with the subject) stays confidential until the date given.';
+$string['bconfidentialuntil'] = 'Confidential until';
+$string['bconfidentialuntil_help'] = 'Only for theses declared confidential with the subject.';
+$string['bembargo'] = 'Thesis under embargo (delayed distribution)';
+$string['bembargountil'] = 'Embargo until';
+$string['bdiffusion'] = 'Thesis distribution';
+$string['bdiffusion_help'] = 'Full text on the internet (DUMAS, Sudoc, library catalogues), or paper copy in veterinary school '
+    . 'libraries and university intranet only.';
+$string['diffusioninternet'] = 'I authorise the full-text distribution of the thesis on the internet';
+$string['diffusionrestricted'] = 'I do not authorise internet distribution, only paper consultation and the intranet';
+
+// Director and registrar steps.
+$string['reporttext'] = 'Director report';
+$string['reporttext_help'] = 'One-page argument presenting the thesis work (work done, main results, student involvement…).';
+$string['reportfavorable'] = 'I give a favourable opinion for the defence and the award of the Doctor of Veterinary Medicine title';
+$string['reportfavorablerequired'] = 'A favourable opinion is required to approve the defence.';
+$string['ethicsnumber'] = 'Ethics committee approval number (if any)';
+$string['gridsectionfond'] = 'Content compliance';
+$string['gridsectionforme'] = 'Form compliance';
+$string['gridsectionpdffond'] = 'Content conformity';
+$string['gridsectionpdfforme'] = 'Form conformity';
+$string['gridconditional'] = '(depending on the thesis)';
+$string['griditems'] = 'Conformity grid';
+$string['griditems_desc'] = 'Items of the conformity grid filled by the thesis director. Changing an item updates the PDF grids '
+    . '(defence documents already generated will be at their next generation); a removed item disappears from the grids; an added '
+    . 'item applies to the grids filled afterwards. "Depending on the thesis": the item may stay unticked. To remove an item, empty '
+    . 'its label.';
+$string['griditemsection'] = 'Section';
+$string['griditemlabel'] = 'Item';
+$string['griditemconditional'] = 'Depending on the thesis (optional)';
+$string['griditemadd'] = 'Add {no} item(s)';
+$string['griditemssaved'] = 'The conformity grid has been saved.';
+$string['griditemsreset'] = 'Restore the original grid';
+$string['gridrequired'] = 'Item to validate.';
+$string['gridquestion'] = 'The scientific question is clearly stated and identified.';
+$string['gridanswer'] = 'The bibliographic or experimental answer is satisfactory.';
+$string['gridbiblio'] = 'The bibliography is complete, relevant and up to date.';
+$string['gridcritique'] = 'The critical analysis of the bibliography is satisfactory.';
+$string['gridownwork'] = 'The work presented is the student\'s own.';
+$string['gridtool'] = 'If the thesis is about developing a tool, teaching material, website etc.: it is not restricted to the '
+    . 'technical description of the work.';
+$string['gridfrench'] = 'Satisfactory French expression and spelling.';
+$string['gridlanguage'] = 'Written in French. Or, if written in English, at least 15% of the manuscript in French and French '
+    . 'summaries of each part.';
+$string['gridtyping'] = 'Correct typing and page numbering.';
+$string['gridthanks'] = 'Acknowledgements to the jury members and sober personal acknowledgements.';
+$string['gridtoc'] = 'A table of contents is present.';
+$string['gridstaff'] = 'The up-to-date list of teaching staff is present.';
+$string['gridlists'] = 'Lists of abbreviations, figures, tables and appendices are present.';
+$string['gridcovers'] = 'Compliant cover pages.';
+$string['gridcitations'] = 'References cited in the text (university library format).';
+$string['gridbibliography'] = 'A correctly formatted final bibliography is present.';
+$string['gridfigures'] = 'Satisfactory numbering, titles and captions, quality and readability of figures and tables.';
+$string['gridintroduction'] = 'An introduction sets out the problem and the outline of the manuscript.';
+$string['gridconclusion'] = 'A conclusion sums up the key points and suggests perspectives.';
+$string['gridabstract'] = 'The abstract is not a copy of the conclusion.';
+$string['gridstructure'] = 'For non-bibliographic theses, the work is presented as a scientific document: introduction, material and '
+    . 'methods, results, discussion and conclusion.';
+$string['agreementscientific'] = 'Scientific approval';
+$string['agreementdirectortext'] = 'By validating, you declare you have read and corrected the student\'s thesis and approve its '
+    . 'content.';
+$string['agreementmembertext'] = 'The director being external, you declare as member that you have corrected the thesis and certify its '
+    . 'form with the compliance grid; the external director will sign the approval from the link received by email.';
+$string['agreementadmin'] = 'Administrative approval';
+$string['agdefvdate'] = 'DEFV obtained on';
+$string['agmobility'] = 'has validated their international mobility';
+$string['aga6notyet'] = 'has not yet validated their final year (A6)';
+$string['aga6date'] = 'Final year (A6) validated on';
+$string['agauthorized'] = 'The student is authorised to defend their veterinary thesis.';
+
+// Signature history and emails.
+$string['logsigned'] = 'Document signed';
+$string['logsignaturesinvalidated'] = 'Signatures invalidated (document changed)';
+$string['logsignaturerequested'] = 'Signature requested';
+$string['logsignedinperson'] = 'Signature collected in person';
+$string['emailkeysignaturerequest'] = 'Signature request (signatories without an account)';
+$string['emailjurydesignationsubject'] = 'Appointment to the thesis jury of {$a->student}';
+$string['emailjurydesignationbody'] = 'Hello {$a->name},
+
+You are appointed as {$a->role} of the jury of the veterinary thesis of {$a->student}, entitled "{$a->title}".
+
+Planned defence: {$a->date}, {$a->location}.
+
+The manuscript and file documents are available through this personal link: {$a->url}
+
+The official notice will follow separately.';
+$string['emailsignaturerequestsubject'] = 'Thesis of {$a->student}: document(s) to sign';
+$string['emailsignaturerequestbody'] = 'Hello {$a->name},
+
+The following documents of the thesis of {$a->student}, entitled "{$a->title}", are waiting for your signature: {$a->document}.
+
+To read and sign them: {$a->url}
+
+This link is personal and valid for one signature only.';
+
+// PDF labels (the documents are official French forms: labels stay close to the originals).
+$string['pdfsignedby'] = 'Electronically signed by {$a->name} on {$a->date} — fingerprint {$a->hash}';
+$string['pdfreportfavorable'] = 'Favourable opinion for the thesis defence and the award of the Doctor of Veterinary Medicine title.';
+$string['privacy:metadata:these_dossier:bordereau'] = 'Personal data entered with the defence (civil status, address, personal email, curriculum, distribution choices).';
+$string['privacy:metadata:these_dossier:conclusions'] = 'Thesis conclusions.';
+$string['privacy:metadata:these_dossier:reporttext'] = 'Director report.';
+$string['privacy:metadata:these_signature'] = 'Electronic signatures applied to the file documents (drawn image kept in the files).';
+$string['privacy:metadata:these_signature:userid'] = 'Signatory.';
+$string['privacy:metadata:these_signature:signername'] = 'Signatory name.';
+$string['privacy:metadata:these_signature:signeremail'] = 'Address of a signatory without an account.';
+$string['privacy:metadata:these_signature:ipaddress'] = 'IP address when signing.';
+$string['privacy:metadata:these_signature:timesigned'] = 'Signature date.';
+$string['directorfunction'] = 'Your position';
+$string['directorfunction_help'] = 'Position printed in the scientific approval: "I, the undersigned NAME First name, position, declare…" (for example: Associate professor, Professor).';
+
+// Document templates.
+$string['doctemplates'] = 'Document templates';
+$string['doctemplates_desc'] = 'Each document produced by this activity is built from a template: HTML in which the record data are '
+    . 'inserted with {{...}} tags. The original templates reproduce the institution forms; a modified template can be restored to '
+    . 'its original at any time. Documents already produced do not change.';
+$string['doctpldocument'] = 'Document';
+$string['doctplcustomised'] = 'Modified';
+$string['doctploriginal'] = 'Original template';
+$string['doctplpreview'] = 'PDF preview';
+$string['doctplreset'] = 'Restore original';
+$string['doctplresetconfirm'] = 'Restore the original template of the document "{$a}"? Your changes will be lost.';
+$string['doctplresetdone'] = 'The original template of the document "{$a}" has been restored.';
+$string['doctplsaved'] = 'The template of the document "{$a}" has been saved.';
+$string['doctplintro'] = 'The PDF preview opens in a new tab with sample data (complete record, signed in every slot), without saving '
+    . 'the template.';
+$string['doctplcontent'] = 'Template';
+$string['doctplcontent_help'] = 'HTML as interpreted by TCPDF: tables (widths in mm, borders with a "border" style), inline styles, '
+    . 'images, page break with &lt;br pagebreak="true" /&gt;.
+
+* {{variable}} inserts a value (escaped); {{{variable}}} inserts HTML (check boxes box.*, signatures sig.*, *html texts);
+* {{#variable}}...{{/variable}} shows the content only if the variable is true or not empty, or repeats it for each item of a list
+  (jury...); {{^variable}}...{{/variable}} shows it if it is false or empty;
+* the first line may set the layout: &lt;!--@page margins="top,right,bottom,left" header="8" footer="12" font="freesans" size="10" lineheight="1.25"--&gt; (mm, points);
+* &lt;!--@header--&gt;, &lt;!--@body--&gt; and &lt;!--@footer--&gt; separate the header and footer, repeated on every page, from the content;
+  {{pagenumber}} and {{pagecount}} give the page number and page count there.';
+$string['doctplerror'] = 'This template does not produce a document: {$a}';
+$string['doctplvariables'] = 'Available variables';
+$string['doctplvariables_desc'] = 'Examples taken from the preview sample data. Signatures are empty until the slot is signed; sigsrc.* '
+    . 'gives the image source to use in &lt;img src="{{sigsrc.director}}" height="10mm" /&gt;.';
+$string['doctplvariable'] = 'Variable';
+$string['doctplexample'] = 'Example';
+$string['doctplvarimage'] = 'Image, to use in <img src="...">';
+$string['doctplvarlist'] = 'List (items: {$a})';
+$string['doctplvarbool'] = 'True / false ({$a})';
+$string['doctplvarhtml'] = 'HTML, to insert with {{{...}}}';
+$string['doctplsubject'] = 'Thesis subject form (E01)';
+$string['doctplagreement'] = 'Administrative and scientific agreement form (E02)';
+$string['doctplsignaletique'] = 'Identification form (E03)';
+$string['doctplbordereau'] = 'Thesis form (ABES)';
+$string['doctplreport'] = "Director's report";
+$string['doctplgrid'] = 'Conformity grid';
+$string['doctplconclusions'] = 'Conclusions';
+$string['doctplcontractdata'] = "Distribution contract (E04): author's data and choices page";
+$string['doctplcontractsign'] = 'Distribution contract (E04): signature page';
+$string['doctplconformity'] = 'Conformity certificate (library)';
+$string['doctplconvocation'] = 'Defence notice';
+$string['doctpljurysheet'] = 'Jury sheet';
+$string['doctplminutes'] = 'Defence minutes';
+
+// Settings transfer.
+$string['transfersettings'] = 'Settings transfer';
+$string['transfersettings_desc'] = 'Take the settings of another thesis management activity (new course, new year) or of a file '
+    . 'exported from another site, or export the settings of this activity. Thesis files are never transferred.';
+$string['transferimportheading'] = 'Take settings';
+$string['transferexportheading'] = 'Export the settings of this activity';
+$string['transferexport_desc'] = 'The file (JSON) can be taken into another activity, on this site or another one.';
+$string['transfersource'] = 'Source';
+$string['transfersourceactivity'] = 'Another activity on this site';
+$string['transfersourcefile'] = 'An exported settings file';
+$string['transferactivity'] = 'Activity';
+$string['transferfile'] = 'Settings file (.json)';
+$string['transfergroups'] = 'Settings';
+$string['transfergroups_help'] = 'Each ticked group fully replaces that of the activity: an email or template customised here but not '
+    . 'in the source goes back to its original text. Unticked groups do not change.';
+$string['transfergroupactivity'] = 'Activity settings (institution, signatory, location, jury, service addresses, reminders)';
+$string['transfergroupemails'] = 'Customised emails';
+$string['transfergroupgriditems'] = 'Conformity grid (items)';
+$string['transferdonegriditems'] = '{$a} conformity grid item(s);';
+$string['transfergroupdoctemplates'] = 'Document templates';
+$string['transfergroupdocimages'] = 'Template images';
+$string['transferconfirmreplace'] = 'I confirm the replacement of the ticked settings of this activity';
+$string['transferconfirmrequired'] = 'Confirm the replacement to continue.';
+$string['transferimport'] = 'Transfer';
+$string['transferexport'] = 'Download the settings file';
+$string['transfernogroup'] = 'Tick at least one group of settings.';
+$string['transferbadfile'] = 'This file is not a thesis management settings file.';
+$string['transferdone'] = 'Settings taken from "{$a}":';
+$string['transferdoneactivity'] = 'activity settings replaced;';
+$string['transferdoneemails'] = '{$a} customised email(s);';
+$string['transferdonedoctemplates'] = '{$a} modified document template(s);';
+$string['transferdonedocimages'] = '{$a} image(s).';
+$string['transferskipped'] = 'Items not taken:';
+$string['transferskippedemail'] = 'unknown email "{$a}"';
+$string['transferskippeddoctemplate'] = 'unknown document "{$a}"';
+$string['transferskippedimage'] = 'unreadable or duplicate image "{$a}"';
+
+// Settings shared by a "Thesis follow-up" activity.
+$string['sharedsettings'] = 'This activity is followed by the "Thesis follow-up" activity {$a->name}, where "{$a->what}" is '
+    . 'defined for every followed cohort: edit it there.';
+$string['doctemplatesshared_desc'] = 'Document templates shared by every "Thesis management" activity followed by this activity: '
+    . 'each cohort produces its documents from them. Tags and layout are described in the guide; the preview uses sample data.';
+$string['griditemsshared_desc'] = 'Conformity grid items shared by every "Thesis management" activity followed by this activity. '
+    . 'Changing an item updates the PDF grids produced afterwards.';
+
+// Pre-jury questionnaire.
+$string['questions'] = 'Pre-jury questionnaire';
+$string['questions_desc'] = 'Questions asked to the student before the defence submission: short answer, long answer, list or '
+    . 'multiple choice. Required questions condition the submission; answers appear in the record, are shown to the jury and are '
+    . 'used to search theses.';
+$string['questionsshared_desc'] = 'Questions shared by every "Thesis management" activity followed by this activity, asked to the '
+    . 'student before the defence submission. Required questions condition the submission; answers are used to search theses.';
+$string['questionsnone'] = 'No question is defined.';
+$string['questionadd'] = 'Add a question';
+$string['questionedit'] = 'Edit the question';
+$string['questiontype'] = 'Question type';
+$string['questionlabel'] = 'Question';
+$string['questionoptions'] = 'Choices';
+$string['questionoptions_help'] = 'One choice per line. A list accepts a single choice, a multiple-choice question several.';
+$string['questionoptionsrequired'] = 'Enter at least two choices, one per line.';
+$string['questionrequired'] = 'Answer required';
+$string['questionsaved'] = 'Question saved.';
+$string['questiondeleted'] = 'Question deleted.';
+$string['questiondeleteconfirm'] = 'Delete the question "{$a->label}" and the {$a->answers} answer(s) already given?';
+$string['qtypetext'] = 'Short answer';
+$string['qtypetextarea'] = 'Long answer';
+$string['qtypelist'] = 'List (one choice)';
+$string['qtypemulti'] = 'Multiple choice';
+$string['questionnaire'] = 'Pre-jury questionnaire';
+$string['questionnaire_desc'] = 'Answer these questions before submitting the defence. Your answers appear in the record and are '
+    . 'shown to the jury; they are also used to find theses.';
+$string['questionnairesaved'] = 'Answers saved.';
+$string['questionnaireunanswered'] = 'No answer';
+$string['questionnairemissing'] = 'Required questions without an answer: {$a}.';
+$string['questionnairecomplete'] = 'Questionnaire completed.';
+$string['questionnairefill'] = 'Fill in the questionnaire';
+$string['questionnairerequired'] = 'Fill in the pre-jury questionnaire before submitting the defence.';
+$string['transfergroupquestions'] = 'Pre-jury questionnaire (questions)';
+$string['transferdonequestions'] = '{$a} question(s);';
+
+// Director report written in the module.
+$string['writereport'] = 'Write the report';
+$string['writereport_desc'] = 'Write your report on the manuscript: it is printed in the PDF report, which must fit on one page with '
+    . 'your signature. You can save it several times and preview it; you sign it when approving the defence.';
+$string['reportsave'] = 'Save the report';
+$string['reportsaved'] = 'Report saved.';
+$string['reportnoteditable'] = 'The report can only be written before the director approves the defence.';
+$string['reportnotwritten'] = 'Report not written.';
+$string['reportwrittenfavorable'] = 'Report written, favourable opinion.';
+$string['reportwrittennotfavorable'] = 'Report written, without a favourable opinion.';
+$string['reporttoolong'] = 'The report has {$a->length} characters for at most {$a->max}: it must fit on one page with the signature.';
+$string['reportonepage'] = 'The report does not fit on one page with the signature: shorten it.';
+$string['logreportsaved'] = 'Director report saved';
+
+// Minutes: jury decisions.
+$string['minutesscan'] = 'Signed minutes (scan)';
+$string['minutesscan_help'] = 'The minutes signed by the jury members, scanned (PDF or images), on which the jury ticked its decisions.';
+$string['jurydecisions'] = 'Jury decisions';
+$string['jurydecisions_help'] = 'Report the decisions ticked by the jury on the minutes. Without corrections, the file is closed; if '
+    . 'the jury requests corrections, the student submits the corrected manuscript, which the director, the library and then the '
+    . 'registrar approve before closing. An adjourned thesis goes back to the defence phase: the student submits a new defence '
+    . 'file, which follows the whole circuit again.';
+$string['mentionhonorable'] = 'Honourable';
+$string['mentiontreshonorable'] = 'Very honourable';
+$string['mentionfelicitations'] = 'Very honourable with the jury\'s congratulations';
+$string['prizeproposal'] = 'Proposed for a thesis prize';
+$string['correctionsrequested'] = 'Corrections requested by the jury';
+$string['recordminutes'] = 'Save the minutes';
+$string['correctionsopened'] = 'Minutes saved: the student is asked to submit the corrected manuscript.';
+
+// Corrections circuit.
+$string['corrections'] = 'Corrections';
+$string['correctionsnote'] = 'Requested corrections';
+$string['correctionsnote_help'] = 'Corrections requested by the jury, as written in the minutes: they are sent to the student.';
+$string['correctionsdone'] = 'Corrections made';
+$string['correctionsdone_help'] = 'Describe the corrections made to the manuscript, point by point.';
+$string['correctedmanuscript'] = 'Corrected manuscript';
+$string['correctedmanuscriptrequired'] = 'The corrected manuscript is required.';
+$string['depositcorrections'] = 'Submit the corrections';
+$string['correctionsnotexpected'] = 'No correction is expected for this file.';
+$string['correctionssubmittedmsg'] = 'Corrections submitted: your thesis director has been notified.';
+$string['statuscorrections'] = 'Corrections requested by the jury';
+$string['statuscorrectionssubmitted'] = 'Corrections submitted, awaiting the director';
+$string['statuscorrectionsapproved'] = 'Corrections approved by the director, awaiting the library';
+$string['statuscorrectionsconform'] = 'Corrections approved by the library, awaiting the registrar';
+$string['stepcorrections'] = 'Corrections, if any';
+$string['reviewdirectorcorrections'] = 'Approve the corrections (director)';
+$string['reviewdirectorcorrections_help'] = 'Check that the corrected manuscript addresses the corrections requested by the jury. You '
+    . 'can also return it to the student with your comments.';
+$string['reviewlibrarycorrections'] = 'Approve the corrections (library)';
+$string['reviewlibrarycorrections_help'] = 'Check the format of the corrected manuscript before its final deposit. A non-compliant '
+    . 'manuscript is returned to the student with the reason.';
+$string['reviewdevecorrections'] = 'Approve the corrections and close the file (registrar)';
+$string['reviewdevecorrections_help'] = 'Approving the corrections closes the file; the student and the director are notified.';
+$string['validatedirectorcorrections'] = 'Approve the corrections';
+$string['validatelibrarycorrections'] = 'Approve the corrections';
+$string['validatedevecorrections'] = 'Approve and close the file';
+$string['logminutescorrections'] = 'Minutes uploaded, corrections requested';
+$string['logcorrectionssubmitted'] = 'Corrected manuscript submitted';
+$string['logcorrectionsresubmitted'] = 'Corrected manuscript submitted again';
+$string['logvalidateddirectorcorrections'] = 'Corrections approved by the director';
+$string['logvalidatedlibrarycorrections'] = 'Corrections approved by the library';
+$string['logvalidateddevecorrections'] = 'Corrections approved by the registrar, file closed';
+$string['privacy:metadata:these_dossier:correctionsdone'] = 'Corrections made, described by the student.';
+
+// Adjournment.
+$string['minutesadjourned'] = 'Adjournment minutes';
+$string['adjournednotice'] = 'Defence adjourned on {$a}: the file is back in the defence phase, awaiting a new submission from the '
+    . 'student.';
+$string['adjournednoticestudent'] = 'Your defence was adjourned on {$a}. Submit a new defence file (revised manuscript, date, '
+    . 'jury): it will be approved again by your director, the registrar and the library.';
+$string['logadjourned'] = 'Minutes uploaded, defence adjourned: back to the defence phase';
+$string['emailadjournedsubject'] = 'Thesis of {$a->student}: defence adjourned';
+$string['emailadjournedbody'] = 'Hello,
+
+The thesis defence of {$a->student} has been adjourned by the jury. The file goes back to the defence phase: a new defence file (revised manuscript, date, jury) must be submitted, then approved again by the director, the registrar and the library.
+
+Subject: {$a->title}
+
+Open the file: {$a->url}';
+
+// DEVE agent signatory and saved signature.
+$string['agentdeve'] = 'Registrar officer';
+$string['settingsdeveagent'] = 'Registrar signatory';
+$string['settingsdeveagent_desc'] = 'Username or email address of the Moodle account of the officer in charge of the registrar. The '
+    . 'registrar team fills in and checks the file, then validates without signing; the officer then receives an email and signs '
+    . 'the subject visa and the administrative approval from "My signatures", with their saved signature. Leave empty for the '
+    . 'registrar member who validates to sign.';
+$string['mysignatures'] = 'My signatures';
+$string['mysignatures_desc'] = 'Documents awaiting your signature, all cohorts together. Check each document as a PDF, tick those '
+    . 'to sign, then sign once: your saved signature is used by default.';
+$string['mysignaturescount'] = 'My signatures ({$a})';
+$string['signmyintro'] = 'Your signature is applied to each ticked document.';
+$string['signnodocument'] = 'Tick at least one document.';
+$string['signpreview'] = 'view the PDF';
+$string['signaturesrecordedcount'] = '{$a} document(s) signed.';
+$string['signaturesaved'] = 'Saved signature';
+$string['signatureusesaved'] = 'Use my saved signature';
+$string['signaturesave'] = 'Save this signature for my next signatures';
+$string['signaturesaveddelete'] = 'Delete my saved signature';
+$string['signaturesaveddeleted'] = 'Saved signature deleted.';
+$string['signaturesavednone'] = 'No saved signature: tick "Save this signature" next time you sign so you no longer need to draw it.';
+$string['emailagentsignaturesubject'] = 'Documents to sign: thesis of {$a->student}';
+$string['emailagentsignaturebody'] = 'Hello {$a->name},
+
+The registrar has checked the thesis file of {$a->student} ({$a->activity}). The following documents await your signature: {$a->document}.
+
+Subject: {$a->title}
+
+Sign from "My signatures": {$a->url}';
+
+// Subject change.
+$string['subjectchange'] = 'Change thesis subject';
+$string['subjectchange_desc'] = 'Explain why you are changing subject. The former subject is archived in the file; your former '
+    . 'director, the registrar and the library are notified. The new subject is approved again by the director (you may choose '
+    . 'another one), then registered by the registrar and the library.';
+$string['subjectchangereason'] = 'Reason for the change';
+$string['subjectchangesubmit'] = 'Submit the new subject';
+$string['subjectchangecurrent'] = 'Current subject: {$a}';
+$string['subjectchangenotallowed'] = 'The subject can only be changed while the file is active (subject registered, defence not '
+    . 'submitted).';
+$string['subjectchangedmsg'] = 'New subject submitted: your thesis director, the registrar and the library have been notified.';
+$string['subjectchangelog'] = 'Former subject: {$a->old}. Reason: {$a->reason}';
+$string['subjecthistory'] = 'Previous subjects';
+$string['subjectarchive'] = 'Archived subject form';
+$string['logsubjectchanged'] = 'Subject changed';
+$string['emailsubjectchangedsubject'] = 'Thesis of {$a->student}: subject changed';
+$string['emailsubjectchangedbody'] = 'Hello,
+
+{$a->student} ({$a->activity}) has changed thesis subject.
+
+Former subject: {$a->oldtitle}
+New subject: {$a->title}
+Reason: {$a->reason}
+
+The former subject is archived in the file. The new subject will be approved by the thesis director, then registered by the registrar and the library.
+
+Open the file: {$a->url}';
+$string['privacy:metadata:these_subjecthistory'] = 'Previous subjects, archived at each subject change.';
+$string['privacy:metadata:these_subjecthistory:title'] = 'Title of the previous subject.';
+$string['privacy:metadata:these_subjecthistory:summary'] = 'Summary of the previous subject.';
+$string['privacy:metadata:these_subjecthistory:reason'] = 'Reason for the change.';
+$string['privacy:metadata:these_subjecthistory:changedby'] = 'Author of the change.';
+$string['privacy:metadata:these_subjecthistory:timecreated'] = 'Time of the change.';

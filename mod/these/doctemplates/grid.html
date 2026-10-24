@@ -1,0 +1,37 @@
+<!--@page margins="12,13,12,13" font="freesans" size="10.2" lineheight="1.25"-->
+<!--@body-->
+<div style="text-align:center;font-size:13pt;font-weight:bold;">Grille de conformité de la thèse d’exercice vétérinaire</div>
+<br />
+<div style="text-align:justify;line-height:1.45;">A renseigner et signer <u>par le directeur de la thèse</u> d’exercice vétérinaire et à joindre au dossier de soutenance de thèse destiné à la DEVE. Ce document à vocation d’attestation de respect des consignes de rédaction du manuscrit de thèse d’exercice vétérinaire à VetAgro Sup. Il propose une liste d’éléments indispensables à vérifier afin d’attester de la conformité du manuscrit.</div>
+<br />
+<table cellpadding="1.5">
+  <tr><td align="center" style="border:0.5pt solid #000000;"><b>{{student.lastname}} {{student.firstname}}</b></td></tr>
+  <tr><td align="center" style="border:0.5pt solid #000000;"><b>{{thesis.title}}</b></td></tr>
+</table>
+<div>&nbsp;&nbsp;Si existant, préciser ici le numéro de l’avis favorable au projet du comité d'éthique : n°{{#thesis.ethicsnumber}}<b>{{thesis.ethicsnumber}}</b>{{/thesis.ethicsnumber}}{{^thesis.ethicsnumber}}<b>………</b>{{/thesis.ethicsnumber}}</div>
+<br />
+{{#gridsections}}
+<table cellpadding="1.5">
+{{#first}}  <tr>
+    <td width="164.8mm"></td>
+    <td width="19.2mm" align="center" style="border:0.5pt solid #000000;">Cocher<br />si validé</td>
+  </tr>
+{{/first}}  <tr>
+    <td colspan="2" style="border:0.5pt solid #000000;background-color:#d9d9d9;">&nbsp;<b>{{pdflabel}}</b></td>
+  </tr>
+{{#items}}  <tr>
+    <td width="164.8mm" style="border:0.5pt solid #000000;">&nbsp;{{label}}</td>
+    <td width="19.2mm" align="center" style="border:0.5pt solid #000000;font-size:11pt;">{{{mark}}}</td>
+  </tr>
+{{/items}}</table>
+<div style="font-size:8pt;"> </div>
+{{/gridsections}}
+<br /><br />
+<table cellpadding="0">
+  <tr>
+    <td width="184mm" align="right" style="letter-spacing:0.3mm;"><i>{{director.fullname}}<br />Signature du directeur de la thèse d’exercice vétérinaire</i></td>
+  </tr>
+  <tr>
+    <td width="184mm" align="right">{{{sig.director}}}</td>
+  </tr>
+</table>

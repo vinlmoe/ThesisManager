@@ -79,13 +79,9 @@ abstract class these_testcase extends \advanced_testcase {
         $this->director = $gen->create_and_enrol($this->course, 'teacher');
         $this->deve = $gen->create_and_enrol($this->course, 'editingteacher');
 
-        // Rôle dédié à la bibliothèque, comme recommandé dans INSTALL.md : consulter l'activité et
-        // gérer les étapes de la bibliothèque, sans pouvoir diriger de thèse.
-        $roleid = $gen->create_role(['shortname' => 'theselibrary']);
-        $systemcontext = \context_system::instance();
-        assign_capability('mod/these:view', CAP_ALLOW, $roleid, $systemcontext->id);
-        assign_capability('mod/these:managelibrary', CAP_ALLOW, $roleid, $systemcontext->id);
-        set_role_contextlevels($roleid, [CONTEXT_COURSE, CONTEXT_MODULE]);
+        // Rôle interne « Bibliothèque (thèses) », créé à l'installation du module et choisi par
+        // défaut pour la bibliothèque dans les réglages du site.
+        these_setup_default_roles();
         $this->librarian = $gen->create_and_enrol($this->course, 'theselibrary');
         accesslib_clear_all_caches_for_unit_testing();
     }

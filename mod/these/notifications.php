@@ -33,7 +33,7 @@ $these = $DB->get_record('these', ['id' => $cm->instance], '*', MUST_EXIST);
 
 require_login($course, true, $cm);
 $context = context_module::instance($cm->id);
-require_capability('mod/these:managedeve', $context);
+these_require_service($context, 'deve');
 
 $PAGE->set_url('/mod/these/notifications.php', ['id' => $cm->id]);
 $PAGE->set_title(format_string($these->name) . ' - ' . get_string('notifications', 'mod_these'));

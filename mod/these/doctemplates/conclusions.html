@@ -1,0 +1,36 @@
+<!--@page margins="15,25,12,25" font="freesans" size="10.5" lineheight="1.25"-->
+<!--@body-->
+<div style="text-align:center;font-size:13pt;font-weight:bold;">LES CONCLUSIONS</div>
+<br /><br />
+<div style="text-align:justify;">{{{conclusions.bodyhtml}}}</div>
+<table cellpadding="0" nobr="true">
+  <tr>
+    <td width="160mm" style="text-align:justify;">{{#conclusions.bodyhtml}}<br /><br />{{/conclusions.bodyhtml}}{{{conclusions.lasthtml}}}<br /><br /><br /></td>
+  </tr>
+  <tr>
+    <td width="160mm">
+      <table cellpadding="0">
+        <tr>
+          <td width="85mm" height="14mm" style="font-size:9pt;"><b>Thèse de {{student.firstname}} {{student.lastname}}</b></td>
+          <td width="75mm"></td>
+        </tr>
+        <tr>
+          <td width="85mm" height="31mm">Le Directeur de la thèse<br /><span style="font-size:8pt;">{{director.fullname}}</span></td>
+          <td width="75mm">{{{sig.director}}}</td>
+        </tr>
+        <tr>
+          <td width="85mm" height="17mm">Le Président de la thèse<br /><span style="font-size:8pt;">{{jurypresident.name}}</span></td>
+          <td width="75mm">{{{sig.president}}}</td>
+        </tr>
+        <tr>
+          <td width="85mm" height="31mm">Le Directeur général<br />VetAgro Sup</td>
+          <td width="75mm">{{{sig.dg}}}</td>
+        </tr>
+        <tr>
+          <td width="85mm"><b><i>Vu , {{settings.visaplace}} le {{sigdate.ccem}}{{^signed.ccem}}……{{/signed.ccem}}</i></b><br /><br />Pour le président de l’Université Lyon 1 et par délégation<br />Le président du CCEM<br />{{settings.ccemname}}</td>
+          <td width="75mm"><br />{{{sig.ccem}}}</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>

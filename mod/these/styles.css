@@ -55,3 +55,15 @@
     background-color: #f8f9fa;
     padding: 0.5rem;
 }
+
+/* Zone de tracé de signature. */
+.these-signature-pad canvas {
+    border: 1px dashed #8a94a6;
+    border-radius: 0.3rem;
+    background-color: #fff;
+    max-width: 100%;
+    cursor: crosshair;
+}
+.these-signatures td:first-child {
+    width: 18rem;
+}

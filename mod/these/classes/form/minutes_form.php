@@ -22,8 +22,9 @@ require_once($CFG->libdir . '/formslib.php');
 require_once($CFG->dirroot . '/mod/these/locallib.php');
 
 /**
- * Dépôt du procès-verbal de soutenance par la DEVE (phase 2, étape 6) : le PV signé, le résultat
- * et la mention éventuelle. Le dépôt clôt le dossier.
+ * Dépôt du procès-verbal de soutenance par la DEVE (phase 2, étape 6) : le PV signé par le jury,
+ * scanné, et les décisions cochées par le jury, reportées ici : résultat, mention, proposition
+ * pour un prix de thèse, corrections demandées. Sans corrections, le dépôt clôt le dossier.
  *
  * @package   mod_these
  * @copyright 2026 Sébastien Lefebvre
@@ -41,20 +42,40 @@ class minutes_form extends \moodleform {
         $mform->addElement('hidden', 'dossierid');
         $mform->setType('dossierid', PARAM_INT);
 
-        $mform->addElement('filemanager', 'pv', get_string('minutes', 'mod_these'), null, these_filemanager_options('pv'));
+        $mform->addElement('filemanager', 'pv', get_string('minutesscan', 'mod_these'), null, these_filemanager_options('pv'));
+        $mform->addHelpButton('pv', 'minutesscan', 'mod_these');
         $mform->addRule('pv', null, 'required', null, 'client');
+
+        $mform->addElement('header', 'decisionsheader', get_string('jurydecisions', 'mod_these'));
+        $mform->setExpanded('decisionsheader');
+        $mform->addElement('static', 'decisionshelp', '', get_string('jurydecisions_help', 'mod_these'));
         $mform->addElement('select', 'defenseresult', get_string('defenseresult', 'mod_these'), these_result_options());
-        $mform->addElement('text', 'mention', get_string('mention', 'mod_these'), ['size' => 64]);
-        $mform->setType('mention', PARAM_TEXT);
-        $mform->addHelpButton('mention', 'mention', 'mod_these');
+        $mform->addElement(
+            'select',
+            'mention',
+            get_string('mention', 'mod_these'),
+            ['' => get_string('choosedots')] + these_mention_options()
+        );
+        $mform->hideIf('mention', 'defenseresult', 'neq', THESE_RESULT_ADMITTED);
+        $mform->addElement('advcheckbox', 'prizeproposal', '', get_string('prizeproposal', 'mod_these'));
+        $mform->hideIf('prizeproposal', 'defenseresult', 'neq', THESE_RESULT_ADMITTED);
+        $mform->addElement('advcheckbox', 'correctionsrequested', '', get_string('correctionsrequested', 'mod_these'));
+        $mform->hideIf('correctionsrequested', 'defenseresult', 'neq', THESE_RESULT_ADMITTED);
+        $mform->addElement('textarea', 'correctionsnote', get_string('correctionsnote', 'mod_these'), ['rows' => 5, 'cols' => 70]);
+        $mform->setType('correctionsnote', PARAM_TEXT);
+        $mform->addHelpButton('correctionsnote', 'correctionsnote', 'mod_these');
+        $mform->hideIf('correctionsnote', 'correctionsrequested', 'notchecked');
+        $mform->hideIf('correctionsnote', 'defenseresult', 'neq', THESE_RESULT_ADMITTED);
+
         $mform->addElement('textarea', 'remark', get_string('reviewremark', 'mod_these'), ['rows' => 3, 'cols' => 70]);
         $mform->setType('remark', PARAM_TEXT);
 
-        $this->add_action_buttons(true, get_string('closedossier', 'mod_these'));
+        $this->add_action_buttons(true, get_string('recordminutes', 'mod_these'));
     }
 
     /**
-     * Le procès-verbal signé est obligatoire.
+     * Le procès-verbal scanné est obligatoire ; une thèse admise reçoit une mention ; les
+     * corrections demandées sont précisées.
      *
      * @param array $data
      * @param array $files
@@ -64,6 +85,14 @@ class minutes_form extends \moodleform {
         $errors = parent::validation($data, $files);
         if (these_count_draft_files($data['pv']) < 1) {
             $errors['pv'] = get_string('minutesrequired', 'mod_these');
+        }
+        if ((int) $data['defenseresult'] === THESE_RESULT_ADMITTED) {
+            if (!array_key_exists((string) $data['mention'], these_mention_options())) {
+                $errors['mention'] = get_string('required');
+            }
+            if (!empty($data['correctionsrequested']) && trim((string) $data['correctionsnote']) === '') {
+                $errors['correctionsnote'] = get_string('required');
+            }
         }
         return $errors;
     }

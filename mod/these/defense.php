@@ -54,8 +54,15 @@ $jury = these_get_jury($dossier->id);
 $returned = (int) $dossier->status === THESE_STATUS_DEFENSE_RETURNED;
 $mform = new defense_form($PAGE->url, [
     'jurycount' => count($jury),
+    'jurorids' => array_map('intval', array_column($jury, 'jurorid')),
     'minjury' => $these->minjury,
+    'these' => $these,
+    'context' => $context,
     'submitlabel' => $returned ? 'resubmitdefense' : 'submitdefense',
+    'signername' => fullname($USER),
+    'questionnaireurl' => these_get_questions(these_settings_scope($these))
+        ? new moodle_url('/mod/these/questionnaire.php', ['id' => $cm->id, 'dossierid' => $dossier->id]) : null,
+    'questionnairemissing' => these_questionnaire_missing($these, $dossier),
 ]);
 
 $formdata = (object) array_merge(['id' => $cm->id, 'dossierid' => $dossier->id], these_jury_form_data($jury));
@@ -65,13 +72,40 @@ foreach (['manuscript', 'defensedocs'] as $filearea) {
     $formdata->$filearea = $draftitemid;
 }
 $formdata->proposeddate = $dossier->proposeddate ?: null;
+$formdata->titleen = $dossier->titleen;
+$formdata->conclusions = $dossier->conclusions;
+// Données de l'étudiant : celles déjà enregistrées, à défaut son profil et sa fiche de sujet.
+$bordereau = these_get_bordereau($dossier) + [
+    'birthname' => core_text::strtoupper($USER->lastname),
+    'firstnames' => $USER->firstname,
+    'city' => $USER->city,
+    'country' => $USER->country ? get_string($USER->country, 'countries') : '',
+    'phone' => $USER->phone1,
+    'nbvolumes' => 1,
+    'summaryfr' => $dossier->summary,
+    'keywords' => these_split_keywords($dossier->keywords),
+];
+foreach ($bordereau as $field => $value) {
+    if ($field === 'keywords') {
+        $formdata->bkeyword = array_values((array) $value);
+    } else {
+        $formdata->{'b' . $field} = $value;
+    }
+}
 $formdata->defenselocation = $dossier->defenselocation ?: $these->defaultlocation;
 // Le directeur figure presque toujours au jury : il est proposé d'office au premier dépôt.
 if (empty($jury) && $dossier->directorid && ($director = $DB->get_record('user', ['id' => $dossier->directorid]))) {
     $formdata->juryrole = [1 => 'director'];
-    $formdata->juryname = [1 => fullname($director)];
-    $formdata->juryemail = [1 => $director->email];
-    $formdata->juryinstitution = [1 => $these->establishmentname];
+    $juror = \mod_these\local\jurors::find_by_email($director->email);
+    if ($juror) {
+        // Directeur présent dans l'annuaire du jury : choisi dans la liste.
+        $formdata->jurorid = [1 => $juror->id];
+    } else {
+        $formdata->juryname = [1 => fullname($director)];
+        $formdata->jurytitle = [1 => (string) $dossier->directortitle];
+        $formdata->juryemail = [1 => $director->email];
+        $formdata->juryinstitution = [1 => $these->establishmentname];
+    }
 }
 $mform->set_data($formdata);
 
@@ -89,7 +123,7 @@ if ($mform->is_cancelled()) {
         );
     }
     $submit = !empty($data->submitdefense);
-    these_save_defense($these, $cm, $dossier, $data, $submit, $USER->id);
+    these_save_defense($these, $cm, $dossier, $data, $submit, $USER->id, $submit ? these_signature_from_form($data) : null);
     redirect(
         $viewurl,
         get_string($submit ? 'defensesubmittedmsg' : 'draftsaved', 'mod_these'),
@@ -106,6 +140,13 @@ if ($returned && trim((string) $dossier->returncomment) !== '') {
             . format_text($dossier->returncomment, FORMAT_PLAIN),
         'alert alert-warning'
     );
+}
+if (these_is_adjourned($dossier)) {
+    echo html_writer::div(get_string(
+        'adjournednoticestudent',
+        'mod_these',
+        userdate($dossier->statustime, get_string('strftimedate', 'langconfig'))
+    ), 'alert alert-warning');
 }
 echo $OUTPUT->box(get_string('defenseintro', 'mod_these', (int) $these->minjury), 'generalbox mb-3');
 $mform->display();
