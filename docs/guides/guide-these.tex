@@ -4,9 +4,9 @@
 
 % Version du guide : à mettre à jour à chaque modification, avec une ligne dans l'historique.
 \newcommand{\titreguide}{Guide de la gestion des thèses}
-\newcommand{\versionguide}{1.3}
+\newcommand{\versionguide}{1.4}
 \newcommand{\dateguide}{23 octobre 2026}
-\newcommand{\versionthese}{0.4.0}
+\newcommand{\versionthese}{0.5.0}
 
 \usepackage{guide-commun}
 \usepackage{tikz}
@@ -33,6 +33,7 @@ documents de l'établissement remplis et signés dans le module. \\
 formulaires officiels ; modèles des documents modifiables dans l'administration. \\
 1.3 & 23 octobre 2026 & Modèles et images des documents propres à chaque
 activité, modifiés par la DEVE. \\
+1.4 & 24 octobre 2026 & Transfert des paramètres entre activités et par fichier. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -324,8 +325,8 @@ La DEVE voit tous les dossiers : la file \og À traiter\fg{}, le décompte par
 statut (cliquable pour filtrer) et la liste complète avec recherche par
 étudiant, titre ou numéro. La barre de boutons donne accès à la création d'un
 dossier pour le compte d'un étudiant, à l'import, aux courriels, aux modèles
-des documents (section~\ref{sec:modeles}) et à l'export du registre (CSV,
-Excel, ODS...).
+des documents (section~\ref{sec:modeles}), au transfert des paramètres
+(section~\ref{sec:transfert}) et à l'export du registre (CSV, Excel, ODS...).
 
 \capture{18_tableau_de_bord_deve}{Tableau de bord de la DEVE.}
 
@@ -500,6 +501,37 @@ ses changements dans le modèle correspondant. Les documents déjà produits ne
 changent pas ; ceux produits ensuite suivent le nouveau modèle. Modifier un
 modèle n'annule aucune signature : seules les données signées sont couvertes
 par l'empreinte, pas leur mise en page.
+\end{attention}
+
+\subsection{Transfert des paramètres}\label{sec:transfert}
+
+Le bouton \bouton{Transfert des paramètres} de la barre de navigation (DEVE)
+reprend dans l'activité les paramètres d'une autre : à l'ouverture d'un
+nouveau cours ou d'une nouvelle année, on part ainsi de l'activité précédente
+au lieu de tout ressaisir. Quatre groupes se transfèrent, au choix :
+\begin{itemize}
+  \item les paramètres de l'activité (établissement, adresse, ville,
+        signataire, lieu de soutenance par défaut, jury minimum, adresses de
+        service, délai de relance) ;
+  \item les courriels personnalisés ;
+  \item les modèles des documents ;
+  \item les images des modèles.
+\end{itemize}
+
+La source est une autre activité de la plateforme dont on est la DEVE, ou un
+\textbf{fichier de paramètres} (JSON) téléchargé depuis la même page avec
+\bouton{Télécharger le fichier de paramètres} : il sert à passer d'une
+plateforme à une autre (test et production, par exemple) ou à garder une
+copie de référence. Les dossiers ne sont jamais transférés.
+
+\capture[0.85\linewidth]{45_transfert_parametres}{Transfert des paramètres depuis l'activité de l'année précédente.}
+
+\begin{attention}
+Chaque groupe coché \textbf{remplace} celui de l'activité : un courriel ou un
+modèle personnalisé ici mais pas dans la source revient à son texte d'origine.
+Il faut cocher la confirmation pour lancer le transfert. Les éléments
+inutilisables (courriel ou document inconnu, modèle qui ne produit pas de
+document, image illisible) sont ignorés et signalés.
 \end{attention}
 
 \subsection{Signer}
