@@ -256,7 +256,8 @@ $string['juryaccessresent'] = '{$a} membre(s) du jury prévenu(s) de nouveau.';
 $string['juryaccess'] = 'Accès du jury';
 $string['juryaccessintro'] = 'Bonjour {$a->name}, vous êtes désigné(e) comme {$a->role} du jury de cette thèse. Vous trouverez '
     . 'ci-dessous les informations de la soutenance et les documents du dossier.';
-$string['juryaccessinvalid'] = "Ce lien d'accès n'est pas (ou plus) valide. Contactez la DEVE.";
+$string['juryaccessinvalid'] = "Ce lien d'accès n'est pas (ou plus) valide : il a été remplacé par un nouvel envoi, la "
+    . "soutenance date de plus de 60 jours, ou le dossier est clos. Contactez la DEVE.";
 $string['juryaccessdocuments'] = 'Documents';
 $string['juryaccessnodocuments'] = "Aucun document n'est encore disponible.";
 
@@ -646,7 +647,8 @@ $string['signaturerequestsent'] = 'Lien de signature envoyé.';
 $string['signaturesrecorded'] = 'Signature enregistrée. Merci.';
 $string['signpagetitle'] = 'Signature de documents de thèse';
 $string['signpageintro'] = 'Signature en qualité de {$a->slot} des documents de la thèse de {$a->student} : « {$a->title} ».';
-$string['signinvalidtoken'] = "Ce lien n'est plus valide : les documents ont déjà été signés, ou une nouvelle invitation a été envoyée.";
+$string['signinvalidtoken'] = "Ce lien n'est plus valide : les documents ont déjà été signés, une nouvelle invitation a été "
+    . "envoyée, ou le lien a expiré (60 jours). Contactez la DEVE pour en recevoir un nouveau.";
 $string['signnothingpending'] = 'Aucun document n\'attend de signature.';
 $string['signdocuments'] = 'Signer les documents';
 
@@ -716,6 +718,8 @@ $string['conclusionstoolong'] = 'Les conclusions comptent {$a->length} caractèr
 $string['conclusionsonepage'] = "Les conclusions ne tiennent pas sur une page avec les signatures : raccourcissez-les ou réduisez le nombre de paragraphes.";
 $string['contracthelp'] = "Choix de l'auteur pour le contrat de diffusion électronique de la thèse (articles 2 et 4). Une thèse "
     . "confidentielle (case cochée au dépôt du sujet) l'est jusqu'à la date indiquée.";
+$string['contracttemplatemissing'] = 'Le contrat type de diffusion n\'a pas été déposé dans les réglages du module : le contrat produit ne contient que les pages du module et ne sera pas scellé tant qu\'il manque.';
+$string['contracttemplateunreadable'] = 'Le contrat type de diffusion déposé dans les réglages du module n\'a pas pu être lu (format PDF non pris en charge) : le contrat produit ne contient que les pages du module et ne sera pas scellé. Déposez le contrat type enregistré dans un format PDF plus ancien (PDF 1.4).';
 $string['bconfidentialuntil'] = "Confidentialité jusqu'au";
 $string['bconfidentialuntil_help'] = 'Ne concerne que les thèses déclarées confidentielles au dépôt du sujet.';
 $string['bembargo'] = "Thèse soumise à embargo (diffusion différée)";
@@ -788,6 +792,9 @@ $string['agauthorized'] = "L'étudiant(e) est autorisé(e) à soutenir sa thèse
 
 // Historique et courriels des signatures.
 $string['logsigned'] = 'Document signé';
+$string['logdocumentsealed'] = 'Document scellé';
+$string['dossierchanged'] = 'Ce dossier a été modifié entre-temps (par une autre personne ou par un double envoi du formulaire) : l\'action n\'a pas été enregistrée. Rechargez le dossier pour voir son état actuel.';
+$string['dossierbusy'] = 'Ce dossier est en cours de traitement par une autre action. Réessayez dans un instant.';
 $string['logsignaturesinvalidated'] = 'Signatures invalidées (document modifié)';
 $string['logsignaturerequested'] = 'Signature demandée';
 $string['logsignedinperson'] = 'Signature recueillie sur place';

@@ -99,7 +99,8 @@ function these_log($dossierid, $userid, $action, $fromstatus, $tostatus, $remark
 /**
  * Fait passer un dossier dans un nouveau statut, avec les champs à mettre à jour en même temps,
  * et l'inscrit à l'historique. Un changement de statut remet à zéro la relance (une nouvelle
- * étape commence), un enregistrement sans changement de statut n'y touche pas.
+ * étape commence), un enregistrement sans changement de statut n'y touche pas. Un dossier clos ou
+ * abandonné perd les liens d'accès de son jury.
  *
  * @param stdClass $dossier Mis à jour en place.
  * @param int $tostatus
@@ -121,11 +122,61 @@ function these_set_status(stdClass $dossier, $tostatus, $userid, $action, $remar
     }
     $DB->update_record('these_dossier', (object) $update);
     these_log($dossier->id, $userid, $action, $fromstatus, $tostatus, $remark);
+    if (in_array((int) $tostatus, [THESE_STATUS_CLOSED, THESE_STATUS_CANCELLED], true)) {
+        // Dossier clos ou abandonné : les liens d'accès du jury sont révoqués.
+        $DB->set_field('these_jury', 'accesstoken', null, ['dossierid' => $dossier->id]);
+    }
 
     foreach ($update as $field => $value) {
         $dossier->$field = $value;
     }
     return $dossier;
+}
+
+/**
+ * Exécute une opération sur un dossier (soumission, validation, renvoi, décision du jury...) de
+ * façon atomique : un seul traitement à la fois par dossier (verrou), dans une transaction, et
+ * seulement si le dossier est encore dans le statut où l'utilisateur l'a vu. Une double soumission
+ * ou deux validations simultanées ne peuvent donc pas s'appliquer deux fois.
+ *
+ * Les opérations imbriquées (une décision d'ajournement depuis le procès-verbal, par exemple)
+ * s'exécutent dans le verrou et la transaction de l'opération qui les appelle.
+ *
+ * @param stdClass $dossier Dossier tel que l'utilisateur l'a vu.
+ * @param callable $operation
+ * @return mixed Résultat de l'opération.
+ * @throws moodle_exception dossierchanged si le dossier a changé de statut entre-temps, dossierbusy
+ *                          si un autre traitement le retient.
+ */
+function these_dossier_operation(stdClass $dossier, callable $operation) {
+    global $DB;
+    static $held = [];
+
+    if (empty($dossier->id) || !empty($held[$dossier->id])) {
+        return $operation();
+    }
+    $lock = \core\lock\lock_config::get_lock_factory('mod_these')->get_lock('dossier' . $dossier->id, 10);
+    if (!$lock) {
+        throw new moodle_exception('dossierbusy', 'mod_these');
+    }
+    $held[$dossier->id] = true;
+    try {
+        $status = $DB->get_field('these_dossier', 'status', ['id' => $dossier->id]);
+        if ($status === false || (int) $status !== (int) $dossier->status) {
+            throw new moodle_exception('dossierchanged', 'mod_these');
+        }
+        $transaction = $DB->start_delegated_transaction();
+        try {
+            $result = $operation();
+            $transaction->allow_commit();
+        } catch (\Throwable $e) {
+            $transaction->rollback($e);
+        }
+        return $result;
+    } finally {
+        unset($held[$dossier->id]);
+        $lock->release();
+    }
 }
 
 /**
@@ -203,13 +254,15 @@ function these_report_editable(stdClass $dossier) {
  * @return stdClass Le dossier à jour.
  */
 function these_save_report(stdClass $dossier, $userid, $text, $favorable) {
-    $dossier = these_set_status($dossier, $dossier->status, $userid, 'reportsaved', '', [
-        'reporttext' => trim((string) $text),
-        'reportfavorable' => $favorable ? 1 : 0,
-    ]);
-    $cm = get_coursemodule_from_instance('these', $dossier->theseid, 0, false, MUST_EXIST);
-    these_refresh_signatures(context_module::instance($cm->id), $dossier);
-    return $dossier;
+    return these_dossier_operation($dossier, function () use ($dossier, $userid, $text, $favorable) {
+        $dossier = these_set_status($dossier, $dossier->status, $userid, 'reportsaved', '', [
+            'reporttext' => trim((string) $text),
+            'reportfavorable' => $favorable ? 1 : 0,
+        ]);
+        $cm = get_coursemodule_from_instance('these', $dossier->theseid, 0, false, MUST_EXIST);
+        these_refresh_signatures(context_module::instance($cm->id), $dossier);
+        return $dossier;
+    });
 }
 
 /**
@@ -305,57 +358,59 @@ function these_save_subject(
     $userid,
     ?stdClass $signature = null
 ) {
-    $context = context_module::instance($cm->id);
-    $fields = [];
-    foreach (
-        ['title', 'titleen', 'summary', 'keywords', 'codirectorname', 'studyyear', 'directortitle',
-            'extdirectorname', 'extdirectorgrade', 'extdirectorinstitution', 'extdirectoremail'] as $field
-    ) {
-        $fields[$field] = (string) these_submitted_value($data, $dossier, $field);
-    }
-    foreach (['directorid', 'confidential', 'externaldirector'] as $field) {
-        $fields[$field] = (int) these_submitted_value($data, $dossier, $field);
-    }
-    if (property_exists($data, 'commitguide')) {
-        $fields['commitments'] = (!empty($data->commitguide) ? THESE_COMMIT_GUIDE : 0)
-            | (!empty($data->commitduplicate) ? THESE_COMMIT_DUPLICATE : 0)
-            | (!empty($data->commitethics) ? THESE_COMMIT_ETHICS : 0);
-    }
-    if (empty($fields['externaldirector'])) {
-        foreach (['extdirectorname', 'extdirectorgrade', 'extdirectorinstitution', 'extdirectoremail'] as $field) {
-            $fields[$field] = '';
+    return these_dossier_operation($dossier, function () use ($these, $cm, $dossier, $data, $submit, $userid, $signature) {
+        $context = context_module::instance($cm->id);
+        $fields = [];
+        foreach (
+            ['title', 'titleen', 'summary', 'keywords', 'codirectorname', 'studyyear', 'directortitle',
+                'extdirectorname', 'extdirectorgrade', 'extdirectorinstitution', 'extdirectoremail'] as $field
+        ) {
+            $fields[$field] = (string) these_submitted_value($data, $dossier, $field);
         }
-    }
+        foreach (['directorid', 'confidential', 'externaldirector'] as $field) {
+            $fields[$field] = (int) these_submitted_value($data, $dossier, $field);
+        }
+        if (property_exists($data, 'commitguide')) {
+            $fields['commitments'] = (!empty($data->commitguide) ? THESE_COMMIT_GUIDE : 0)
+                | (!empty($data->commitduplicate) ? THESE_COMMIT_DUPLICATE : 0)
+                | (!empty($data->commitethics) ? THESE_COMMIT_ETHICS : 0);
+        }
+        if (empty($fields['externaldirector'])) {
+            foreach (['extdirectorname', 'extdirectorgrade', 'extdirectorinstitution', 'extdirectoremail'] as $field) {
+                $fields[$field] = '';
+            }
+        }
 
-    if (!$submit) {
-        $dossier = these_set_status($dossier, $dossier->status, $userid, 'subjectsaved', '', $fields);
-        these_refresh_signatures($context, $dossier);
+        if (!$submit) {
+            $dossier = these_set_status($dossier, $dossier->status, $userid, 'subjectsaved', '', $fields);
+            these_refresh_signatures($context, $dossier);
+            return $dossier;
+        }
+
+        $previous = clone $dossier;
+        foreach ($fields as $field => $value) {
+            $dossier->$field = $value;
+        }
+        $invalidated = these_refresh_signatures($context, $dossier);
+        $target = these_resubmission_target($previous, $invalidated);
+        $resubmitted = (int) $previous->status === THESE_STATUS_SUBJECT_RETURNED;
+        $dossier = these_set_status(
+            $previous,
+            $target,
+            $userid,
+            $resubmitted ? 'subjectresubmitted' : 'subjectsubmitted',
+            '',
+            array_merge($fields, these_cleared_return_fields())
+        );
+        if ($signature !== null) {
+            these_sign_document($context, $dossier, 'subject', 'student', $userid, $signature->name, $signature->png);
+        }
+        if (!empty($dossier->externaldirector)) {
+            these_request_external_signatures($these, $cm, $dossier, 'subject');
+        }
+        these_notify_actor($these, $cm, $dossier);
         return $dossier;
-    }
-
-    $previous = clone $dossier;
-    foreach ($fields as $field => $value) {
-        $dossier->$field = $value;
-    }
-    $invalidated = these_refresh_signatures($context, $dossier);
-    $target = these_resubmission_target($previous, $invalidated);
-    $resubmitted = (int) $previous->status === THESE_STATUS_SUBJECT_RETURNED;
-    $dossier = these_set_status(
-        $previous,
-        $target,
-        $userid,
-        $resubmitted ? 'subjectresubmitted' : 'subjectsubmitted',
-        '',
-        array_merge($fields, these_cleared_return_fields())
-    );
-    if ($signature !== null) {
-        these_sign_document($context, $dossier, 'subject', 'student', $userid, $signature->name, $signature->png);
-    }
-    if (!empty($dossier->externaldirector)) {
-        these_request_external_signatures($these, $cm, $dossier, 'subject');
-    }
-    these_notify_actor($these, $cm, $dossier);
-    return $dossier;
+    });
 }
 
 /**
@@ -407,49 +462,51 @@ function these_save_defense(
     $userid,
     ?stdClass $signature = null
 ) {
-    $context = context_module::instance($cm->id);
-    these_save_jury($dossier->id, these_extract_submitted_jury($data));
+    return these_dossier_operation($dossier, function () use ($these, $cm, $dossier, $data, $submit, $userid, $signature) {
+        $context = context_module::instance($cm->id);
+        these_save_jury($dossier->id, these_extract_submitted_jury($data));
 
-    $fields = [
-        'proposeddate' => (int) $data->proposeddate,
-        'defenselocation' => trim((string) $data->defenselocation),
-        'titleen' => (string) these_submitted_value($data, $dossier, 'titleen'),
-        'conclusions' => (string) these_submitted_value($data, $dossier, 'conclusions'),
-        'bordereau' => json_encode(these_extract_bordereau($data, these_get_bordereau($dossier)), JSON_UNESCAPED_UNICODE),
-    ];
-    // Tant que la DEVE n'a pas arrêté la date, la date retenue suit la proposition de l'étudiant.
-    if ((int) $dossier->status === THESE_STATUS_ACTIVE || empty($dossier->defensedate)) {
-        $fields['defensedate'] = (int) $data->proposeddate;
-    }
-
-    if (!$submit) {
-        $dossier = these_set_status($dossier, $dossier->status, $userid, 'defensesaved', '', $fields);
-        these_refresh_signatures($context, $dossier);
-        return $dossier;
-    }
-
-    $previous = clone $dossier;
-    foreach ($fields as $field => $value) {
-        $dossier->$field = $value;
-    }
-    $invalidated = these_refresh_signatures($context, $dossier);
-    $target = these_resubmission_target($previous, $invalidated);
-    $resubmitted = (int) $previous->status === THESE_STATUS_DEFENSE_RETURNED;
-    $dossier = these_set_status(
-        $previous,
-        $target,
-        $userid,
-        $resubmitted ? 'defenseresubmitted' : 'defensesubmitted',
-        '',
-        array_merge($fields, these_cleared_return_fields())
-    );
-    if ($signature !== null) {
-        foreach (['bordereau', 'contract'] as $doctype) {
-            these_sign_document($context, $dossier, $doctype, 'student', $userid, $signature->name, $signature->png);
+        $fields = [
+            'proposeddate' => (int) $data->proposeddate,
+            'defenselocation' => trim((string) $data->defenselocation),
+            'titleen' => (string) these_submitted_value($data, $dossier, 'titleen'),
+            'conclusions' => (string) these_submitted_value($data, $dossier, 'conclusions'),
+            'bordereau' => json_encode(these_extract_bordereau($data, these_get_bordereau($dossier)), JSON_UNESCAPED_UNICODE),
+        ];
+        // Tant que la DEVE n'a pas arrêté la date, la date retenue suit la proposition de l'étudiant.
+        if ((int) $dossier->status === THESE_STATUS_ACTIVE || empty($dossier->defensedate)) {
+            $fields['defensedate'] = (int) $data->proposeddate;
         }
-    }
-    these_notify_actor($these, $cm, $dossier);
-    return $dossier;
+
+        if (!$submit) {
+            $dossier = these_set_status($dossier, $dossier->status, $userid, 'defensesaved', '', $fields);
+            these_refresh_signatures($context, $dossier);
+            return $dossier;
+        }
+
+        $previous = clone $dossier;
+        foreach ($fields as $field => $value) {
+            $dossier->$field = $value;
+        }
+        $invalidated = these_refresh_signatures($context, $dossier);
+        $target = these_resubmission_target($previous, $invalidated);
+        $resubmitted = (int) $previous->status === THESE_STATUS_DEFENSE_RETURNED;
+        $dossier = these_set_status(
+            $previous,
+            $target,
+            $userid,
+            $resubmitted ? 'defenseresubmitted' : 'defensesubmitted',
+            '',
+            array_merge($fields, these_cleared_return_fields())
+        );
+        if ($signature !== null) {
+            foreach (['bordereau', 'contract'] as $doctype) {
+                these_sign_document($context, $dossier, $doctype, 'student', $userid, $signature->name, $signature->png);
+            }
+        }
+        these_notify_actor($these, $cm, $dossier);
+        return $dossier;
+    });
 }
 
 /**
@@ -475,51 +532,53 @@ function these_validate_step(
     $remark = '',
     ?stdClass $signature = null
 ) {
-    $steps = these_review_steps();
-    $step = $steps[(int) $dossier->status] ?? null;
-    if ($step === null) {
-        throw new coding_exception('Aucune étape de validation pour le statut ' . $dossier->status);
-    }
-    $context = context_module::instance($cm->id);
-
-    $dossier = these_set_status(
-        $dossier,
-        $step['next'],
-        $userid,
-        'validated' . $step['key'],
-        $remark,
-        array_merge($fields, these_cleared_return_fields())
-    );
-    these_refresh_signatures($context, $dossier);
-    $agentdoctypes = [];
-    foreach ($step['sign'] as $slot => $doctypes) {
-        if (!these_signs_slot_at_validation($slot, $userid)) {
-            // Emplacement de l'agent DEVE : il signe ensuite, depuis « Mes signatures ».
-            $agentdoctypes = array_merge($agentdoctypes, $doctypes);
-            continue;
+    return these_dossier_operation($dossier, function () use ($these, $cm, $dossier, $userid, $fields, $remark, $signature) {
+        $steps = these_review_steps();
+        $step = $steps[(int) $dossier->status] ?? null;
+        if ($step === null) {
+            throw new coding_exception('Aucune étape de validation pour le statut ' . $dossier->status);
         }
-        foreach ($doctypes as $doctype) {
-            if ($signature !== null && in_array($slot, these_document_slots($dossier, $doctype), true)) {
-                these_sign_document($context, $dossier, $doctype, $slot, $userid, $signature->name, $signature->png);
+        $context = context_module::instance($cm->id);
+
+        $dossier = these_set_status(
+            $dossier,
+            $step['next'],
+            $userid,
+            'validated' . $step['key'],
+            $remark,
+            array_merge($fields, these_cleared_return_fields())
+        );
+        these_refresh_signatures($context, $dossier);
+        $agentdoctypes = [];
+        foreach ($step['sign'] as $slot => $doctypes) {
+            if (!these_signs_slot_at_validation($slot, $userid)) {
+                // Emplacement de l'agent DEVE : il signe ensuite, depuis « Mes signatures ».
+                $agentdoctypes = array_merge($agentdoctypes, $doctypes);
+                continue;
+            }
+            foreach ($doctypes as $doctype) {
+                if ($signature !== null && in_array($slot, these_document_slots($dossier, $doctype), true)) {
+                    these_sign_document($context, $dossier, $doctype, $slot, $userid, $signature->name, $signature->png);
+                }
             }
         }
-    }
-    if ($agentdoctypes) {
-        these_request_agent_signatures($these, $cm, $dossier, array_unique($agentdoctypes));
-    }
-    if ($step['request']) {
-        // Un seul appel pour tous les documents : chaque signataire reçoit un seul lien.
-        these_request_external_signatures($these, $cm, $dossier, $step['request']);
-    }
+        if ($agentdoctypes) {
+            these_request_agent_signatures($these, $cm, $dossier, array_unique($agentdoctypes));
+        }
+        if ($step['request']) {
+            // Un seul appel pour tous les documents : chaque signataire reçoit un seul lien.
+            these_request_external_signatures($these, $cm, $dossier, $step['request']);
+        }
 
-    if ((int) $dossier->status === THESE_STATUS_ACTIVE) {
-        these_notify_subject_active($these, $cm, $dossier);
-    } else if ((int) $dossier->status === THESE_STATUS_CLOSED) {
-        these_notify_closed($these, $cm, $dossier);
-    } else {
-        these_notify_actor($these, $cm, $dossier);
-    }
-    return $dossier;
+        if ((int) $dossier->status === THESE_STATUS_ACTIVE) {
+            these_notify_subject_active($these, $cm, $dossier);
+        } else if ((int) $dossier->status === THESE_STATUS_CLOSED) {
+            these_notify_closed($these, $cm, $dossier);
+        } else {
+            these_notify_actor($these, $cm, $dossier);
+        }
+        return $dossier;
+    });
 }
 
 /**
@@ -538,32 +597,34 @@ function these_validate_step(
  * @return stdClass Le dossier à jour.
  */
 function these_return_dossier(stdClass $these, stdClass $cm, stdClass $dossier, $userid, $target, $comment) {
-    $steps = these_review_steps();
-    $step = $steps[(int) $dossier->status] ?? null;
-    if ($step === null || !in_array($target, $step['returnto'], true)) {
-        throw new coding_exception('Renvoi impossible depuis le statut ' . $dossier->status . ' vers ' . $target);
-    }
+    return these_dossier_operation($dossier, function () use ($these, $cm, $dossier, $userid, $target, $comment) {
+        $steps = these_review_steps();
+        $step = $steps[(int) $dossier->status] ?? null;
+        if ($step === null || !in_array($target, $step['returnto'], true)) {
+            throw new coding_exception('Renvoi impossible depuis le statut ' . $dossier->status . ' vers ' . $target);
+        }
 
-    $phase = these_phase($dossier->status);
-    $fields = [
-        'returncomment' => $comment,
-        'returnedby' => $userid,
-        'returntime' => time(),
-    ];
-    if ($target === 'student' && these_in_corrections($dossier->status)) {
-        $tostatus = THESE_STATUS_CORRECTIONS;
-        $fields['returnstatus'] = (int) $dossier->status;
-    } else if ($target === 'student') {
-        $tostatus = $phase === 1 ? THESE_STATUS_SUBJECT_RETURNED : THESE_STATUS_DEFENSE_RETURNED;
-        $fields['returnstatus'] = (int) $dossier->status;
-    } else {
-        $tostatus = $phase === 1 ? THESE_STATUS_SUBJECT_SUBMITTED : THESE_STATUS_DEFENSE_SUBMITTED;
-        $fields['returnstatus'] = 0;
-    }
+        $phase = these_phase($dossier->status);
+        $fields = [
+            'returncomment' => $comment,
+            'returnedby' => $userid,
+            'returntime' => time(),
+        ];
+        if ($target === 'student' && these_in_corrections($dossier->status)) {
+            $tostatus = THESE_STATUS_CORRECTIONS;
+            $fields['returnstatus'] = (int) $dossier->status;
+        } else if ($target === 'student') {
+            $tostatus = $phase === 1 ? THESE_STATUS_SUBJECT_RETURNED : THESE_STATUS_DEFENSE_RETURNED;
+            $fields['returnstatus'] = (int) $dossier->status;
+        } else {
+            $tostatus = $phase === 1 ? THESE_STATUS_SUBJECT_SUBMITTED : THESE_STATUS_DEFENSE_SUBMITTED;
+            $fields['returnstatus'] = 0;
+        }
 
-    $dossier = these_set_status($dossier, $tostatus, $userid, 'returnedto' . $target, $comment, $fields);
-    these_notify_returned($these, $cm, $dossier, $target, $comment);
-    return $dossier;
+        $dossier = these_set_status($dossier, $tostatus, $userid, 'returnedto' . $target, $comment, $fields);
+        these_notify_returned($these, $cm, $dossier, $target, $comment);
+        return $dossier;
+    });
 }
 
 /**
@@ -575,9 +636,11 @@ function these_return_dossier(stdClass $these, stdClass $cm, stdClass $dossier, 
  * @return stdClass
  */
 function these_cancel_dossier(stdClass $dossier, $userid, $comment) {
-    return these_set_status($dossier, THESE_STATUS_CANCELLED, $userid, 'cancelled', $comment, [
-        'cancelledfromstatus' => (int) $dossier->status,
-    ]);
+    return these_dossier_operation($dossier, function () use ($dossier, $userid, $comment) {
+        return these_set_status($dossier, THESE_STATUS_CANCELLED, $userid, 'cancelled', $comment, [
+            'cancelledfromstatus' => (int) $dossier->status,
+        ]);
+    });
 }
 
 /**
@@ -589,9 +652,11 @@ function these_cancel_dossier(stdClass $dossier, $userid, $comment) {
  * @return stdClass
  */
 function these_reopen_dossier(stdClass $dossier, $userid, $comment = '') {
-    return these_set_status($dossier, (int) $dossier->cancelledfromstatus, $userid, 'reopened', $comment, [
-        'cancelledfromstatus' => 0,
-    ]);
+    return these_dossier_operation($dossier, function () use ($dossier, $userid, $comment) {
+        return these_set_status($dossier, (int) $dossier->cancelledfromstatus, $userid, 'reopened', $comment, [
+            'cancelledfromstatus' => 0,
+        ]);
+    });
 }
 
 /**
@@ -613,34 +678,36 @@ function these_reopen_dossier(stdClass $dossier, $userid, $comment = '') {
  * @return stdClass Le dossier à jour.
  */
 function these_record_minutes(stdClass $these, stdClass $cm, stdClass $dossier, $userid, stdClass $decision, $remark = '') {
-    $admitted = (int) $decision->result === THESE_RESULT_ADMITTED;
-    $mention = (string) ($decision->mention ?? '');
-    if ((int) $decision->result === THESE_RESULT_ADJOURNED) {
-        return these_adjourn_dossier($these, $cm, $dossier, $userid, $remark);
-    }
-    $corrections = $admitted && !empty($decision->correctionsrequested);
-    $fields = [
-        'defenseresult' => (int) $decision->result,
-        'mention' => $admitted && array_key_exists($mention, these_mention_options()) ? $mention : '',
-        'prizeproposal' => $admitted && !empty($decision->prizeproposal) ? 1 : 0,
-        'correctionsrequested' => $corrections ? 1 : 0,
-        'correctionsnote' => $corrections ? trim((string) ($decision->correctionsnote ?? '')) : '',
-    ];
-    if ($corrections) {
-        $dossier = these_set_status(
-            $dossier,
-            THESE_STATUS_CORRECTIONS,
-            $userid,
-            'minutescorrections',
-            $remark,
-            array_merge($fields, these_cleared_return_fields())
-        );
-        these_notify_actor($these, $cm, $dossier);
+    return these_dossier_operation($dossier, function () use ($these, $cm, $dossier, $userid, $decision, $remark) {
+        $admitted = (int) $decision->result === THESE_RESULT_ADMITTED;
+        $mention = (string) ($decision->mention ?? '');
+        if ((int) $decision->result === THESE_RESULT_ADJOURNED) {
+            return these_adjourn_dossier($these, $cm, $dossier, $userid, $remark);
+        }
+        $corrections = $admitted && !empty($decision->correctionsrequested);
+        $fields = [
+            'defenseresult' => (int) $decision->result,
+            'mention' => $admitted && array_key_exists($mention, these_mention_options()) ? $mention : '',
+            'prizeproposal' => $admitted && !empty($decision->prizeproposal) ? 1 : 0,
+            'correctionsrequested' => $corrections ? 1 : 0,
+            'correctionsnote' => $corrections ? trim((string) ($decision->correctionsnote ?? '')) : '',
+        ];
+        if ($corrections) {
+            $dossier = these_set_status(
+                $dossier,
+                THESE_STATUS_CORRECTIONS,
+                $userid,
+                'minutescorrections',
+                $remark,
+                array_merge($fields, these_cleared_return_fields())
+            );
+            these_notify_actor($these, $cm, $dossier);
+            return $dossier;
+        }
+        $dossier = these_set_status($dossier, THESE_STATUS_CLOSED, $userid, 'closed', $remark, $fields);
+        these_notify_closed($these, $cm, $dossier);
         return $dossier;
-    }
-    $dossier = these_set_status($dossier, THESE_STATUS_CLOSED, $userid, 'closed', $remark, $fields);
-    these_notify_closed($these, $cm, $dossier);
-    return $dossier;
+    });
 }
 
 /**
@@ -661,40 +728,43 @@ function these_record_minutes(stdClass $these, stdClass $cm, stdClass $dossier, 
  * @return stdClass Le dossier à jour.
  */
 function these_adjourn_dossier(stdClass $these, stdClass $cm, stdClass $dossier, $userid, $remark = '') {
-    global $DB;
+    return these_dossier_operation($dossier, function () use ($these, $cm, $dossier, $userid, $remark) {
+        global $DB;
 
-    $context = context_module::instance($cm->id);
-    $fs = get_file_storage();
-    $prefix = 'ajournement-' . userdate(time(), '%Y-%m-%d') . '-';
-    foreach ($fs->get_area_files($context->id, 'mod_these', 'pv', $dossier->id, 'filename', false) as $file) {
-        $filename = $prefix . $file->get_filename();
-        if (!$fs->file_exists($context->id, 'mod_these', 'pvadjourned', $dossier->id, '/', $filename)) {
-            $fs->create_file_from_storedfile(['filearea' => 'pvadjourned', 'filename' => $filename], $file);
+        $context = context_module::instance($cm->id);
+        $fs = get_file_storage();
+        $prefix = 'ajournement-' . userdate(time(), '%Y-%m-%d') . '-';
+        foreach ($fs->get_area_files($context->id, 'mod_these', 'pv', $dossier->id, 'filename', false) as $file) {
+            $filename = $prefix . $file->get_filename();
+            if (!$fs->file_exists($context->id, 'mod_these', 'pvadjourned', $dossier->id, '/', $filename)) {
+                $fs->create_file_from_storedfile(['filearea' => 'pvadjourned', 'filename' => $filename], $file);
+            }
         }
-    }
-    $fs->delete_area_files($context->id, 'mod_these', 'pv', $dossier->id);
-    $fs->delete_area_files($context->id, 'mod_these', 'generated', $dossier->id);
-    foreach (these_get_signatures($dossier->id) as $signature) {
-        if ($signature->doctype !== 'subject') {
-            these_delete_signature($context, $signature);
+        $fs->delete_area_files($context->id, 'mod_these', 'pv', $dossier->id);
+        $fs->delete_area_files($context->id, 'mod_these', 'generated', $dossier->id);
+        foreach (these_get_signatures($dossier->id) as $signature) {
+            if ($signature->doctype !== 'subject') {
+                these_delete_signature($context, $signature);
+            }
         }
-    }
-    $DB->set_field('these_jury', 'notifiedtime', 0, ['dossierid' => $dossier->id]);
-    $DB->set_field('these_jury', 'accesstoken', null, ['dossierid' => $dossier->id]);
-    $DB->set_field('these_jury', 'eligible', 0, ['dossierid' => $dossier->id]);
+        $DB->set_field('these_jury', 'notifiedtime', 0, ['dossierid' => $dossier->id]);
+        $DB->set_field('these_jury', 'accesstoken', null, ['dossierid' => $dossier->id]);
+        $DB->set_field('these_jury', 'eligible', 0, ['dossierid' => $dossier->id]);
 
-    $dossier = these_set_status($dossier, THESE_STATUS_ACTIVE, $userid, 'adjourned', $remark, array_merge([
-        'defenseresult' => THESE_RESULT_ADJOURNED,
-        'mention' => '',
-        'prizeproposal' => 0,
-        'correctionsrequested' => 0,
-        'correctionsnote' => '',
-        'reportfavorable' => 0,
-        'documentstime' => 0,
-        'senttime' => 0,
-    ], these_cleared_return_fields()));
-    these_send_email($these, 'adjourned', these_get_student_and_director($dossier), these_email_base_vars($these, $cm, $dossier));
-    return $dossier;
+        $dossier = these_set_status($dossier, THESE_STATUS_ACTIVE, $userid, 'adjourned', $remark, array_merge([
+            'defenseresult' => THESE_RESULT_ADJOURNED,
+            'mention' => '',
+            'prizeproposal' => 0,
+            'correctionsrequested' => 0,
+            'correctionsnote' => '',
+            'reportfavorable' => 0,
+            'documentstime' => 0,
+            'senttime' => 0,
+        ], these_cleared_return_fields()));
+        $vars = these_email_base_vars($these, $cm, $dossier);
+        these_send_email($these, 'adjourned', these_get_student_and_director($dossier), $vars);
+        return $dossier;
+    });
 }
 
 /**
@@ -719,20 +789,22 @@ function these_is_adjourned(stdClass $dossier) {
  * @return stdClass Le dossier à jour.
  */
 function these_submit_corrections(stdClass $these, stdClass $cm, stdClass $dossier, $userid, $done) {
-    if ((int) $dossier->status !== THESE_STATUS_CORRECTIONS) {
-        throw new coding_exception('Dépôt des corrections impossible au statut ' . $dossier->status);
-    }
-    $resubmitted = !empty($dossier->returnstatus);
-    $dossier = these_set_status(
-        $dossier,
-        these_submission_target($dossier),
-        $userid,
-        $resubmitted ? 'correctionsresubmitted' : 'correctionssubmitted',
-        '',
-        array_merge(['correctionsdone' => trim((string) $done)], these_cleared_return_fields())
-    );
-    these_notify_actor($these, $cm, $dossier);
-    return $dossier;
+    return these_dossier_operation($dossier, function () use ($these, $cm, $dossier, $userid, $done) {
+        if ((int) $dossier->status !== THESE_STATUS_CORRECTIONS) {
+            throw new coding_exception('Dépôt des corrections impossible au statut ' . $dossier->status);
+        }
+        $resubmitted = !empty($dossier->returnstatus);
+        $dossier = these_set_status(
+            $dossier,
+            these_submission_target($dossier),
+            $userid,
+            $resubmitted ? 'correctionsresubmitted' : 'correctionssubmitted',
+            '',
+            array_merge(['correctionsdone' => trim((string) $done)], these_cleared_return_fields())
+        );
+        these_notify_actor($these, $cm, $dossier);
+        return $dossier;
+    });
 }
 
 /**
@@ -752,7 +824,7 @@ function these_delete_dossiers(array $dossierids, ?context $context = null) {
     if ($context !== null) {
         $fs = get_file_storage();
         foreach ($dossierids as $dossierid) {
-            foreach (THESE_FILEAREAS as $filearea) {
+            foreach (array_merge(THESE_FILEAREAS, ['sealed']) as $filearea) {
                 $fs->delete_area_files($context->id, 'mod_these', $filearea, $dossierid);
             }
         }

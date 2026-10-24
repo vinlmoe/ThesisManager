@@ -131,9 +131,29 @@ class html_document extends \pdf {
         $parsed = self::parse($template);
         $mustache = self::mustache();
         foreach (['header', 'body', 'footer'] as $section) {
-            $parsed[$section] = $parsed[$section] === '' ? '' : $mustache->render($parsed[$section], $context);
+            if ($parsed[$section] !== '') {
+                $parsed[$section] = self::restrict_images($mustache->render($parsed[$section], $context));
+            }
         }
         return $parsed;
+    }
+
+    /**
+     * Retire les images qui ne sont pas fournies par le module. TCPDF sait lire une image par chemin
+     * ou par adresse : un modèle, modifiable par la DEVE, ne doit pas pouvoir lui faire lire un
+     * fichier du serveur ni appeler une adresse du réseau. Seules restent les images des modèles
+     * ({{img.nom}}, contenu précédé de « @ ») et les images en ligne (data:image/...).
+     *
+     * @param string $html
+     * @return string
+     */
+    public static function restrict_images($html) {
+        return preg_replace_callback('/<img\b[^>]*>/i', function ($match) {
+            $allowed = '(?:@|data:image\/)';
+            $hasallowed = preg_match('/\ssrc\s*=\s*(["\'])' . $allowed . '/i', $match[0]);
+            $hasother = preg_match('/\ssrc\s*=\s*(?!(["\'])' . $allowed . ')/i', $match[0]);
+            return $hasallowed && !$hasother ? $match[0] : '';
+        }, $html);
     }
 
     /**

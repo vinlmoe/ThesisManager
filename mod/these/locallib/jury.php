@@ -387,10 +387,10 @@ function these_notify_jury(stdClass $these, stdClass $cm, stdClass $dossier, $fo
             $result->missing[] = $member->fullname;
             continue;
         }
-        if (empty($member->accesstoken)) {
-            $member->accesstoken = random_string(48);
-            $DB->set_field('these_jury', 'accesstoken', $member->accesstoken, ['id' => $member->id]);
-        }
+        // Seule l'empreinte du jeton est conservée : chaque envoi donne un nouveau lien, qui
+        // remplace le précédent.
+        $token = these_new_token();
+        $DB->set_field('these_jury', 'accesstoken', these_token_hash($token), ['id' => $member->id]);
         $sent = these_send_email($these, 'jurydesignation', [these_make_external_user($member->email, $member->fullname)], [
             'name' => trim($member->jurytitle . ' ' . $member->fullname),
             'role' => $roles[$member->juryrole] ?? $member->juryrole,
@@ -398,7 +398,7 @@ function these_notify_jury(stdClass $these, stdClass $cm, stdClass $dossier, $fo
             'title' => format_string($dossier->title),
             'date' => $date ? userdate($date, get_string('strftimedaydatetime', 'langconfig')) : '-',
             'location' => (string) $dossier->defenselocation,
-            'url' => (new moodle_url('/mod/these/jury.php', ['token' => $member->accesstoken]))->out(false),
+            'url' => (new moodle_url('/mod/these/jury.php', ['token' => $token]))->out(false),
         ]);
         if ($sent) {
             $DB->set_field('these_jury', 'notifiedtime', time(), ['id' => $member->id]);
@@ -414,7 +414,8 @@ function these_notify_jury(stdClass $these, stdClass $cm, stdClass $dossier, $fo
  * Membre du jury correspondant à un lien d'accès aux documents.
  *
  * @param string $token
- * @return stdClass|null Membre, avec dossier, these et cm.
+ * @return stdClass|null Membre, avec dossier, these et cm ; null si le lien est inconnu ou n'est plus
+ *                       valide (voir these_jury_access_open()).
  */
 function these_get_jury_access($token) {
     global $DB;
@@ -423,18 +424,68 @@ function these_get_jury_access($token) {
     if (strlen($token) < 32) {
         return null;
     }
-    $member = $DB->get_record('these_jury', ['accesstoken' => $token]);
-    if (!$member) {
+    $member = $DB->get_record('these_jury', ['accesstoken' => these_token_hash($token)]);
+    return $member ? these_jury_access_member($member) : null;
+}
+
+/**
+ * Membre du jury consultant les documents depuis son compte Moodle (activité « Suivi des thèses »),
+ * reconnu à son adresse ou à celle de sa fiche dans l'annuaire du jury.
+ *
+ * @param int $memberid
+ * @param stdClass $user
+ * @return stdClass|null Voir these_get_jury_access().
+ */
+function these_get_jury_member_access($memberid, stdClass $user) {
+    global $DB;
+
+    $email = core_text::strtolower(trim((string) $user->email));
+    $member = $DB->get_record('these_jury', ['id' => $memberid]);
+    if (!$member || $email === '' || empty($member->notifiedtime)) {
         return null;
     }
+    $emails = [core_text::strtolower(trim((string) $member->email))];
+    if (!empty($member->jurorid)) {
+        $emails[] = core_text::strtolower(trim((string) $DB->get_field('these_juror', 'email', ['id' => $member->jurorid])));
+    }
+    return in_array($email, $emails, true) ? these_jury_access_member($member) : null;
+}
+
+/**
+ * Complète un membre du jury de son dossier, de son activité et de son module de cours, si son
+ * accès aux documents est ouvert.
+ *
+ * @param stdClass $member
+ * @return stdClass|null
+ */
+function these_jury_access_member(stdClass $member) {
+    global $DB;
+
     $dossier = $DB->get_record('these_dossier', ['id' => $member->dossierid]);
-    if (!$dossier || (int) $dossier->status === THESE_STATUS_CANCELLED) {
+    if (!$dossier || !these_jury_access_open($dossier, $member)) {
         return null;
     }
     $member->dossier = $dossier;
     $member->these = $DB->get_record('these', ['id' => $dossier->theseid], '*', MUST_EXIST);
     $member->cm = get_coursemodule_from_instance('these', $dossier->theseid, 0, false, MUST_EXIST);
     return $member;
+}
+
+/**
+ * Indique si l'accès d'un membre du jury aux documents est ouvert : jusqu'à THESE_TOKEN_LIFETIME
+ * après la soutenance (ou après le dernier envoi du lien, s'il est plus tardif), et tant que le
+ * dossier n'est ni clos ni abandonné.
+ *
+ * @param stdClass $dossier
+ * @param stdClass $member
+ * @return bool
+ */
+function these_jury_access_open(stdClass $dossier, stdClass $member) {
+    if (in_array((int) $dossier->status, [THESE_STATUS_CANCELLED, THESE_STATUS_CLOSED], true)) {
+        return false;
+    }
+    $from = max((int) $member->notifiedtime, (int) ($dossier->defensedate ?: $dossier->proposeddate));
+    return $from > 0 && time() <= $from + THESE_TOKEN_LIFETIME;
 }
 
 /**

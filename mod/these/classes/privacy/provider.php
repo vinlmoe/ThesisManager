@@ -337,6 +337,15 @@ class provider implements
                         writer::with_context($context)->export_area_files($subcontext, 'mod_these', $filearea, $dossier->id);
                     }
                 }
+                // Documents scellés, sauf ceux réservés au personnel (rapport, grille).
+                $definitions = these_document_definitions();
+                $sealed = get_file_storage()->get_area_files($context->id, 'mod_these', 'sealed', $dossier->id, 'filename', false);
+                foreach ($sealed as $file) {
+                    $doctype = pathinfo($file->get_filename(), PATHINFO_FILENAME);
+                    if (empty($definitions[$doctype]['staffonly'])) {
+                        writer::with_context($context)->export_file($subcontext, $file);
+                    }
+                }
             }
 
             self::export_staff_data($context, $cm, $user->id);
@@ -512,6 +521,8 @@ class provider implements
         );
         foreach ($signatures as $signature) {
             get_file_storage()->delete_area_files($context->id, 'mod_these', 'signature', $signature->id);
+            // Le document scellé reproduit la signature : il sera scellé de nouveau sans elle.
+            these_unseal_document($context, $signature->dossierid, $signature->doctype);
             $DB->update_record('these_signature', (object) [
                 'id' => $signature->id, 'userid' => 0, 'signername' => '', 'signeremail' => '', 'ipaddress' => '',
             ]);

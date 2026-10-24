@@ -156,6 +156,8 @@ class backup_these_activity_structure_step extends backup_activity_structure_ste
         foreach (THESE_FILEAREAS as $filearea) {
             $dossier->annotate_files('mod_these', $filearea, 'id');
         }
+        // Documents scellés (voir these_seal_document()).
+        $dossier->annotate_files('mod_these', 'sealed', 'id');
 
         return $this->prepare_activity_structure($these);
     }

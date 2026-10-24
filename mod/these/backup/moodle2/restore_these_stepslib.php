@@ -279,5 +279,6 @@ class restore_these_activity_structure_step extends restore_activity_structure_s
             $this->add_related_files('mod_these', $filearea, 'these_dossier');
         }
         $this->add_related_files('mod_these', 'signature', 'these_signature');
+        $this->add_related_files('mod_these', 'sealed', 'these_dossier');
     }
 }

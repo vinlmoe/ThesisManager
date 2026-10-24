@@ -72,107 +72,109 @@ function these_change_subject(
     $reason,
     ?stdClass $signature = null
 ) {
-    global $DB;
+    return these_dossier_operation($dossier, function () use ($these, $cm, $dossier, $data, $userid, $reason, $signature) {
+        global $DB;
 
-    if (!these_subject_changeable($dossier)) {
-        throw new coding_exception('Changement de sujet impossible au statut ' . $dossier->status);
-    }
-    $context = context_module::instance($cm->id);
-    $now = time();
-    $olddirector = $dossier->directorid ? $DB->get_record('user', ['id' => $dossier->directorid, 'deleted' => 0]) : null;
-
-    // Trace de l'ancien sujet.
-    $history = (object) [
-        'dossierid' => $dossier->id,
-        'title' => (string) $dossier->title,
-        'titleen' => (string) $dossier->titleen,
-        'summary' => (string) $dossier->summary,
-        'keywords' => (string) $dossier->keywords,
-        'studyyear' => (string) ($dossier->studyyear ?? ''),
-        'confidential' => (int) ($dossier->confidential ?? 0),
-        'directorid' => (int) $dossier->directorid,
-        'directorname' => !empty($dossier->externaldirector) ? (string) $dossier->extdirectorname
-            : ($olddirector ? fullname($olddirector) : ''),
-        'codirectorname' => (string) $dossier->codirectorname,
-        'libraryref' => (string) $dossier->libraryref,
-        'reason' => trim((string) $reason),
-        'changedby' => (int) $userid,
-        'timecreated' => $now,
-    ];
-    $history->id = $DB->insert_record('these_subjecthistory', $history);
-    try {
-        get_file_storage()->create_file_from_string([
-            'contextid' => $context->id,
-            'component' => 'mod_these',
-            'filearea' => 'subjectarchive',
-            'itemid' => $dossier->id,
-            'filepath' => '/',
-            'filename' => 'sujet-' . userdate($now, '%Y-%m-%d') . '-' . $history->id . '.pdf',
-        ], these_signed_document_pdf($these, $context, $dossier, 'subject'));
-    } catch (\Throwable $e) {
-        debugging('Archivage du dépôt de sujet impossible : ' . $e->getMessage(), DEBUG_DEVELOPER);
-    }
-
-    // Le dépôt de sujet sera signé de nouveau par tous.
-    foreach (these_get_signatures($dossier->id) as $existing) {
-        if ($existing->doctype === 'subject') {
-            these_delete_signature($context, $existing);
+        if (!these_subject_changeable($dossier)) {
+            throw new coding_exception('Changement de sujet impossible au statut ' . $dossier->status);
         }
-    }
+        $context = context_module::instance($cm->id);
+        $now = time();
+        $olddirector = $dossier->directorid ? $DB->get_record('user', ['id' => $dossier->directorid, 'deleted' => 0]) : null;
 
-    $oldtitle = (string) $dossier->title;
-    $fields = [];
-    foreach (
-        ['title', 'titleen', 'summary', 'keywords', 'codirectorname', 'studyyear', 'directortitle',
-            'extdirectorname', 'extdirectorgrade', 'extdirectorinstitution', 'extdirectoremail'] as $field
-    ) {
-        $fields[$field] = (string) these_submitted_value($data, $dossier, $field);
-    }
-    foreach (['directorid', 'confidential', 'externaldirector'] as $field) {
-        $fields[$field] = (int) these_submitted_value($data, $dossier, $field);
-    }
-    if (property_exists($data, 'commitguide')) {
-        $fields['commitments'] = (!empty($data->commitguide) ? THESE_COMMIT_GUIDE : 0)
-            | (!empty($data->commitduplicate) ? THESE_COMMIT_DUPLICATE : 0)
-            | (!empty($data->commitethics) ? THESE_COMMIT_ETHICS : 0);
-    }
-    if (empty($fields['externaldirector'])) {
-        foreach (['extdirectorname', 'extdirectorgrade', 'extdirectorinstitution', 'extdirectoremail'] as $field) {
-            $fields[$field] = '';
+        // Trace de l'ancien sujet.
+        $history = (object) [
+            'dossierid' => $dossier->id,
+            'title' => (string) $dossier->title,
+            'titleen' => (string) $dossier->titleen,
+            'summary' => (string) $dossier->summary,
+            'keywords' => (string) $dossier->keywords,
+            'studyyear' => (string) ($dossier->studyyear ?? ''),
+            'confidential' => (int) ($dossier->confidential ?? 0),
+            'directorid' => (int) $dossier->directorid,
+            'directorname' => !empty($dossier->externaldirector) ? (string) $dossier->extdirectorname
+                : ($olddirector ? fullname($olddirector) : ''),
+            'codirectorname' => (string) $dossier->codirectorname,
+            'libraryref' => (string) $dossier->libraryref,
+            'reason' => trim((string) $reason),
+            'changedby' => (int) $userid,
+            'timecreated' => $now,
+        ];
+        $history->id = $DB->insert_record('these_subjecthistory', $history);
+        try {
+            get_file_storage()->create_file_from_string([
+                'contextid' => $context->id,
+                'component' => 'mod_these',
+                'filearea' => 'subjectarchive',
+                'itemid' => $dossier->id,
+                'filepath' => '/',
+                'filename' => 'sujet-' . userdate($now, '%Y-%m-%d') . '-' . $history->id . '.pdf',
+            ], these_signed_document_pdf($these, $context, $dossier, 'subject'));
+        } catch (\Throwable $e) {
+            debugging('Archivage du dépôt de sujet impossible : ' . $e->getMessage(), DEBUG_DEVELOPER);
         }
-    }
-    $dossier = these_set_status(
-        $dossier,
-        THESE_STATUS_SUBJECT_SUBMITTED,
-        $userid,
-        'subjectchanged',
-        get_string('subjectchangelog', 'mod_these', (object) ['old' => $oldtitle, 'reason' => trim((string) $reason)]),
-        array_merge($fields, these_cleared_return_fields())
-    );
-    if ($signature !== null) {
-        these_sign_document($context, $dossier, 'subject', 'student', $userid, $signature->name, $signature->png);
-    }
-    if (!empty($dossier->externaldirector)) {
-        these_request_external_signatures($these, $cm, $dossier, 'subject');
-    }
 
-    // Avertissement de l'ancien directeur, de la DEVE et de la bibliothèque.
-    $recipients = [];
-    if ($olddirector) {
-        $recipients[core_text::strtolower($olddirector->email)] = $olddirector;
-    }
-    foreach (['deve', 'library'] as $service) {
-        foreach (these_get_service_recipients($these, $context, $service) as $recipient) {
-            $recipients[core_text::strtolower((string) $recipient->email)] = $recipient;
+        // Le dépôt de sujet sera signé de nouveau par tous.
+        foreach (these_get_signatures($dossier->id) as $existing) {
+            if ($existing->doctype === 'subject') {
+                these_delete_signature($context, $existing);
+            }
         }
-    }
-    $vars = these_email_base_vars($these, $cm, $dossier);
-    $vars['oldtitle'] = format_string($oldtitle);
-    $vars['reason'] = trim((string) $reason);
-    these_send_email($these, 'subjectchanged', array_values($recipients), $vars);
-    // Le (nouveau) directeur est attendu pour valider le nouveau sujet.
-    these_notify_actor($these, $cm, $dossier);
-    return $dossier;
+
+        $oldtitle = (string) $dossier->title;
+        $fields = [];
+        foreach (
+            ['title', 'titleen', 'summary', 'keywords', 'codirectorname', 'studyyear', 'directortitle',
+                'extdirectorname', 'extdirectorgrade', 'extdirectorinstitution', 'extdirectoremail'] as $field
+        ) {
+            $fields[$field] = (string) these_submitted_value($data, $dossier, $field);
+        }
+        foreach (['directorid', 'confidential', 'externaldirector'] as $field) {
+            $fields[$field] = (int) these_submitted_value($data, $dossier, $field);
+        }
+        if (property_exists($data, 'commitguide')) {
+            $fields['commitments'] = (!empty($data->commitguide) ? THESE_COMMIT_GUIDE : 0)
+                | (!empty($data->commitduplicate) ? THESE_COMMIT_DUPLICATE : 0)
+                | (!empty($data->commitethics) ? THESE_COMMIT_ETHICS : 0);
+        }
+        if (empty($fields['externaldirector'])) {
+            foreach (['extdirectorname', 'extdirectorgrade', 'extdirectorinstitution', 'extdirectoremail'] as $field) {
+                $fields[$field] = '';
+            }
+        }
+        $dossier = these_set_status(
+            $dossier,
+            THESE_STATUS_SUBJECT_SUBMITTED,
+            $userid,
+            'subjectchanged',
+            get_string('subjectchangelog', 'mod_these', (object) ['old' => $oldtitle, 'reason' => trim((string) $reason)]),
+            array_merge($fields, these_cleared_return_fields())
+        );
+        if ($signature !== null) {
+            these_sign_document($context, $dossier, 'subject', 'student', $userid, $signature->name, $signature->png);
+        }
+        if (!empty($dossier->externaldirector)) {
+            these_request_external_signatures($these, $cm, $dossier, 'subject');
+        }
+
+        // Avertissement de l'ancien directeur, de la DEVE et de la bibliothèque.
+        $recipients = [];
+        if ($olddirector) {
+            $recipients[core_text::strtolower($olddirector->email)] = $olddirector;
+        }
+        foreach (['deve', 'library'] as $service) {
+            foreach (these_get_service_recipients($these, $context, $service) as $recipient) {
+                $recipients[core_text::strtolower((string) $recipient->email)] = $recipient;
+            }
+        }
+        $vars = these_email_base_vars($these, $cm, $dossier);
+        $vars['oldtitle'] = format_string($oldtitle);
+        $vars['reason'] = trim((string) $reason);
+        these_send_email($these, 'subjectchanged', array_values($recipients), $vars);
+        // Le (nouveau) directeur est attendu pour valider le nouveau sujet.
+        these_notify_actor($these, $cm, $dossier);
+        return $dossier;
+    });
 }
 
 /**

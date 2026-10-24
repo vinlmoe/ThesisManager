@@ -54,6 +54,7 @@ $string['open'] = 'Open';
 $string['myjuries'] = 'My juries';
 $string['nojuries'] = 'You do not sit on any jury of the followed cohorts.';
 $string['juryaccesspending'] = 'Access given when the registrar validates the jury';
+$string['juryaccessclosed'] = 'Access closed (file closed or defence over)';
 $string['followed'] = 'Followed files';
 $string['nodossiers'] = 'No file.';
 $string['allpromotions'] = 'All cohorts';

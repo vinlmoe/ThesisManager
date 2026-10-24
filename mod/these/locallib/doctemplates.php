@@ -840,6 +840,26 @@ function these_signed_document_pdf(stdClass $these, context $context, stdClass $
     if (!array_key_exists($doctype, these_document_definitions())) {
         throw new coding_exception('Document inconnu : ' . $doctype);
     }
+    // Document entièrement signé : le PDF scellé fait foi (scellé au besoin pour un document signé
+    // avant l'apparition des scellés).
+    $sealed = these_seal_document($context, $dossier, $doctype);
+    if ($sealed) {
+        return $sealed->get_content();
+    }
+    return these_render_document_pdf($these, $context, $dossier, $doctype);
+}
+
+/**
+ * Produit le PDF d'un document signé à partir de son modèle en vigueur, sans tenir compte du
+ * scellé.
+ *
+ * @param stdClass $these
+ * @param context $context
+ * @param stdClass $dossier
+ * @param string $doctype
+ * @return string Contenu PDF.
+ */
+function these_render_document_pdf(stdClass $these, context $context, stdClass $dossier, $doctype) {
     $data = these_document_context($these, $context, $dossier, $doctype);
     if ($doctype !== 'contract') {
         return these_render_doctemplate($these, $doctype, $data);
@@ -857,7 +877,8 @@ function these_signed_document_pdf(stdClass $these, context $context, stdClass $
             ]);
         } catch (\Throwable $e) {
             // Contrat type illisible par l'analyseur libre de FPDI (certaines compressions récentes) :
-            // les pages du module restent produites, avec un avertissement à la place du contrat.
+            // les pages du module restent produites, avec un avertissement à la place du contrat, et
+            // le document n'est pas scellé (voir these_contract_template_problem()).
             debugging('Contrat type de diffusion illisible : ' . $e->getMessage(), DEBUG_DEVELOPER);
         }
     }
@@ -866,6 +887,25 @@ function these_signed_document_pdf(stdClass $these, context $context, stdClass $
         these_render_doctemplate($these, 'contractdata', $data),
         these_render_doctemplate($these, 'contractsign', $data),
     ]);
+}
+
+/**
+ * Problème du contrat type de diffusion déposé dans les réglages du site, qui empêche de produire
+ * le contrat complet : sans lui, le contrat n'est pas scellé et la DEVE en est avertie.
+ *
+ * @return string|null 'contracttemplatemissing', 'contracttemplateunreadable' ou null.
+ */
+function these_contract_template_problem() {
+    $template = these_get_contract_template();
+    if ($template === null) {
+        return 'contracttemplatemissing';
+    }
+    try {
+        these_merge_pdfs([$template]);
+    } catch (\Throwable $e) {
+        return 'contracttemplateunreadable';
+    }
+    return null;
 }
 
 /**

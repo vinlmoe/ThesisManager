@@ -313,5 +313,25 @@ function xmldb_these_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2026103100, 'these');
     }
 
+    if ($oldversion < 2026103101) {
+        // Empreinte de la mise en forme des documents signés (modèles, images).
+        $table = new xmldb_table('these_signature');
+        $field = new xmldb_field('templatehash', XMLDB_TYPE_CHAR, '64', null, null, null, null, 'contenthash');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Seule l'empreinte des jetons des liens est désormais conservée : les liens déjà envoyés
+        // restent valables, leur jeton étant remplacé par son empreinte.
+        foreach (['these_signature' => 'token', 'these_jury' => 'accesstoken'] as $tablename => $fieldname) {
+            $rs = $DB->get_recordset_select($tablename, "$fieldname IS NOT NULL AND $fieldname <> ''", null, '', "id, $fieldname");
+            foreach ($rs as $record) {
+                $DB->set_field($tablename, $fieldname, hash('sha256', $record->$fieldname), ['id' => $record->id]);
+            }
+            $rs->close();
+        }
+        upgrade_mod_savepoint(true, 2026103101, 'these');
+    }
+
     return true;
 }

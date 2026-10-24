@@ -144,76 +144,78 @@ function these_generate_documents(stdClass $these, context $context, stdClass $d
  * @return stdClass {sent, failed, missing (noms des membres du jury sans adresse)}
  */
 function these_transmit_documents(stdClass $these, stdClass $cm, context $context, stdClass $dossier, $userid) {
-    global $DB;
+    return these_dossier_operation($dossier, function () use ($these, $cm, $context, $dossier, $userid) {
+        global $DB;
 
-    $files = [];
-    foreach (these_get_files($context, 'generated', $dossier->id) as $file) {
-        $files[$file->get_filename()] = $file;
-    }
-    $data = these_document_data($these, $dossier);
-    $result = (object) ['sent' => 0, 'failed' => 0, 'missing' => []];
-    $basevars = [
-        'student' => $data['student'],
-        'title' => format_string($dossier->title),
-        'date' => $data['date'] . ' ' . $data['time'],
-        'location' => $data['location'],
-    ];
-
-    $send = function ($recipient, $name, $filename) use ($these, $files, $basevars, $result) {
-        $attachment = '';
-        if (isset($files[$filename])) {
-            $attachment = $files[$filename]->copy_content_to_temp('mod_these');
+        $files = [];
+        foreach (these_get_files($context, 'generated', $dossier->id) as $file) {
+            $files[$file->get_filename()] = $file;
         }
-        $sent = these_send_email(
-            $these,
-            'convocation',
-            [$recipient],
-            array_merge($basevars, ['name' => $name]),
-            $attachment ?: '',
-            $attachment ? $filename : ''
-        );
-        $sent ? $result->sent++ : $result->failed++;
-    };
+        $data = these_document_data($these, $dossier);
+        $result = (object) ['sent' => 0, 'failed' => 0, 'missing' => []];
+        $basevars = [
+            'student' => $data['student'],
+            'title' => format_string($dossier->title),
+            'date' => $data['date'] . ' ' . $data['time'],
+            'location' => $data['location'],
+        ];
 
-    $student = $DB->get_record('user', ['id' => $dossier->userid, 'deleted' => 0]);
-    if ($student) {
-        $send($student, fullname($student), these_document_filename('convocation-etudiant'));
-    }
-    foreach ($data['jury'] as $index => $member) {
-        if ($member->email === '') {
-            $result->missing[] = $member->fullname;
-            continue;
+        $send = function ($recipient, $name, $filename) use ($these, $files, $basevars, $result) {
+            $attachment = '';
+            if (isset($files[$filename])) {
+                $attachment = $files[$filename]->copy_content_to_temp('mod_these');
+            }
+            $sent = these_send_email(
+                $these,
+                'convocation',
+                [$recipient],
+                array_merge($basevars, ['name' => $name]),
+                $attachment ?: '',
+                $attachment ? $filename : ''
+            );
+            $sent ? $result->sent++ : $result->failed++;
+        };
+
+        $student = $DB->get_record('user', ['id' => $dossier->userid, 'deleted' => 0]);
+        if ($student) {
+            $send($student, fullname($student), these_document_filename('convocation-etudiant'));
         }
-        $send(
-            these_make_external_user($member->email, $member->fullname),
-            $member->fullname,
-            these_document_filename('convocation-jury-' . ($index + 1), $member->fullname)
-        );
-    }
+        foreach ($data['jury'] as $index => $member) {
+            if ($member->email === '') {
+                $result->missing[] = $member->fullname;
+                continue;
+            }
+            $send(
+                these_make_external_user($member->email, $member->fullname),
+                $member->fullname,
+                these_document_filename('convocation-jury-' . ($index + 1), $member->fullname)
+            );
+        }
 
-    $universityemail = trim((string) $these->universityemail);
-    if ($universityemail !== '' && $files) {
-        $zipname = clean_filename('soutenance-' . ($dossier->devenumber ?: $dossier->id) . '.zip');
-        $zippath = make_request_directory() . '/' . $zipname;
-        $packer = get_file_packer('application/zip');
-        $packer->archive_to_pathname($files, $zippath);
-        $sent = these_send_email(
-            $these,
-            'university',
-            [these_make_external_user($universityemail)],
-            array_merge($basevars, ['devenumber' => (string) $dossier->devenumber]),
-            $zippath,
-            $zipname
-        );
-        $sent ? $result->sent++ : $result->failed++;
-    }
+        $universityemail = trim((string) $these->universityemail);
+        if ($universityemail !== '' && $files) {
+            $zipname = clean_filename('soutenance-' . ($dossier->devenumber ?: $dossier->id) . '.zip');
+            $zippath = make_request_directory() . '/' . $zipname;
+            $packer = get_file_packer('application/zip');
+            $packer->archive_to_pathname($files, $zippath);
+            $sent = these_send_email(
+                $these,
+                'university',
+                [these_make_external_user($universityemail)],
+                array_merge($basevars, ['devenumber' => (string) $dossier->devenumber]),
+                $zippath,
+                $zipname
+            );
+            $sent ? $result->sent++ : $result->failed++;
+        }
 
-    $fields = ['senttime' => time()];
-    $remark = get_string('transmitsummary', 'mod_these', $result);
-    if ((int) $dossier->status === THESE_STATUS_CONFORM) {
-        these_set_status($dossier, THESE_STATUS_SCHEDULED, $userid, 'documentssent', $remark, $fields);
-    } else {
-        these_set_status($dossier, $dossier->status, $userid, 'documentsresent', $remark, $fields);
-    }
-    return $result;
+        $fields = ['senttime' => time()];
+        $remark = get_string('transmitsummary', 'mod_these', $result);
+        if ((int) $dossier->status === THESE_STATUS_CONFORM) {
+            these_set_status($dossier, THESE_STATUS_SCHEDULED, $userid, 'documentssent', $remark, $fields);
+        } else {
+            these_set_status($dossier, $dossier->status, $userid, 'documentsresent', $remark, $fields);
+        }
+        return $result;
+    });
 }

@@ -203,3 +203,26 @@ function these_user_can_act(stdClass $dossier, stdClass $rights) {
     }
     return !empty($rights->$actor);
 }
+
+/** Durée de validité d'un lien à jeton (signature sans compte, accès du jury), en secondes. */
+define('THESE_TOKEN_LIFETIME', 60 * DAYSECS);
+
+/**
+ * Nouveau jeton pour un lien envoyé par courriel. Seule son empreinte est conservée en base (voir
+ * these_token_hash()) : le jeton lui-même ne figure que dans le courriel.
+ *
+ * @return string
+ */
+function these_new_token() {
+    return random_string(48);
+}
+
+/**
+ * Empreinte d'un jeton, seule conservée en base : une copie de la base ne donne accès à aucun lien.
+ *
+ * @param string $token
+ * @return string SHA-256 en hexadécimal.
+ */
+function these_token_hash($token) {
+    return hash('sha256', (string) $token);
+}

@@ -98,6 +98,26 @@ abstract class these_testcase extends \advanced_testcase {
     }
 
     /**
+     * Jeton du dernier lien envoyé à une adresse (seule son empreinte est conservée en base).
+     *
+     * @param array $messages Courriels interceptés.
+     * @param string $email Destinataire.
+     * @param string $script Page du lien : sign.php ou jury.php.
+     * @return string
+     */
+    protected function token_sent_to(array $messages, string $email, string $script = 'sign.php'): string {
+        $token = '';
+        foreach ($messages as $message) {
+            $body = quoted_printable_decode($message->body);
+            if ($message->to === $email && preg_match('#' . preg_quote($script, '#') . '\?token=([A-Za-z0-9]+)#', $body, $match)) {
+                $token = $match[1];
+            }
+        }
+        $this->assertNotSame('', $token, 'Aucun lien envoyé à ' . $email);
+        return $token;
+    }
+
+    /**
      * Données de soumission d'un dossier de soutenance (date dans un mois, jury par défaut).
      *
      * @return \stdClass

@@ -550,6 +550,7 @@ function these_sign_document(context $context, stdClass $dossier, $doctype, $slo
         'token' => null,
         'timesigned' => $now,
         'contenthash' => these_document_hash($dossier, $doctype, $slot),
+        'templatehash' => these_document_template_hash($dossier, $doctype),
         'ipaddress' => getremoteaddr(),
     ];
     if ($signature) {
@@ -581,6 +582,7 @@ function these_sign_document(context $context, stdClass $dossier, $doctype, $slo
         $dossier->status,
         these_document_label($doctype) . ' — ' . these_slot_label($slot) . ' — ' . trim($name)
     );
+    these_seal_document($context, $dossier, $doctype);
     return $DB->get_record('these_signature', ['id' => $record->id]);
 }
 
@@ -596,11 +598,13 @@ function these_delete_signature(context $context, stdClass $signature) {
 
     get_file_storage()->delete_area_files($context->id, 'mod_these', 'signature', $signature->id);
     $DB->delete_records('these_signature', ['id' => $signature->id]);
+    these_unseal_document($context, $signature->dossierid, $signature->doctype);
 }
 
 /**
  * Invalide les signatures dont le document a changé depuis qu'elles ont été apposées : un
- * document signé ne peut pas être modifié en silence. Les signatures concernées sont supprimées
+ * document signé ne peut pas être modifié en silence. Tant que le document n'est pas scellé
+ * (voir these_seal_document()), un changement de son modèle compte aussi. Les signatures concernées sont supprimées
  * et la suppression est inscrite à l'historique.
  *
  * @param context $context
@@ -613,7 +617,10 @@ function these_refresh_signatures(context $context, stdClass $dossier) {
         if (empty($signature->timesigned)) {
             continue;
         }
-        if ($signature->contenthash !== these_document_hash($dossier, $signature->doctype, $signature->slot)) {
+        if (
+            $signature->contenthash !== these_document_hash($dossier, $signature->doctype, $signature->slot)
+            || these_signature_template_changed($context, $dossier, $signature)
+        ) {
             these_delete_signature($context, $signature);
             $invalidated[] = $key;
         }
@@ -630,6 +637,150 @@ function these_refresh_signatures(context $context, stdClass $dossier) {
     return $invalidated;
 }
 
+/**
+ * Empreinte SHA-256 de la mise en forme d'un document : modèles en vigueur, images qu'ils
+ * appellent et, pour le contrat de diffusion, contrat type déposé dans les réglages du site.
+ *
+ * @param stdClass $dossier
+ * @param string $doctype
+ * @return string
+ */
+function these_document_template_hash(stdClass $dossier, $doctype) {
+    global $DB;
+
+    $these = $DB->get_record('these', ['id' => $dossier->theseid], '*', MUST_EXIST);
+    $scope = these_settings_scope($these);
+    $types = array_keys(array_filter(these_doctemplate_types(), function ($signed) use ($doctype) {
+        return $signed === $doctype;
+    }));
+    $parts = [];
+    $images = these_doctemplate_images($scope);
+    foreach ($types as $type) {
+        $template = these_get_doctemplate($scope, $type);
+        $parts[] = $template;
+        foreach ($images as $name => $source) {
+            if (strpos($template, 'img.' . $name) !== false) {
+                $parts[] = $name . ':' . sha1($source);
+            }
+        }
+    }
+    if ($doctype === 'contract') {
+        $parts[] = sha1((string) these_get_contract_template());
+    }
+    return hash('sha256', implode("\n", $parts));
+}
+
+/**
+ * Indique si la mise en forme d'un document a changé depuis une signature. Un document scellé
+ * ne dépend plus de son modèle ; une signature antérieure à l'enregistrement de cette empreinte
+ * n'est pas remise en cause.
+ *
+ * @param context $context
+ * @param stdClass $dossier
+ * @param stdClass $signature
+ * @return bool
+ */
+function these_signature_template_changed(context $context, stdClass $dossier, stdClass $signature) {
+    if (empty($signature->templatehash) || these_get_sealed_document($context, $dossier->id, $signature->doctype)) {
+        return false;
+    }
+    return $signature->templatehash !== these_document_template_hash($dossier, $signature->doctype);
+}
+
+/**
+ * Indique si tous les emplacements de signature d'un document sont signés.
+ *
+ * @param stdClass $dossier
+ * @param string $doctype
+ * @return bool
+ */
+function these_document_fully_signed(stdClass $dossier, $doctype) {
+    $signatures = these_get_signatures($dossier->id);
+    foreach (these_document_slots($dossier, $doctype) as $slot) {
+        if (empty($signatures[$doctype . ':' . $slot]->timesigned)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+/**
+ * PDF scellé d'un document.
+ *
+ * @param context $context
+ * @param int $dossierid
+ * @param string $doctype
+ * @return stored_file|null
+ */
+function these_get_sealed_document(context $context, $dossierid, $doctype) {
+    $file = get_file_storage()->get_file($context->id, 'mod_these', 'sealed', $dossierid, '/', $doctype . '.pdf');
+    return $file ?: null;
+}
+
+/**
+ * Scelle un document dont toutes les signatures sont apposées : le PDF est produit une dernière
+ * fois et conservé tel quel. Il ne dépend plus ensuite ni des modèles ni du contrat type, et son
+ * empreinte SHA-256, calculée sur ses octets, est inscrite à l'historique du dossier.
+ *
+ * Une signature dont la mise en forme a changé depuis qu'elle a été apposée est d'abord invalidée
+ * (voir these_refresh_signatures()) : le document n'est alors pas scellé.
+ *
+ * @param context $context
+ * @param stdClass $dossier
+ * @param string $doctype
+ * @return stored_file|null Document scellé, null s'il attend encore une signature.
+ */
+function these_seal_document(context $context, stdClass $dossier, $doctype) {
+    global $DB;
+
+    if ($sealed = these_get_sealed_document($context, $dossier->id, $doctype)) {
+        return $sealed;
+    }
+    if (
+        !these_document_fully_signed($dossier, $doctype)
+            || ($doctype === 'contract' && these_contract_template_problem() !== null)
+    ) {
+        return null;
+    }
+    these_refresh_signatures($context, $dossier);
+    if (!these_document_fully_signed($dossier, $doctype)) {
+        return null;
+    }
+    $these = $DB->get_record('these', ['id' => $dossier->theseid], '*', MUST_EXIST);
+    $pdf = these_render_document_pdf($these, $context, $dossier, $doctype);
+    $file = get_file_storage()->create_file_from_string([
+        'contextid' => $context->id,
+        'component' => 'mod_these',
+        'filearea' => 'sealed',
+        'itemid' => $dossier->id,
+        'filepath' => '/',
+        'filename' => $doctype . '.pdf',
+    ], $pdf);
+    these_log(
+        $dossier->id,
+        0,
+        'documentsealed',
+        $dossier->status,
+        $dossier->status,
+        these_document_label($doctype) . ' — SHA-256 ' . hash('sha256', $pdf)
+    );
+    return $file;
+}
+
+/**
+ * Retire le scellé d'un document dont une signature disparaît : il sera scellé de nouveau une
+ * fois toutes ses signatures apposées.
+ *
+ * @param context $context
+ * @param int $dossierid
+ * @param string $doctype
+ * @return void
+ */
+function these_unseal_document(context $context, $dossierid, $doctype) {
+    if ($file = these_get_sealed_document($context, $dossierid, $doctype)) {
+        $file->delete();
+    }
+}
 /**
  * Signataires sans compte attendus pour un dossier, avec leur nom et leur adresse : le
  * directeur extérieur (formulaire de sujet), le président du jury, le directeur général et le
@@ -703,7 +854,7 @@ function these_request_signature(stdClass $these, stdClass $cm, stdClass $dossie
         return null;
     }
     $signer = these_external_signers($dossier)[$slot];
-    $token = random_string(48);
+    $token = these_new_token();
     $now = time();
     foreach ($doctypes as $doctype) {
         $signature = $DB->get_record('these_signature', ['dossierid' => $dossier->id, 'doctype' => $doctype, 'slot' => $slot]);
@@ -714,10 +865,11 @@ function these_request_signature(stdClass $these, stdClass $cm, stdClass $dossie
             'userid' => 0,
             'signername' => $signer['name'],
             'signeremail' => $signer['email'],
-            'token' => $token,
+            'token' => these_token_hash($token),
             'requesttime' => $now,
             'timesigned' => 0,
             'contenthash' => null,
+            'templatehash' => null,
         ];
         if ($signature) {
             $record->id = $signature->id;
@@ -769,10 +921,11 @@ function these_request_external_signatures(stdClass $these, stdClass $cm, stdCla
 
 /**
  * Signatures en attente correspondant à un jeton d'invitation : tous les documents qu'un même
- * signataire doit signer dans un dossier.
+ * signataire doit signer dans un dossier. Le lien vaut THESE_TOKEN_LIFETIME à partir de
+ * l'invitation ; la DEVE peut en envoyer un nouveau depuis le suivi des signatures.
  *
  * @param string $token
- * @return stdClass[] Signatures en attente, vide si le jeton est inconnu ou déjà utilisé.
+ * @return stdClass[] Signatures en attente, vide si le jeton est inconnu, déjà utilisé ou expiré.
  */
 function these_get_signatures_by_token($token) {
     global $DB;
@@ -781,7 +934,12 @@ function these_get_signatures_by_token($token) {
     if (strlen($token) < 32) {
         return [];
     }
-    return array_values($DB->get_records('these_signature', ['token' => $token, 'timesigned' => 0], 'id ASC'));
+    return array_values($DB->get_records_select(
+        'these_signature',
+        'token = :token AND timesigned = 0 AND requesttime > :since',
+        ['token' => these_token_hash($token), 'since' => time() - THESE_TOKEN_LIFETIME],
+        'id ASC'
+    ));
 }
 
 /**
@@ -935,5 +1093,11 @@ function these_render_signed_documents(stdClass $cm, context $context, stdClass 
         return '';
     }
     $out = html_writer::tag('h4', get_string('signeddocuments', 'mod_these'), ['class' => 'mt-4']) . html_writer::table($table);
+    if (
+        $rights->deve && these_document_available($dossier, 'contract')
+            && ($problem = these_contract_template_problem()) !== null
+    ) {
+        $out .= html_writer::div(get_string($problem, 'mod_these'), 'alert alert-warning');
+    }
     return $out;
 }

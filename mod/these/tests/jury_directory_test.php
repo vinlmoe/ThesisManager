@@ -169,16 +169,21 @@ final class jury_directory_test extends these_testcase {
         $sink->clear();
 
         $jury = these_get_jury($dossier->id);
-        $token = $jury[0]->accesstoken;
-        $this->assertNotEmpty($token);
+        $first = $this->token_sent_to($messages, 'martin@example.org', 'jury.php');
+        $this->assertSame(these_token_hash($first), $jury[0]->accesstoken);
         $this->assertNotEmpty($jury[0]->notifiedtime);
-        $access = these_get_jury_access($token);
+        $access = these_get_jury_access($first);
         $this->assertSame((int) $dossier->id, (int) $access->dossier->id);
         $this->assertNull(these_get_jury_access('inconnu'));
+        $this->assertNull(these_get_jury_access($jury[0]->accesstoken));
 
-        // Déjà prévenus : rien de plus, sauf renvoi.
+        // Déjà prévenus : rien de plus, sauf renvoi, qui remplace le lien.
         $this->assertSame(0, these_notify_jury($this->these, $this->cm, $dossier)->sent);
         $this->assertSame(2, these_notify_jury($this->these, $this->cm, $dossier, true)->sent);
+        $token = $this->token_sent_to($sink->get_messages(), 'martin@example.org', 'jury.php');
+        $this->assertNull(these_get_jury_access($first));
+        $this->assertNotNull(these_get_jury_access($token));
+        $hash = these_get_jury($dossier->id)[0]->accesstoken;
 
         // Jury modifié par l'étudiant : le même membre garde son lien et sa validation ; un
         // changement de rôle demande une nouvelle validation.
@@ -186,7 +191,7 @@ final class jury_directory_test extends these_testcase {
         unset($members[0]->eligible, $members[1]->eligible);
         these_save_jury($dossier->id, $members);
         $jury = these_get_jury($dossier->id);
-        $this->assertSame($token, $jury[0]->accesstoken);
+        $this->assertSame($hash, $jury[0]->accesstoken);
         $this->assertEquals(1, $jury[0]->eligible);
         $this->assertEquals(0, $jury[1]->eligible);
 

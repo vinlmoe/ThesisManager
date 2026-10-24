@@ -198,7 +198,11 @@ final class signature_test extends these_testcase {
         $this->assertContains('externe@example.com', array_column($sink->get_messages(), 'to'));
         $signature = these_get_signatures($dossier->id)['subject:extdirector'];
         $this->assertEmpty($signature->timesigned);
-        $pending = these_get_signatures_by_token($signature->token);
+        $token = $this->token_sent_to($sink->get_messages(), 'externe@example.com');
+        // Seule l'empreinte du jeton est en base.
+        $this->assertSame(these_token_hash($token), $signature->token);
+        $this->assertEmpty(these_get_signatures_by_token($signature->token));
+        $pending = these_get_signatures_by_token($token);
         $this->assertCount(1, $pending);
 
         these_sign_document(
@@ -211,7 +215,7 @@ final class signature_test extends these_testcase {
             $this->signature()->png,
             'externe@example.com'
         );
-        $this->assertEmpty(these_get_signatures_by_token($signature->token));
+        $this->assertEmpty(these_get_signatures_by_token($token));
         $this->assertEmpty(these_get_signatures_by_token('court'));
     }
 
@@ -268,7 +272,7 @@ final class signature_test extends these_testcase {
             $this->assertSame(1, $recipients[$email] ?? 0, $email);
         }
         // Le même lien couvre tous les documents de la direction générale.
-        $token = $signatures['conclusions:dg']->token;
+        $token = $this->token_sent_to($sink->get_messages(), 'dg@example.com');
         $this->assertEqualsCanonicalizing(
             ['signaletique', 'contract', 'conclusions'],
             array_column(these_get_signatures_by_token($token), 'doctype')

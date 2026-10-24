@@ -252,7 +252,8 @@ $string['juryaccessresent'] = '{$a} jury member(s) notified again.';
 $string['juryaccess'] = 'Jury access';
 $string['juryaccessintro'] = 'Hello {$a->name}, you are appointed as {$a->role} of the jury of this thesis. Below are the defence '
     . 'details and the file documents.';
-$string['juryaccessinvalid'] = 'This access link is not (or no longer) valid. Contact the registrar.';
+$string['juryaccessinvalid'] = 'This access link is not (or no longer) valid: it was replaced by a new one, the defence '
+    . 'was more than 60 days ago, or the file is closed. Contact the registrar.';
 $string['juryaccessdocuments'] = 'Documents';
 $string['juryaccessnodocuments'] = 'No document is available yet.';
 
@@ -640,7 +641,8 @@ $string['signaturerequestsent'] = 'Signing link sent.';
 $string['signaturesrecorded'] = 'Signature recorded. Thank you.';
 $string['signpagetitle'] = 'Signing thesis documents';
 $string['signpageintro'] = 'Signing as {$a->slot} the documents of the thesis of {$a->student}: "{$a->title}".';
-$string['signinvalidtoken'] = 'This link is no longer valid: the documents have already been signed, or a new invitation was sent.';
+$string['signinvalidtoken'] = 'This link is no longer valid: the documents have already been signed, a new invitation was sent, '
+    . 'or the link has expired (60 days). Contact the registrar to receive a new one.';
 $string['signnothingpending'] = 'No document is waiting for a signature.';
 $string['signdocuments'] = 'Sign the documents';
 
@@ -711,6 +713,8 @@ $string['conclusionstoolong'] = 'The conclusions have {$a->length} characters fo
 $string['conclusionsonepage'] = 'The conclusions do not fit on one page with the signatures: shorten them or use fewer paragraphs.';
 $string['contracthelp'] = 'Author choices for the electronic distribution contract (articles 2 and 4). A confidential thesis (box '
     . 'ticked with the subject) stays confidential until the date given.';
+$string['contracttemplatemissing'] = 'The standard distribution contract has not been uploaded in the module settings: the contract only contains the module\'s pages and will not be sealed until it is provided.';
+$string['contracttemplateunreadable'] = 'The standard distribution contract uploaded in the module settings could not be read (unsupported PDF format): the contract only contains the module\'s pages and will not be sealed. Upload the contract saved in an older PDF format (PDF 1.4).';
 $string['bconfidentialuntil'] = 'Confidential until';
 $string['bconfidentialuntil_help'] = 'Only for theses declared confidential with the subject.';
 $string['bembargo'] = 'Thesis under embargo (delayed distribution)';
@@ -782,6 +786,9 @@ $string['agauthorized'] = 'The student is authorised to defend their veterinary 
 
 // Signature history and emails.
 $string['logsigned'] = 'Document signed';
+$string['logdocumentsealed'] = 'Document sealed';
+$string['dossierchanged'] = 'This file was changed in the meantime (by someone else or by submitting the form twice): the action was not recorded. Reload the file to see its current state.';
+$string['dossierbusy'] = 'This file is being processed by another action. Try again in a moment.';
 $string['logsignaturesinvalidated'] = 'Signatures invalidated (document changed)';
 $string['logsignaturerequested'] = 'Signature requested';
 $string['logsignedinperson'] = 'Signature collected in person';

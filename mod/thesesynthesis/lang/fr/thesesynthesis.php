@@ -55,6 +55,7 @@ $string['open'] = 'Ouvrir';
 $string['myjuries'] = 'Mes jurys';
 $string['nojuries'] = "Vous ne siégez dans aucun jury des promotions suivies.";
 $string['juryaccesspending'] = "Accès donné à la validation du jury par la DEVE";
+$string['juryaccessclosed'] = 'Accès clos (dossier clos ou soutenance passée)';
 $string['followed'] = 'Dossiers suivis';
 $string['nodossiers'] = 'Aucun dossier.';
 $string['allpromotions'] = 'Toutes les promotions';
