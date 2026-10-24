@@ -116,16 +116,34 @@ $links = array_map(function ($doctype) use ($pageparams) {
     );
 }, $doctypes);
 
+// Signataire connecté avec le compte de l'adresse invitée (membre du jury ayant un compte Moodle,
+// par exemple) : il peut reprendre ou enregistrer sa signature. Jamais pour une signature sur place.
+$signeremail = core_text::strtolower(trim((string) ($token !== '' ? $pending[0]->signeremail : '')));
+$allowsaved = !$inperson && $signeremail !== '' && isloggedin() && !isguestuser()
+    && core_text::strtolower(trim((string) $USER->email)) === $signeremail;
 $mform = new \mod_these\form\sign_form($PAGE->url, [
     'documents' => $links ? html_writer::alist($links) : '-',
-    'signername' => $signer['name'],
+    'signername' => $signer['name'] !== '' ? $signer['name'] : ($allowsaved ? fullname($USER) : ''),
+    'allowsaved' => $allowsaved,
 ]);
 $mform->set_data($pageparams);
 
 if ($doctypes && ($data = $mform->get_data())) {
-    $png = these_decode_signature_image($data->signaturedata);
+    if (!$allowsaved) {
+        unset($data->usesavedsignature, $data->savesignature);
+    }
+    $signature = these_signature_from_form($data);
     foreach ($doctypes as $doctype) {
-        these_sign_document($context, $dossier, $doctype, $slot, 0, $data->signername, $png, $signer['email']);
+        these_sign_document(
+            $context,
+            $dossier,
+            $doctype,
+            $slot,
+            $allowsaved ? $USER->id : 0,
+            $signature->name,
+            $signature->png,
+            $signer['email'] !== '' ? $signer['email'] : $pending[0]->signeremail ?? ''
+        );
     }
     if ($inperson) {
         these_log(

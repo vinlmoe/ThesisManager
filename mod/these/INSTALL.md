@@ -150,6 +150,21 @@ les signatures (*Suivi des signatures*), relance ou fait signer sur place.
   (*Déposer les corrections*), validé par le directeur, la bibliothèque puis la
   DEVE, qui clôt le dossier.
 
+- **Ajournement** : le dossier revient en *Dossier actif* (sujet, numéro et
+  rapport conservés) ; le PV d'ajournement est archivé, les documents générés et
+  les signatures de la soutenance sont supprimés, les accès du jury révoqués ;
+  l'étudiant dépose un nouveau dossier de soutenance.
+- **Agent DEVE signataire** (réglage du site *Agent DEVE signataire* :
+  identifiant ou adresse du compte) : l'équipe DEVE valide sans signer ; l'agent
+  reçoit un courriel et signe le visa du sujet et l'agrément administratif depuis
+  *Mes signatures* (`/mod/these/mysignatures.php`). Sans agent, la personne qui
+  valide signe.
+- **Signature enregistrée** : tout utilisateur connecté peut enregistrer sa
+  signature (fichier dans son contexte utilisateur, couvert par la confidentialité) ;
+  elle est reprise d'office aux signatures suivantes. Un signataire invité
+  connecté avec le compte de l'adresse invitée (président du jury, par exemple)
+  peut l'utiliser et retrouve ses documents dans *Mes signatures*.
+
 ## 3 ter. Transfert des paramètres
 
 *Transfert des paramètres* (DEVE, barre de navigation de l'activité) reprend les

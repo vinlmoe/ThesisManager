@@ -47,6 +47,18 @@ $PAGE->set_title(format_string($these->name) . ' - ' . get_string('managesignatu
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($context);
 
+if ($resend === 'agent' && confirm_sesskey()) {
+    $available = array_values(array_filter(array_keys(these_document_definitions()), function ($doctype) use ($dossier) {
+        return these_document_available($dossier, $doctype);
+    }));
+    $count = these_request_agent_signatures($these, $cm, $dossier, $available);
+    redirect(
+        $PAGE->url,
+        get_string($count ? 'signaturerequestsent' : 'signnothingpending', 'mod_these'),
+        null,
+        \core\output\notification::NOTIFY_SUCCESS
+    );
+}
 if ($resend !== '' && in_array($resend, these_external_slots(), true) && confirm_sesskey()) {
     $available = array_values(array_filter(array_keys(these_document_definitions()), function ($doctype) use ($dossier) {
         return these_document_available($dossier, $doctype);
@@ -98,6 +110,30 @@ foreach (these_external_slots() as $slot) {
         implode(', ', array_map('these_document_label', $pending)),
         $actions,
     ];
+}
+// Agent responsable de la DEVE : signe depuis « Mes signatures ».
+$agent = these_deve_agent();
+if ($agent) {
+    $pending = [];
+    foreach (these_agent_slots() as $slot) {
+        foreach (these_pending_documents_for_slot($dossier, $slot) as $doctype) {
+            if (these_agent_document_due($dossier, $doctype)) {
+                $pending[] = these_document_label($doctype) . ' (' . these_slot_label($slot) . ')';
+            }
+        }
+    }
+    if ($pending) {
+        $table->data[] = [
+            get_string('agentdeve', 'mod_these') . ' — ' . s(fullname($agent)),
+            s($agent->email),
+            implode(', ', $pending),
+            html_writer::link(
+                new moodle_url($PAGE->url, ['resend' => 'agent', 'sesskey' => sesskey()]),
+                get_string('resendsignature', 'mod_these'),
+                ['class' => 'btn btn-sm btn-secondary']
+            ),
+        ];
+    }
 }
 echo html_writer::tag('h4', get_string('externalsigners', 'mod_these'), ['class' => 'mt-4']);
 if ($table->data) {

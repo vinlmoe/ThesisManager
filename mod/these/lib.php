@@ -89,7 +89,8 @@ define('THESE_LIST_PERPAGE', 40);
  * these_dossier.id), et qui peut les consulter en plus de l'étudiant, de son directeur, de la DEVE
  * et de la bibliothèque. Voir these_can_view_filearea().
  */
-define('THESE_FILEAREAS', ['subjectdocs', 'manuscript', 'defensedocs', 'directorreport', 'generated', 'pv', 'corrections']);
+define('THESE_FILEAREAS', ['subjectdocs', 'manuscript', 'defensedocs', 'directorreport', 'generated', 'pv', 'corrections',
+    'pvadjourned']);
 
 /**
  * Returns the list of features supported by this module.

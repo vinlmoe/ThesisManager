@@ -67,6 +67,10 @@ $jury = these_get_jury($dossier->id);
 // Documents signés par l'acteur à la validation de cette étape.
 $signs = [];
 foreach ($step['sign'] as $slot => $doctypes) {
+    // Les emplacements de l'agent DEVE, quand il est désigné, sont signés par lui seul.
+    if (!these_signs_slot_at_validation($slot, $USER->id)) {
+        continue;
+    }
     foreach ($doctypes as $doctype) {
         if (in_array($slot, these_document_slots($dossier, $doctype), true)) {
             $signs[$doctype] = these_document_label($doctype);

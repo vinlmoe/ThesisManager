@@ -65,6 +65,15 @@
   title=À noter, boxrule=0.6pt, arc=2pt}
 \newtcolorbox{attention}{colback=orange!6, colframe=orange!80!black, fonttitle=\bfseries,
   title=Attention, boxrule=0.6pt, arc=2pt}
+% Procédure pas à pas : \begin{procedure}{Titre}{Qui}\begin{etapes}\item ...\end{etapes}\end{procedure}
+\newtcolorbox{procedure}[2]{breakable, enhanced, colback=white, colframe=moodle, boxrule=0.8pt, arc=2pt,
+  fonttitle=\bfseries\sffamily, title={#1}, after title={\hfill\normalfont\small\sffamily #2},
+  left=6pt, right=6pt, top=4pt, bottom=4pt}
+\newcommand{\numetape}[1]{{\setlength{\fboxsep}{1.5pt}\colorbox{moodle}{\makebox[1.1em]{\color{white}\small\bfseries\sffamily #1}}}}
+\newenvironment{etapes}{\begin{enumerate}[label={\protect\numetape{\arabic*}}, leftmargin=2.2em, itemsep=5pt]}{\end{enumerate}}
+% Résultat d'une procédure : ce qui se passe ensuite.
+\newcommand{\ensuite}[1]{\par\smallskip{\small\sffamily\textbf{\color{moodle}Ensuite~:} #1}\par}
+
 % Texte de courriel : \begin{courriel}{Sujet}...\end{courriel}
 \newtcolorbox{courriel}[1]{colback=black!3, colframe=black!40, boxrule=0.4pt, arc=1pt,
   fonttitle=\small\sffamily, coltitle=black, colbacktitle=black!10, title={Sujet : #1},

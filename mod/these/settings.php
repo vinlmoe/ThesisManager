@@ -85,6 +85,15 @@ if ($ADMIN->fulltree) {
         'ucblname' => 'M. Bruno Lina',
         'ucblemail' => '',
     ];
+    // Agent responsable de la DEVE : signe le visa du sujet et l'agrément administratif une fois que
+    // l'équipe de la DEVE a tout rempli et vérifié.
+    $settings->add(new admin_setting_configtext(
+        'mod_these/deveagent',
+        get_string('settingsdeveagent', 'mod_these'),
+        get_string('settingsdeveagent_desc', 'mod_these'),
+        '',
+        PARAM_TEXT
+    ));
     foreach ($texts as $name => $default) {
         $type = in_array($name, ['dgemail', 'ccememail', 'ucblemail'], true) ? PARAM_EMAIL : PARAM_TEXT;
         $settings->add(new admin_setting_configtext(
