@@ -192,7 +192,21 @@ signés.
   `subjectarchive`) ; l'ancien directeur, la DEVE et la bibliothèque reçoivent
   le courriel *subjectchanged* ; le nouveau sujet repasse la phase 1.
 
-## 3 ter. Transfert des paramètres
+## 3 ter. Planning des soutenances
+
+*Planning des soutenances* (`/mod/these/planning.php`, barre de navigation de
+l'activité ; DEVE, bibliothèque et `mod/these:viewall` pour toutes les
+soutenances, directeur pour les siennes) présente les soutenances de la semaine
+ou du mois, jour par jour, avec la date proposée ou arrêtée, le jury et le lieu.
+Une thèse y figure dès le dépôt du dossier de soutenance ; un dossier abandonné
+ou une thèse ajournée en sort. On passe d'une période à l'autre, on va à une
+date, et la vue semaine liste les semaines à venir qui ont des soutenances. Le
+planning de la période s'imprime (PDF en paysage, modèle de document
+*Planning des soutenances*, modifiable comme les autres) ou se télécharge en
+tableur (CSV, Excel, ODS). L'activité *Suivi des thèses* offre la même page pour
+toutes les promotions suivies.
+
+## 3 quater. Transfert des paramètres
 
 *Transfert des paramètres* (DEVE, barre de navigation de l'activité) reprend les
 paramètres d'une autre activité dont on est la DEVE, ou d'un fichier de

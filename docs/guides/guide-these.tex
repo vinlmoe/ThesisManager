@@ -543,6 +543,36 @@ du sujet et l'agrément administratif depuis \bouton{Mes signatures}. Sans agent
 désigné, la personne qui valide signe elle-même.
 \end{astuce}
 
+\subsection{Planning des soutenances}\label{sec:planning}
+
+Le bouton \bouton{Planning des soutenances} présente les soutenances de la
+semaine, jour par jour : heure, étudiant, titre, directeur, jury (président en
+tête), lieu, et l'état de la date (\og date proposée\fg{} par l'étudiant au
+dépôt, \og date arrêtée\fg{} une fois le dossier validé par la DEVE). Le nom
+de l'étudiant ouvre son dossier. Une thèse figure au planning dès le dépôt du
+dossier de soutenance ; un dossier abandonné ou une thèse ajournée en sort.
+
+\begin{procedure}{Retrouver une soutenance et éditer le planning du mois}{DEVE, bibliothèque, directeurs}
+\begin{etapes}
+  \item Ouvrez \bouton{Planning des soutenances} : la semaine en cours
+        s'affiche, avec la liste des semaines à venir qui ont des soutenances.
+  \item Passez d'une semaine à l'autre (\bouton{Semaine précédente},
+        \bouton{Semaine suivante}, \bouton{Cette semaine}), ou choisissez une
+        date dans \bouton{Aller au}.
+  \item Basculez sur \bouton{Par mois} pour voir tout un mois, puis
+        \bouton{Imprimer le planning mensuel (PDF)} : un tableau en paysage,
+        regroupé par jour, prêt à afficher ou à diffuser.
+  \item Le menu \bouton{Télécharger le planning de la période} produit le
+        même planning en tableur (CSV, Excel, ODS\ldots).
+\end{etapes}
+\end{procedure}
+
+La DEVE et la bibliothèque voient toutes les soutenances ; un directeur, celles
+des thèses qu'il dirige. La mise en forme du planning imprimé est un modèle de
+document comme les autres (\og Planning des soutenances\fg{},
+section~\ref{sec:modeles}) : la DEVE peut en changer l'en-tête, les colonnes ou
+le logo.
+
 \begin{procedure}{Enregistrer le sujet (phase 1)}{Équipe DEVE}
 \begin{etapes}
   \item Ouvrez le dossier (statut \statut{Sujet validé par le directeur}) et
@@ -1067,7 +1097,10 @@ thèses\fg{} (une par promotion) à suivre. Chacun y trouve :
   \item[Mes jurys] les jurys où il siège, avec la date, le lieu et l'accès aux
         documents dès la validation du jury par la DEVE ;
   \item[Dossiers suivis] ses thèses dirigées, ou tous les dossiers pour la DEVE
-        et la bibliothèque, filtrables par promotion, statut et recherche.
+        et la bibliothèque, filtrables par promotion, statut et recherche ;
+  \item[Planning des soutenances] les soutenances de la semaine ou du mois de
+        toutes les promotions suivies, avec la promotion de chaque étudiant, et
+        le planning mensuel imprimable (section~\ref{sec:planning}).
 \end{description}
 
 \capture[0.85\linewidth]{49_suivi_theses}{Suivi des thèses : jurys d'un enseignant.}

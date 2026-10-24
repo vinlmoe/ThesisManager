@@ -47,6 +47,13 @@ php admin/cli/upgrade.php
   réponses au questionnaire. La DEVE et la bibliothèque trouvent tous les
   dossiers des promotions où elles ont leurs droits ; un enseignant, les thèses
   enregistrées, non confidentielles et non abandonnées, et celles qu'il dirige.
+- **Planning des soutenances** : les soutenances de la semaine ou du mois de
+  toutes les promotions suivies, avec la promotion de chaque étudiant ;
+  navigation d'une semaine ou d'un mois à l'autre, accès à une date, semaines à
+  venir qui ont des soutenances, planning imprimable (PDF, modèle « Planning des
+  soutenances » des paramètres partagés) et téléchargeable en tableur. Toutes
+  les soutenances pour la DEVE et la bibliothèque, celles des thèses qu'il
+  dirige pour un directeur.
 
 L'activité ne stocke ni droit ni donnée de thèse (seulement les paramètres
 partagés : modèles, images, grille, questionnaire) : tout est relu à l'affichage

@@ -25,10 +25,11 @@ class behat_mod_these_generator extends behat_generator_base {
     /**
      * Entités créables : des dossiers directement à une étape du circuit.
      *
-     * | activity | user     | status | title        |
-     * | these1   | student1 | active | Leptospirose |
+     * | activity | user     | status    | title        | defensedate              | defenselocation |
+     * | these1   | student1 | scheduled | Leptospirose | ##monday next week 14:00## | Amphithéâtre A  |
      *
-     * Le statut est le nom d'une constante THESE_STATUS_* en minuscules (draft par défaut).
+     * Le statut est le nom d'une constante THESE_STATUS_* en minuscules (draft par défaut) ; titre,
+     * date et lieu de soutenance sont facultatifs.
      *
      * @return array
      */
@@ -58,8 +59,13 @@ class behat_mod_these_generator extends behat_generator_base {
             throw new Exception('Statut de dossier inconnu : ' . $data['status']);
         }
         $record = ['status' => constant($constant)];
-        if (isset($data['title'])) {
-            $record['title'] = $data['title'];
+        foreach (['title', 'defenselocation'] as $field) {
+            if (isset($data[$field])) {
+                $record[$field] = $data[$field];
+            }
+        }
+        if (isset($data['defensedate'])) {
+            $record['defensedate'] = $record['proposeddate'] = (int) $data['defensedate'];
         }
         $this->componentdatagenerator->create_dossier($theseid, $data['userid'], $record);
     }

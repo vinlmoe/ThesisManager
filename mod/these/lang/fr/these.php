@@ -118,6 +118,27 @@ $string['dormantphase'] = 'dossier dormant';
 
 // Navigation et listes.
 $string['dashboard'] = 'Tableau de bord';
+$string['planning'] = 'Planning des soutenances';
+$string['planningviewweek'] = 'Par semaine';
+$string['planningviewmonth'] = 'Par mois';
+$string['planningweekof'] = 'Semaine du {$a->start} au {$a->end}';
+$string['planningprevweek'] = 'Semaine précédente';
+$string['planningthisweek'] = 'Cette semaine';
+$string['planningnextweek'] = 'Semaine suivante';
+$string['planningprevmonth'] = 'Mois précédent';
+$string['planningthismonth'] = 'Ce mois-ci';
+$string['planningnextmonth'] = 'Mois suivant';
+$string['planninggoto'] = 'Aller au';
+$string['planningcount'] = '{$a} soutenance(s)';
+$string['planningnone'] = 'Aucune soutenance sur cette période.';
+$string['planningtime'] = 'Heure';
+$string['planningpromotion'] = 'Promotion';
+$string['planningconfirmed'] = 'Date arrêtée';
+$string['planningproposed'] = 'Date proposée';
+$string['planningpdfweek'] = 'Imprimer le planning de la semaine (PDF)';
+$string['planningpdfmonth'] = 'Imprimer le planning mensuel (PDF)';
+$string['planningdownload'] = 'Télécharger le planning de la période';
+$string['planningupcoming'] = 'Semaines à venir avec des soutenances';
 $string['todo'] = 'À traiter';
 $string['nothingtodo'] = "Aucune étape du circuit ne vous est attribuée dans cette activité.";
 $string['alldossiers'] = 'Tous les dossiers';
@@ -881,6 +902,7 @@ $string['doctplconformity'] = 'Attestation de conformité (bibliothèque)';
 $string['doctplconvocation'] = 'Convocation à la soutenance';
 $string['doctpljurysheet'] = 'Feuille de jury';
 $string['doctplminutes'] = 'Procès-verbal de soutenance';
+$string['doctplplanning'] = 'Planning des soutenances';
 
 // Transfert des paramètres.
 $string['transfersettings'] = 'Transfert des paramètres';

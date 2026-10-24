@@ -98,16 +98,21 @@ Bibliothèque ──conformité du manuscrit──▶ DEVE ──convocations, f
 - Un tableau de bord par acteur (« À traiter », décompte par statut, recherche),
   l'export du registre (CSV, Excel, ODS) et l'**import CSV** des sujets déjà
   enregistrés à la mise en service.
+- Un **planning des soutenances** par semaine ou par mois, dans chaque activité
+  et, pour toutes les promotions, dans « Suivi des thèses » : navigation d'une
+  période à l'autre, planning mensuel imprimable (PDF, modèle modifiable) et
+  téléchargeable en tableur.
 
 ## Qualité
 
 - Style : standard Moodle (`moodlehq/moodle-cs`), sans avertissement.
-- Tests PHPUnit (75 + 4 tests) : circuit complet, corrections, rapport, renvois,
+- Tests PHPUnit (78 + 5 tests) : circuit complet, corrections, rapport, renvois,
   droits, relances, documents générés, signatures et scellés, modèles,
   paramètres partagés, questionnaire, recherche, transfert des paramètres,
-  annuaire et jury, liens à jeton, opérations concurrentes, grille, conclusions,
+  annuaire et jury, liens à jeton, opérations concurrentes, planning, grille, conclusions,
   suivi multi-promotions, import, confidentialité, sauvegarde/restauration.
-- Tests Behat : création et consultation d'un dossier, liens invalides.
+- Tests Behat : création et consultation d'un dossier, liens invalides,
+  planning des soutenances.
 - CI GitHub Actions : phpcs, lint, validation du plugin, savepoints, PHPDoc,
   PHPUnit et Behat sur Moodle 4.1 LTS (PHP 8.0, MariaDB) et Moodle 4.5 LTS
   (PHP 8.2, PostgreSQL) ; production du guide PDF.

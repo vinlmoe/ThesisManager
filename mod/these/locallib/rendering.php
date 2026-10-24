@@ -166,6 +166,7 @@ function these_render_navlinks(stdClass $cm, context $context) {
     $links = [];
     if ($rights->viewall || has_capability('mod/these:direct', $context)) {
         $links[get_string('dashboard', 'mod_these')] = new moodle_url('/mod/these/dashboard.php', ['id' => $cm->id]);
+        $links[get_string('planning', 'mod_these')] = new moodle_url('/mod/these/planning.php', ['id' => $cm->id]);
     }
     if ($rights->deve) {
         $links[get_string('createdossier', 'mod_these')] = new moodle_url('/mod/these/create.php', ['id' => $cm->id]);

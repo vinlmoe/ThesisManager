@@ -4,6 +4,21 @@ Format : une section par version publiée de `mod_these` (et de `mod_thesesynthe
 quand il change), de la plus récente à la plus ancienne. Une version publiée est
 étiquetée `vX.Y.Z` ; la CI joint alors le guide PDF à la publication GitHub.
 
+## mod_these 0.10.0 (2026103102), mod_thesesynthesis 0.3.0 (2026102902)
+
+### Nouveautés
+
+- **Planning des soutenances** (`planning.php`, dans chaque activité et dans
+  « Suivi des thèses » pour toutes les promotions suivies) : soutenances de la
+  semaine ou du mois, jour par jour, avec date proposée ou arrêtée, jury et lieu ;
+  navigation d'une période à l'autre, accès à une date, semaines à venir qui ont
+  des soutenances ; planning imprimable en PDF (paysage) et téléchargeable en
+  tableur. Toutes les soutenances pour la DEVE et la bibliothèque, les siennes
+  pour un directeur.
+- Nouveau modèle de document « Planning des soutenances », modifiable par la
+  DEVE comme les autres ; les modèles acceptent l'orientation paysage
+  (`orientation="L"` dans la directive `@page`).
+
 ## mod_these 0.9.1 (2026103101), mod_thesesynthesis 0.2.1 (2026102901)
 
 ### Sécurité et intégrité

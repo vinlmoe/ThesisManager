@@ -47,6 +47,7 @@ function these_doctemplate_types() {
         'convocation' => null,
         'jurysheet' => null,
         'minutes' => null,
+        'planning' => null,
     ];
 }
 
@@ -909,6 +910,22 @@ function these_contract_template_problem() {
 }
 
 /**
+ * Données d'exemple d'un modèle : celles d'un dossier, ou celles d'un mois de soutenances pour le
+ * planning mensuel.
+ *
+ * @param stdClass|null $scope
+ * @param string $type Voir these_doctemplate_types().
+ * @param stdClass|null $activity Activité dont reprendre l'établissement.
+ * @return array
+ */
+function these_doctemplate_sample_context(?stdClass $scope, $type, ?stdClass $activity = null) {
+    if ($type === 'planning') {
+        return these_sample_planning_context($scope, $activity);
+    }
+    return these_sample_document_context($scope, $activity);
+}
+
+/**
  * Vérifie qu'un modèle produit un document avec les données d'exemple.
  *
  * @param stdClass $scope Voir these_settings_scope().
@@ -919,7 +936,7 @@ function these_contract_template_problem() {
  */
 function these_doctemplate_error(stdClass $scope, $type, $content, ?stdClass $activity = null) {
     try {
-        these_render_scope_doctemplate($scope, $type, these_sample_document_context($scope, $activity), $content);
+        these_render_scope_doctemplate($scope, $type, these_doctemplate_sample_context($scope, $type, $activity), $content);
     } catch (\Throwable $e) {
         return get_string('doctplerror', 'mod_these', $e->getMessage());
     }

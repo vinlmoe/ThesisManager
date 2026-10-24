@@ -1,0 +1,38 @@
+<!--@page margins="30,12,14,12" header="8" footer="9" font="freesans" size="9" lineheight="1.25" orientation="L"-->
+<!--@header-->
+<table cellpadding="0">
+  <tr>
+    <td width="60mm"><img src="{{img.vetagrosup}}" height="15mm" /></td>
+    <td width="213mm" align="right" style="font-size:8.5pt;color:#444444;"><br /><br />{{establishment.name}}<br />Planning des soutenances de thèse d’exercice vétérinaire</td>
+  </tr>
+</table>
+<!--@body-->
+<div style="text-align:center;font-size:15pt;font-weight:bold;">Planning des soutenances — {{period.label}}</div>
+<div style="text-align:center;font-size:9pt;color:#444444;">{{count}} soutenance(s) · édité le {{today}}</div>
+<br />
+{{^hasdefenses}}<p>Aucune soutenance n’est prévue sur cette période.</p>{{/hasdefenses}}
+{{#hasdefenses}}<table cellpadding="3" border="0.5">
+  <thead>
+    <tr style="background-color:#d9d9d9;font-weight:bold;">
+      <td width="20mm">Heure</td>
+      <td width="45mm">Étudiant</td>
+      <td width="78mm">Titre</td>
+      <td width="40mm">Directeur</td>
+      <td width="52mm">Jury</td>
+      <td width="38mm">Lieu</td>
+    </tr>
+  </thead>
+{{#days}}  <tr nobr="true" style="background-color:#eef2f7;">
+    <td width="273mm"><b>{{label}}</b></td>
+  </tr>
+{{#defenses}}  <tr nobr="true">
+    <td width="20mm">{{time}}{{^confirmed}}<br /><i style="font-size:7.5pt;">(date proposée)</i>{{/confirmed}}</td>
+    <td width="45mm">{{student}}{{#promotion}}<br /><span style="font-size:7.5pt;color:#444444;">{{promotion}}</span>{{/promotion}}</td>
+    <td width="78mm">{{title}}</td>
+    <td width="40mm">{{director}}</td>
+    <td width="52mm">{{#president}}<b>{{president}}</b> (président)<br />{{/president}}{{jury}}</td>
+    <td width="38mm">{{location}}</td>
+  </tr>
+{{/defenses}}{{/days}}</table>{{/hasdefenses}}
+<!--@footer-->
+<div style="font-size:8pt;text-align:right;color:#444444;">Page {{pagenumber}} / {{pagecount}}</div>

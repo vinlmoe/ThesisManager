@@ -116,6 +116,27 @@ $string['dormantphase'] = 'dormant file';
 
 // Navigation and lists.
 $string['dashboard'] = 'Dashboard';
+$string['planning'] = 'Defence schedule';
+$string['planningviewweek'] = 'By week';
+$string['planningviewmonth'] = 'By month';
+$string['planningweekof'] = 'Week of {$a->start} to {$a->end}';
+$string['planningprevweek'] = 'Previous week';
+$string['planningthisweek'] = 'This week';
+$string['planningnextweek'] = 'Next week';
+$string['planningprevmonth'] = 'Previous month';
+$string['planningthismonth'] = 'This month';
+$string['planningnextmonth'] = 'Next month';
+$string['planninggoto'] = 'Go to';
+$string['planningcount'] = '{$a} defence(s)';
+$string['planningnone'] = 'No defence in this period.';
+$string['planningtime'] = 'Time';
+$string['planningpromotion'] = 'Cohort';
+$string['planningconfirmed'] = 'Date confirmed';
+$string['planningproposed'] = 'Date proposed';
+$string['planningpdfweek'] = 'Print the week\'s schedule (PDF)';
+$string['planningpdfmonth'] = 'Print the monthly schedule (PDF)';
+$string['planningdownload'] = 'Download the schedule for this period';
+$string['planningupcoming'] = 'Upcoming weeks with defences';
 $string['todo'] = 'To do';
 $string['nothingtodo'] = 'No workflow step is assigned to you in this activity.';
 $string['alldossiers'] = 'All files';
@@ -875,6 +896,7 @@ $string['doctplconformity'] = 'Conformity certificate (library)';
 $string['doctplconvocation'] = 'Defence notice';
 $string['doctpljurysheet'] = 'Jury sheet';
 $string['doctplminutes'] = 'Defence minutes';
+$string['doctplplanning'] = 'Defence schedule';
 
 // Settings transfer.
 $string['transfersettings'] = 'Settings transfer';

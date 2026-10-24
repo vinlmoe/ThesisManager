@@ -59,3 +59,4 @@ require_once($CFG->dirroot . '/mod/these/locallib/settingstransfer.php');
 require_once($CFG->dirroot . '/mod/these/locallib/questionnaire.php');
 require_once($CFG->dirroot . '/mod/these/locallib/signatureagent.php');
 require_once($CFG->dirroot . '/mod/these/locallib/subjectchange.php');
+require_once($CFG->dirroot . '/mod/these/locallib/planning.php');

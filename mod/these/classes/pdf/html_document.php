@@ -34,7 +34,8 @@ require_once($CFG->libdir . '/pdflib.php');
  *
  * margins : haut, droite, bas, gauche (mm) ; header : position de l'en-tête depuis le haut de la
  * page ; footer : position du pied depuis le bas ; font et size : police et taille par défaut ;
- * lineheight : interligne. Sans section, tout le modèle est le contenu.
+ * lineheight : interligne ; orientation : P (portrait, par défaut) ou L (paysage). Sans section,
+ * tout le modèle est le contenu.
  *
  * @package   mod_these
  * @copyright 2026 Sébastien Lefebvre
@@ -63,6 +64,7 @@ class html_document extends \pdf {
             'font' => 'freesans',
             'size' => 10,
             'lineheight' => 1.25,
+            'orientation' => 'P',
         ];
     }
 
@@ -85,6 +87,8 @@ class html_document extends \pdf {
                     }
                 } else if (in_array($name, ['header', 'footer', 'size', 'lineheight'], true)) {
                     $layout[$name] = (float) $value;
+                } else if ($name === 'orientation') {
+                    $layout['orientation'] = strtoupper(substr(trim($value), 0, 1)) === 'L' ? 'L' : 'P';
                 } else if ($name === 'font') {
                     $layout['font'] = preg_replace('/[^a-z0-9]/', '', strtolower($value));
                 }
@@ -165,7 +169,7 @@ class html_document extends \pdf {
      * @return string Contenu PDF.
      */
     public static function render($template, array $context, $title = '') {
-        $pdf = new self('P', 'mm', 'A4', true, 'UTF-8');
+        $pdf = new self(self::parse($template)['layout']['orientation'], 'mm', 'A4', true, 'UTF-8');
         // Numéros de page : remplacés par TCPDF à la fin du document.
         $context['pagenumber'] = $pdf->getAliasNumPage();
         $context['pagecount'] = $pdf->getAliasNbPages();
