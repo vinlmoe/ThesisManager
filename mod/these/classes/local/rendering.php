@@ -521,28 +521,9 @@ class rendering {
      * @return string HTML
      */
     public static function render_embargo(stdClass $dossier, stdClass $rights) {
-        $bordereau = these_get_bordereau($dossier);
-        if (!$bordereau) {
-            return '';
-        }
-        $diffusion = (string) ($bordereau['diffusion'] ?? '');
-        $rows = [
-            get_string('diffusion', 'mod_these') => in_array($diffusion, ['internet', 'restricted'], true)
-                ? get_string('diffusion' . $diffusion, 'mod_these') : null,
-        ];
-        if (!empty($bordereau['embargo'])) {
-            $until = these_embargo_until($dossier);
-            $rows[get_string('embargo', 'mod_these')] = html_writer::span($until
-                ? get_string('embargorequested', 'mod_these', (object) [
-                    'years' => THESE_EMBARGO_YEARS,
-                    'until' => userdate($until, get_string('strftimedate', 'langconfig')),
-                ])
-                : get_string('embargorequestednodate', 'mod_these', THESE_EMBARGO_YEARS), 'badge badge-warning');
-            if ($rights->knowssubject && trim((string) ($bordereau['embargoreason'] ?? '')) !== '') {
-                $rows[get_string('embargoreason', 'mod_these')] = format_text((string) $bordereau['embargoreason'], FORMAT_PLAIN);
-            }
-        }
-        return these_render_detail_section(get_string('diffusion', 'mod_these'), $rows);
+        global $PAGE;
+
+        return $PAGE->get_renderer('mod_these')->render(new output\embargo($dossier, $rights));
     }
 
     /**
