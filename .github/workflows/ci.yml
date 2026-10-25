@@ -107,6 +107,9 @@ jobs:
 
       - name: Install moodle-plugin-ci
         run: |
+          # pdftotext (poppler-utils) : position des mots dans les PDF (tests de mise en page).
+          sudo apt-get update -q
+          sudo apt-get install -y -q --no-install-recommends poppler-utils
           composer create-project --no-interaction --no-dev --prefer-dist moodlehq/moodle-plugin-ci ci ^4
           echo "${GITHUB_WORKSPACE}/ci/bin" >> "$GITHUB_PATH"
           echo "${GITHUB_WORKSPACE}/ci/vendor/bin" >> "$GITHUB_PATH"
@@ -176,6 +179,8 @@ jobs:
         if: ${{ !cancelled() && steps.moodle_install.outcome == 'success' }}
         env:
           COVERAGE: ${{ matrix.coverage }}
+          # Les tests de mise en page des PDF échouent, au lieu d'être ignorés, si pdftotext manque.
+          MOD_THESE_REQUIRE_PDFTOTEXT: 1
         run: |
           # Couverture des tests mesurée sur une seule configuration (pcov), affichée dans le journal.
           options=""
