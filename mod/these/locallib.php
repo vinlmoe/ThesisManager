@@ -32,8 +32,10 @@
  * de nouveau, le dossier revenant alors directement à l'étape qui l'avait renvoyé) ou, pour la
  * DEVE, au directeur de thèse.
  *
- * Les fonctions sont réparties par domaine dans le dossier locallib/ ; ce fichier les charge
- * toutes et reste le seul point d'entrée à inclure.
+ * Le code métier est dans des classes autochargées, une par domaine (mod_these\local\workflow,
+ * rights, dossiers, jury, signatures, doctemplates, planning...). Les fonctions these_*() de
+ * locallib/, chargées par ce fichier, en sont des façades d'une ligne gardées pour les appelants
+ * existants ; ce fichier reste le seul à inclure (il définit aussi les constantes).
  *
  * @package   mod_these
  * @copyright 2026 Sébastien Lefebvre
