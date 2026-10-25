@@ -13,11 +13,12 @@ de version recalés sur la date. Les numéros entre parenthèses des sections de
 développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
 été étiquetée.
 
-## En cours (non publiée) — rendu par gabarits Mustache
+## mod_these 0.12.0, mod_thesesynthesis 0.4.0 (2026102502) — rendu par gabarits Mustache
 
 Passage du rendu HTML à l'architecture Moodle standard (composants `renderable`
 et `templatable`, gabarits Mustache, renderer de plugin), en quatre demandes de
-fusion. Affichage inchangé ; numéro de version augmenté à la dernière étape.
+fusion. Affichage inchangé, sans changement de schéma. Hors champ : documents
+PDF (TCPDF) et formulaires `moodleform`.
 
 - Étape 1, vue du dossier : renderer `mod_these\output\renderer` ; composants
   `status_badge`, `file_links`, `actions`, `detail_section`, `progress`,
@@ -46,6 +47,17 @@ fusion. Affichage inchangé ; numéro de version augmenté à la dernière étap
   mots-clés, le résumé et les réponses d'une thèse confidentielle n'entrent dans
   le contexte que pour qui connaît le sujet. Nouveau fragment `pdetails` (bloc
   dépliable) dans le partiel `mod_these/part`.
+- Étape 4, pages restantes : barre de navigation (`navlinks`) ; tableau de bord
+  (`status_counts`, `dossier_filter`) ; suivi des signatures
+  (`external_signers`) ; modèles de documents (`doctemplate_list`,
+  `doctemplate_variables`) ; questionnaire (`question_list`) ; annuaire du jury
+  (`juror_list`, `single_button_block`) ; mes signatures (`saved_signature`) ;
+  promotions suivies de `mod_thesesynthesis` (`links_form`). Composants
+  génériques pour les autres pages : `message`, `link`, `fragment`,
+  `bullet_list`, `table`. Les partiels `select` et `message` passent de
+  `mod_thesesynthesis` à `mod_these`, qui les partage ; nouveaux fragments
+  `pcode` et `pcheckbox`, cible des liens. `html_writer` ne sert plus qu'à la
+  construction des formulaires `moodleform`.
 - Les noms de personnes (étudiant, directeur, auteur d'une entrée d'historique)
   sont désormais échappés à l'affichage, comme le reste du texte.
 - Tests : un test par composant (contexte exporté, rendu du gabarit), dont un
