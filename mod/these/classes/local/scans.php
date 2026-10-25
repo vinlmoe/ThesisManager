@@ -76,7 +76,9 @@ class scans {
         $usercontext = \context_user::instance($userid);
         $drafts = $fs->get_area_files($usercontext->id, 'user', 'draft', $draftitemid, 'filename', false);
 
-        $prefix = userdate($signeddate, '%Y-%m-%d') . '-' . $doctype . '-' . clean_filename($signer);
+        // Nom lisible par un système d'archivage : date, document, signataire en minuscules sans accents.
+        $slug = trim(preg_replace('/[^a-z0-9]+/', '-', \core_text::strtolower(\core_text::specialtoascii($signer))), '-');
+        $prefix = userdate($signeddate, '%Y-%m-%d') . '-' . $doctype . ($slug !== '' ? '-' . $slug : '');
         $hashes = [];
         foreach ($drafts as $draft) {
             $filename = clean_filename($prefix . '-' . $draft->get_filename());

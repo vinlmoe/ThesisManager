@@ -4,7 +4,7 @@
 
 % Version du guide : à mettre à jour à chaque modification, avec une ligne dans l'historique.
 \newcommand{\titreguide}{Guide de la gestion des thèses}
-\newcommand{\versionguide}{2.2}
+\newcommand{\versionguide}{2.3}
 \newcommand{\dateguide}{25 octobre 2026}
 \newcommand{\versionthese}{0.13.0}
 
@@ -61,6 +61,11 @@ ajournement, documents générés et transmis, dossier complet) ; libellé du
 bouton d'envoi des liens de signature ; précision sur les scans signés. \\
 2.2 & 25 octobre 2026 & Scans des documents signés hors module, joints au
 dossier par la DEVE et inscrits à l'historique avec leur empreinte. \\
+2.3 & 25 octobre 2026 & Emplacement des documents pour l'archivage (zones,
+tables, chemins, adresses de téléchargement) ; captures refaites sur un Moodle de
+test : création et abandon d'un dossier, corrections validées par la
+bibliothèque, dépôt d'un scan signé, éligibilité du jury, convocation et
+procès-verbal générés. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -709,7 +714,7 @@ régénérez avant de transmettre de nouveau.}
 
 \capture[0.85\linewidth]{73_deve_documents}{Génération des documents de soutenance.}
 
-\capture[0.8\linewidth]{30_convocation}{Convocation générée en PDF pour un membre du jury.}
+\capture[0.8\linewidth]{30_convocation}{Convocation du président du jury, générée en PDF.}
 
 \capture[0.8\linewidth]{31_proces_verbal}{Procès-verbal généré en PDF, à cocher et signer le jour de la soutenance.}
 
@@ -786,6 +791,10 @@ décisions du jury.}
         l'historique.
 \end{description}
 
+\capture[0.85\linewidth]{95_deve_creer_dossier}{Création d'un dossier par la DEVE pour un étudiant inscrit qui n'en a pas.}
+
+\capture[0.85\linewidth]{96_deve_abandon_dossier}{Abandon d'un dossier : le motif est obligatoire.}
+
 \capture[0.85\linewidth]{85_sujets_precedents}{Trace d'un changement de sujet : sujets précédents et historique.}
 
 % ===========================================================================
@@ -861,6 +870,8 @@ DEVE génère les documents de soutenance.}
   \item Validez, ou renvoyez à l'étudiant avec le motif.
 \end{etapes}
 \end{procedure}
+
+\capture[0.85\linewidth]{97_biblio_corrections}{Validation des corrections par la bibliothèque.}
 
 % ===========================================================================
 \section{Membres du jury : pas à pas}
@@ -1142,9 +1153,17 @@ autres documents du dossier.
         \bouton{Enregistrer le scan}.
 \end{etapes}
 \ensuite{les fichiers figurent dans la rubrique \og Scans signés hors module\fg{}
-du dossier, visible de la DEVE et de ceux qui voient tout le dossier. Le dépôt est
-inscrit à l'historique avec l'empreinte SHA-256 de chaque fichier.}
+du dossier, visible comme les autres pièces du dossier (étudiant, directeur,
+DEVE, bibliothèque ; masquée, pour une thèse confidentielle, à qui n'en connaît
+pas le sujet). Le dépôt est inscrit à l'historique avec l'empreinte SHA-256 de
+chaque fichier.}
 \end{procedure}
+
+\capture[0.85\linewidth]{98_deve_scan_depot}{Dépôt du scan d'un contrat de diffusion signé à la main par la présidence de l'université.}
+
+\capture[0.85\linewidth]{99_dossier_scans}{Rubrique \og Scans signés hors module\fg{} du dossier : le nom du fichier porte la date, le document et le signataire.}
+
+\capture[0.85\linewidth]{100_historique_scan}{Historique : dépôt du scan, avec l'empreinte SHA-256 du fichier.}
 
 \begin{attention}
 Un scan déposé ne se supprime ni ne se remplace dans le module. Pour corriger un
@@ -1360,5 +1379,118 @@ sauvegarde d'une activité et ne sont protégés que par celle du serveur. Le
 transfert des paramètres (section~\ref{sec:transfert}) exporte la
 configuration d'une activité, jamais les dossiers.
 \end{attention}
+
+\subsection{Emplacement des documents pour l'archivage}\label{sec:archivage}
+
+Les documents d'un dossier ne sont pas rangés dans une arborescence de
+dossiers : ils sont gérés par l'API de fichiers de Moodle. Un gestionnaire
+électronique de documents (GED) ou un système d'archivage se connecte donc de
+l'une des deux façons suivantes, toujours en \textbf{lecture seule}.
+
+\paragraph{Par la base de données et le dossier \texttt{moodledata}.} Chaque
+fichier est décrit par une ligne de la table \texttt{mdl\_files} (préfixe
+\texttt{mdl\_} par défaut, voir \texttt{\$CFG->prefix}) :
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}l X@{}}
+\toprule
+\textbf{Champ} & \textbf{Valeur pour la gestion des thèses} \\
+\midrule
+\texttt{component} & \texttt{mod\_these} \\
+\texttt{contextid} & contexte de l'activité : ligne de \texttt{mdl\_context} de
+niveau 70 dont \texttt{instanceid} est l'identifiant du module de cours
+(le paramètre \texttt{id} des adresses \texttt{/mod/these/view.php?id=\ldots}) \\
+\texttt{filearea} & zone du document (tableau ci-dessous) \\
+\texttt{itemid} & identifiant du dossier (\texttt{mdl\_these\_dossier.id}, le
+paramètre \texttt{dossierid} des adresses), sauf pour la zone
+\texttt{signature} \\
+\texttt{filepath}, \texttt{filename} & toujours \texttt{/}, puis le nom du fichier \\
+\texttt{contenthash} & empreinte SHA-1 du contenu, qui donne l'emplacement
+physique du fichier \\
+\texttt{filesize}, \texttt{timecreated}, \texttt{timemodified} & taille et dates \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Le contenu se lit dans
+\texttt{<moodledata>/filedir/\textit{ab}/\textit{cd}/\textit{abcd\ldots}}, où
+\textit{ab} et \textit{cd} sont les deux premiers puis les deux caractères
+suivants du \texttt{contenthash}, et \textit{abcd\ldots} le \texttt{contenthash}
+complet. Les lignes dont le nom est \og .\fg{} désignent des répertoires et
+s'ignorent. La requête suivante liste les documents de toutes les activités,
+avec le numéro DEVE de chaque dossier :
+
+\begin{verbatim}
+SELECT d.id AS dossierid, d.devenumber, d.userid, f.filearea,
+       f.filename, f.contenthash, f.filesize, f.timemodified
+  FROM mdl_files f
+  JOIN mdl_context c ON c.id = f.contextid AND c.contextlevel = 70
+  JOIN mdl_course_modules cm ON cm.id = c.instanceid
+  JOIN mdl_modules m ON m.id = cm.module AND m.name = 'these'
+  JOIN mdl_these_dossier d ON d.id = f.itemid AND d.theseid = cm.instance
+ WHERE f.component = 'mod_these' AND f.filename <> '.'
+   AND f.filearea <> 'signature'
+ ORDER BY d.id, f.filearea, f.filename;
+\end{verbatim}
+
+\paragraph{Par le site, avec un compte de service.} Un compte qui a les droits
+de la DEVE ou de la bibliothèque télécharge :
+\begin{itemize}
+  \item les fichiers des zones déposées ou générées par
+        \nolinkurl{https://<site>/pluginfile.php/<contextid>/mod_these/<zone>/<dossierid>/<fichier>} ;
+  \item les documents de l'établissement, scellés ou dans leur état de
+        signature, par
+        \nolinkurl{https://<site>/mod/these/document.php?id=<module>&dossierid=<dossierid>&type=<document>},
+        \texttt{<document>} étant l'une des clés \texttt{subject},
+        \texttt{bordereau}, \texttt{report}, \texttt{grid}, \texttt{agreement},
+        \texttt{signaletique}, \texttt{contract}, \texttt{conformity},
+        \texttt{conclusions}. La zone \texttt{sealed} ne passe pas par
+        \texttt{pluginfile.php}.
+\end{itemize}
+
+\begin{center}
+\footnotesize
+\begin{tabularx}{\linewidth}{@{}l X X@{}}
+\toprule
+\textbf{Zone} & \textbf{Contenu} & \textbf{Nom des fichiers} \\
+\midrule
+\texttt{subjectdocs} & Pièces jointes au sujet par l'étudiant & nom d'origine \\
+\texttt{subjectarchive} & Dépôt de sujet signé, archivé à un changement de sujet
+& \texttt{sujet-AAAA-MM-JJ-<n>.pdf} \\
+\texttt{manuscript} & Manuscrit déposé pour la soutenance (un PDF) & nom d'origine \\
+\texttt{defensedocs} & Autres documents de soutenance & nom d'origine \\
+\texttt{directorreport} & Pièces jointes au rapport du directeur & nom d'origine \\
+\texttt{generated} & Documents de soutenance générés, remplacés à chaque
+génération et supprimés à un ajournement : convocations, feuille de jury,
+procès-verbal à remplir, documents de l'établissement dans leur état de
+signature & \texttt{convocation-etudiant.pdf},
+\texttt{convocation-jury-<n>-<nom>.pdf}, \texttt{feuille-de-jury.pdf},
+\texttt{proces-verbal.pdf}, \texttt{<document>.pdf} \\
+\texttt{sealed} & Documents entièrement signés, figés ; leur empreinte SHA-256
+est à l'historique & \texttt{<document>.pdf} \\
+\texttt{pv} & Procès-verbal signé par le jury, scanné & nom d'origine \\
+\texttt{pvadjourned} & Procès-verbaux d'ajournement archivés &
+\texttt{ajournement-AAAA-MM-JJ-<nom d'origine>} \\
+\texttt{corrections} & Manuscrit corrigé & nom d'origine \\
+\texttt{signedscan} & Scans des documents signés hors module
+(section~\ref{sec:scans}) &
+\texttt{AAAA-MM-JJ-<document>-<signataire>-<nom d'origine>}, signataire en
+minuscules sans accents \\
+\texttt{signature} & Tracé de chaque signature (\texttt{itemid} :
+\texttt{mdl\_these\_signature.id}) & \texttt{signature.png} \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{astuce}
+Pour un archivage définitif, retenir les zones dont le contenu ne change plus :
+\texttt{sealed}, \texttt{pv}, \texttt{pvadjourned}, \texttt{subjectarchive},
+\texttt{signedscan}, et le manuscrit de \texttt{corrections} ou, sans
+corrections, de \texttt{manuscript}. Les métadonnées du dossier sont dans
+\texttt{mdl\_these\_dossier} (numéro DEVE, titre, dates, décisions du jury), et
+son historique, empreintes comprises, dans \texttt{mdl\_these\_log}. Le
+connecteur ne doit jamais écrire dans \texttt{filedir} ni dans ces tables.
+\end{astuce}
 
 \end{document}
