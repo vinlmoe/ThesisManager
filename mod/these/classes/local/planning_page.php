@@ -16,7 +16,7 @@
 
 namespace mod_these\local;
 
-use html_writer;
+use mod_these\output;
 use moodle_url;
 
 /**
@@ -54,7 +54,7 @@ class planning_page {
         $heading,
         $navigation = ''
     ) {
-        global $OUTPUT, $USER;
+        global $OUTPUT, $PAGE, $USER;
 
         $view = optional_param('view', 'week', PARAM_ALPHA) === 'month' ? 'month' : 'week';
         $date = optional_param('date', 0, PARAM_INT) ?: time();
@@ -122,61 +122,17 @@ class planning_page {
             die();
         }
 
-        $url = function (array $params) use ($baseurl, $view) {
-            return new moodle_url($baseurl, array_merge(['view' => $view], $params));
-        };
-
+        $renderer = $PAGE->get_renderer('mod_these');
         echo $OUTPUT->header();
         echo $OUTPUT->heading($heading);
         echo $navigation;
-
-        // Vue par semaine ou par mois.
-        $views = [];
-        foreach (['week' => 'planningviewweek', 'month' => 'planningviewmonth'] as $name => $string) {
-            $views[] = html_writer::link(
-                new moodle_url($baseurl, ['view' => $name, 'date' => $from]),
-                get_string($string, 'mod_these'),
-                ['class' => 'btn btn-sm ' . ($name === $view ? 'btn-primary' : 'btn-outline-primary') . ' mr-1']
-            );
-        }
-        echo html_writer::div(implode('', $views), 'mb-3');
-
-        // Période précédente, courante, suivante, et accès à une date.
-        $suffix = $view === 'week' ? 'week' : 'month';
-        $button = function ($date, $text, $class) use ($url) {
-            return html_writer::link($url(['date' => $date]), $text, ['class' => 'btn btn-secondary mb-1 ' . $class]);
-        };
-        $navlinks = [
-            $button($previous, '« ' . get_string('planningprev' . $suffix, 'mod_these'), 'mr-1'),
-            $button($current, get_string('planningthis' . $suffix, 'mod_these'), 'mr-1' . ($current === $from ? ' active' : '')),
-            $button($next, get_string('planningnext' . $suffix, 'mod_these') . ' »', 'mr-3'),
-        ];
-        $form = html_writer::start_tag('form', ['method' => 'get', 'action' => $baseurl->out_omit_querystring(),
-            'class' => 'form-inline d-inline-flex mb-1']);
-        foreach ($baseurl->params() as $name => $value) {
-            $form .= html_writer::empty_tag('input', ['type' => 'hidden', 'name' => $name, 'value' => $value]);
-        }
-        $form .= html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'view', 'value' => $view]);
-        $form .= html_writer::label(get_string('planninggoto', 'mod_these'), 'these-planning-goto', true, ['class' => 'mr-1']);
-        $form .= html_writer::empty_tag('input', ['type' => 'date', 'name' => 'goto', 'id' => 'these-planning-goto',
-            'value' => userdate($date, '%Y-%m-%d'), 'class' => 'form-control mr-1']);
-        $form .= html_writer::empty_tag('input', ['type' => 'submit', 'value' => get_string('go'),
-            'class' => 'btn btn-secondary']);
-        $form .= html_writer::end_tag('form');
-        echo html_writer::div(implode('', $navlinks) . $form, 'these-planning-nav mb-3');
+        echo $renderer->render(new output\planning_nav($baseurl, $view, $from, $previous, $current, $next, $date));
 
         echo $OUTPUT->heading($label . ' — ' . get_string('planningcount', 'mod_these', count($defenses)), 3);
         echo these_render_planning($defenses, $showpromotion);
 
         // Impression et téléchargement de la période affichée.
-        echo html_writer::div(
-            html_writer::link(
-                $url(['date' => $from, 'format' => 'pdf']),
-                get_string($view === 'month' ? 'planningpdfmonth' : 'planningpdfweek', 'mod_these'),
-                ['class' => 'btn btn-primary']
-            ),
-            'mt-3 mb-2'
-        );
+        echo $renderer->render(new output\planning_print($baseurl, $view, $from));
         echo $OUTPUT->download_dataformat_selector(
             get_string('planningdownload', 'mod_these'),
             $baseurl->out_omit_querystring(),
@@ -186,18 +142,10 @@ class planning_page {
 
         // Semaines à venir qui ont des soutenances.
         if ($view === 'week') {
-            $start = max($current, $next);
-            $counts = these_count_defenses_by_week($sources, $start, self::UPCOMING_WEEKS, $USER->id);
+            $counts = these_count_defenses_by_week($sources, max($current, $next), self::UPCOMING_WEEKS, $USER->id);
             if ($counts) {
-                $items = [];
-                foreach ($counts as $week => $count) {
-                    $items[] = html_writer::link($url(['date' => $week]), get_string('planningweekof', 'mod_these', (object) [
-                        'start' => userdate($week, get_string('strftimedate', 'langconfig')),
-                        'end' => userdate(these_planning_shift_week($week, 1) - DAYSECS, get_string('strftimedate', 'langconfig')),
-                    ])) . ' — ' . get_string('planningcount', 'mod_these', $count);
-                }
                 echo $OUTPUT->heading(get_string('planningupcoming', 'mod_these'), 4, 'mt-4');
-                echo html_writer::alist($items);
+                echo $renderer->render(new output\planning_upcoming($baseurl, $counts));
             }
         }
 
