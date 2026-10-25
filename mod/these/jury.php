@@ -37,6 +37,9 @@
 require(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/these/locallib.php');
 
+use mod_these\output;
+use mod_these\output\parts;
+
 $token = optional_param('token', '', PARAM_ALPHANUM);
 $memberid = optional_param('member', 0, PARAM_INT);
 $area = optional_param('area', '', PARAM_ALPHA);
@@ -96,53 +99,60 @@ $date = (int) ($dossier->defensedate ?: $dossier->proposeddate);
 
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('juryaccess', 'mod_these'));
-echo html_writer::div(get_string('juryaccessintro', 'mod_these', (object) [
-    'name' => s(trim($member->jurytitle . ' ' . $member->fullname)),
-    'role' => s($roles[$member->juryrole] ?? $member->juryrole),
-]), 'mb-3');
+$renderer = $PAGE->get_renderer('mod_these');
+echo $renderer->render(new output\message(get_string('juryaccessintro', 'mod_these', (object) [
+    'name' => trim($member->jurytitle . ' ' . $member->fullname),
+    'role' => $roles[$member->juryrole] ?? $member->juryrole,
+]), 'mb-3'));
 
-$table = new html_table();
-$table->attributes['class'] = 'generaltable';
-$table->data = [
-    [get_string('student', 'mod_these'), s($student ? fullname($student) : '-')],
-    [get_string('subjecttitle', 'mod_these'), format_string($dossier->title)],
-    [get_string('defensedate', 'mod_these'), $date ? userdate($date, get_string('strftimedaydatetime', 'langconfig')) : '-'],
-    [get_string('defenselocation', 'mod_these'), s($dossier->defenselocation)],
-];
-echo html_writer::table($table);
+// Le membre du jury connaît le sujet (voir these_user_knows_subject()) : le titre est affiché.
+echo $renderer->render(new output\table([], [
+    [[parts::text(get_string('student', 'mod_these'))], [parts::text($student ? fullname($student) : '-')]],
+    [[parts::text(get_string('subjecttitle', 'mod_these'))], [parts::html(format_string($dossier->title))]],
+    [[parts::text(get_string('defensedate', 'mod_these'))],
+        [parts::text($date ? userdate($date, get_string('strftimedaydatetime', 'langconfig')) : '-')]],
+    [[parts::text(get_string('defenselocation', 'mod_these'))], [parts::text($dossier->defenselocation)]],
+]));
 
-$jury = new html_table();
-$jury->head = [
+$rows = [];
+foreach (these_get_jury($dossier->id) as $juror) {
+    $rows[] = [
+        [parts::text($roles[$juror->juryrole] ?? $juror->juryrole)],
+        [parts::text(trim($juror->jurytitle . ' ' . $juror->fullname))],
+        [parts::text($juror->institution)],
+    ];
+}
+echo $OUTPUT->heading(get_string('jury', 'mod_these'), 3);
+echo $renderer->render(new output\table([
     get_string('juryrole', 'mod_these'),
     get_string('juryname', 'mod_these'),
     get_string('juryinstitution', 'mod_these'),
-];
-$jury->attributes['class'] = 'generaltable';
-foreach (these_get_jury($dossier->id) as $juror) {
-    $jury->data[] = [s($roles[$juror->juryrole] ?? $juror->juryrole), s(trim($juror->jurytitle . ' ' . $juror->fullname)),
-        s($juror->institution)];
-}
-echo $OUTPUT->heading(get_string('jury', 'mod_these'), 3);
-echo html_writer::table($jury);
+], $rows));
 echo these_render_answers($these, $dossier);
 
 $links = [];
 foreach ($allowed['areas'] as $filearea) {
     foreach (these_get_files($context, $filearea, $dossier->id) as $file) {
-        $links[] = html_writer::link(
-            new moodle_url('/mod/these/jury.php', $pageparams + ['area' => $filearea, 'file' => $file->get_filename()]),
-            s($file->get_filename())
-        ) . ' — ' . get_string($filearea, 'mod_these');
+        $links[] = [
+            parts::link(
+                new moodle_url('/mod/these/jury.php', $pageparams + ['area' => $filearea, 'file' => $file->get_filename()]),
+                $file->get_filename(),
+                ''
+            ),
+            parts::text(' — ' . get_string($filearea, 'mod_these')),
+        ];
     }
 }
 foreach ($allowed['documents'] as $doctype) {
     if (these_document_available($dossier, $doctype)) {
-        $links[] = html_writer::link(
+        $links[] = [parts::link(
             new moodle_url('/mod/these/jury.php', $pageparams + ['doc' => $doctype]),
-            these_document_label($doctype)
-        );
+            these_document_label($doctype),
+            ''
+        )];
     }
 }
 echo $OUTPUT->heading(get_string('juryaccessdocuments', 'mod_these'), 3);
-echo $links ? html_writer::alist($links) : $OUTPUT->notification(get_string('juryaccessnodocuments', 'mod_these'), 'info');
+echo $links ? $renderer->render(new output\bullet_list($links))
+    : $OUTPUT->notification(get_string('juryaccessnodocuments', 'mod_these'), 'info');
 echo $OUTPUT->footer();

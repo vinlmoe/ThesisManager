@@ -66,7 +66,7 @@ $renderer = $PAGE->get_renderer('mod_thesesynthesis');
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('searchtheses', 'mod_thesesynthesis'));
 echo thesesynthesis_render_navlinks($cm, $context);
-echo $renderer->render(new output\message(get_string('searchtheses_desc', 'mod_thesesynthesis'), 'mb-3'));
+echo $renderer->render(new \mod_these\output\message(get_string('searchtheses_desc', 'mod_thesesynthesis'), 'mb-3'));
 if (!$links) {
     echo $OUTPUT->notification(get_string('nolinks', 'mod_thesesynthesis'), 'info');
     echo $OUTPUT->footer();

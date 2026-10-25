@@ -24,6 +24,9 @@
 
 require(__DIR__ . '/../../config.php');
 
+use mod_these\output;
+use mod_these\output\parts;
+
 $id = required_param('id', PARAM_INT);
 $course = get_course($id);
 
@@ -45,14 +48,14 @@ if (empty($instances)) {
     exit;
 }
 
-$table = new html_table();
-$table->head = [get_string('name')];
+$rows = [];
 foreach ($instances as $instance) {
-    $table->data[] = [html_writer::link(
+    $rows[] = [[parts::link(
         new moodle_url('/mod/these/view.php', ['id' => $instance->coursemodule]),
-        format_string($instance->name)
-    )];
+        format_string($instance->name, true, ['escape' => false]),
+        ''
+    )]];
 }
-echo html_writer::table($table);
+echo $PAGE->get_renderer('mod_these')->render(new output\table([get_string('name')], $rows));
 
 echo $OUTPUT->footer();

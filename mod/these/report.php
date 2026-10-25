@@ -27,6 +27,9 @@
 require(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/these/locallib.php');
 
+use mod_these\output;
+use mod_these\output\parts;
+
 use mod_these\form\report_form;
 
 $id = required_param('id', PARAM_INT);
@@ -101,11 +104,15 @@ if ($mform->is_cancelled()) {
 }
 
 $student = $DB->get_record('user', ['id' => $dossier->userid]);
+$renderer = $PAGE->get_renderer('mod_these');
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('writereport', 'mod_these'));
-echo html_writer::link($dossierurl, get_string('back'));
-echo $OUTPUT->box(get_string('dossierof', 'mod_these', $student ? fullname($student) : '-') . html_writer::empty_tag('br')
-    . format_string($dossier->title), 'generalbox my-3');
-echo html_writer::div(get_string('writereport_desc', 'mod_these'), 'mb-3');
+echo $renderer->render(new output\link($dossierurl, get_string('back')));
+echo $OUTPUT->box($renderer->render(new output\fragment([
+    parts::text(get_string('dossierof', 'mod_these', $student ? fullname($student) : '-')),
+    parts::br(),
+    parts::html(format_string($dossier->title)),
+])), 'generalbox my-3');
+echo $renderer->render(new output\message(get_string('writereport_desc', 'mod_these'), 'mb-3'));
 $mform->display();
 echo $OUTPUT->footer();

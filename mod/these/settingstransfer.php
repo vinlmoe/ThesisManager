@@ -28,6 +28,8 @@
 require(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/these/locallib.php');
 
+use mod_these\output;
+
 use mod_these\form\settings_transfer_form;
 
 $id = required_param('id', PARAM_INT);
@@ -88,7 +90,8 @@ if ($mode === 'import') {
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('transfersettings', 'mod_these'));
 echo these_render_navlinks($cm, $context);
-echo html_writer::div(get_string('transfersettings_desc', 'mod_these'), 'mb-3');
+$renderer = $PAGE->get_renderer('mod_these');
+echo $renderer->render(new output\message(get_string('transfersettings_desc', 'mod_these'), 'mb-3'));
 
 if ($result) {
     $lines = [];
@@ -101,12 +104,12 @@ if ($result) {
         }
     }
     echo $OUTPUT->notification(
-        get_string('transferdone', 'mod_these', s($origin)) . html_writer::alist($lines),
+        get_string('transferdone', 'mod_these', s($origin)) . $renderer->render(new output\bullet_list($lines)),
         \core\output\notification::NOTIFY_SUCCESS
     );
     if ($result->skipped) {
         echo $OUTPUT->notification(
-            get_string('transferskipped', 'mod_these') . html_writer::alist(array_map('s', $result->skipped)),
+            get_string('transferskipped', 'mod_these') . $renderer->render(new output\bullet_list($result->skipped)),
             \core\output\notification::NOTIFY_WARNING
         );
     }
@@ -115,6 +118,6 @@ if ($result) {
 echo $OUTPUT->heading(get_string('transferimportheading', 'mod_these'), 3, 'mt-4');
 $importform->display();
 echo $OUTPUT->heading(get_string('transferexportheading', 'mod_these'), 3, 'mt-4');
-echo html_writer::div(get_string('transferexport_desc', 'mod_these'), 'mb-2');
+echo $renderer->render(new output\message(get_string('transferexport_desc', 'mod_these'), 'mb-2'));
 $exportform->display();
 echo $OUTPUT->footer();

@@ -35,6 +35,8 @@ class file_links implements \renderable, \templatable {
     protected $filearea;
     /** @var int */
     protected $dossierid;
+    /** @var string */
+    protected $divclass;
     /** @var array|null Liens, calculés une fois. */
     protected $files = null;
 
@@ -44,11 +46,13 @@ class file_links implements \renderable, \templatable {
      * @param context $context Contexte de l'activité.
      * @param string $filearea
      * @param int $dossierid
+     * @param string $divclass Classes CSS d'un bloc autour des liens (vide : pas de bloc).
      */
-    public function __construct(context $context, $filearea, $dossierid) {
+    public function __construct(context $context, $filearea, $dossierid, $divclass = '') {
         $this->context = $context;
         $this->filearea = (string) $filearea;
         $this->dossierid = (int) $dossierid;
+        $this->divclass = (string) $divclass;
     }
 
     /**
@@ -92,9 +96,9 @@ class file_links implements \renderable, \templatable {
      * Données du gabarit mod_these/file_links.
      *
      * @param \renderer_base $output
-     * @return array files (url, filename, separator)
+     * @return array files (url, filename, separator), divclass
      */
     public function export_for_template(\renderer_base $output): array {
-        return ['files' => $this->get_files()];
+        return ['files' => $this->get_files(), 'divclass' => $this->divclass];
     }
 }

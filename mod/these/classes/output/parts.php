@@ -33,7 +33,7 @@ namespace mod_these\output;
 class parts {
     /** @var string[] Clés de type d'un fragment. */
     const TYPES = ['ptext', 'phtml', 'pstrong', 'pstronghtml', 'pem', 'pbadge', 'pspan', 'plink', 'pmuted', 'pbr',
-        'pfiles', 'pstatus', 'pdetails'];
+        'pfiles', 'pstatus', 'pdetails', 'pcode', 'pcheckbox'];
 
     /**
      * Fragment d'un type donné.
@@ -126,10 +126,34 @@ class parts {
      * @param \moodle_url $url
      * @param string $value
      * @param string $class
+     * @param string $target Cible (_blank : nouvel onglet), vide par défaut.
      * @return array
      */
-    public static function link(\moodle_url $url, string $value, string $class): array {
-        return self::make('plink', ['url' => $url->out(false), 'value' => $value, 'class' => $class]);
+    public static function link(\moodle_url $url, string $value, string $class, string $target = ''): array {
+        return self::make('plink', ['url' => $url->out(false), 'value' => $value, 'class' => $class, 'target' => $target]);
+    }
+
+    /**
+     * Texte en police à chasse fixe (nom de variable d'un modèle).
+     *
+     * @param string $value
+     * @return array
+     */
+    public static function code(string $value): array {
+        return self::make('pcode', ['value' => $value]);
+    }
+
+    /**
+     * Case à cocher.
+     *
+     * @param string $name
+     * @param string $value
+     * @param bool $checked
+     * @param string $id
+     * @return array
+     */
+    public static function checkbox(string $name, string $value, bool $checked, string $id): array {
+        return self::make('pcheckbox', ['name' => $name, 'value' => $value, 'checked' => $checked, 'id' => $id]);
     }
 
     /**

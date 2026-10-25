@@ -45,15 +45,14 @@ if (empty($instances)) {
     exit;
 }
 
-$table = new html_table();
-$table->head = [get_string('name')];
+$rows = [];
 foreach ($instances as $instance) {
-    $link = html_writer::link(
+    $rows[] = [[\mod_these\output\parts::link(
         new moodle_url('/mod/thesesynthesis/view.php', ['id' => $instance->coursemodule]),
-        format_string($instance->name)
-    );
-    $table->data[] = [$link];
+        format_string($instance->name, true, ['escape' => false]),
+        ''
+    )]];
 }
-echo html_writer::table($table);
+echo $PAGE->get_renderer('mod_these')->render(new \mod_these\output\table([get_string('name')], $rows));
 
 echo $OUTPUT->footer();

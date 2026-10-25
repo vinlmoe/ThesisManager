@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace mod_thesesynthesis\output;
+namespace mod_these\output;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -22,31 +22,35 @@ global $CFG;
 require_once(__DIR__ . '/output_testcase.php');
 
 /**
- * Message en bloc.
+ * Bouton du cœur dans un bloc.
  *
- * @package    mod_thesesynthesis
+ * @package    mod_these
  * @copyright  2026 Sébastien Lefebvre
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \mod_thesesynthesis\output\message
+ * @covers     \mod_these\output\single_button_block
  */
-final class message_test extends output_testcase {
+final class single_button_block_test extends output_testcase {
     /**
-     * Contexte : texte et classes.
+     * Contexte : bloc et contexte du bouton du cœur.
      */
     public function test_export_for_template(): void {
         $this->resetAfterTest();
-        $this->assertSame(
-            ['text' => 'Un & deux', 'class' => 'alert alert-info'],
-            (new message('Un & deux'))->export_for_template($this->renderer())
-        );
+        $data = (new single_button_block(new \moodle_url('/a.php', ['x' => 1]), 'Ajouter', 'get'))
+            ->export_for_template($this->renderer());
+        $this->assertSame('mb-3', $data['divclass']);
+        $this->assertSame('get', $data['button']->method);
+        $this->assertSame('Ajouter', $data['button']->label);
     }
 
     /**
-     * Rendu : texte échappé dans le bloc.
+     * Rendu : le bouton du cœur (formulaire GET vers l'adresse) dans le bloc.
      */
     public function test_render(): void {
         $this->resetAfterTest();
-        $html = $this->renderer()->render(new message('Un & <deux>', 'mb-3'));
-        $this->assertSame('<div class="mb-3">Un &amp; &lt;deux&gt;</div>', $html);
+        $html = $this->renderer()->render(new single_button_block(new \moodle_url('/a.php'), 'Ajouter', 'get'));
+        $this->assertStringStartsWith('<div class="mb-3">', $html);
+        $this->assertStringEndsWith('</div>', $html);
+        $this->assertMatchesRegularExpression('#<form method="get" action="https://www.example.com/moodle/a.php"#', $html);
+        $this->assertStringContainsString('Ajouter', $html);
     }
 }

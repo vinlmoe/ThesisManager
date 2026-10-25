@@ -15,9 +15,9 @@
     along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 }}
 {{!
-    @template mod_thesesynthesis/message
+    @template mod_these/doctemplate_list
 
-    Message en bloc : introduction d'une page ou alerte d'information.
+    Liste des modèles de documents : état (d'origine ou modifié) et actions.
 
     Classes required for JS:
     * none
@@ -26,10 +26,9 @@
     * none
 
     Context variables required for this template:
-    * text Texte brut.
-    * class Classes CSS du bloc.
+    * tableclass, hashead, head, rows Voir mod_these/table.
 
     Example context (json):
-    {"text": "Aucune thèse ne correspond à la recherche.", "class": "alert alert-info"}
+    {"tableclass": "generaltable", "hashead": true, "head": [{"text": "Nom", "class": "header c0 lastcol", "isth": true}], "rows": [{"class": "lastrow", "cells": [{"class": "cell c0 lastcol", "parts": [{"ptext": {"value": "Exemple"}, "phtml": false, "pstrong": false, "pstronghtml": false, "pem": false, "pbadge": false, "pspan": false, "plink": false, "pmuted": false, "pbr": false, "pfiles": false, "pstatus": false, "pdetails": false, "pcode": false, "pcheckbox": false}]}]}]}
 }}
-<div class="{{class}}">{{text}}</div>
+{{> mod_these/table}}

@@ -29,7 +29,7 @@
     Context variables required for this template:
     * action Adresse du formulaire.
     * cmid Module de l'activité de suivi.
-    * promotions, statuses Contextes de mod_thesesynthesis/select.
+    * promotions, statuses Contextes de mod_these/select.
     * search Texte recherché.
     * placeholder, filterlabel Libellés.
 
@@ -46,4 +46,4 @@
         "filterlabel": "Filtrer"
     }
 }}
-<form method="get" action="{{action}}" class="form-inline mb-3"><input type="hidden" name="id" value="{{cmid}}" />{{#promotions}}{{> mod_thesesynthesis/select}}{{/promotions}}{{#statuses}}{{> mod_thesesynthesis/select}}{{/statuses}}<input type="text" name="search" value="{{search}}" class="form-control mr-2 mb-1" placeholder="{{placeholder}}" /><button type="submit" class="btn btn-secondary mb-1">{{filterlabel}}</button></form>
+<form method="get" action="{{action}}" class="form-inline mb-3"><input type="hidden" name="id" value="{{cmid}}" />{{#promotions}}{{> mod_these/select}}{{/promotions}}{{#statuses}}{{> mod_these/select}}{{/statuses}}<input type="text" name="search" value="{{search}}" class="form-control mr-2 mb-1" placeholder="{{placeholder}}" /><button type="submit" class="btn btn-secondary mb-1">{{filterlabel}}</button></form>

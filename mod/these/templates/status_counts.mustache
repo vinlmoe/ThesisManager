@@ -1,0 +1,43 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_these/status_counts
+
+    Décompte des dossiers par statut, en badges cliquables séparés par une espace. Rien n'est rendu
+    sans dossier.
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * none
+
+    Context variables required for this template:
+    * hasbadges Au moins un statut a des dossiers.
+    * badges Badges : label, url, class, separator (espace avant le badge).
+
+    Example context (json):
+    {"hasbadges": true, "badges": [
+        {"label": "Dossier actif : 3", "url": "https://example.com/mod/these/dashboard.php?id=2&status=40",
+            "class": "badge badge-success mr-1 mb-1 p-2", "separator": false},
+        {"label": "Dossier clos : 1", "url": "https://example.com/mod/these/dashboard.php?id=2&status=100",
+            "class": "badge badge-dark mr-1 mb-1 p-2", "separator": true}
+    ]}
+}}
+{{#hasbadges}}
+<div class="these-counts mb-3">{{#badges}}{{#separator}} {{/separator}}<a href="{{url}}" class="{{class}}">{{label}}</a>{{/badges}}</div>
+{{/hasbadges}}

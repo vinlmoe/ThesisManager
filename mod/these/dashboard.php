@@ -28,6 +28,8 @@
 require(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/these/locallib.php');
 
+use mod_these\output;
+
 $id = required_param('id', PARAM_INT);
 $statusfilter = optional_param('status', '', PARAM_RAW_TRIMMED);
 $search = optional_param('search', '', PARAM_TEXT);
@@ -57,6 +59,7 @@ $PAGE->set_title(format_string($these->name) . ' - ' . get_string('dashboard', '
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($context);
 
+$renderer = $PAGE->get_renderer('mod_these');
 echo $OUTPUT->header();
 echo $OUTPUT->heading(format_string($these->name));
 echo these_render_navlinks($cm, $context);
@@ -77,43 +80,17 @@ if ($queue) {
     $todo = these_get_dossiers($these->id, ['queue' => $queue, 'queuedirectorid' => $USER->id]);
     echo these_render_dossier_table($todo, $cm);
 } else {
-    echo html_writer::div(get_string('nothingtodo', 'mod_these'), 'alert alert-info');
+    echo $renderer->render(new output\message(get_string('nothingtodo', 'mod_these')));
 }
 
 // Décompte par statut, cliquable pour filtrer la liste ci-dessous.
 $restrictdirector = $rights->viewall ? null : (int) $USER->id;
 $counts = these_count_by_status($these->id, $restrictdirector);
 echo $OUTPUT->heading($rights->viewall ? get_string('alldossiers', 'mod_these') : get_string('mydirecteddossiers', 'mod_these'), 3);
-$badges = [];
-foreach (these_all_statuses() as $status) {
-    if (empty($counts[$status])) {
-        continue;
-    }
-    $label = these_status_label($status) . ' : ' . $counts[$status];
-    $badges[] = html_writer::link(
-        new moodle_url('/mod/these/dashboard.php', ['id' => $cm->id, 'status' => $status]),
-        $label,
-        ['class' => 'badge ' . these_status_badgeclass($status) . ' mr-1 mb-1 p-2']
-    );
-}
-if ($badges) {
-    echo html_writer::div(implode(' ', $badges), 'these-counts mb-3');
-}
+echo $renderer->render(new output\status_counts($cm, $counts));
 
 // Filtres.
-$statusoptions = ['' => get_string('allstatuses', 'mod_these')];
-foreach (these_all_statuses() as $status) {
-    $statusoptions[$status] = these_status_label($status);
-}
-echo html_writer::start_tag('form', ['method' => 'get', 'action' => $PAGE->url->out_omit_querystring(),
-    'class' => 'form-inline mb-3']);
-echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'id', 'value' => $cm->id]);
-echo html_writer::label(get_string('status', 'mod_these'), 'these-status', true, ['class' => 'mr-1']);
-echo html_writer::select($statusoptions, 'status', $statusfilter, false, ['id' => 'these-status', 'class' => 'mr-2']);
-echo html_writer::empty_tag('input', ['type' => 'text', 'name' => 'search', 'value' => $search,
-    'placeholder' => get_string('searchdossiers', 'mod_these'), 'class' => 'form-control mr-2']);
-echo html_writer::empty_tag('input', ['type' => 'submit', 'value' => get_string('filter'), 'class' => 'btn btn-secondary']);
-echo html_writer::end_tag('form');
+echo $renderer->render(new output\dossier_filter($PAGE->url, $cm->id, $statusfilter, $search));
 
 // La DEVE et la bibliothèque connaissent le sujet de toutes les thèses, un directeur (sans droit de
 // tout voir) celui des siennes : eux seuls cherchent aussi dans le titre des thèses confidentielles.

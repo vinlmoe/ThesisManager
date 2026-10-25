@@ -27,6 +27,8 @@
 require(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/these/locallib.php');
 
+use mod_these\output;
+
 $id = required_param('id', PARAM_INT);
 
 $cm = get_coursemodule_from_id('these', $id, 0, false, MUST_EXIST);
@@ -66,11 +68,11 @@ if ($these->intro) {
 echo $OUTPUT->heading(get_string('mydossier', 'mod_these'), 3);
 if (!$dossier) {
     echo $OUTPUT->notification(get_string('nodossieryet', 'mod_these'), 'info');
-    echo html_writer::link(
+    echo $PAGE->get_renderer('mod_these')->render(new output\link(
         new moodle_url('/mod/these/subject.php', ['id' => $cm->id]),
         get_string('proposesubject', 'mod_these'),
-        ['class' => 'btn btn-primary']
-    );
+        'btn btn-primary'
+    ));
 } else {
     $rights = these_get_rights($context, $dossier, $USER->id);
     echo these_render_dossier($these, $cm, $context, $dossier, $rights);

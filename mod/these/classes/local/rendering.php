@@ -17,7 +17,6 @@
 namespace mod_these\local;
 
 use context;
-use html_writer;
 use mod_these\output;
 use moodle_url;
 use paging_bar;
@@ -168,36 +167,9 @@ class rendering {
      * @return string HTML
      */
     public static function render_navlinks(stdClass $cm, context $context) {
-        global $USER;
+        global $PAGE;
 
-        $rights = these_get_rights($context, null, $USER->id);
-        $links = [];
-        if ($rights->viewall || has_capability('mod/these:direct', $context)) {
-            $links[get_string('dashboard', 'mod_these')] = new moodle_url('/mod/these/dashboard.php', ['id' => $cm->id]);
-            $links[get_string('planning', 'mod_these')] = new moodle_url('/mod/these/planning.php', ['id' => $cm->id]);
-        }
-        if ($rights->deve) {
-            $links[get_string('createdossier', 'mod_these')] = new moodle_url('/mod/these/create.php', ['id' => $cm->id]);
-            $links[get_string('importdossiers', 'mod_these')] = new moodle_url('/mod/these/import.php', ['id' => $cm->id]);
-            $links[get_string('notifications', 'mod_these')] = new moodle_url('/mod/these/notifications.php', ['id' => $cm->id]);
-            $links[get_string('doctemplates', 'mod_these')] = new moodle_url('/mod/these/doctemplates.php', ['id' => $cm->id]);
-            $links[get_string('griditems', 'mod_these')] = new moodle_url('/mod/these/griditems.php', ['id' => $cm->id]);
-            $links[get_string('questions', 'mod_these')] = new moodle_url('/mod/these/questions.php', ['id' => $cm->id]);
-            $links[get_string('jurors', 'mod_these')] = new moodle_url('/mod/these/jurors.php', ['id' => $cm->id]);
-            $links[get_string('transfersettings', 'mod_these')] =
-                new moodle_url('/mod/these/settingstransfer.php', ['id' => $cm->id]);
-        }
-        if ($rights->viewall) {
-            $links[get_string('export', 'mod_these')] = new moodle_url('/mod/these/export.php', ['id' => $cm->id]);
-        }
-        $tosign = count(these_get_user_pending_signatures($USER));
-        if ($tosign) {
-            $links[get_string('mysignaturescount', 'mod_these', $tosign)] = new moodle_url('/mod/these/mysignatures.php');
-        }
-        if (empty($links)) {
-            return '';
-        }
-        return html_writer::div(these_render_actions($links, 'btn btn-secondary mr-1 mb-1'), 'these-navlinks mb-3');
+        return $PAGE->get_renderer('mod_these')->render(new output\navlinks($cm, $context));
     }
 
     /**

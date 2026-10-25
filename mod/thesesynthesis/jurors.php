@@ -44,8 +44,11 @@ $PAGE->set_context($context);
 
 \mod_these\local\jurors_page::output(
     $baseurl,
-    html_writer::div(
-        html_writer::link(new moodle_url('/mod/thesesynthesis/view.php', ['id' => $cm->id]), get_string('back')),
+    $PAGE->get_renderer('mod_these')->render(new \mod_these\output\link(
+        new moodle_url('/mod/thesesynthesis/view.php', ['id' => $cm->id]),
+        get_string('back'),
+        '',
+        '',
         'mb-3'
-    )
+    ))
 );

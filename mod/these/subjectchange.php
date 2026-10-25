@@ -27,6 +27,8 @@
 require(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/these/locallib.php');
 
+use mod_these\output;
+
 use mod_these\form\subject_form;
 
 $id = required_param('id', PARAM_INT);
@@ -101,8 +103,10 @@ if ($mform->is_cancelled()) {
     redirect($viewurl, get_string('subjectchangedmsg', 'mod_these'), null, \core\output\notification::NOTIFY_SUCCESS);
 }
 
+$renderer = $PAGE->get_renderer('mod_these');
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('subjectchange', 'mod_these'));
-echo html_writer::div(get_string('subjectchangecurrent', 'mod_these', format_string($dossier->title)), 'alert alert-info');
+$current = get_string('subjectchangecurrent', 'mod_these', format_string($dossier->title, true, ['escape' => false]));
+echo $renderer->render(new output\message($current, 'alert alert-info'));
 $mform->display();
 echo $OUTPUT->footer();

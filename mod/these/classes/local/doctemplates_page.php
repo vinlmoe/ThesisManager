@@ -16,7 +16,7 @@
 
 namespace mod_these\local;
 
-use html_writer;
+use mod_these\output;
 use moodle_url;
 use mod_these\form\doctemplate_form;
 use mod_these\form\doctemplate_images_form;
@@ -121,23 +121,21 @@ class doctemplates_page {
                 );
             }
 
+            $renderer = $PAGE->get_renderer('mod_these');
             echo $OUTPUT->header();
             echo $OUTPUT->heading(get_string('doctemplates', 'mod_these') . ' : ' . these_doctemplate_label($type));
             echo $navigation;
-            echo html_writer::link($listurl, get_string('back'));
-            echo html_writer::div(get_string('doctplintro', 'mod_these'), 'my-3');
+            echo $renderer->render(new output\link($listurl, get_string('back')));
+            echo $renderer->render(new output\message(get_string('doctplintro', 'mod_these'), 'my-3'));
             $mform->display();
 
             // Variables disponibles, avec un exemple de valeur.
-            $table = new \html_table();
-            $table->head = [get_string('doctplvariable', 'mod_these'), get_string('doctplexample', 'mod_these')];
-            $table->attributes['class'] = 'generaltable table-sm';
-            foreach (these_doctemplate_variables($sample()) as $name => $example) {
-                $table->data[] = [html_writer::tag('code', '{{' . s($name) . '}}'), s($example)];
-            }
             echo $OUTPUT->heading(get_string('doctplvariables', 'mod_these'), 3, 'mt-4');
-            echo html_writer::div(get_string('doctplvariables_desc', 'mod_these'), 'mb-2');
-            echo html_writer::table($table);
+            // La chaîne cite une balise sous forme d'entités (&lt;img ...&gt;) : décodée ici, elle est
+            // échappée par le gabarit et s'affiche comme avant.
+            $variablesdesc = html_entity_decode(get_string('doctplvariables_desc', 'mod_these'), ENT_QUOTES | ENT_HTML401, 'UTF-8');
+            echo $renderer->render(new output\message($variablesdesc, 'mb-2'));
+            echo $renderer->render(new output\doctemplate_variables($sample()));
             echo $OUTPUT->footer();
             exit;
         }
@@ -154,43 +152,13 @@ class doctemplates_page {
         }
 
         // Liste des modèles.
+        $renderer = $PAGE->get_renderer('mod_these');
         echo $OUTPUT->header();
         echo $OUTPUT->heading(get_string('doctemplates', 'mod_these'));
         echo $navigation;
-        echo html_writer::div(get_string($scope->shared ? 'doctemplatesshared_desc' : 'doctemplates_desc', 'mod_these'), 'mb-3');
-        $table = new \html_table();
-        $table->head = [get_string('doctpldocument', 'mod_these'), get_string('status'), get_string('actions')];
-        $table->attributes['class'] = 'generaltable';
-        foreach (array_keys($types) as $key) {
-            $customised = these_doctemplate_customised($scope, $key);
-            $actions = [
-                html_writer::link(
-                    new moodle_url($listurl, ['type' => $key]),
-                    get_string('edit'),
-                    ['class' => 'btn btn-sm btn-primary']
-                ),
-                html_writer::link(
-                    new moodle_url($listurl, ['type' => $key, 'action' => 'preview']),
-                    get_string('doctplpreview', 'mod_these'),
-                    ['class' => 'btn btn-sm btn-secondary', 'target' => '_blank']
-                ),
-            ];
-            if ($customised) {
-                $actions[] = html_writer::link(
-                    new moodle_url($listurl, ['type' => $key, 'action' => 'reset']),
-                    get_string('doctplreset', 'mod_these'),
-                    ['class' => 'btn btn-sm btn-outline-danger']
-                );
-            }
-            $table->data[] = [
-                these_doctemplate_label($key),
-                $customised
-                    ? html_writer::span(get_string('doctplcustomised', 'mod_these'), 'badge badge-warning bg-warning text-dark')
-                    : html_writer::span(get_string('doctploriginal', 'mod_these'), 'badge badge-secondary bg-secondary'),
-                implode(' ', $actions),
-            ];
-        }
-        echo html_writer::table($table);
+        $intro = get_string($scope->shared ? 'doctemplatesshared_desc' : 'doctemplates_desc', 'mod_these');
+        echo $renderer->render(new output\message($intro, 'mb-3'));
+        echo $renderer->render(new output\doctemplate_list($scope, $listurl));
         echo $OUTPUT->heading(get_string('doctplimages', 'mod_these'), 3, 'mt-4');
         $imagesform->display();
         echo $OUTPUT->footer();
@@ -205,12 +173,13 @@ class doctemplates_page {
      * @return string HTML
      */
     public static function shared_notice(\stdClass $scope, $what) {
-        global $OUTPUT;
+        global $OUTPUT, $PAGE;
 
         $url = new moodle_url('/mod/thesesynthesis/view.php', ['id' => $scope->cmid]);
+        $link = new output\link($url, format_string($scope->name, true, ['escape' => false]));
         return $OUTPUT->notification(get_string('sharedsettings', 'mod_these', (object) [
             'what' => $what,
-            'name' => html_writer::link($url, format_string($scope->name)),
+            'name' => $PAGE->get_renderer('mod_these')->render($link),
         ]), 'info');
     }
 }

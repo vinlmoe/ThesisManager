@@ -15,10 +15,9 @@
     along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 }}
 {{!
-    @template mod_thesesynthesis/select
+    @template mod_these/doctemplate_variables
 
-    Liste déroulante au balisage de html_writer::select() (voir \mod_thesesynthesis\output\select_context).
-    Sur une ligne, sans saut de ligne final : le partiel est inclus entre des éléments en ligne.
+    Variables disponibles dans un modèle de document, avec une valeur d'exemple.
 
     Classes required for JS:
     * none
@@ -27,13 +26,9 @@
     * none
 
     Context variables required for this template:
-    * name, id, class Attributs de la liste.
-    * options Options : value, label, selected.
+    * tableclass, hashead, head, rows Voir mod_these/table.
 
     Example context (json):
-    {"name": "status", "id": "menustatus", "class": "select custom-select custom-select mr-2 mb-1", "options": [
-        {"value": "-999", "label": "Tous les statuts", "selected": true},
-        {"value": "100", "label": "Dossier clos", "selected": false}
-    ]}
+    {"tableclass": "generaltable", "hashead": true, "head": [{"text": "Nom", "class": "header c0 lastcol", "isth": true}], "rows": [{"class": "lastrow", "cells": [{"class": "cell c0 lastcol", "parts": [{"ptext": {"value": "Exemple"}, "phtml": false, "pstrong": false, "pstronghtml": false, "pem": false, "pbadge": false, "pspan": false, "plink": false, "pmuted": false, "pbr": false, "pfiles": false, "pstatus": false, "pdetails": false, "pcode": false, "pcheckbox": false}]}]}]}
 }}
-<select class="{{class}}" id="{{id}}" name="{{name}}">{{#options}}<option{{#selected}} selected="selected"{{/selected}} value="{{value}}">{{label}}</option>{{/options}}</select>
+{{> mod_these/table}}

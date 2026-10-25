@@ -32,6 +32,8 @@
 require(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/these/locallib.php');
 
+use mod_these\output;
+
 use mod_these\form\review_form;
 
 $id = required_param('id', PARAM_INT);
@@ -191,9 +193,10 @@ if ($mform->is_cancelled()) {
 
 $student = $DB->get_record('user', ['id' => $dossier->userid]);
 
+$renderer = $PAGE->get_renderer('mod_these');
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('review' . $step['key'], 'mod_these'));
-echo html_writer::link($dossierurl, get_string('back'));
+echo $renderer->render(new output\link($dossierurl, get_string('back')));
 echo $OUTPUT->box(get_string('dossierof', 'mod_these', $student ? fullname($student) : '-'), 'generalbox mb-3');
 $mform->display();
 echo these_render_dossier($these, $cm, $context, $dossier, $rights, false);

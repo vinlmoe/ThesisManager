@@ -1,0 +1,67 @@
+<?php
+// This file is part of Moodle - http://moodle.org/
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+namespace mod_these\output;
+
+defined('MOODLE_INTERNAL') || die();
+
+global $CFG;
+require_once(__DIR__ . '/output_testcase.php');
+
+/**
+ * Barre de navigation du personnel : liens selon les droits.
+ *
+ * @package    mod_these
+ * @copyright  2026 Sébastien Lefebvre
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @covers     \mod_these\output\navlinks
+ */
+final class navlinks_test extends output_testcase {
+    /**
+     * Contexte : la DEVE a les liens de gestion ; le directeur le tableau de bord et le planning ;
+     * l'étudiant aucun.
+     */
+    public function test_export_for_template(): void {
+        $this->setup_activity();
+        $labels = function ($user) {
+            $this->setUser($user);
+            $data = (new navlinks($this->cm, $this->context))->export_for_template($this->renderer());
+            return [$data['haslinks'], array_column($data['buttons']['actions'], 'label')];
+        };
+        [$has, $deve] = $labels($this->deve);
+        $this->assertTrue($has);
+        $this->assertContains(get_string('jurors', 'mod_these'), $deve);
+        $this->assertContains(get_string('export', 'mod_these'), $deve);
+        [, $director] = $labels($this->director);
+        $this->assertSame([get_string('dashboard', 'mod_these'), get_string('planning', 'mod_these')], $director);
+        [$has, $student] = $labels($this->student);
+        $this->assertFalse($has);
+        $this->assertSame([], $student);
+    }
+
+    /**
+     * Rendu : bloc these-navlinks ; rien pour l'étudiant.
+     */
+    public function test_render(): void {
+        $this->setup_activity();
+        $this->setUser($this->director);
+        $html = $this->renderer()->render(new navlinks($this->cm, $this->context));
+        $this->assertStringStartsWith('<div class="these-navlinks mb-3"><a href=', $html);
+        $this->assertSame($html, these_render_navlinks($this->cm, $this->context));
+        $this->setUser($this->student);
+        $this->assertSame('', these_render_navlinks($this->cm, $this->context));
+    }
+}

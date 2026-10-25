@@ -28,6 +28,7 @@
 
     Context variables required for this template:
     * files Fichiers : url, filename, separator (saut de ligne avant le lien).
+    * divclass Classes CSS d'un bloc autour des liens, ou vide (pas de bloc).
 
     Example context (json):
     {"files": [
@@ -35,6 +36,6 @@
             "filename": "these.pdf", "separator": false},
         {"url": "https://example.com/pluginfile.php/1/mod_these/manuscript/2/annexes.pdf?forcedownload=1",
             "filename": "annexes.pdf", "separator": true}
-    ]}
+    ], "divclass": ""}
 }}
-{{#files}}{{#separator}}<br />{{/separator}}<a href="{{url}}">{{filename}}</a>{{/files}}
+{{#divclass}}<div class="{{divclass}}">{{/divclass}}{{#files}}{{#separator}}<br />{{/separator}}<a href="{{url}}">{{filename}}</a>{{/files}}{{#divclass}}</div>{{/divclass}}

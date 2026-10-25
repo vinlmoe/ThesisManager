@@ -28,6 +28,8 @@
 require(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/these/locallib.php');
 
+use mod_these\output;
+
 $id = required_param('id', PARAM_INT);
 $dossierid = required_param('dossierid', PARAM_INT);
 
@@ -75,25 +77,28 @@ if ($action === 'transmit' && confirm_sesskey()) {
     );
 }
 
+$renderer = $PAGE->get_renderer('mod_these');
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('documents', 'mod_these'));
-echo html_writer::link($dossierurl, get_string('back'));
+echo $renderer->render(new output\link($dossierurl, get_string('back')));
 echo $OUTPUT->box(get_string('dossierof', 'mod_these', $student ? fullname($student) : '-'), 'generalbox mb-3');
 echo $OUTPUT->box(get_string('documentsintro', 'mod_these'), 'generalbox mb-3');
 
 $datetimeformat = get_string('strftimedatetimeshort', 'langconfig');
-$files = these_render_file_links($context, 'generated', $dossier->id);
-if ($files !== '' && !empty($dossier->documentstime)) {
-    echo html_writer::div(get_string('documentsgeneratedon', 'mod_these', userdate($dossier->documentstime, $datetimeformat)));
-    echo html_writer::div($files, 'mb-3');
-} else if ($files !== '') {
+$files = new output\file_links($context, 'generated', $dossier->id, 'mb-3');
+if (!$files->is_empty() && !empty($dossier->documentstime)) {
+    $generated = get_string('documentsgeneratedon', 'mod_these', userdate($dossier->documentstime, $datetimeformat));
+    echo $renderer->render(new output\message($generated, ''));
+    echo $renderer->render($files);
+} else if (!$files->is_empty()) {
     // Les documents existent mais le dossier a été modifié depuis (voir edit.php) : ils sont à
     // régénérer avant toute transmission.
     echo $OUTPUT->notification(get_string('documentsstale', 'mod_these'), 'warning');
-    echo html_writer::div($files, 'mb-3');
+    echo $renderer->render($files);
 }
 if (!empty($dossier->senttime)) {
-    echo html_writer::div(get_string('documentssenton', 'mod_these', userdate($dossier->senttime, $datetimeformat)), 'mb-3');
+    $sent = get_string('documentssenton', 'mod_these', userdate($dossier->senttime, $datetimeformat));
+    echo $renderer->render(new output\message($sent, 'mb-3'));
 }
 
 $jury = these_get_jury($dossier->id);
@@ -112,9 +117,9 @@ if (trim((string) $these->universityemail) === '') {
 
 echo $OUTPUT->single_button(
     new moodle_url($PAGE->url, ['action' => 'generate', 'sesskey' => sesskey()]),
-    get_string($files !== '' ? 'regeneratedocuments' : 'generatedocuments', 'mod_these')
+    get_string(!$files->is_empty() ? 'regeneratedocuments' : 'generatedocuments', 'mod_these')
 );
-if ($files !== '' && !empty($dossier->documentstime)) {
+if (!$files->is_empty() && !empty($dossier->documentstime)) {
     echo $OUTPUT->single_button(
         new moodle_url($PAGE->url, ['action' => 'transmit', 'sesskey' => sesskey()]),
         get_string(empty($dossier->senttime) ? 'transmitdocuments' : 'retransmitdocuments', 'mod_these')

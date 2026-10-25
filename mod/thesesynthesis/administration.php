@@ -63,7 +63,8 @@ $linked = thesesynthesis_get_links($synthesis->id);
 echo $OUTPUT->header();
 echo $OUTPUT->heading(format_string($synthesis->name));
 echo $OUTPUT->heading(get_string('managelinks', 'mod_thesesynthesis'), 3);
-echo html_writer::tag('p', get_string('managelinks_help', 'mod_thesesynthesis'));
+$renderer = $PAGE->get_renderer('mod_thesesynthesis');
+echo $renderer->render(new \mod_these\output\message(get_string('managelinks_help', 'mod_thesesynthesis'), '', 'p'));
 
 if (empty($available)) {
     echo $OUTPUT->notification(get_string('noactivities', 'mod_thesesynthesis'), 'info');
@@ -71,33 +72,5 @@ if (empty($available)) {
     exit;
 }
 
-echo html_writer::start_tag('form', ['method' => 'post', 'action' => $baseurl->out(false)]);
-echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
-echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'save', 'value' => 1]);
-$table = new html_table();
-$table->head = [get_string('linked', 'mod_thesesynthesis'), get_string('course'), get_string('activity')];
-foreach ($available as $activity) {
-    $coursename = format_string($activity->coursename);
-    if (!$activity->coursevisible) {
-        $coursename .= ' ' . html_writer::span(get_string('hiddencourse', 'mod_thesesynthesis'), 'badge badge-secondary');
-    }
-    $activityname = format_string($activity->thesename);
-    if (!$activity->visible) {
-        $activityname .= ' ' . html_writer::span(get_string('hiddenactivity', 'mod_thesesynthesis'), 'badge badge-secondary');
-    }
-    $table->data[] = [
-        html_writer::checkbox(
-            'thesecmid[]',
-            $activity->thesecmid,
-            isset($linked[(int) $activity->thesecmid]),
-            '',
-            ['id' => 'thesecmid_' . $activity->thesecmid]
-        ),
-        $coursename,
-        $activityname,
-    ];
-}
-echo html_writer::table($table);
-echo html_writer::tag('button', get_string('savechanges'), ['type' => 'submit', 'class' => 'btn btn-primary']);
-echo html_writer::end_tag('form');
+echo $renderer->render(new \mod_thesesynthesis\output\links_form($baseurl, $available, $linked));
 echo $OUTPUT->footer();

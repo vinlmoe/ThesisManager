@@ -16,7 +16,7 @@
 
 namespace mod_these\local;
 
-use html_writer;
+use mod_these\output;
 use moodle_url;
 use mod_these\form\griditems_form;
 
@@ -46,7 +46,7 @@ class griditems_page {
         moodle_url $cancelurl,
         $navigation = ''
     ) {
-        global $DB, $OUTPUT;
+        global $DB, $OUTPUT, $PAGE;
 
         $items = [];
         foreach (these_get_grid_items($scope) as $sectionitems) {
@@ -84,15 +84,14 @@ class griditems_page {
             redirect($pageurl, get_string('griditemssaved', 'mod_these'), null, \core\output\notification::NOTIFY_SUCCESS);
         }
 
+        $renderer = $PAGE->get_renderer('mod_these');
         echo $OUTPUT->header();
         echo $OUTPUT->heading(get_string('griditems', 'mod_these'));
         echo $navigation;
-        echo html_writer::div(get_string($scope->shared ? 'griditemsshared_desc' : 'griditems_desc', 'mod_these'), 'mb-3');
-        echo html_writer::div(html_writer::link(
-            $previewurl,
-            get_string('doctplpreview', 'mod_these'),
-            ['class' => 'btn btn-secondary', 'target' => '_blank']
-        ), 'mb-3');
+        $intro = get_string($scope->shared ? 'griditemsshared_desc' : 'griditems_desc', 'mod_these');
+        echo $renderer->render(new output\message($intro, 'mb-3'));
+        $preview = new output\link($previewurl, get_string('doctplpreview', 'mod_these'), 'btn btn-secondary', '_blank', 'mb-3');
+        echo $renderer->render($preview);
         $mform->display();
         echo $OUTPUT->footer();
     }
