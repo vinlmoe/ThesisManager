@@ -16,11 +16,9 @@
 
 namespace mod_these\local;
 
-use mod_these\output;
 use context;
-use context_module;
-use html_table;
 use html_writer;
+use mod_these\output;
 use moodle_url;
 use paging_bar;
 use stdClass;
@@ -546,45 +544,8 @@ class rendering {
      * @return string HTML
      */
     public static function render_dossier_table(array $dossiers, stdClass $cm) {
-        global $USER;
+        global $PAGE;
 
-        $context = context_module::instance($cm->id);
-        if (empty($dossiers)) {
-            return html_writer::div(get_string('nodossiers', 'mod_these'), 'alert alert-info');
-        }
-        $table = new html_table();
-        $table->attributes['class'] = 'generaltable these-dossiers';
-        $table->head = [
-            get_string('student', 'mod_these'),
-            get_string('subjecttitle', 'mod_these'),
-            get_string('director', 'mod_these'),
-            get_string('devenumber', 'mod_these'),
-            get_string('status', 'mod_these'),
-            get_string('since', 'mod_these', ''),
-            '',
-        ];
-        $dateformat = get_string('strftimedate', 'langconfig');
-        foreach ($dossiers as $dossier) {
-            $student = (object) [];
-            $director = (object) [];
-            foreach (\core_user\fields::get_name_fields() as $field) {
-                $student->$field = $dossier->{'student' . $field} ?? '';
-                $director->$field = $dossier->{'director' . $field} ?? '';
-            }
-            $url = new moodle_url('/mod/these/dossier.php', ['id' => $cm->id, 'dossierid' => $dossier->id]);
-            $title = these_user_knows_subject($dossier, $context, $USER->id)
-                ? (shorten_text(format_string($dossier->title), 90) ?: '-')
-                : html_writer::tag('em', get_string('confidentialtitle', 'mod_these'));
-            $table->data[] = [
-                fullname($student),
-                $title,
-                $dossier->directorid ? fullname($director) : '-',
-                s((string) $dossier->devenumber),
-                these_render_status_badge($dossier->status),
-                userdate($dossier->statustime, $dateformat),
-                html_writer::link($url, get_string('open', 'mod_these'), ['class' => 'btn btn-sm btn-secondary']),
-            ];
-        }
-        return html_writer::table($table);
+        return $PAGE->get_renderer('mod_these')->render(new output\dossier_table($dossiers, $cm));
     }
 }
