@@ -29,6 +29,13 @@ fusion. Affichage inchangé ; numéro de version augmenté à la dernière étap
   Les décisions d'accès (sujet d'une thèse confidentielle, motifs masqués,
   documents et zones de fichiers visibles) restent dans `export_for_template()` :
   le gabarit ne reçoit jamais le sujet masqué.
+- Étape 2, planning des soutenances : composants `planning` (soutenances de la
+  période, un tableau par jour), `planning_nav` (vue par semaine ou par mois,
+  période précédente, courante et suivante, accès à une date), `planning_print`
+  (planning imprimable) et `planning_upcoming` (semaines à venir) ;
+  `these_render_planning()` et la page du planning (activité et suivi des
+  thèses) les rendent. Le titre d'une thèse confidentielle reste masqué par
+  `these_defense_row()` avant d'entrer dans le contexte.
 - Les noms de personnes (étudiant, directeur, auteur d'une entrée d'historique)
   sont désormais échappés à l'affichage, comme le reste du texte.
 - Tests : un test par composant (contexte exporté, rendu du gabarit), dont un
