@@ -99,7 +99,9 @@ class planning_nav implements \renderable, \templatable {
             'action' => $this->baseurl->out_omit_querystring(),
             'hidden' => $hidden,
             'gotolabel' => get_string('planninggoto', 'mod_these'),
-            'gotovalue' => userdate($dates['date'], '%Y-%m-%d'),
+            // Sans le zéro initial du jour que userdate() retire par défaut ($fixday), « 2026-11-4 » n'est
+            // pas une valeur valide pour un champ de date, qui s'afficherait vide du 1er au 9 du mois.
+            'gotovalue' => userdate($dates['date'], '%Y-%m-%d', 99, false),
             'submitlabel' => get_string('go'),
         ];
     }

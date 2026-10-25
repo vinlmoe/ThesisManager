@@ -13,6 +13,12 @@ de version recalés sur la date. Les numéros entre parenthèses des sections de
 développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
 été étiquetée.
 
+## En cours (non publiée)
+
+- Planning : le champ « Aller au » garde le zéro initial du jour (« 2026-11-04 ») ;
+  il s'affichait vide du 1er au 9 du mois, la valeur « 2026-11-4 » n'étant pas
+  une date valide pour le navigateur.
+
 ## mod_these 0.12.0, mod_thesesynthesis 0.4.0 (2026102502) — rendu par gabarits Mustache
 
 Passage du rendu HTML à l'architecture Moodle standard (composants `renderable`
