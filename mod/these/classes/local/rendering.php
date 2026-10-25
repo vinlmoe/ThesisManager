@@ -237,56 +237,9 @@ class rendering {
      * @return string HTML
      */
     public static function render_jury(array $members, $showemail = true, $staff = false) {
-        if (empty($members)) {
-            return '';
-        }
-        $roles = these_jury_role_options();
-        $table = new html_table();
-        $table->attributes['class'] = 'generaltable';
-        $table->head = [get_string('juryrole', 'mod_these'), get_string('juryname', 'mod_these'),
-            get_string('jurytitle', 'mod_these'), get_string('jurystatus', 'mod_these'),
-            get_string('juryinstitution', 'mod_these')];
-        if ($showemail) {
-            $table->head[] = get_string('juryemail', 'mod_these');
-        }
-        if ($staff) {
-            $table->head[] = get_string('juryeligiblecheck', 'mod_these');
-        }
-        foreach ($members as $member) {
-            $row = [$roles[$member->juryrole] ?? s($member->juryrole), s($member->fullname), s($member->jurytitle),
-                s(\mod_these\local\jurors::status_label($member->jurystatus ?? '')), s($member->institution)];
-            if ($showemail) {
-                $row[] = s($member->email);
-            }
-            if ($staff) {
-                if ($member->juryrole === 'guest') {
-                    $eligibility = '-';
-                } else if (!empty($member->eligible)) {
-                    $eligibility = html_writer::span(
-                        get_string('juryeligibilityvalidated', 'mod_these'),
-                        'badge badge-success bg-success'
-                    );
-                } else {
-                    $state = these_jury_eligibility($member);
-                    $eligibility = html_writer::span(
-                        get_string('juryeligibility' . $state, 'mod_these'),
-                        'badge ' . ($state === 'ko' ? 'badge-danger bg-danger' : 'badge-warning bg-warning text-dark')
-                    );
-                }
-                if (!empty($member->notifiedtime)) {
-                    $eligibility .= html_writer::div(
-                        get_string('jurynotifiedon', 'mod_these', userdate(
-                            $member->notifiedtime,
-                            get_string('strftimedatetimeshort', 'langconfig')
-                        )),
-                        'small text-muted'
-                    );
-                }
-                $row[] = $eligibility;
-            }
-            $table->data[] = $row;
-        }
-        return html_writer::tag('h4', get_string('jury', 'mod_these'), ['class' => 'mt-4']) . html_writer::table($table);
+        global $PAGE;
+
+        return $PAGE->get_renderer('mod_these')->render(new output\jury($members, $showemail, $staff));
     }
 
     /**
