@@ -26,6 +26,8 @@
 require(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/these/locallib.php');
 
+use mod_these\output;
+
 $id = required_param('id', PARAM_INT);
 $dossierid = required_param('dossierid', PARAM_INT);
 
@@ -70,9 +72,10 @@ if ($mform->is_cancelled()) {
     );
 }
 
+$renderer = $PAGE->get_renderer('mod_these');
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string($reopen ? 'reopendossier' : 'canceldossier', 'mod_these'));
-echo html_writer::link($dossierurl, get_string('back'));
+echo $renderer->render(new output\link($dossierurl, get_string('back')));
 echo $OUTPUT->box(get_string('dossierof', 'mod_these', $student ? fullname($student) : '-'), 'generalbox mb-3');
 $mform->display();
 echo $OUTPUT->footer();

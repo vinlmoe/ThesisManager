@@ -26,6 +26,9 @@
 require(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/these/locallib.php');
 
+use mod_these\output;
+use mod_these\output\parts;
+
 use mod_these\form\corrections_form;
 
 $id = required_param('id', PARAM_INT);
@@ -83,13 +86,20 @@ if ($mform->is_cancelled()) {
     redirect($viewurl, get_string('correctionssubmittedmsg', 'mod_these'), null, \core\output\notification::NOTIFY_SUCCESS);
 }
 
+$renderer = $PAGE->get_renderer('mod_these');
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('depositcorrections', 'mod_these'));
 if (trim((string) $dossier->returncomment) !== '') {
-    echo html_writer::div(html_writer::tag('strong', get_string('returncomment', 'mod_these')) . html_writer::empty_tag('br')
-        . format_text($dossier->returncomment, FORMAT_PLAIN), 'alert alert-warning');
+    echo $renderer->render(new output\message([
+        parts::strong(get_string('returncomment', 'mod_these')),
+        parts::br(),
+        parts::html(format_text($dossier->returncomment, FORMAT_PLAIN)),
+    ], 'alert alert-warning'));
 }
-echo $OUTPUT->box(html_writer::tag('strong', get_string('correctionsnote', 'mod_these')) . html_writer::empty_tag('br')
-    . format_text((string) $dossier->correctionsnote, FORMAT_PLAIN), 'generalbox mb-3');
+echo $OUTPUT->box($renderer->render(new output\fragment([
+    parts::strong(get_string('correctionsnote', 'mod_these')),
+    parts::br(),
+    parts::html(format_text((string) $dossier->correctionsnote, FORMAT_PLAIN)),
+])), 'generalbox mb-3');
 $mform->display();
 echo $OUTPUT->footer();

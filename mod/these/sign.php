@@ -40,6 +40,9 @@
 require(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/these/locallib.php');
 
+use mod_these\output;
+use mod_these\output\parts;
+
 $token = optional_param('token', '', PARAM_ALPHANUM);
 $preview = optional_param('preview', '', PARAM_ALPHA);
 
@@ -112,12 +115,14 @@ $PAGE->set_heading(format_string($these->name));
 
 $signer = these_external_signers($dossier)[$slot];
 $dossierurl = new moodle_url('/mod/these/dossier.php', ['id' => $cm->id, 'dossierid' => $dossier->id]);
+$renderer = $PAGE->get_renderer('mod_these');
 $links = array_map(function ($doctype) use ($pageparams) {
-    return html_writer::link(
+    return [parts::link(
         new moodle_url('/mod/these/sign.php', $pageparams + ['preview' => $doctype]),
         these_document_label($doctype),
-        ['target' => '_blank']
-    );
+        '',
+        '_blank'
+    )];
 }, $doctypes);
 
 // Signataire connecté avec le compte de l'adresse invitée (membre du jury ayant un compte Moodle,
@@ -126,7 +131,7 @@ $signeremail = core_text::strtolower(trim((string) ($token !== '' ? $pending[0]-
 $allowsaved = !$inperson && $signeremail !== '' && isloggedin() && !isguestuser()
     && core_text::strtolower(trim((string) $USER->email)) === $signeremail;
 $mform = new \mod_these\form\sign_form($PAGE->url, [
-    'documents' => $links ? html_writer::alist($links) : '-',
+    'documents' => $links ? $renderer->render(new output\bullet_list($links)) : '-',
     'signername' => $signer['name'] !== '' ? $signer['name'] : ($allowsaved ? fullname($USER) : ''),
     'allowsaved' => $allowsaved,
 ]);
@@ -168,17 +173,17 @@ $student = $DB->get_record('user', ['id' => $dossier->userid]);
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('signpagetitle', 'mod_these'));
 echo $OUTPUT->box(
-    html_writer::tag('p', get_string('signpageintro', 'mod_these', (object) [
+    $renderer->render(new output\message(get_string('signpageintro', 'mod_these', (object) [
         'slot' => these_slot_label($slot),
         'student' => $student ? fullname($student) : '',
-        'title' => format_string($dossier->title),
-    ])),
+        'title' => format_string($dossier->title, true, ['escape' => false]),
+    ]), '', 'p')),
     'generalbox mb-3'
 );
 if (!$doctypes) {
     echo $OUTPUT->notification(get_string('signnothingpending', 'mod_these'), 'success');
     if ($inperson) {
-        echo html_writer::link($dossierurl, get_string('back'));
+        echo $renderer->render(new output\link($dossierurl, get_string('back')));
     }
 } else {
     $mform->display();

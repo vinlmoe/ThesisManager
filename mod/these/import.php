@@ -26,6 +26,9 @@
 require(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/these/locallib.php');
 
+use mod_these\output;
+use mod_these\output\parts;
+
 $id = required_param('id', PARAM_INT);
 
 $cm = get_coursemodule_from_id('these', $id, 0, false, MUST_EXIST);
@@ -74,16 +77,16 @@ if ($report !== null) {
         ]),
         $ok === count($report) ? 'success' : 'warning'
     );
-    $table = new html_table();
-    $table->head = [get_string('importline', 'mod_these'), get_string('student', 'mod_these'), get_string('status', 'mod_these')];
+    $rows = [];
     foreach ($report as $row) {
-        $table->data[] = [
-            $row['line'],
-            s($row['student']),
-            html_writer::span($row['message'], 'badge ' . ($row['ok'] ? 'badge-success' : 'badge-danger')),
+        $rows[] = [
+            [parts::text((string) $row['line'])],
+            [parts::text($row['student'])],
+            [parts::span($row['message'], 'badge ' . ($row['ok'] ? 'badge-success' : 'badge-danger'))],
         ];
     }
-    echo html_writer::table($table);
+    $head = [get_string('importline', 'mod_these'), get_string('student', 'mod_these'), get_string('status', 'mod_these')];
+    echo $PAGE->get_renderer('mod_these')->render(new output\table($head, $rows));
 }
 
 $mform->display();
