@@ -4,7 +4,7 @@
 
 % Version du guide : à mettre à jour à chaque modification, avec une ligne dans l'historique.
 \newcommand{\titreguide}{Guide de la gestion des thèses}
-\newcommand{\versionguide}{2.3}
+\newcommand{\versionguide}{2.4}
 \newcommand{\dateguide}{25 octobre 2026}
 \newcommand{\versionthese}{0.13.0}
 
@@ -66,6 +66,10 @@ tables, chemins, adresses de téléchargement) ; captures refaites sur un Moodle
 test : création et abandon d'un dossier, corrections validées par la
 bibliothèque, dépôt d'un scan signé, éligibilité du jury, convocation et
 procès-verbal générés. \\
+2.4 & 25 octobre 2026 & Plusieurs agents DEVE signataires. Toutes les captures
+refaites sur un Moodle de test, en entier (aucune coupe au milieu d'un élément),
+avec des dossiers amenés à chaque étape par le circuit lui-même ; pages longues
+présentées par rubrique ; captures plus grandes dans la page. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -506,7 +510,7 @@ traiter\fg{} liste les dossiers qui attendent son action, puis tous les dossiers
 qu'il dirige. Chaque courriel \og action requise\fg{} contient le lien direct
 vers le dossier.
 
-\capture{04_directeur_tableau_de_bord}{Tableau de bord du directeur.}
+\capture{04_directeur_tableau_de_bord}{Tableau de bord du directeur : la rubrique \og À traiter\fg{}, suivie de la liste des dossiers qu'il dirige.}
 
 \begin{procedure}{Valider ou renvoyer le sujet (phase 1)}{Directeur}
 \begin{etapes}
@@ -593,7 +597,7 @@ des documents (section~\ref{sec:modeles}), à la grille, au questionnaire, à
 l'annuaire du jury, au transfert des paramètres (section~\ref{sec:transfert})
 et à l'export du registre (CSV, Excel, ODS...).
 
-\capture{18_tableau_de_bord_deve}{Tableau de bord de la DEVE.}
+\capture{18_tableau_de_bord_deve}{Tableau de bord de la DEVE : la rubrique \og À traiter\fg{}, suivie du décompte par statut et de la liste de tous les dossiers.}
 
 \begin{astuce}
 Quand des \textbf{agents DEVE signataires} sont désignés dans les réglages du
@@ -697,7 +701,9 @@ de signature.}
 
 \capture{40_suivi_signatures}{Suivi des signatures d'un dossier.}
 
-\capture[0.85\linewidth]{83_dossier_complet}{Dossier complet : données, jury avec éligibilité vérifiée, documents signés.}
+\capture[0.85\linewidth]{83_dossier_complet}{Dossier complet (1/2) : étapes, actions, sujet, enregistrements, soutenance et documents générés.}
+
+\capture[0.85\linewidth]{83_dossier_complet_suite}{Dossier complet (2/2) : jury avec éligibilité vérifiée et état de signature de chaque document.}
 
 \begin{procedure}{Générer et transmettre les documents de soutenance}{Équipe DEVE}
 \begin{etapes}
@@ -996,7 +1002,7 @@ extension), ou remplaçant celles fournies avec le module sous le même nom :
 \texttt{marianne}, \texttt{vetagrosup}, \texttt{lyon1}, \texttt{bulyon1},
 \texttt{abes}.
 
-\capture[0.85\linewidth]{43_modeles_documents}{Liste des modèles des documents.}
+\capture[0.85\linewidth]{43_modeles_documents}{Liste des modèles des documents, dans l'activité de suivi qui les partage.}
 
 Un modèle est du HTML (tableaux, styles en ligne, images) dans lequel les
 données du dossier s'insèrent par des balises : \var{student.lastname} pour le
@@ -1045,7 +1051,7 @@ formulaire rempli par le directeur et des éléments en vigueur : une
 modification met à jour les grilles (les documents de soutenance déjà générés
 le sont à leur prochaine génération).
 
-\capture[0.8\linewidth]{48_grille_elements}{Éléments de la grille de conformité.}
+\capture[0.8\linewidth]{48_grille_elements}{Éléments de la grille de conformité (début de la liste), dans l'activité de suivi.}
 
 \subsection{Questionnaire préalable au jury}\label{sec:questionnaire}
 
@@ -1057,7 +1063,7 @@ au moins deux pour une liste ou un QCM) et peut être obligatoire. Les questions
 se modifient, se réordonnent et se suppriment ; supprimer une question supprime
 les réponses déjà données. La DEVE peut corriger les réponses d'un dossier.
 
-\capture[0.85\linewidth]{51_questionnaire_questions}{Questions du questionnaire préalable au jury.}
+\capture[0.85\linewidth]{51_questionnaire_questions}{Questions du questionnaire préalable au jury, dans l'activité de suivi.}
 
 Les réponses figurent au dossier (étudiant, directeur, DEVE, bibliothèque), sur
 la page d'accès du jury, et servent à la recherche des thèses
@@ -1283,7 +1289,7 @@ thèses\fg{} (une par promotion) à suivre. Chacun y trouve :
         le planning mensuel imprimable (section~\ref{sec:planning}).
 \end{description}
 
-\capture[0.85\linewidth]{49_suivi_theses}{Suivi des thèses : jurys d'un enseignant.}
+\capture[0.85\linewidth]{49_suivi_theses}{Suivi des thèses : dossiers à traiter et jurys d'un enseignant.}
 
 L'activité ne stocke aucune donnée de thèse : elle relit les dossiers dans les
 activités liées, et seulement là où l'utilisateur a ses droits. Elle porte en
