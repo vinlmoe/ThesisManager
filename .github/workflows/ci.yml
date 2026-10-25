@@ -235,3 +235,47 @@ jobs:
             || gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --title "$GITHUB_REF_NAME" \
                  --notes-file CHANGES.md
           gh release upload "$GITHUB_REF_NAME" docs/guides/guide-these.pdf --repo "$GITHUB_REPOSITORY" --clobber
+
+  release:
+    # Publication automatique : sur main, une fois tous les contrôles verts, la version de mod_these
+    # (release de version.php) qui n'a pas encore d'étiquette est étiquetée vX.Y.Z et publiée, avec la
+    # première section de CHANGES.md pour notes et le guide PDF produit par le job « guide ».
+    name: Publication
+    needs: [style, moodle, guide]
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Read version
+        id: version
+        run: |
+          release=$(sed -nE "s/^\\\$plugin->release *= *'([^']+)';.*/\1/p" mod/these/version.php)
+          if [ -z "$release" ]; then echo "release introuvable dans mod/these/version.php"; exit 1; fi
+          echo "tag=v$release" >> "$GITHUB_OUTPUT"
+
+      - name: Download guide
+        uses: actions/download-artifact@v4
+        with:
+          name: guide-these
+          path: guide
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            echo "$TAG est déjà publiée."
+            exit 0
+          fi
+          awk '/^## /{n++} n==1' CHANGES.md > notes.md
+          printf '\nHistorique complet : CHANGES.md.\n' >> notes.md
+          gh release create "$TAG" guide/guide-these.pdf --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --title "$TAG" --notes-file notes.md

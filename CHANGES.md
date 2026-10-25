@@ -2,16 +2,28 @@
 
 Format : une section par version publiée de `mod_these` (et de `mod_thesesynthesis`
 quand il change), de la plus récente à la plus ancienne. Une version publiée est
-étiquetée `vX.Y.Z` ; la CI joint alors le guide PDF à la publication GitHub.
+étiquetée `vX.Y.Z` : la CI crée l'étiquette et la publication GitHub, avec le
+guide PDF, quand une nouvelle valeur de `release` arrive sur `main`.
 
-**Première version publiée : `v0.11.2`** (`mod_these` et `mod_thesesynthesis`
-2026102500). Le module n'ayant jamais été installé auparavant, les versions de
-développement ci-dessous (0.9.0 à 0.11.2) sont regroupées dans celle-ci : une
-seule structure de base (`db/install.xml`), sans étape de mise à jour, et des
-numéros de version recalés sur la date. Les numéros entre parenthèses des
-sections de développement ne correspondent à aucune version installable.
+**Première version publiée : `v0.11.3`** (`mod_these` et `mod_thesesynthesis`
+2026102501). Le module n'ayant jamais été installé auparavant, les versions de
+développement (0.9.0 à 0.11.2) sont regroupées dans celle-ci : une seule
+structure de base (`db/install.xml`), sans étape de mise à jour, et des numéros
+de version recalés sur la date. Les numéros entre parenthèses des sections de
+développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
+été étiquetée.
 
-## mod_these 0.11.2, mod_thesesynthesis 0.3.2 (2026102500) — première version publiée
+## mod_these 0.11.3, mod_thesesynthesis 0.3.3 (2026102501) — première version publiée
+
+- Publication automatique : sur `main`, une fois la CI verte, la version de
+  `mod_these` (`release` de `version.php`) qui n'a pas encore d'étiquette est
+  étiquetée `vX.Y.Z` et publiée sur GitHub, notes tirées de ce fichier et guide
+  PDF joint.
+- CI : paquet `lmodern` installé pour le guide ; JIT de PHP désactivé (son
+  avertissement avec pcov bloquait l'installation de Moodle 4.5) ; test du
+  formulaire du jury compatible PHP 8.0 (Moodle 4.1).
+
+## mod_these 0.11.2, mod_thesesynthesis 0.3.2 (2026102500) — non publiée
 
 - Base : les étapes de `db/upgrade.php` (développement) sont supprimées, le
   module n'ayant jamais été installé ; numéros de version recalés sur la date
