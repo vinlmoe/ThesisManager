@@ -16,7 +16,7 @@
 
 namespace mod_these\local;
 
-use html_writer;
+use mod_these\output;
 use moodle_url;
 use mod_these\form\juror_form;
 use mod_these\form\juror_import_form;
@@ -39,7 +39,7 @@ class jurors_page {
      * @return void
      */
     public static function output(moodle_url $baseurl, $navigation = '') {
-        global $OUTPUT;
+        global $OUTPUT, $PAGE;
 
         $action = optional_param('action', '', PARAM_ALPHA);
         $jurorid = optional_param('jurorid', 0, PARAM_INT);
@@ -89,50 +89,26 @@ class jurors_page {
             $result = jurors::import_csv($importform->get_file_content('csvfile'));
         }
 
+        $renderer = $PAGE->get_renderer('mod_these');
         echo $OUTPUT->header();
         echo $OUTPUT->heading(get_string('jurors', 'mod_these'));
         echo $navigation;
-        echo html_writer::div(get_string('jurors_desc', 'mod_these'), 'mb-3');
+        echo $renderer->render(new output\message(get_string('jurors_desc', 'mod_these'), 'mb-3'));
         if ($result) {
             echo $OUTPUT->notification(get_string('jurorimportdone', 'mod_these', $result), 'success');
             if ($result->errors) {
-                echo $OUTPUT->notification(html_writer::alist(array_map('s', $result->errors)), 'warning');
+                echo $OUTPUT->notification($renderer->render(new output\bullet_list($result->errors)), 'warning');
             }
         }
-        echo html_writer::div($OUTPUT->single_button(
+        echo $renderer->render(new output\single_button_block(
             new moodle_url($baseurl, ['action' => 'edit']),
             get_string('juroradd', 'mod_these'),
             'get'
-        ), 'mb-3');
+        ));
 
-        $table = new \html_table();
-        $table->head = [
-            get_string('juryname', 'mod_these'),
-            get_string('jurystatus', 'mod_these'),
-            get_string('jurorpresident', 'mod_these'),
-            get_string('juryinstitution', 'mod_these'),
-            get_string('email'),
-            get_string('status'),
-            get_string('actions'),
-        ];
-        $table->attributes['class'] = 'generaltable these-jurors';
-        foreach (jurors::get_all() as $juror) {
-            $table->data[] = [
-                s(jurors::name($juror)),
-                s(jurors::status_label($juror->status)),
-                jurors::can_preside($juror->status) ? get_string('yes') : get_string('no'),
-                s($juror->institution),
-                s($juror->email),
-                $juror->active ? get_string('juroractiveyes', 'mod_these') : get_string('juroractiveno', 'mod_these'),
-                html_writer::link(new moodle_url($baseurl, ['action' => 'edit', 'jurorid' => $juror->id]), get_string('edit'))
-                    . ' | ' . html_writer::link(
-                        new moodle_url($baseurl, ['action' => 'delete', 'jurorid' => $juror->id]),
-                        get_string('delete')
-                    ),
-            ];
-        }
-        if ($table->data) {
-            echo html_writer::table($table);
+        $list = new output\juror_list(jurors::get_all(), $baseurl);
+        if (!$list->is_empty()) {
+            echo $renderer->render($list);
         } else {
             echo $OUTPUT->notification(get_string('jurorsnone', 'mod_these'), 'info');
         }
