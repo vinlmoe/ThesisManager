@@ -254,36 +254,9 @@ class rendering {
      * @return string HTML
      */
     public static function render_history($dossierid, $staffview = true, $knowssubject = true) {
-        global $DB;
+        global $PAGE;
 
-        $logs = $DB->get_records('these_log', ['dossierid' => $dossierid], 'timecreated DESC, id DESC');
-        if (empty($logs)) {
-            return '';
-        }
-        $userids = array_filter(array_unique(array_map(function ($log) {
-            return (int) $log->userid;
-        }, $logs)));
-        $users = $userids ? $DB->get_records_list('user', 'id', $userids) : [];
-
-        $table = new html_table();
-        $table->attributes['class'] = 'generaltable these-history';
-        $table->head = [get_string('date'), get_string('historyaction', 'mod_these'), get_string('historyby', 'mod_these'),
-            get_string('status', 'mod_these'), get_string('historyremark', 'mod_these')];
-        $strman = get_string_manager();
-        foreach ($logs as $log) {
-            $actionkey = 'log' . $log->logaction;
-            $by = $log->userid && isset($users[$log->userid]) ? fullname($users[$log->userid]) : get_string('system', 'mod_these');
-            $row = [
-                userdate($log->timecreated, get_string('strftimedatetimeshort', 'langconfig')),
-                $strman->string_exists($actionkey, 'mod_these') ? get_string($actionkey, 'mod_these') : s($log->logaction),
-                $by,
-                these_status_label($log->tostatus),
-                ($staffview || $log->logaction !== 'returnedtodirector') && ($knowssubject || $log->logaction !== 'subjectchanged')
-                    ? format_text((string) $log->remark, FORMAT_PLAIN) : '',
-            ];
-            $table->data[] = $row;
-        }
-        return html_writer::tag('h4', get_string('history', 'mod_these'), ['class' => 'mt-4']) . html_writer::table($table);
+        return $PAGE->get_renderer('mod_these')->render(new output\history($dossierid, $staffview, $knowssubject));
     }
 
     /**
