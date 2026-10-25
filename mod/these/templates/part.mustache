@@ -40,18 +40,20 @@
     * pem {value} Texte en italique.
     * pbadge {value, class} Badge.
     * pspan {value, class} Texte dans un span.
-    * plink {url, value, class} Lien.
+    * plink {url, value, class, target} Lien.
     * pmuted {value} Petit texte grisé.
     * pbr Saut de ligne.
     * pfiles Contexte de mod_these/file_links.
     * pstatus Contexte de mod_these/status_badge.
     * pdetails {summary, body} Bloc dépliable : fragments du résumé et du détail (partiel récursif).
+    * pcode {value} Texte en police à chasse fixe.
+    * pcheckbox {name, value, checked, id} Case à cocher.
 
     Example context (json):
     {
         "ptext": false, "phtml": false, "pstrong": false, "pstronghtml": false, "pem": false,
         "pbadge": {"value": "Validé", "class": "badge badge-success"}, "pspan": false, "plink": false,
-        "pmuted": false, "pbr": false, "pfiles": false, "pstatus": false, "pdetails": false
+        "pmuted": false, "pbr": false, "pfiles": false, "pstatus": false, "pdetails": false, "pcode": false, "pcheckbox": false
     }
 }}
-{{#ptext}}{{value}}{{/ptext}}{{#phtml}}{{{value}}}{{/phtml}}{{#pstrong}}<strong>{{value}}</strong>{{/pstrong}}{{#pstronghtml}}<strong>{{{value}}}</strong>{{/pstronghtml}}{{#pem}}<em>{{value}}</em>{{/pem}}{{#pbadge}}<span class="{{class}}">{{value}}</span>{{/pbadge}}{{#pspan}}<span class="{{class}}">{{value}}</span>{{/pspan}}{{#plink}}<a href="{{url}}"{{#class}} class="{{class}}"{{/class}}>{{value}}</a>{{/plink}}{{#pmuted}}<div class="small text-muted">{{value}}</div>{{/pmuted}}{{#pbr}}<br />{{/pbr}}{{#pfiles}}{{> mod_these/file_links}}{{/pfiles}}{{#pstatus}}{{> mod_these/status_badge}}{{/pstatus}}{{#pdetails}}<details><summary>{{#summary}}{{> mod_these/part}}{{/summary}}</summary><div class="small mt-1">{{#body}}{{> mod_these/part}}{{/body}}</div></details>{{/pdetails}}
+{{#ptext}}{{value}}{{/ptext}}{{#phtml}}{{{value}}}{{/phtml}}{{#pstrong}}<strong>{{value}}</strong>{{/pstrong}}{{#pstronghtml}}<strong>{{{value}}}</strong>{{/pstronghtml}}{{#pem}}<em>{{value}}</em>{{/pem}}{{#pbadge}}<span class="{{class}}">{{value}}</span>{{/pbadge}}{{#pspan}}<span class="{{class}}">{{value}}</span>{{/pspan}}{{#plink}}<a href="{{url}}"{{#class}} class="{{class}}"{{/class}}{{#target}} target="{{target}}"{{/target}}>{{value}}</a>{{/plink}}{{#pmuted}}<div class="small text-muted">{{value}}</div>{{/pmuted}}{{#pbr}}<br />{{/pbr}}{{#pfiles}}{{> mod_these/file_links}}{{/pfiles}}{{#pstatus}}{{> mod_these/status_badge}}{{/pstatus}}{{#pdetails}}<details><summary>{{#summary}}{{> mod_these/part}}{{/summary}}</summary><div class="small mt-1">{{#body}}{{> mod_these/part}}{{/body}}</div></details>{{/pdetails}}{{#pcode}}<code>{{value}}</code>{{/pcode}}{{#pcheckbox}}<input id="{{id}}" type="checkbox" value="{{value}}" name="{{name}}"{{#checked}} checked="checked"{{/checked}} />{{/pcheckbox}}
