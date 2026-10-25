@@ -18,6 +18,11 @@ développement ne correspondent à aucune version installable ; 0.11.2 n'a jamai
 - Planning : le champ « Aller au » garde le zéro initial du jour (« 2026-11-04 ») ;
   il s'affichait vide du 1er au 9 du mois, la valeur « 2026-11-4 » n'étant pas
   une date valide pour le navigateur.
+- Tests : lisibilité des 14 modèles de documents PDF avec des noms et des titres
+  très longs (titre de plus de 300 caractères avec un mot de plus de 40 lettres,
+  noms composés, établissements, jury, lieu) : aucun mot hors de la page, aucun
+  mot qui en recouvre un autre, titre et noms cités en entier. Positions lues par
+  `pdftotext -bbox-layout` (poppler-utils, installé par la CI).
 
 ## mod_these 0.12.0, mod_thesesynthesis 0.4.0 (2026102502) — rendu par gabarits Mustache
 
