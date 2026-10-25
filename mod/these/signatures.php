@@ -26,6 +26,8 @@
 require(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/these/locallib.php');
 
+use mod_these\output;
+
 $id = required_param('id', PARAM_INT);
 $dossierid = required_param('dossierid', PARAM_INT);
 $resend = optional_param('resend', '', PARAM_ALPHA);
@@ -73,72 +75,18 @@ if ($resend !== '' && in_array($resend, these_external_slots(), true) && confirm
 }
 
 $student = $DB->get_record('user', ['id' => $dossier->userid]);
-$signers = these_external_signers($dossier);
 
+$renderer = $PAGE->get_renderer('mod_these');
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('managesignatures', 'mod_these'));
-echo html_writer::link($dossierurl, get_string('back'));
+echo $renderer->render(new output\link($dossierurl, get_string('back')));
 echo $OUTPUT->box(get_string('dossierof', 'mod_these', $student ? fullname($student) : '-'), 'generalbox mb-3');
 echo these_render_signed_documents($cm, $context, $dossier, $rights);
 
 // Signataires sans compte : relance par courriel ou signature sur place.
-$table = new html_table();
-$table->head = [get_string('signer', 'mod_these'), get_string('email'), get_string('documentstosign', 'mod_these'), ''];
-foreach (these_external_slots() as $slot) {
-    $pending = array_filter(these_pending_documents_for_slot($dossier, $slot), function ($doctype) use ($dossier) {
-        return these_document_available($dossier, $doctype);
-    });
-    if (!$pending) {
-        continue;
-    }
-    $actions = '';
-    if ($signers[$slot]['email'] !== '') {
-        $actions .= html_writer::link(
-            new moodle_url($PAGE->url, ['resend' => $slot, 'sesskey' => sesskey()]),
-            get_string('resendsignature', 'mod_these'),
-            ['class' => 'btn btn-sm btn-secondary mr-1']
-        );
-    }
-    $actions .= html_writer::link(
-        new moodle_url('/mod/these/sign.php', ['id' => $cm->id, 'dossierid' => $dossier->id, 'slot' => $slot]),
-        get_string('signinperson', 'mod_these'),
-        ['class' => 'btn btn-sm btn-primary']
-    );
-    $table->data[] = [
-        these_slot_label($slot) . ($signers[$slot]['name'] !== '' ? ' — ' . s($signers[$slot]['name']) : ''),
-        s($signers[$slot]['email']) ?: html_writer::span(get_string('noemail', 'mod_these'), 'text-muted'),
-        implode(', ', array_map('these_document_label', $pending)),
-        $actions,
-    ];
-}
-// Agent responsable de la DEVE : signe depuis « Mes signatures ».
-$agent = these_deve_agent();
-if ($agent) {
-    $pending = [];
-    foreach (these_agent_slots() as $slot) {
-        foreach (these_pending_documents_for_slot($dossier, $slot) as $doctype) {
-            if (these_agent_document_due($dossier, $doctype)) {
-                $pending[] = these_document_label($doctype) . ' (' . these_slot_label($slot) . ')';
-            }
-        }
-    }
-    if ($pending) {
-        $table->data[] = [
-            get_string('agentdeve', 'mod_these') . ' — ' . s(fullname($agent)),
-            s($agent->email),
-            implode(', ', $pending),
-            html_writer::link(
-                new moodle_url($PAGE->url, ['resend' => 'agent', 'sesskey' => sesskey()]),
-                get_string('resendsignature', 'mod_these'),
-                ['class' => 'btn btn-sm btn-secondary']
-            ),
-        ];
-    }
-}
-echo html_writer::tag('h4', get_string('externalsigners', 'mod_these'), ['class' => 'mt-4']);
-if ($table->data) {
-    echo html_writer::table($table);
-} else {
+$signers = new output\external_signers($cm, $dossier, $PAGE->url);
+echo $renderer->render($signers);
+if ($signers->is_empty()) {
     echo $OUTPUT->notification(get_string('signnothingpending', 'mod_these'), 'success');
 }
 echo $OUTPUT->footer();
