@@ -116,8 +116,15 @@ final class signature_agent_test extends these_testcase {
 
         $pending = these_get_user_pending_signatures($second);
         $item = reset($pending);
-        these_sign_document($this->context, $item->dossier, $item->doctype, $item->slot, $second->id, fullname($second),
-            these_sample_signature_image());
+        these_sign_document(
+            $this->context,
+            $item->dossier,
+            $item->doctype,
+            $item->slot,
+            $second->id,
+            fullname($second),
+            these_sample_signature_image()
+        );
         $signed = these_get_signatures($dossier->id)['subject:deve'];
         $this->assertNotEmpty($signed->timesigned);
         $this->assertEquals($second->id, $signed->userid);

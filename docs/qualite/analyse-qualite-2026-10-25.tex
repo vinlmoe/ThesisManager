@@ -1,0 +1,438 @@
+% Analyse qualité du dépôt ThesisManager (mod_these, mod_thesesynthesis).
+% Compilation : pdflatex analyse-qualite-2026-10-25.tex (deux passes), paquets TeX Live
+% latex-recommended, latex-extra, lang-french.
+\documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[french]{babel}
+\usepackage[margin=2.2cm]{geometry}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage[colorlinks=true,linkcolor=blue!50!black,urlcolor=blue!50!black]{hyperref}
+
+\setlist{nosep}
+\sloppy
+\setlength{\emergencystretch}{3em}
+\newcommand{\fichier}[1]{\texttt{\small #1}}
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\sev}[1]{\textbf{#1}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+
+\title{ThesisManager : analyse qualité du projet\\
+  \large \code{mod\_these} 0.13.0 (2026102503) et \code{mod\_thesesynthesis} 0.4.0 (2026102502)}
+\author{Sébastien Lefebvre}
+\date{25 octobre 2026 --- commit \code{766613e} (fusion de la demande n\textsuperscript{o}~10)}
+
+\begin{document}
+\maketitle
+
+\section*{Synthèse}
+
+Le dépôt est d'une tenue nettement supérieure à la moyenne des modules Moodle : style
+\code{moodle-cs} appliqué avec les avertissements, PHPDoc complet sur les 761 fonctions et
+méthodes, parité totale des chaînes français/anglais, machine à états tabulaire avec test de
+cohérence, opérations sur les dossiers sous verrou et transaction, couche d'affichage Mustache
+sans HTML dans les gabarits, 183 tests PHPUnit et 9 scénarios Behat, documentation (README,
+INSTALL, CONTRIBUTING, CHANGES, guide LaTeX) construite et publiée par la CI.
+
+Cinq points appellent une action rapide, par ordre d'importance :
+
+\begin{enumerate}
+  \item \sev{Sécurité (élevé)} : la génération des documents de soutenance copie le rapport
+    du directeur et la grille de conformité, pourtant marqués « non communiqués à l'étudiant »,
+    dans la zone de fichiers \code{generated}, que l'étudiant peut lire et télécharger
+    (§\ref{sec:securite}).
+  \item \sev{Processus} : la CI de \code{main} est rouge (28 erreurs et 2 avertissements
+    \code{phpcs} dans quatre fichiers de la demande n\textsuperscript{o}~10, fusionnée malgré
+    l'échec du contrôle « Style Moodle »). La protection de branche décrite dans CONTRIBUTING
+    n'est donc pas active (§\ref{sec:processus}).
+  \item \sev{Publication} : \code{version.php} annonce déjà 0.13.0, mais la première section
+    de \fichier{CHANGES.md} s'intitule « En cours (non publiée) ». Dès que \code{main} redeviendra
+    verte, la CI étiquettera \code{v0.13.0} avec ces notes-là (§\ref{sec:processus}).
+  \item \sev{Architecture} : la migration des façades \code{these\_*()} vers les classes de
+    domaine est à mi-chemin et inversée : ce sont les classes qui appellent les façades
+    (608 appels dans \fichier{classes/}), dix constantes vivent dans les façades, et
+    \code{mod\_thesesynthesis} n'a pas été migré (§\ref{sec:architecture}).
+  \item \sev{Données} : sauvegarde sans \code{templatehash}, remappage des jurés à la
+    restauration incorrect entre sites, métadonnées de confidentialité incomplètes (directeur
+    extérieur, \code{eligibleby}, historique de sujet), index manquants, et aucune politique de
+    conservation des procès-verbaux face aux demandes de suppression RGPD (§\ref{sec:donnees}).
+\end{enumerate}
+
+\section{Méthode et périmètre}
+
+L'analyse porte sur l'arbre de travail au commit \code{766613e} (identique à \code{origin/main}),
+hors \fichier{mod/these/thirdparty} (FPDI 2.6.8 redistribué tel quel). Elle combine :
+\begin{itemize}
+  \item l'exécution locale de \code{php -l} sur les 35~400 lignes de PHP (aucune erreur) et de
+    \code{phpcs --standard=phpcs.xml} avec \code{moodlehq/moodle-cs} 3.7 ;
+  \item la lecture de l'état de la CI GitHub Actions (exécutions n\textsuperscript{o}~25 et 26)
+    et de l'historique \code{git} (121 commits, étiquettes \code{v0.11.3} et \code{v0.12.0}) ;
+  \item trois lectures ciblées du code : sécurité (pages, droits, jetons, fichiers, SQL,
+    échappement, confidentialité), architecture et maintenabilité, puis tests, schéma,
+    sauvegarde, API de confidentialité, tâche planifiée et CI/CD.
+\end{itemize}
+Aucun test PHPUnit ni Behat n'a pu être exécuté ici (pas de Moodle installé) : les constats sur
+les tests sont statiques. Les constats marquants ont été revérifiés dans le code source.
+
+\section{Chiffres clés}
+
+\begin{center}
+\begin{tabular}{lr}
+\toprule
+PHP hors bibliothèque tierce & 35~400 lignes \\
+Fichiers de langue (\code{en} / \code{fr}) & 872 + 40 clés, 0 écart \\
+Façades \code{these\_*()} (\fichier{locallib/}) & 240 fonctions, 3~212 lignes, 100~\% délégation \\
+Appels aux façades / appels directs aux classes & 1~610 / 34 \\
+Classes \fichier{classes/local/} & 23, toutes 100~\% statiques (265 méthodes) \\
+Méthodes de plus de 80 lignes & 12 (la plus longue : 379 lignes) \\
+Tests PHPUnit & 183 méthodes, 64 fichiers, environ 1~090 assertions \\
+Scénarios Behat & 9 (4 fichiers), 1 seul avec JavaScript \\
+Gabarits Mustache & 33 + 8, tous référencés \\
+Tables & 12 (\code{mod\_these}) + 2 (\code{mod\_thesesynthesis}) \\
+Fichiers signalés par \code{phpcs} & 4 (28 erreurs, 2 avertissements) \\
+Captures du guide non citées & 11 sur 78 (13~Mo d'images au total) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{État du dépôt et processus de livraison}\label{sec:processus}
+
+\paragraph{CI rouge sur \code{main}.}
+L'exécution n\textsuperscript{o}~25 (demande n\textsuperscript{o}~10, commit \code{d36ec97}) a
+échoué au contrôle « Style Moodle » ; la demande a néanmoins été fusionnée et l'exécution
+n\textsuperscript{o}~26 sur \code{main} échoue de même, ce qui bloque le job « Publication ».
+Reproduction locale :
+\begin{itemize}
+  \item \fichier{mod/these/tests/scans\_test.php} lignes 88 à 95 : 20 erreurs d'appel
+    multi-ligne (corrigeables par \code{phpcbf}) ;
+  \item \fichier{mod/these/tests/signature\_agent\_test.php} lignes 119 à 125 : 8 erreurs du
+    même type ;
+  \item \fichier{mod/these/classes/form/scan\_form.php} ligne 54 et
+    \fichier{mod/these/classes/local/scans.php} ligne 74 : lignes de plus de 132 caractères.
+\end{itemize}
+CONTRIBUTING impose une CI verte et une relecture avant fusion ; la règle de protection de
+branche qu'il décrit doit être activée (fusion obligatoire, quatre contrôles requis, une
+approbation).
+
+\paragraph{Version 0.13.0 annoncée sans section de publication.}
+Le commit \code{a0e555c} monte \code{\$plugin->release} à 0.13.0 et \code{version} à 2026102503
+au sein d'un commit de fonctionnalité, alors que la première section de \fichier{CHANGES.md}
+reste « En cours (non publiée) ». Le job « Publication » extrait la première section
+(\code{awk '/\^{}\#\#\ /\{n++\} n==1'}) : la publication \code{v0.13.0} partirait avec ce titre.
+Deux corrections : renommer la section (\code{\#\# mod\_these 0.13.0 (2026102503) --- …}) ou
+remettre la version à 0.12.0 jusqu'à la publication ; et faire échouer le job si la première
+section ne contient pas la valeur de \code{release}. À noter aussi : l'INSTALL décrit encore un
+« Agent DEVE signataire » unique alors que le réglage accepte désormais une liste.
+
+\paragraph{Gouvernance du dépôt.}
+Pas de fichier \fichier{LICENSE} à la racine alors que README et en-têtes affirment GPL~v3
+(exigé par le répertoire des plugins Moodle) ; pas de \fichier{SECURITY.md} ni de
+\fichier{CODEOWNERS}. Dependabot et le modèle de demande de fusion existent et sont conformes à
+CONTRIBUTING. Le README annonce « 90 + 7 tests » et un badge « PHP 8.2 » : la réalité est 162 +
+21 tests et PHP 8.0 à 8.2 testés.
+
+\paragraph{Historique.}
+Les 42 commits attribués à « Claude » sont pour l'essentiel bien découpés ; le commit
+\code{a0e555c} mélange fonctionnalité, guide, CHANGES et montée de version, contre la règle « un
+commit, un changement ».
+
+\section{Sécurité}\label{sec:securite}
+
+\subsection*{Ce qui est fait correctement}
+
+Toutes les pages appellent \code{require\_login} avec le bon module puis un contrôle de droit
+centralisé (\fichier{classes/local/rights.php}) ; les dossiers sont toujours chargés avec
+\code{theseid} de l'activité ; chaque action modifiante sur GET est protégée par
+\code{confirm\_sesskey} ; les jetons (jury, signatures) sont tirés avec \code{random\_string(48)},
+stockés hachés en SHA-256, bornés à un dossier et un document, expirés à 60 jours, révoqués à la
+clôture et exclus des sauvegardes ; \code{these\_pluginfile} filtre les zones, vérifie l'activité
+et les droits et force le téléchargement ; aucune concaténation SQL, usage systématique de
+\code{sql\_like} et \code{get\_in\_or\_equal} ; aucune triple moustache alimentée par du contenu
+brut ; les modèles PDF passent par Mustache avec échappement et une liste blanche d'images
+(fermant les lectures de fichiers locaux par TCPDF) ; le sujet d'une thèse confidentielle est
+masqué dans la vue, les tableaux, l'export, le planning, la recherche, l'historique et les
+courriels ; 66 tests de rendu prouvent par marqueurs secrets qu'aucune fuite n'atteint le
+contexte Mustache ni le HTML.
+
+\subsection*{Constats}
+
+\begin{description}[style=nextline]
+  \item[Élevé --- rapport du directeur et grille lisibles par l'étudiant.]
+    \fichier{classes/local/documents.php} (lignes 109 à 114) copie dans la zone \code{generated}
+    tous les documents disponibles, dont \code{report} et \code{grid}, que
+    \fichier{signatures.php} (lignes 62 et 63) déclare \code{staffonly}.
+    \code{rights::can\_view\_filearea} ne restreint que la zone \code{directorreport} ;
+    \fichier{output/dossier.php} (ligne 168) liste la zone \code{generated} à l'étudiant et
+    \code{these\_pluginfile} la sert. Le contrat du code (« le rapport du directeur n'est pas
+    communiqué à l'étudiant ») est rompu dès que la DEVE génère les documents. Correction :
+    exclure les documents \code{staffonly} de la zone \code{generated} (les garder dans
+    l'archive transmise à l'université), ou créer une zone réservée au personnel ; ajouter un
+    test vérifiant que l'étudiant ne peut pas télécharger \code{report.pdf} ni \code{grid.pdf}.
+  \item[Moyen --- signature du directeur extérieur contrôlée par l'étudiant.]
+    L'adresse \code{extdirectoremail} est saisie par l'étudiant et la demande de signature part
+    dès la soumission du sujet (\fichier{dossiers.php} ligne 419, \fichier{subjectchange.php}
+    ligne 164), avant toute validation. De plus, tout compte connecté dont l'adresse de profil
+    correspond peut signer sans jeton. Un étudiant peut ainsi produire une signature « directeur
+    extérieur » avec une adresse qu'il contrôle. Correction : n'émettre la demande qu'après
+    validation du directeur interne ou de la DEVE, et afficher l'adresse au validateur.
+  \item[Moyen --- identité par égalité d'adresse électronique.]
+    Accès jury (\code{jury.php?member=}), « Mes signatures », connaissance du sujet confidentiel
+    et jurys dans le suivi reposent sur \code{LOWER(email) =} plutôt que sur un
+    \code{userid}, sans vérifier \code{confirmed}, \code{suspended} ou \code{deleted}. Stocker
+    l'identifiant du compte quand il existe, à la validation d'éligibilité par la DEVE.
+  \item[Moyen --- masquage du sujet contourné dans certains courriels.]
+    Convocations, archive université, demandes de signature et désignation du jury appellent
+    \code{these\_send\_email} sans le dossier, donc sans masquage ; par ailleurs le remplacement
+    des balises par \code{str\_replace} en tableau laisse une valeur substituée tôt (commentaire
+    d'un étudiant contenant \code{\{\{title\}\}}) être elle-même substituée. Passer à un
+    \code{preg\_replace\_callback} en une passe.
+  \item[Moyen --- risques non déclarés sur \code{mod/these:managedeve}.]
+    La capacité permet d'éditer le HTML brut des modèles et des courriels mais ne porte pas
+    \code{RISK\_XSS}, contrairement à \code{mod/thesesynthesis:managesettings}. Vérifier aussi
+    que \code{K\_TCPDF\_CALLS\_IN\_HTML} est faux sur la plateforme, ou retirer défensivement les
+    balises \code{<tcpdf>} dans \code{html\_document::fill()}.
+  \item[Faible.] Noms de membres du jury non échappés dans trois messages de redirection
+    (\fichier{jurynotify.php} 47, \fichier{review.php} 189, \fichier{documents.php} 70) ;
+    énumération des utilisateurs du site par l'import CSV (résolution par courriel ou
+    \code{idnumber} sans contrôle d'inscription) ; injection de formules dans les exports
+    tableur (cellules commençant par \code{=}, \code{+}, \code{-}, \code{@}) ; jeton secret
+    placé dans \code{\$PAGE->set\_url()} (journaux, referer) ; annuaire du jury modifiable par
+    toute DEVE de tout cours (à documenter).
+\end{description}
+
+\section{Architecture et maintenabilité}\label{sec:architecture}
+
+\paragraph{Points forts.}
+Machine à états unique (\code{status\_transitions}, \code{review\_steps},
+\code{progress\_steps}) avec \code{set\_status} qui refuse toute transition hors table, et un test
+de cohérence ; \code{dossier\_operation} (verrou, revérification optimiste, transaction,
+\code{finally}) exemplaire ; couche de sortie complète (composants \code{renderable},
+gabarits avec contexte d'exemple, système de fragments typés \code{parts}) ; feuille de style
+préfixée sans \code{!important} ; aucun \code{TODO}, aucun \code{@}, aucun \code{print\_error}.
+
+\paragraph{La double couche façades / classes.}
+Les 240 façades sont bien toutes de pure délégation, mais elles restent l'API de fait
+(1~610 appels contre 34 appels directs), et surtout les classes de domaine les consomment
+elles-mêmes (608 appels : 83 dans \fichier{dossiers.php}, 78 dans \fichier{signatures.php},
+70 dans \fichier{doctemplates.php}), y compris \code{workflow} qui appelle ses propres façades.
+Dix constantes métier (\code{THESE\_TOKEN\_LIFETIME}, \code{THESE\_EMBARGO\_YEARS},
+\code{THESE\_COMMIT\_*}, limites de longueur) sont définies dans \fichier{locallib/*.php} : les
+classes autochargées ne fonctionnent pas sans \code{require\_once locallib.php}, que 18 classes
+font explicitement. Dépendance circulaire classe~$\rightarrow$~façade~$\rightarrow$~classe.
+\code{mod\_thesesynthesis/locallib.php} (400 lignes, 11 fonctions) contient, lui, la vraie
+logique, sans espace de noms \code{local} ; \code{thesesynthesis\_search} est la fonction la plus
+profonde du dépôt (93 lignes, imbrication 6) et \code{thesesynthesis\_get\_dossiers} fait une
+requête \code{user} par ligne. Cinq paires façade/méthode sont mortes (\code{deve\_agent},
+\code{render\_file\_links}, \code{sign\_from\_form}, \code{render\_actions},
+\code{render\_progress}).
+
+\paragraph{Classes trop larges.}
+Les 23 classes de \fichier{classes/local/} sont intégralement statiques (265 méthodes, aucun
+état, aucune interface) : rien n'est injectable ni substituable en test.
+\fichier{doctemplates.php} (1~135 lignes, 33 méthodes) mêle registre des types, résolution de
+portée entre les deux modules, CRUD, images, construction du contexte documentaire
+(\code{build\_document\_context} : 379 lignes), validation, rendu HTML et PDF, fusion FPDI et
+données d'aperçu. \fichier{signatures.php} (1~086 lignes, 41 méthodes) mêle signatures, scellés
+et jetons avec la grille, le bordereau, l'embargo et la construction de champs de formulaire en
+\code{html\_writer}. Douze méthodes dépassent 80 lignes.
+
+\paragraph{Duplication.}
+Amorce de page (module, instance, contexte, service, dossier, droits, URL) recopiée dans
+13 pages ; extraction des champs du sujet dupliquée entre \fichier{dossiers.php} (373 à 392) et
+\fichier{subjectchange.php} (132 à 151) ; liste des années d'étude en constante dans
+\code{subject\_form} et en littéral dans \fichier{doctemplates.php} ligne 638 ; 16 formulaires
+répètent le même prologue et les mêmes champs cachés. Les classes \code{*\_page} qui mutualisent
+les pages entre modules sont des contrôleurs HTTP (\code{optional\_param}, \code{echo},
+\code{redirect}, \code{die}) placés dans l'espace de noms de domaine.
+
+\paragraph{Dépendance inversée.}
+\code{mod\_these} interroge les tables et la configuration de \code{mod\_thesesynthesis}
+(\fichier{doctemplates.php} lignes 116 à 150, \fichier{doctemplates\_page.php} 178), sous garde
+de version. Le module de base connaît donc le module dépendant ; un point d'extension (callback
+ou hook) rendrait la dépendance unidirectionnelle.
+
+\paragraph{Gestion d'erreurs.}
+Sept \code{catch (\textbackslash Throwable)} ; deux (\fichier{doctemplates.php} 767 et 791,
+autour du parseur FPDI) retournent \code{null} sans trace.
+
+\paragraph{Compatibilité.}
+Le code est syntaxiquement compatible PHP 7.4, honorant \code{requires} = Moodle 4.0, mais ce
+plancher n'est jamais testé ; Moodle 5.x et PHP 8.3/8.4, courants en 2026, non plus. Aligner le
+plancher déclaré sur le plancher testé (4.1 ou 4.5) et ajouter une ligne 5.x à la matrice.
+
+\section{Tests}
+
+\paragraph{Points forts.}
+Socle \code{these\_testcase} avec quatre acteurs et rôle bibliothèque réel, générateur de
+dossiers, extraction des jetons depuis les courriels interceptés, \code{@covers} dans chaque
+fichier, aucun test sauté, aucun test se contentant de l'absence d'exception ; circuit complet,
+renvois, concurrence, expiration des jetons, scellés et invalidation des signatures, modèles,
+transfert, annuaire, questionnaire, grille, planning, suivi multi-promotions bien couverts.
+
+\paragraph{Zones minces.}
+\begin{itemize}
+  \item Sauvegarde/restauration : un seul test (userinfo = 1, sans signatures, scellés, modèles,
+    grille, questions) ; rien pour \code{mod\_thesesynthesis} dont le remappage des liens dans
+    \code{after\_restore} n'est pas testé.
+  \item Confidentialité : contexte utilisateur (signature enregistrée), chemin « suppression du
+    personnel $\rightarrow$ descellement » non testés.
+  \item Validation des formulaires : 17 méthodes \code{validation()}, aucun test direct.
+  \item Pages : aucun test PHPUnit n'exerce les quelque 35 scripts de page (droits, paramètres) ;
+    Behat ne les effleure qu'en surface.
+  \item Import CSV : encodage, BOM, séparateurs, guillemets, en-têtes non testés.
+  \item Behat : scénarios de visibilité seulement ; aucun parcours bout en bout, aucune
+    signature, aucun dépôt de fichier, aucun accès jury par jeton valide.
+  \item Les tests de rendu comparent du HTML exact (\code{<td class="header c6 lastcol">}),
+    fragile au moindre changement de gabarit.
+  \item Les \code{@covers} en docblock seront dépréciés sous PHPUnit 11 (Moodle 5.x).
+\end{itemize}
+
+\section{Base de données, sauvegarde, confidentialité, tâche planifiée}\label{sec:donnees}
+
+\paragraph{Schéma.}
+Aucune modification de \fichier{install.xml} depuis la première version publiée (vérifié par
+\code{git diff v0.11.3}) : l'absence de \fichier{db/upgrade.php} est cohérente. Conventions de
+nommage respectées. Index manquants sur des colonnes filtrées : \code{these\_log.userid},
+\code{these\_signature.userid} (requêtes de confidentialité), \code{these\_dossier.defensedate}
+(planning multi-promotions), \code{these\_subjecthistory.directorid} et \code{changedby}.
+Recherche par \code{LOWER(j.email)} inexploitable par index : stocker l'adresse normalisée.
+\code{these\_question.theseid} sans clé étrangère alors que ses homologues en ont ;
+\code{these\_juror.email} limité à 100 contre 255 pour \code{these\_jury.email} ; version
+\code{20261028} de \fichier{thesesynthesis/db/install.xml} postérieure à la date du jour.
+
+\paragraph{Sauvegarde et restauration.}
+Couverture complète des tables et zones de fichiers, secrets exclus, utilisateurs remappés,
+\code{after\_restore} du suivi avec \code{is\_samesite} : bien pensé. Quatre défauts :
+\begin{itemize}
+  \item \code{templatehash} n'est pas sauvegardé (\fichier{backup\_these\_stepslib.php} ligne 99
+    liste \code{contenthash} seul) ; après restauration la détection de modification du modèle
+    est désactivée en silence pour les documents partiellement signés.
+  \item \code{contenthash} inclut des identifiants d'utilisateurs : sur un autre site, toutes
+    les signatures non scellées sont invalidées à la première actualisation, sans que cela soit
+    documenté.
+  \item \code{jurorid} et \code{questionid} sont conservés dès qu'un enregistrement du même
+    identifiant existe sur la cible (\fichier{restore\_these\_stepslib.php} 227 et 148) : sur un
+    autre site, ils désignent un autre enseignant ou une autre question. Conditionner à
+    \code{is\_samesite()}.
+  \item Un dossier ignoré (étudiant absent, doublon) ne laisse aucune trace : journaliser en
+    avertissement. L'annuaire \code{these\_juror} n'est dans aucune sauvegarde (à documenter).
+    Règles de décodage encore nommées \code{STAGESYNTHESIS*}.
+\end{itemize}
+
+\paragraph{API de confidentialité.}
+Fournisseur complet structurellement (export, suppression par contexte, par utilisateur, liste
+d'utilisateurs), 55 chaînes de métadonnées en deux langues. Métadonnées incomplètes : directeur
+extérieur (nom, adresse, grade, établissement : données d'un tiers), \code{codirectorname},
+\code{eligibleby}, \code{accesstoken}, historique de sujet, \code{token} et \code{contenthash}
+des signatures. Colonnes \code{these\_jury.eligibleby},
+\code{these\_subjecthistory.directorid} et \code{changedby} absentes des requêtes de contexte,
+de liste et de suppression. Seule la destination « jury » est déclarée comme lieu externe, alors
+que l'université, les boîtes de service et les signataires extérieurs reçoivent aussi des
+données. Surtout, la suppression d'un étudiant efface le dossier entier, procès-verbal scellé
+compris, et la suppression d'un membre du personnel descelle le document (\fichier{provider.php}
+ligne 525) : un acte administratif à conservation légale disparaît ou change d'empreinte sans
+aucune consigne au délégué à la protection des données. Rédiger la politique de conservation
+(INSTALL, guide, commentaire du fournisseur) et envisager l'anonymisation plutôt que la
+suppression du procès-verbal.
+
+\paragraph{Tâche de relance.}
+Idempotente (\code{remindertime} mis à jour, test du double passage), une seule requête ciblée,
+cache des instances. Journalisation réduite à une ligne quand au moins une relance est partie :
+ajouter une trace par relance et un résumé systématique. Les notifications passent toutes par
+\code{email\_to\_user} : pas de préférences utilisateur ni de notification web ou mobile pour
+les destinataires à compte ; l'API de messagerie (\fichier{db/messages.php}) serait plus
+conforme. Aucun événement Moodle n'est déclenché par le module et aucune intégration au
+calendrier n'existe (les dates de soutenance ne sont pas poussées dans le calendrier).
+
+\section{CI/CD et outillage}
+
+\paragraph{Points forts.}
+Permissions minimales par défaut, \code{persist-credentials: false}, matrice deux bases et deux
+PHP, lint, validation, savepoints, PHPDoc sans avertissement, gabarits, PHPUnit, Behat, guide
+LaTeX construit et joint aux publications, Dependabot, publication automatique.
+
+\paragraph{Améliorations.}
+\begin{itemize}
+  \item \code{cancel-in-progress} s'applique aussi aux poussées sur \code{main} : deux fusions
+    rapprochées annulent la CI du commit intermédiaire. Le conditionner aux demandes de fusion.
+  \item Le job « Guide PDF » porte \code{contents: write} pour tous les événements, y compris les
+    demandes de fusion ; seule l'étape d'attache à la publication en a besoin. Un tag poussé
+    déclenche en outre un second passage complet et crée la publication avec
+    \fichier{CHANGES.md} entier pour notes.
+  \item \code{moodlehq/moodle-cs} installé sans épinglage de version : une nouvelle règle casse
+    \code{main} sans changement de code. Épingler \code{\^{}3.7}.
+  \item Pas d'étape \code{grunt} : la fraîcheur d'\fichier{amd/build} n'est pas contrôlée, il
+    manque le fichier \code{.map} et aucun \fichier{Gruntfile.js} n'est présent.
+  \item Couverture affichée dans le journal seulement, sans artefact ni seuil.
+  \item Pas de \code{timeout-minutes} ; actions épinglées par étiquette majeure et non par
+    empreinte.
+\end{itemize}
+
+\section{Documentation, internationalisation, données embarquées}
+
+\begin{itemize}
+  \item Valeurs par défaut de \fichier{settings.php} (lignes 73 à 86) : noms de personnes réelles
+    et d'une institution (\code{devename}, \code{dgname}, \code{ccemname}, \code{ucblname}) dans
+    un dépôt public ; deux adresses nominatives dans \fichier{doctemplates/subject.html}. Remplacer
+    par des champs vides ou des balises alimentées par les réglages.
+  \item Sept formats de date fixés en dur (\code{\%d/\%m/\%Y}, \code{\%B \%Y}) là où
+    \code{get\_string('strftime...')} est utilisé ailleurs ; « 5 ans » en dur dans
+    \code{embargo\_help} alors que \code{THESE\_EMBARGO\_YEARS} existe.
+  \item Messages de développeur (\code{coding\_exception}, \code{mtrace}, \code{debugging}) en
+    français : acceptable, mais à harmoniser.
+  \item INSTALL : les 13 réglages institutionnels ne sont décrits que génériquement ; section
+    « Agent DEVE signataire » obsolète ; pas de renvoi vers CONTRIBUTING.
+  \item Guide : 11 captures sur 78 ne sont plus citées ; 13~Mo d'images PNG dans le dépôt, à
+    élaguer ou à compresser.
+  \item README : décompte des tests et badge PHP obsolètes.
+\end{itemize}
+
+\section{Plan d'action proposé}
+
+\begin{longtable}{@{}p{0.6cm}p{11.2cm}p{1.6cm}p{1.6cm}@{}}
+\toprule
+\textbf{N\textsuperscript{o}} & \textbf{Action} & \textbf{Effort} & \textbf{Impact} \\
+\midrule
+\endhead
+1 & Exclure les documents \code{staffonly} de la zone \code{generated} ou créer une zone
+    réservée ; test de non-accès de l'étudiant. & Petit & Élevé \\
+2 & Corriger les 4 fichiers \code{phpcs} ; renommer la section de CHANGES ou revenir à 0.12.0 ;
+    activer la protection de branche ; faire échouer la publication si la première section ne
+    porte pas la version. & Petit & Élevé \\
+3 & Différer la demande de signature du directeur extérieur après validation ; rattacher jury
+    et signataires à un \code{userid} ; passer le dossier à tous les envois ; substitution des
+    balises en une passe ; \code{RISK\_XSS} sur \code{managedeve}. & Moyen & Élevé \\
+4 & Sauvegarde : ajouter \code{templatehash}, conditionner \code{jurorid} et \code{questionid}
+    à \code{is\_samesite}, journaliser les dossiers ignorés, documenter l'annuaire. & Petit &
+    Moyen \\
+5 & Confidentialité : compléter métadonnées, requêtes et lieux externes ; rédiger la politique de
+    conservation des procès-verbaux. & Moyen & Élevé \\
+6 & Créer \fichier{db/upgrade.php} avec les index manquants et la normalisation des adresses. &
+    Petit & Moyen \\
+7 & Sortir les 10 constantes de \fichier{locallib/}, supprimer les 5 paires mortes, remplacer
+    les appels aux façades dans \fichier{classes/} par des appels de classe. & Moyen & Moyen \\
+8 & Scinder \code{doctemplates} et \code{signatures} ; découper
+    \code{build\_document\_context} ; sortir les contrôleurs \code{*\_page} de l'espace
+    \code{local} ; helper d'amorce de page ; classe de base des formulaires. & Moyen & Moyen \\
+9 & Créer \code{mod\_thesesynthesis\textbackslash local} ; supprimer la dépendance inverse par
+    un point d'extension. & Moyen & Moyen \\
+10 & CI : concurrence conditionnelle, permissions du job guide, épinglage de
+    \code{moodle-cs}, étape \code{grunt}, matrice Moodle 5.x / PHP 8.3-8.4, couverture en
+    artefact, \code{timeout-minutes}, fichier LICENSE. & Petit & Moyen \\
+11 & Tests : aller-retour de sauvegarde complet (les deux modules), validation des formulaires,
+    droits par page, import CSV, un parcours Behat bout en bout. & Moyen & Moyen \\
+12 & Retirer les noms et adresses nominatifs des valeurs par défaut et du modèle de sujet ;
+    formats de date localisés ; mise à jour d'INSTALL et README ; élagage des captures. & Petit
+    & Faible \\
+13 & Notifications par l'API de messagerie pour les comptes ; événements Moodle ; calendrier des
+    soutenances. & Grand & Moyen \\
+\bottomrule
+\end{longtable}
+
+\end{document}

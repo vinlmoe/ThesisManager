@@ -71,7 +71,16 @@ class scans {
      * @param string $remark Commentaire facultatif.
      * @return int Nombre de fichiers joints.
      */
-    public static function add(context $context, stdClass $dossier, $userid, $doctype, $signer, $signeddate, $draftitemid, $remark = '') {
+    public static function add(
+        context $context,
+        stdClass $dossier,
+        $userid,
+        $doctype,
+        $signer,
+        $signeddate,
+        $draftitemid,
+        $remark = ''
+    ) {
         $fs = get_file_storage();
         $usercontext = \context_user::instance($userid);
         $drafts = $fs->get_area_files($usercontext->id, 'user', 'draft', $draftitemid, 'filename', false);
