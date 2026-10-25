@@ -101,7 +101,7 @@ jobs:
         with:
           php-version: ${{ matrix.php }}
           extensions: pgsql, mysqli, pdo_pgsql, gd, intl, mbstring, soap, zip
-          ini-values: max_input_vars=5000, opcache.enable_cli=1
+          ini-values: max_input_vars=5000, opcache.enable_cli=1, opcache.jit=disable
           tools: composer
           coverage: ${{ matrix.coverage }}
 
