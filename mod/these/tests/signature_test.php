@@ -181,8 +181,8 @@ final class signature_test extends these_testcase {
     }
 
     /**
-     * Directeur extérieur : un lien de signature lui est envoyé à la soumission du sujet, et sa
-     * signature par le lien efface le jeton.
+     * Directeur extérieur : un lien de signature lui est envoyé à la validation du sujet par le
+     * directeur de l'établissement (pas à la soumission), et sa signature par le lien efface le jeton.
      */
     public function test_external_director_token(): void {
         $this->setup_activity();
@@ -196,6 +196,16 @@ final class signature_test extends these_testcase {
         $data->extdirectoremail = 'externe@example.com';
         $dossier = these_save_subject($this->these, $this->cm, $dossier, $data, true, $this->student->id, $this->signature());
 
+        // À la soumission, le directeur extérieur n'est pas encore invité : l'adresse, saisie par
+        // l'étudiant, est d'abord contrôlée par le directeur de l'établissement, qui la voit dans
+        // le dossier.
+        $this->assertNotContains('externe@example.com', array_column($sink->get_messages(), 'to'));
+        $this->assertArrayNotHasKey('subject:extdirector', these_get_signatures($dossier->id));
+        $details = \mod_these\output\dossier::external_director_details($dossier);
+        $this->assertSame('Dr Jean Externe, Docteur vétérinaire, Clinique du Lac — externe@example.com', $details);
+
+        these_validate_step($this->these, $this->cm, $dossier, $this->director->id);
+        $dossier = $this->reload($dossier->id);
         $this->assertContains('externe@example.com', array_column($sink->get_messages(), 'to'));
         $signature = these_get_signatures($dossier->id)['subject:extdirector'];
         $this->assertEmpty($signature->timesigned);

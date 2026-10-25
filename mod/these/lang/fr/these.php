@@ -623,7 +623,9 @@ $string['hetoplink'] = 'Rechercher les mots-clés dans HeTOP';
 $string['keywordscount'] = 'Indiquez de 3 à 5 mots-clés, séparés par des points-virgules.';
 $string['subjectapproval'] = 'Approbation du sujet';
 $string['externaldirector'] = "Le directeur de thèse est extérieur à l'établissement";
-$string['externaldirector_help'] = "Le directeur extérieur, sans compte Moodle, signe le formulaire depuis un lien reçu par courriel. "
+$string['extdirector'] = 'Directeur extérieur';
+$string['externaldirector_help'] = "Le directeur extérieur, sans compte Moodle, signe le formulaire depuis un lien reçu par courriel, "
+    . "envoyé une fois le sujet validé par le directeur de l'établissement, qui contrôle ses coordonnées. "
     . "Choisissez alors ci-dessous, comme directeur dans le module, le membre de l'établissement (enseignant-chercheur) qui suit la "
     . "thèse : c'est lui qui valide les étapes et signe en qualité de membre.";
 $string['directortitle'] = 'Titre du directeur';

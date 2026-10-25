@@ -141,9 +141,28 @@ class dossier implements \renderable, \templatable {
             get_string('subjectsummary', 'mod_these') => $summary,
             get_string('subjectkeywords', 'mod_these') => $keywords,
             get_string('director', 'mod_these') => [parts::text($director ? fullname($director) : '-')],
+            get_string('extdirector', 'mod_these') => !empty($dossier->externaldirector)
+                ? self::text(self::external_director_details($dossier)) : null,
             get_string('codirector', 'mod_these') => self::text($dossier->codirectorname),
             get_string('subjectdocs', 'mod_these') => $this->files('subjectdocs', $output),
         ]);
+    }
+
+    /**
+     * Coordonnées du directeur extérieur, telles que l'étudiant les a saisies : le directeur de
+     * l'établissement les contrôle avant de valider le sujet, ce qui envoie le lien de signature.
+     *
+     * @param \stdClass $dossier
+     * @return string
+     */
+    public static function external_director_details(\stdClass $dossier): string {
+        $parts = array_filter(array_map('trim', [
+            (string) ($dossier->extdirectorname ?? ''),
+            (string) ($dossier->extdirectorgrade ?? ''),
+            (string) ($dossier->extdirectorinstitution ?? ''),
+        ]), 'strlen');
+        $email = trim((string) ($dossier->extdirectoremail ?? ''));
+        return implode(', ', $parts) . ($email !== '' ? ' — ' . $email : '');
     }
 
     /**
