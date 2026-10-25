@@ -77,7 +77,12 @@ final class confidentiality_test extends these_testcase {
                 get_string('confidentialtitle', 'mod_these'),
                 these_subject_field($dossier, 'title', $this->context, $user->id)
             );
-            $this->assertSame('', these_subject_field($dossier, 'keywords', $this->context, $user->id));
+            foreach (['titleen', 'summary', 'keywords'] as $field) {
+                $this->assertSame(
+                    get_string('confidentialtitle', 'mod_these'),
+                    these_subject_field($dossier, $field, $this->context, $user->id)
+                );
+            }
         }
 
         // Une thèse ordinaire est connue de tous ceux qui voient le dossier.

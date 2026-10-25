@@ -292,7 +292,7 @@ function these_user_in_jury($dossierid, $userid) {
 /**
  * Valeur d'un champ du sujet telle qu'un utilisateur peut la voir : le texte brut, ou, pour une
  * thèse confidentielle dont il ne connaît pas le sujet, « Thèse confidentielle » à la place du
- * titre et rien pour les autres champs.
+ * titre, du titre anglais, du résumé et des mots-clés.
  *
  * @param stdClass $dossier
  * @param string $field title, titleen, summary ou keywords.
@@ -306,5 +306,5 @@ function these_subject_field(stdClass $dossier, $field, context $context, $useri
     if (these_user_knows_subject($dossier, $context, $userid ?? $USER->id)) {
         return (string) $dossier->$field;
     }
-    return $field === 'title' ? get_string('confidentialtitle', 'mod_these') : '';
+    return get_string('confidentialtitle', 'mod_these');
 }

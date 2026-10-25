@@ -30,6 +30,7 @@ require_once($CFG->dirroot . '/mod/thesesynthesis/locallib.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     ::these_settings_scope
  * @covers     ::thesesynthesis_search
+ * @covers     ::thesesynthesis_render_search_results
  * @covers     ::thesesynthesis_delete_instance
  */
 final class shared_settings_test extends \advanced_testcase {
@@ -261,5 +262,84 @@ final class shared_settings_test extends \advanced_testcase {
             $found = thesesynthesis_search($links, $user->id, ['text' => 'vaccinologie'], $questions);
             $this->assertSame([(int) $env->confidential->id], $ids($found), $name);
         }
+    }
+
+    /**
+     * Une thèse confidentielle se trouve dans la recherche (étudiant, année, promotion) et figure au
+     * planning, mais, pour qui ne doit pas connaître son sujet, titre, mots-clés et résumé y sont
+     * remplacés par « Thèse confidentielle » ; elle ne se trouve jamais par son sujet.
+     */
+    public function test_confidential_thesis_is_found_but_masked(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $env = $this->setup_env();
+        $student = $DB->get_record('user', ['id' => $env->confidential->userid]);
+        $DB->update_record('these_dossier', (object) ['id' => $env->confidential->id, 'title' => 'SECRETTITRE',
+            'summary' => 'SECRETRESUME', 'keywords' => 'SECRETMOTCLE ; chien', 'status' => THESE_STATUS_SCHEDULED,
+            'defensedate' => these_planning_week_start(time()) + DAYSECS]);
+        $text = these_save_question($env->scope, (object) ['qtype' => 'text', 'label' => 'Laboratoire', 'options' => '',
+            'required' => 0]);
+        $questions = these_get_questions($env->scope);
+        these_save_answers($this->reload_dossier($env->confidential->id), $questions, ['q' . $text => 'SECRETREPONSE']);
+        $secrets = ['SECRETTITRE', 'SECRETRESUME', 'SECRETMOTCLE', 'SECRETREPONSE'];
+
+        // Un enseignant qui ne dirige pas la thèse : trouvée par l'étudiant ou l'année, jamais par le sujet.
+        $links = thesesynthesis_get_active_links($env->synthesis->id, $env->teacher->id);
+        $search = function (array $filters) use ($links, $env, $questions) {
+            return thesesynthesis_search($links, $env->teacher->id, $filters, $questions);
+        };
+        foreach (['SECRETTITRE', 'SECRETRESUME', 'SECRETMOTCLE', 'SECRETREPONSE'] as $word) {
+            $this->assertSame([], $search(['text' => $word]), $word);
+        }
+        $this->assertSame([], $search(['answers' => [$text => 'SECRETREPONSE']]));
+        foreach ([['text' => $student->lastname], ['year' => (int) userdate(time(), '%Y')]] as $filters) {
+            $rows = array_values(array_filter($search($filters), function ($row) use ($env) {
+                return (int) $row->dossier->id === (int) $env->confidential->id;
+            }));
+            $this->assertCount(1, $rows, json_encode($filters));
+            $this->assertFalse($rows[0]->knowssubject);
+            $this->assertFalse($rows[0]->canopen);
+            $html = thesesynthesis_render_search_results($rows, $questions);
+            foreach ($secrets as $secret) {
+                $this->assertStringNotContainsString($secret, $html);
+            }
+            $this->assertSame(3, substr_count($html, get_string('confidentialtitle', 'mod_these')));
+            $this->assertStringContainsString(fullname($student), $html);
+        }
+
+        // La DEVE : trouvée par son sujet, tout est affiché.
+        $links = thesesynthesis_get_active_links($env->synthesis->id, $env->deve->id);
+        $rows = thesesynthesis_search($links, $env->deve->id, ['text' => 'SECRETMOTCLE'], $questions);
+        $this->assertCount(1, $rows);
+        $html = thesesynthesis_render_search_results($rows, $questions);
+        foreach ($secrets as $secret) {
+            $this->assertStringContainsString($secret, $html);
+        }
+
+        // Planning des promotions suivies : la soutenance y figure, sujet masqué pour qui ne le connaît pas.
+        $monday = these_planning_week_start(time());
+        $viewall = $this->getDataGenerator()->create_user();
+        $roleid = $this->getDataGenerator()->create_role(['shortname' => 'theseviewall']);
+        assign_capability('mod/these:view', CAP_ALLOW, $roleid, \context_system::instance()->id);
+        assign_capability('mod/these:viewall', CAP_ALLOW, $roleid, \context_system::instance()->id);
+        $this->getDataGenerator()->enrol_user($viewall->id, $env->activities[0]->course->id, $roleid);
+        accesslib_clear_all_caches_for_unit_testing();
+        $this->setUser($viewall);
+        $links = thesesynthesis_get_active_links($env->synthesis->id, $viewall->id);
+        $defenses = these_get_defenses($links, $monday, these_planning_shift_week($monday, 1), $viewall->id);
+        $this->assertCount(1, $defenses);
+        $this->assertSame(get_string('confidentialtitle', 'mod_these'), these_defense_row($defenses[0])['title']);
+        $this->assertStringNotContainsString('SECRETTITRE', these_render_planning($defenses, true));
+    }
+
+    /**
+     * Dossier relu depuis la base.
+     *
+     * @param int $id
+     * @return \stdClass
+     */
+    private function reload_dossier(int $id): \stdClass {
+        global $DB;
+        return $DB->get_record('these_dossier', ['id' => $id], '*', MUST_EXIST);
     }
 }

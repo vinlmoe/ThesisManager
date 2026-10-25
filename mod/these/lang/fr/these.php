@@ -615,7 +615,7 @@ $string['settingsucblemail_desc'] = 'Adresse à laquelle envoyer les liens de si
 // Formulaire de dépôt de sujet.
 $string['studyyear'] = "Année d'études";
 $string['confidential'] = 'Thèse confidentielle, ne pas divulguer le titre';
-$string['confidential_help'] = 'Le sujet d\'une thèse confidentielle (titre, titre anglais, résumé, mots-clés) n\'est connu que de l\'étudiant, de la DEVE, de la bibliothèque, du directeur de thèse et des membres du jury. Pour tous les autres (autres enseignants, personnels qui consultent tous les dossiers sans être la DEVE ni la bibliothèque), il est remplacé par « Thèse confidentielle » dans les pages, les listes, le planning, la recherche, l\'export et les courriels, et les documents qui portent le titre ne leur sont pas accessibles.';
+$string['confidential_help'] = 'Le sujet d\'une thèse confidentielle (titre, titre anglais, résumé, mots-clés) n\'est connu que de l\'étudiant, de la DEVE, de la bibliothèque, du directeur de thèse et des membres du jury. La thèse se trouve et figure au planning comme les autres, mais, pour tous les autres (autres enseignants, personnels qui consultent tous les dossiers sans être la DEVE ni la bibliothèque), son titre, ses mots-clés et son résumé sont remplacés par « Thèse confidentielle » (pages, listes, planning, recherche, export, courriels), elle ne se trouve jamais par son sujet, et les documents qui portent le titre ne leur sont pas accessibles.';
 $string['confidentialtitle'] = 'Thèse confidentielle';
 $string['confidentialbadge'] = 'Thèse confidentielle : sujet connu de l\'étudiant, de la DEVE, de la bibliothèque, du directeur et du jury seulement';
 $string['confidentialitylabel'] = 'Confidentialité';

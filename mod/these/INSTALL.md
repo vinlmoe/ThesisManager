@@ -162,8 +162,10 @@ signés.
   des membres du jury (reconnus à leur adresse ou à celle de leur fiche de
   l'annuaire). Pour tous les autres, dont les détenteurs de `mod/these:viewall`
   sans rôle de service, il est remplacé par « Thèse confidentielle » dans le
-  dossier, les listes, le planning, la recherche (y compris dans *Suivi des
-  thèses*), l'export du registre et les courriels ; le questionnaire, l'ancien
+  dossier (titre, titre anglais, résumé et mots-clés), les listes, le planning,
+  la recherche (y compris dans *Suivi des thèses*, où la thèse se trouve par
+  l'étudiant, le directeur, le jury ou l'année, jamais par son sujet), l'export
+  du registre et les courriels ; le questionnaire, l'ancien
   titre d'un changement de sujet et les fichiers ou documents qui portent le
   titre leur sont masqués, sauf le manuscrit et le manuscrit corrigé. La
   variable `{{thesis.publictitle}}` des modèles donne « Thèse confidentielle »

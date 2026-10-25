@@ -4,6 +4,19 @@ Format : une section par version publiée de `mod_these` (et de `mod_thesesynthe
 quand il change), de la plus récente à la plus ancienne. Une version publiée est
 étiquetée `vX.Y.Z` ; la CI joint alors le guide PDF à la publication GitHub.
 
+## mod_these 0.11.2 (2026103105), mod_thesesynthesis 0.3.2 (2026102904)
+
+- Thèse confidentielle **trouvable** : dans « Suivi des thèses », un enseignant
+  la trouve comme les autres thèses enregistrées (étudiant, directeur, jury,
+  année, promotion), jamais par son sujet ou ses réponses ; elle figure aussi au
+  planning des soutenances. Pour qui ne doit pas connaître le sujet, titre,
+  titre anglais, mots-clés et résumé sont tous remplacés par « Thèse
+  confidentielle » (dossier, recherche, export).
+- Correction : les résultats de recherche de « Suivi des thèses » affichaient
+  les mots-clés et le résumé d'une thèse confidentielle dont le titre était
+  masqué. Le tableau des résultats passe par
+  `thesesynthesis_render_search_results()`, testé.
+
 ## mod_these 0.11.1 (2026103104)
 
 - Thèse confidentielle : la **bibliothèque** connaît désormais le sujet, comme

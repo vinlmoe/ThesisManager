@@ -487,14 +487,14 @@ function these_render_dossier(
     $knows = $rights->knowssubject;
     $confidential = !empty($dossier->confidential)
         ? html_writer::span(get_string('confidentialbadge', 'mod_these'), 'badge badge-danger') : null;
+    $masked = html_writer::tag('em', get_string('confidentialtitle', 'mod_these'));
     $out .= these_render_detail_section(get_string('subject', 'mod_these'), [
         get_string('student', 'mod_these') => $student ? fullname($student) : '-',
-        get_string('subjecttitle', 'mod_these') => $knows ? (format_string($dossier->title) ?: '-')
-            : html_writer::tag('em', get_string('confidentialtitle', 'mod_these')),
+        get_string('subjecttitle', 'mod_these') => $knows ? (format_string($dossier->title) ?: '-') : $masked,
         get_string('confidentialitylabel', 'mod_these') => $confidential,
-        get_string('subjecttitleen', 'mod_these') => $knows ? format_string((string) $dossier->titleen) : null,
-        get_string('subjectsummary', 'mod_these') => $knows ? format_text((string) $dossier->summary, FORMAT_PLAIN) : null,
-        get_string('subjectkeywords', 'mod_these') => $knows ? s((string) $dossier->keywords) : null,
+        get_string('subjecttitleen', 'mod_these') => $knows ? format_string((string) $dossier->titleen) : $masked,
+        get_string('subjectsummary', 'mod_these') => $knows ? format_text((string) $dossier->summary, FORMAT_PLAIN) : $masked,
+        get_string('subjectkeywords', 'mod_these') => $knows ? s((string) $dossier->keywords) : $masked,
         get_string('director', 'mod_these') => $director ? fullname($director) : '-',
         get_string('codirector', 'mod_these') => s((string) $dossier->codirectorname),
         get_string('subjectdocs', 'mod_these') => these_can_view_filearea('subjectdocs', $rights)
