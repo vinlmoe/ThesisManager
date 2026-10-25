@@ -4,9 +4,9 @@
 
 % Version du guide : à mettre à jour à chaque modification, avec une ligne dans l'historique.
 \newcommand{\titreguide}{Guide de la gestion des thèses}
-\newcommand{\versionguide}{2.0}
+\newcommand{\versionguide}{2.4}
 \newcommand{\dateguide}{25 octobre 2026}
-\newcommand{\versionthese}{0.11.3}
+\newcommand{\versionthese}{0.13.0}
 
 \usepackage{guide-commun}
 \usepackage{tikz}
@@ -55,6 +55,21 @@ thèse trouvable et au planning) ; demande d'embargo de diffusion de 5 ans ;
 documents signés scellés ; liens par courriel valables 60 jours, accès du jury
 depuis son compte ; valeur des signatures ; sauvegarde ; captures du planning,
 de la thèse confidentielle, de l'embargo et du document scellé. \\
+2.1 & 25 octobre 2026 & Captures ajoutées à chaque étape qui n'en avait pas
+(notice de la bibliothèque, éligibilité du jury, renvois, corrections,
+ajournement, documents générés et transmis, dossier complet) ; libellé du
+bouton d'envoi des liens de signature ; précision sur les scans signés. \\
+2.2 & 25 octobre 2026 & Scans des documents signés hors module, joints au
+dossier par la DEVE et inscrits à l'historique avec leur empreinte. \\
+2.3 & 25 octobre 2026 & Emplacement des documents pour l'archivage (zones,
+tables, chemins, adresses de téléchargement) ; captures refaites sur un Moodle de
+test : création et abandon d'un dossier, corrections validées par la
+bibliothèque, dépôt d'un scan signé, éligibilité du jury, convocation et
+procès-verbal générés. \\
+2.4 & 25 octobre 2026 & Plusieurs agents DEVE signataires. Toutes les captures
+refaites sur un Moodle de test, en entier (aucune coupe au milieu d'un élément),
+avec des dossiers amenés à chaque étape par le circuit lui-même ; pages longues
+présentées par rubrique ; captures plus grandes dans la page. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -80,7 +95,7 @@ la soutenance\fg{}. Quatre acteurs y interviennent :
 \end{itemize}
 
 Les membres du jury consultent les documents et le président signe les siens ;
-l'agent responsable de la DEVE signe les documents de la DEVE une fois que son
+un agent habilité de la DEVE signe les documents de la DEVE une fois que son
 équipe a tout vérifié. Les sections \og pas à pas\fg{} décrivent, pour chacun,
 chaque action dans l'ordre.
 
@@ -170,6 +185,10 @@ Chaque étape de validation propose, à côté du bouton de validation, un bouto
         l'étudiant.
 \end{itemize}
 
+\capture[0.85\linewidth]{68_directeur_renvoi}{Renvoi par le directeur : le motif est saisi dans \bouton{Commentaire}.}
+
+\capture[0.85\linewidth]{69_etudiant_soutenance_renvoyee}{Dossier de soutenance renvoyé : le motif s'affiche à l'étudiant.}
+
 Chaque action est inscrite à l'\textbf{historique} du dossier, avec son auteur,
 sa date et son commentaire.
 
@@ -236,10 +255,11 @@ Dans la même page d'administration :
         contrat ne contient que les pages du module, n'est pas scellé
         (section~\ref{sec:integrite}) et le dossier affiche un avertissement
         à la DEVE.
-  \item[Agent DEVE signataire] identifiant ou adresse du compte Moodle de
-        l'agent responsable de la DEVE : l'équipe valide sans signer, puis
-        l'agent signe depuis \bouton{Mes signatures}
-        (section~\ref{sec:agent}). Vide : la personne qui valide signe.
+  \item[Agents DEVE signataires] identifiants ou adresses des comptes Moodle
+        des agents habilités à signer pour la DEVE, séparés par des virgules ou
+        un par ligne : l'équipe valide sans signer, puis l'un des agents signe
+        depuis \bouton{Mes signatures} (section~\ref{sec:agent}). Vide : la
+        personne qui valide signe.
   \item[Signataires] direction générale, président du CCEM, présidence de
         l'université : nom et adresse. Avec une adresse, le signataire reçoit un
         lien de signature ; sans adresse, la DEVE recueille sa signature sur place.
@@ -305,6 +325,8 @@ par défaut, affiche le compte rendu ligne par ligne sans rien créer.
 L'activité \og Gestion des thèses\fg{} ouvre sur \og Mon dossier de thèse\fg{}.
 La frise en haut du dossier indique à tout moment l'étape atteinte et qui doit
 agir ; les boutons bleus sous la frise sont les actions qui vous attendent.
+
+\capture[0.85\linewidth]{01_etudiant_accueil}{Accueil de l'activité : \og Mon dossier de thèse\fg{}.}
 
 \begin{procedure}{Proposer son sujet (phase 1)}{Étudiant}
 \begin{etapes}
@@ -455,6 +477,10 @@ nouveau dépôt revient directement à lui. La validation de la DEVE clôt le
 dossier.}
 \end{procedure}
 
+\capture[0.8\linewidth]{75_dossier_corrections}{Dossier en attente des corrections demandées par le jury.}
+
+\capture[0.8\linewidth]{77_etudiant_corrections_renvoyees}{Vue de l'étudiant : corrections à déposer.}
+
 \capture[0.8\linewidth]{55_corrections_depot}{Dépôt du manuscrit corrigé.}
 
 \begin{procedure}{Après un ajournement}{Étudiant}
@@ -474,6 +500,8 @@ directeur, validation de la DEVE, conformité, documents, nouvelle soutenance.}
 
 \capture[0.85\linewidth]{81_etudiant_ajourne}{Dossier revenu en phase de soutenance après un ajournement.}
 
+\capture[0.85\linewidth]{82_nouveau_depot}{Nouveau dépôt de soutenance, avec le rappel de l'ajournement.}
+
 % ===========================================================================
 \section{Directeur de thèse : pas à pas}
 
@@ -482,7 +510,7 @@ traiter\fg{} liste les dossiers qui attendent son action, puis tous les dossiers
 qu'il dirige. Chaque courriel \og action requise\fg{} contient le lien direct
 vers le dossier.
 
-\capture{04_directeur_tableau_de_bord}{Tableau de bord du directeur.}
+\capture{04_directeur_tableau_de_bord}{Tableau de bord du directeur : la rubrique \og À traiter\fg{}, suivie de la liste des dossiers qu'il dirige.}
 
 \begin{procedure}{Valider ou renvoyer le sujet (phase 1)}{Directeur}
 \begin{etapes}
@@ -554,6 +582,8 @@ favorable\fg{}.}
 \ensuite{les corrections passent à la bibliothèque.}
 \end{procedure}
 
+\capture[0.85\linewidth]{76_directeur_corrections}{Validation des corrections par le directeur.}
+
 % ===========================================================================
 \section{DEVE : pas à pas}
 
@@ -567,13 +597,14 @@ des documents (section~\ref{sec:modeles}), à la grille, au questionnaire, à
 l'annuaire du jury, au transfert des paramètres (section~\ref{sec:transfert})
 et à l'export du registre (CSV, Excel, ODS...).
 
-\capture{18_tableau_de_bord_deve}{Tableau de bord de la DEVE.}
+\capture{18_tableau_de_bord_deve}{Tableau de bord de la DEVE : la rubrique \og À traiter\fg{}, suivie du décompte par statut et de la liste de tous les dossiers.}
 
 \begin{astuce}
-Quand un \textbf{agent DEVE signataire} est désigné dans les réglages du site
-(section~\ref{sec:agent}), l'équipe de la DEVE remplit et vérifie, puis
-\emph{valide sans signer} : l'agent reçoit un courriel et signe ensuite le visa
-du sujet et l'agrément administratif depuis \bouton{Mes signatures}. Sans agent
+Quand des \textbf{agents DEVE signataires} sont désignés dans les réglages du
+site (section~\ref{sec:agent}), l'équipe de la DEVE remplit et vérifie, puis
+\emph{valide sans signer} : chaque agent reçoit un courriel, et l'un d'eux signe
+ensuite le visa du sujet et l'agrément administratif depuis \bouton{Mes
+signatures}. Sans agent
 désigné, la personne qui valide signe elle-même.
 \end{astuce}
 
@@ -624,8 +655,8 @@ le logo.
   \item Cliquez sur \bouton{Enregistrer le sujet}, ou renvoyez à l'étudiant ou
         au directeur avec un motif.
 \end{etapes}
-\ensuite{le sujet passe à la bibliothèque ; l'agent DEVE est invité à viser le
-dépôt de sujet. Le numéro d'enregistrement n'est pas encore attribué.}
+\ensuite{le sujet passe à la bibliothèque ; les agents DEVE sont invités à viser
+le dépôt de sujet. Le numéro d'enregistrement n'est pas encore attribué.}
 \end{procedure}
 
 \capture[0.85\linewidth]{63_deve_enregistre_sujet}{Enregistrement du sujet par l'équipe DEVE, sans signature quand un agent est désigné.}
@@ -648,18 +679,20 @@ dépôt de sujet. Le numéro d'enregistrement n'est pas encore attribué.}
 \end{etapes}
 \ensuite{le manuscrit passe à la bibliothèque ; les membres du jury reçoivent
 leur accès aux documents ; les signataires invités (président du jury,
-direction générale, CCEM, université) et l'agent DEVE reçoivent leur demande
+direction générale, CCEM, université) et les agents DEVE reçoivent leur demande
 de signature.}
 \end{procedure}
 
 \capture[0.85\linewidth]{71_deve_valide_soutenance}{Validation du dossier de soutenance : numéro, date, jury et éligibilité.}
+
+\capture[0.85\linewidth]{46_jury_eligibilite}{Éligibilité des membres du jury, vérifiée par la DEVE.}
 
 \begin{procedure}{Suivre et recueillir les signatures}{Équipe DEVE}
 \begin{etapes}
   \item Dans le dossier, cliquez sur \bouton{Suivi des signatures} : chaque
         document et chaque emplacement y figurent avec leur état.
   \item Pour un signataire qui n'a pas reçu son lien, cliquez sur
-        \bouton{Envoyer le lien} (signataires invités et agent DEVE).
+        \bouton{Envoyer le lien} (signataires invités et agents DEVE).
   \item Pour un signataire présent ou sans adresse, cliquez sur
         \bouton{Signer sur place} : il consulte les documents, trace sa
         signature, puis vous validez.
@@ -667,6 +700,10 @@ de signature.}
 \end{procedure}
 
 \capture{40_suivi_signatures}{Suivi des signatures d'un dossier.}
+
+\capture[0.85\linewidth]{83_dossier_complet}{Dossier complet (1/2) : étapes, actions, sujet, enregistrements, soutenance et documents générés.}
+
+\capture[0.85\linewidth]{83_dossier_complet_suite}{Dossier complet (2/2) : jury avec éligibilité vérifiée et état de signature de chaque document.}
 
 \begin{procedure}{Générer et transmettre les documents de soutenance}{Équipe DEVE}
 \begin{etapes}
@@ -684,6 +721,12 @@ régénérez avant de transmettre de nouveau.}
 \end{procedure}
 
 \capture[0.85\linewidth]{73_deve_documents}{Génération des documents de soutenance.}
+
+\capture[0.8\linewidth]{30_convocation}{Convocation du président du jury, générée en PDF.}
+
+\capture[0.8\linewidth]{31_proces_verbal}{Procès-verbal généré en PDF, à cocher et signer le jour de la soutenance.}
+
+\capture[0.85\linewidth]{74_deve_transmis}{Après transmission : courriels envoyés, dossier en \statut{Soutenance programmée}.}
 
 \begin{procedure}{Déposer le procès-verbal}{Équipe DEVE, après la soutenance}
 \begin{etapes}
@@ -720,6 +763,8 @@ suivante).}
 \end{etapes}
 \end{procedure}
 
+\capture[0.85\linewidth]{79_pv_ajournement}{Procès-verbal saisi avec le résultat \og Ajourné\fg{}.}
+
 \capture[0.85\linewidth]{80_dossier_ajourne}{Dossier ajourné : retour en phase de soutenance, procès-verbal archivé.}
 
 \begin{procedure}{Valider les corrections et clore le dossier}{Équipe DEVE}
@@ -754,16 +799,28 @@ décisions du jury.}
         l'historique.
 \end{description}
 
+\capture[0.85\linewidth]{95_deve_creer_dossier}{Création d'un dossier par la DEVE pour un étudiant inscrit qui n'en a pas.}
+
+\capture[0.85\linewidth]{96_deve_abandon_dossier}{Abandon d'un dossier : le motif est obligatoire.}
+
 \capture[0.85\linewidth]{85_sujets_precedents}{Trace d'un changement de sujet : sujets précédents et historique.}
 
 % ===========================================================================
-\section{Agent DEVE signataire : pas à pas}\label{sec:agent}
+\section{Agents DEVE signataires : pas à pas}\label{sec:agent}
 
-L'agent responsable de la DEVE (désigné dans \chemin{Administration du site >
-Plugins > Modules d'activité > Gestion des thèses}, réglage \bouton{Agent DEVE
-signataire}) signe le visa du dépôt de sujet, l'agrément administratif et la
-partie \og direction générale représentée par la DEVE\fg{} de la fiche
-d'agréments, une fois que l'équipe a tout vérifié.
+Les agents habilités à signer pour la DEVE (désignés dans \chemin{Administration
+du site > Plugins > Modules d'activité > Gestion des thèses}, réglage
+\bouton{Agents DEVE signataires}) signent le visa du dépôt de sujet, l'agrément
+administratif et la partie \og direction générale représentée par la DEVE\fg{}
+de la fiche d'agréments, une fois que l'équipe a tout vérifié.
+
+\begin{astuce}
+\textbf{Plusieurs agents.} On peut en désigner plusieurs (un responsable et son
+suppléant, par exemple) : chacun reçoit le courriel \og Documents à signer\fg{}
+et voit les mêmes documents dans \bouton{Mes signatures}. Le premier qui signe
+appose la signature, à son nom ; le document disparaît alors de la page des
+autres. Un agent retiré du réglage ne voit plus les documents en attente.
+\end{astuce}
 
 \begin{procedure}{Signer les documents qui vous attendent}{Agent DEVE}
 \begin{etapes}
@@ -801,6 +858,8 @@ La signature enregistrée se supprime en bas de la page \bouton{Mes signatures}.
 prévenus.}
 \end{procedure}
 
+\capture[0.85\linewidth]{07_bibliotheque_notice}{Notice du sujet : référence saisie par la bibliothèque.}
+
 \begin{procedure}{Contrôler la conformité du manuscrit (phase 2)}{Bibliothèque}
 \begin{etapes}
   \item Ouvrez le dossier (statut \statut{Dossier validé par la DEVE}) et
@@ -827,6 +886,8 @@ DEVE génère les documents de soutenance.}
   \item Validez, ou renvoyez à l'étudiant avec le motif.
 \end{etapes}
 \end{procedure}
+
+\capture[0.85\linewidth]{97_biblio_corrections}{Validation des corrections par la bibliothèque.}
 
 % ===========================================================================
 \section{Membres du jury : pas à pas}
@@ -941,7 +1002,7 @@ extension), ou remplaçant celles fournies avec le module sous le même nom :
 \texttt{marianne}, \texttt{vetagrosup}, \texttt{lyon1}, \texttt{bulyon1},
 \texttt{abes}.
 
-\capture[0.85\linewidth]{43_modeles_documents}{Liste des modèles des documents.}
+\capture[0.85\linewidth]{43_modeles_documents}{Liste des modèles des documents, dans l'activité de suivi qui les partage.}
 
 Un modèle est du HTML (tableaux, styles en ligne, images) dans lequel les
 données du dossier s'insèrent par des balises : \var{student.lastname} pour le
@@ -990,7 +1051,7 @@ formulaire rempli par le directeur et des éléments en vigueur : une
 modification met à jour les grilles (les documents de soutenance déjà générés
 le sont à leur prochaine génération).
 
-\capture[0.8\linewidth]{48_grille_elements}{Éléments de la grille de conformité.}
+\capture[0.8\linewidth]{48_grille_elements}{Éléments de la grille de conformité (début de la liste), dans l'activité de suivi.}
 
 \subsection{Questionnaire préalable au jury}\label{sec:questionnaire}
 
@@ -1002,7 +1063,7 @@ au moins deux pour une liste ou un QCM) et peut être obligatoire. Les questions
 se modifient, se réordonnent et se suppriment ; supprimer une question supprime
 les réponses déjà données. La DEVE peut corriger les réponses d'un dossier.
 
-\capture[0.85\linewidth]{51_questionnaire_questions}{Questions du questionnaire préalable au jury.}
+\capture[0.85\linewidth]{51_questionnaire_questions}{Questions du questionnaire préalable au jury, dans l'activité de suivi.}
 
 Les réponses figurent au dossier (étudiant, directeur, DEVE, bibliothèque), sur
 la page d'accès du jury, et servent à la recherche des thèses
@@ -1047,9 +1108,9 @@ document, image illisible) sont ignorés et signalés.
 Chaque acteur signe au moment où il agit : la soumission (étudiant) ou la
 validation (directeur, DEVE, bibliothèque) exige sa signature et la
 certification ; une même signature est apposée sur tous les documents de
-l'étape. Quand un agent DEVE signataire est désigné, les signatures de la DEVE
-lui reviennent : l'équipe valide sans signer et l'agent signe ensuite depuis
-\bouton{Mes signatures}.
+l'étape. Quand des agents DEVE signataires sont désignés, les signatures de la
+DEVE leur reviennent : l'équipe valide sans signer et l'un des agents signe
+ensuite depuis \bouton{Mes signatures}.
 
 \paragraph{Signature enregistrée.} Tout utilisateur connecté (étudiant,
 directeur, DEVE, bibliothèque, agent DEVE, membre du jury ayant un compte)
@@ -1063,7 +1124,8 @@ n'utilise jamais une signature enregistrée.
 \paragraph{Mes signatures.} La page \bouton{Mes signatures} (lien dans les
 courriels de demande, et bouton de la barre de navigation quand des documents
 attendent) regroupe, toutes promotions confondues, les documents qui attendent
-la signature de l'utilisateur : ceux de l'agent DEVE, et ceux d'un signataire
+la signature de l'utilisateur : pour un agent DEVE, ceux qui attendent un agent,
+et ceux d'un signataire
 invité dont l'adresse est celle de son compte (président du jury, par exemple).
 
 \subsection{Signataires sans compte}
@@ -1082,12 +1144,48 @@ aussi les documents depuis \bouton{Mes jurys} de l'activité \og Suivi des
 thèses\fg{}.
 
 La page \bouton{Suivi des signatures} du dossier (DEVE) montre l'état de chaque
-emplacement, permet de \bouton{renvoyer le lien} ou de \bouton{signer sur place}
+emplacement, permet de \bouton{Envoyer le lien} ou de \bouton{signer sur place}
 pour un signataire présent ou sans adresse.
 
 \capture{40_suivi_signatures}{Suivi des signatures d'un dossier.}
 
 \capture[0.8\linewidth]{41_signature_sur_place}{Signature sur place du président du jury.}
+
+\subsection{Scans des documents signés hors module}\label{sec:scans}
+
+Un signataire sans compte peut signer à la main un document (contrat de
+diffusion, fiche d'agréments, fiche signalétique, conclusions, dépôt de sujet) :
+la DEVE joint alors le scan de ce document signé au dossier, pour conservation.
+Le scan n'ouvre ni ne modifie aucune signature du module ; il figure avec les
+autres documents du dossier.
+
+\begin{procedure}{Joindre le scan d'un document signé hors module}{Équipe DEVE}
+\begin{etapes}
+  \item Ouvrez le dossier (statut \statut{Dossier validé par la DEVE} ou plus avancé,
+        non abandonné) et cliquez sur \bouton{Ajouter un scan signé}.
+  \item Choisissez le \textbf{document signé}, saisissez le nom du
+        \textbf{signataire} et la date de la signature.
+  \item Déposez le ou les fichiers scannés (PDF ou images, 10 fichiers au plus).
+  \item Au besoin, précisez un commentaire, puis cliquez sur
+        \bouton{Enregistrer le scan}.
+\end{etapes}
+\ensuite{les fichiers figurent dans la rubrique \og Scans signés hors module\fg{}
+du dossier, visible comme les autres pièces du dossier (étudiant, directeur,
+DEVE, bibliothèque ; masquée, pour une thèse confidentielle, à qui n'en connaît
+pas le sujet). Le dépôt est inscrit à l'historique avec l'empreinte SHA-256 de
+chaque fichier.}
+\end{procedure}
+
+\capture[0.85\linewidth]{98_deve_scan_depot}{Dépôt du scan d'un contrat de diffusion signé à la main par la présidence de l'université.}
+
+\capture[0.85\linewidth]{99_dossier_scans}{Rubrique \og Scans signés hors module\fg{} du dossier : le nom du fichier porte la date, le document et le signataire.}
+
+\capture[0.85\linewidth]{100_historique_scan}{Historique : dépôt du scan, avec l'empreinte SHA-256 du fichier.}
+
+\begin{attention}
+Un scan déposé ne se supprime ni ne se remplace dans le module. Pour corriger un
+dépôt, joignez le bon scan : l'historique garde les deux empreintes.
+\end{attention}
 
 \subsection{Intégrité}\label{sec:integrite}
 
@@ -1131,8 +1229,9 @@ identifie le signataire (compte Moodle, ou lien personnel reçu à son adresse),
 date la signature et la lie au contenu signé par son empreinte, mais ne repose
 pas sur un certificat qualifié. Il revient à l'établissement de décider pour
 quels documents elle suffit (procès-verbal, contrat de diffusion) ; un document
-qui exige une signature avancée ou qualifiée est signé hors du module puis
-déposé signé.
+qui exige une signature avancée ou qualifiée est signé hors du module, puis son
+scan est joint au dossier (section~\ref{sec:scans}). Ce scan sert à la
+conservation : il ne vaut pas signature qualifiée.
 \end{attention}
 
 % ===========================================================================
@@ -1190,7 +1289,7 @@ thèses\fg{} (une par promotion) à suivre. Chacun y trouve :
         le planning mensuel imprimable (section~\ref{sec:planning}).
 \end{description}
 
-\capture[0.85\linewidth]{49_suivi_theses}{Suivi des thèses : jurys d'un enseignant.}
+\capture[0.85\linewidth]{49_suivi_theses}{Suivi des thèses : dossiers à traiter et jurys d'un enseignant.}
 
 L'activité ne stocke aucune donnée de thèse : elle relit les dossiers dans les
 activités liées, et seulement là où l'utilisateur a ses droits. Elle porte en
@@ -1254,6 +1353,8 @@ Relance & à l'acteur attendu, après le délai de relance \\
 \end{tabularx}
 \end{center}
 
+\capture[0.85\linewidth]{19_courriels}{Liste des courriels personnalisables par la DEVE.}
+
 Chaque texte est personnalisable par la DEVE (\chemin{Courriels}), avec les
 variables indiquées sous chaque courriel, par exemple \var{student} ou \var{url}.
 Pour une thèse confidentielle, un destinataire qui ne doit pas en connaître le
@@ -1295,5 +1396,118 @@ sauvegarde d'une activité et ne sont protégés que par celle du serveur. Le
 transfert des paramètres (section~\ref{sec:transfert}) exporte la
 configuration d'une activité, jamais les dossiers.
 \end{attention}
+
+\subsection{Emplacement des documents pour l'archivage}\label{sec:archivage}
+
+Les documents d'un dossier ne sont pas rangés dans une arborescence de
+dossiers : ils sont gérés par l'API de fichiers de Moodle. Un gestionnaire
+électronique de documents (GED) ou un système d'archivage se connecte donc de
+l'une des deux façons suivantes, toujours en \textbf{lecture seule}.
+
+\paragraph{Par la base de données et le dossier \texttt{moodledata}.} Chaque
+fichier est décrit par une ligne de la table \texttt{mdl\_files} (préfixe
+\texttt{mdl\_} par défaut, voir \texttt{\$CFG->prefix}) :
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}l X@{}}
+\toprule
+\textbf{Champ} & \textbf{Valeur pour la gestion des thèses} \\
+\midrule
+\texttt{component} & \texttt{mod\_these} \\
+\texttt{contextid} & contexte de l'activité : ligne de \texttt{mdl\_context} de
+niveau 70 dont \texttt{instanceid} est l'identifiant du module de cours
+(le paramètre \texttt{id} des adresses \texttt{/mod/these/view.php?id=\ldots}) \\
+\texttt{filearea} & zone du document (tableau ci-dessous) \\
+\texttt{itemid} & identifiant du dossier (\texttt{mdl\_these\_dossier.id}, le
+paramètre \texttt{dossierid} des adresses), sauf pour la zone
+\texttt{signature} \\
+\texttt{filepath}, \texttt{filename} & toujours \texttt{/}, puis le nom du fichier \\
+\texttt{contenthash} & empreinte SHA-1 du contenu, qui donne l'emplacement
+physique du fichier \\
+\texttt{filesize}, \texttt{timecreated}, \texttt{timemodified} & taille et dates \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Le contenu se lit dans
+\texttt{<moodledata>/filedir/\textit{ab}/\textit{cd}/\textit{abcd\ldots}}, où
+\textit{ab} et \textit{cd} sont les deux premiers puis les deux caractères
+suivants du \texttt{contenthash}, et \textit{abcd\ldots} le \texttt{contenthash}
+complet. Les lignes dont le nom est \og .\fg{} désignent des répertoires et
+s'ignorent. La requête suivante liste les documents de toutes les activités,
+avec le numéro DEVE de chaque dossier :
+
+\begin{verbatim}
+SELECT d.id AS dossierid, d.devenumber, d.userid, f.filearea,
+       f.filename, f.contenthash, f.filesize, f.timemodified
+  FROM mdl_files f
+  JOIN mdl_context c ON c.id = f.contextid AND c.contextlevel = 70
+  JOIN mdl_course_modules cm ON cm.id = c.instanceid
+  JOIN mdl_modules m ON m.id = cm.module AND m.name = 'these'
+  JOIN mdl_these_dossier d ON d.id = f.itemid AND d.theseid = cm.instance
+ WHERE f.component = 'mod_these' AND f.filename <> '.'
+   AND f.filearea <> 'signature'
+ ORDER BY d.id, f.filearea, f.filename;
+\end{verbatim}
+
+\paragraph{Par le site, avec un compte de service.} Un compte qui a les droits
+de la DEVE ou de la bibliothèque télécharge :
+\begin{itemize}
+  \item les fichiers des zones déposées ou générées par
+        \nolinkurl{https://<site>/pluginfile.php/<contextid>/mod_these/<zone>/<dossierid>/<fichier>} ;
+  \item les documents de l'établissement, scellés ou dans leur état de
+        signature, par
+        \nolinkurl{https://<site>/mod/these/document.php?id=<module>&dossierid=<dossierid>&type=<document>},
+        \texttt{<document>} étant l'une des clés \texttt{subject},
+        \texttt{bordereau}, \texttt{report}, \texttt{grid}, \texttt{agreement},
+        \texttt{signaletique}, \texttt{contract}, \texttt{conformity},
+        \texttt{conclusions}. La zone \texttt{sealed} ne passe pas par
+        \texttt{pluginfile.php}.
+\end{itemize}
+
+\begin{center}
+\footnotesize
+\begin{tabularx}{\linewidth}{@{}l X X@{}}
+\toprule
+\textbf{Zone} & \textbf{Contenu} & \textbf{Nom des fichiers} \\
+\midrule
+\texttt{subjectdocs} & Pièces jointes au sujet par l'étudiant & nom d'origine \\
+\texttt{subjectarchive} & Dépôt de sujet signé, archivé à un changement de sujet
+& \texttt{sujet-AAAA-MM-JJ-<n>.pdf} \\
+\texttt{manuscript} & Manuscrit déposé pour la soutenance (un PDF) & nom d'origine \\
+\texttt{defensedocs} & Autres documents de soutenance & nom d'origine \\
+\texttt{directorreport} & Pièces jointes au rapport du directeur & nom d'origine \\
+\texttt{generated} & Documents de soutenance générés, remplacés à chaque
+génération et supprimés à un ajournement : convocations, feuille de jury,
+procès-verbal à remplir, documents de l'établissement dans leur état de
+signature & \texttt{convocation-etudiant.pdf},
+\texttt{convocation-jury-<n>-<nom>.pdf}, \texttt{feuille-de-jury.pdf},
+\texttt{proces-verbal.pdf}, \texttt{<document>.pdf} \\
+\texttt{sealed} & Documents entièrement signés, figés ; leur empreinte SHA-256
+est à l'historique & \texttt{<document>.pdf} \\
+\texttt{pv} & Procès-verbal signé par le jury, scanné & nom d'origine \\
+\texttt{pvadjourned} & Procès-verbaux d'ajournement archivés &
+\texttt{ajournement-AAAA-MM-JJ-<nom d'origine>} \\
+\texttt{corrections} & Manuscrit corrigé & nom d'origine \\
+\texttt{signedscan} & Scans des documents signés hors module
+(section~\ref{sec:scans}) &
+\texttt{AAAA-MM-JJ-<document>-<signataire>-<nom d'origine>}, signataire en
+minuscules sans accents \\
+\texttt{signature} & Tracé de chaque signature (\texttt{itemid} :
+\texttt{mdl\_these\_signature.id}) & \texttt{signature.png} \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{astuce}
+Pour un archivage définitif, retenir les zones dont le contenu ne change plus :
+\texttt{sealed}, \texttt{pv}, \texttt{pvadjourned}, \texttt{subjectarchive},
+\texttt{signedscan}, et le manuscrit de \texttt{corrections} ou, sans
+corrections, de \texttt{manuscript}. Les métadonnées du dossier sont dans
+\texttt{mdl\_these\_dossier} (numéro DEVE, titre, dates, décisions du jury), et
+son historique, empreintes comprises, dans \texttt{mdl\_these\_log}. Le
+connecteur ne doit jamais écrire dans \texttt{filedir} ni dans ces tables.
+\end{astuce}
 
 \end{document}

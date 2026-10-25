@@ -90,8 +90,8 @@ class external_signers implements \renderable, \templatable {
                 $actions,
             ];
         }
-        $agent = these_deve_agent();
-        if ($agent) {
+        $agents = these_deve_agents();
+        if ($agents) {
             $pending = [];
             foreach (these_agent_slots() as $slot) {
                 foreach (these_pending_documents_for_slot($dossier, $slot) as $doctype) {
@@ -102,8 +102,9 @@ class external_signers implements \renderable, \templatable {
             }
             if ($pending) {
                 $this->rows[] = [
-                    [parts::text(get_string('agentdeve', 'mod_these') . ' — ' . fullname($agent))],
-                    [parts::text($agent->email)],
+                    [parts::text(get_string('agentdeve', 'mod_these') . ' — '
+                        . implode(', ', array_map('fullname', $agents)))],
+                    [parts::text(implode(', ', array_column($agents, 'email')))],
                     [parts::text(implode(', ', $pending))],
                     [parts::link(
                         new moodle_url($this->pageurl, ['resend' => 'agent', 'sesskey' => sesskey()]),

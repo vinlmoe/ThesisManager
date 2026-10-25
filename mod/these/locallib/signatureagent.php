@@ -67,6 +67,15 @@ function these_agent_slots() {
 }
 
 /**
+ * Voir \mod_these\local\signatureagent::deve_agents().
+ *
+ * @return stdClass[]
+ */
+function these_deve_agents() {
+    return \mod_these\local\signatureagent::deve_agents();
+}
+
+/**
  * Voir \mod_these\local\signatureagent::deve_agent().
  *
  * @return stdClass|null

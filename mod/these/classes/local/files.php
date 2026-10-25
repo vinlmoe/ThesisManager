@@ -51,6 +51,11 @@ class files {
                 $options['maxfiles'] = 5;
                 $options['accepted_types'] = ['.pdf', '.jpg', '.jpeg', '.png'];
                 break;
+            case 'signedscan':
+                // Documents signés hors du module (signataires sans compte), scannés en PDF ou en images.
+                $options['maxfiles'] = 10;
+                $options['accepted_types'] = ['.pdf', '.jpg', '.jpeg', '.png'];
+                break;
         }
         return $options;
     }

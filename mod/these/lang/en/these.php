@@ -1066,6 +1066,25 @@ $string['adjournednotice'] = 'Defence adjourned on {$a}: the file is back in the
 $string['adjournednoticestudent'] = 'Your defence was adjourned on {$a}. Submit a new defence file (revised manuscript, date, '
     . 'jury): it will be approved again by your director, the registrar and the library.';
 $string['logadjourned'] = 'Minutes uploaded, defence adjourned: back to the defence phase';
+$string['logsignedscan'] = 'Signed scan uploaded (signed outside the module)';
+$string['scanlogremark'] = 'Document: {$a->doctype}. Signer: {$a->signer}. SHA-256 fingerprint: {$a->files}.';
+$string['signedscans'] = 'Signed scans (outside the module)';
+$string['addsignedscan'] = 'Add a signed scan';
+$string['recordscan'] = 'Save the scan';
+$string['scandoctype'] = 'Signed document';
+$string['scandoctypesubject'] = 'Subject form (E01)';
+$string['scandoctypeagreement'] = 'Approval form (E02)';
+$string['scandoctypesignaletique'] = 'Thesis details form (E03)';
+$string['scandoctypecontract'] = 'Distribution contract (E04)';
+$string['scandoctypeconclusions'] = 'Conclusions';
+$string['scansigner'] = 'Signer';
+$string['scansigneddate'] = 'Signature date';
+$string['scanfiles'] = 'Signed scans (PDF or images)';
+$string['scanfiles_help'] = 'The document signed by hand by the signer, scanned. It is attached to the file for record keeping: it does not replace the signature in the module and cannot be changed afterwards.';
+$string['scanremark'] = 'Comment';
+$string['scanrequired'] = 'Upload at least one scan.';
+$string['scanunavailable'] = 'Signed scans can be uploaded once the file has been validated by the DEVE, and as long as it is not cancelled.';
+$string['scanrecorded'] = '{$a} file(s) attached to the file, fingerprint(s) recorded in the history.';
 $string['emailadjournedsubject'] = 'Thesis of {$a->student}: defence adjourned';
 $string['emailadjournedbody'] = 'Hello,
 
@@ -1077,11 +1096,12 @@ Open the file: {$a->url}';
 
 // DEVE agent signatory and saved signature.
 $string['agentdeve'] = 'Registrar officer';
-$string['settingsdeveagent'] = 'Registrar signatory';
-$string['settingsdeveagent_desc'] = 'Username or email address of the Moodle account of the officer in charge of the registrar. The '
-    . 'registrar team fills in and checks the file, then validates without signing; the officer then receives an email and signs '
-    . 'the subject visa and the administrative approval from "My signatures", with their saved signature. Leave empty for the '
-    . 'registrar member who validates to sign.';
+$string['settingsdeveagent'] = 'Registrar signatories';
+$string['settingsdeveagent_desc'] = 'Usernames or email addresses of the Moodle accounts of the officers allowed to sign for the '
+    . 'registrar, separated by commas or one per line. The registrar team fills in and checks the file, then validates without '
+    . 'signing; each officer then receives an email and finds the subject visa and the administrative approval in "My signatures": '
+    . 'the first one to sign applies the signature, with their saved signature. Leave empty for the registrar member who validates '
+    . 'to sign.';
 $string['mysignatures'] = 'My signatures';
 $string['mysignatures_desc'] = 'Documents awaiting your signature, all cohorts together. Check each document as a PDF, tick those '
     . 'to sign, then sign once: your saved signature is used by default.';

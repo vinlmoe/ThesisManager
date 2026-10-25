@@ -275,6 +275,9 @@ class rendering {
         if ($rights->deve && $status === THESE_STATUS_SCHEDULED) {
             $links[get_string('depositminutes', 'mod_these')] = new moodle_url('/mod/these/minutes.php', $params);
         }
+        if ($rights->deve && \mod_these\local\scans::allowed($dossier)) {
+            $links[get_string('addsignedscan', 'mod_these')] = new moodle_url('/mod/these/scan.php', $params);
+        }
         if ($rights->deve) {
             $links[get_string('editdossier', 'mod_these')] = new moodle_url('/mod/these/edit.php', $params);
             if ($status === THESE_STATUS_CANCELLED) {
