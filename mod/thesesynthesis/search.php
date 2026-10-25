@@ -27,6 +27,8 @@
 require(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/thesesynthesis/locallib.php');
 
+use mod_thesesynthesis\output;
+
 $id = required_param('id', PARAM_INT);
 $text = optional_param('q', '', PARAM_TEXT);
 $filtercmid = optional_param('cmid', 0, PARAM_INT);
@@ -60,10 +62,11 @@ foreach ($questions as $question) {
 $searched = $text !== '' || $filtercmid || $status !== -999 || $year || $answerfilters
     || optional_param('search', 0, PARAM_BOOL);
 
+$renderer = $PAGE->get_renderer('mod_thesesynthesis');
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('searchtheses', 'mod_thesesynthesis'));
 echo thesesynthesis_render_navlinks($cm, $context);
-echo html_writer::div(get_string('searchtheses_desc', 'mod_thesesynthesis'), 'mb-3');
+echo $renderer->render(new output\message(get_string('searchtheses_desc', 'mod_thesesynthesis'), 'mb-3'));
 if (!$links) {
     echo $OUTPUT->notification(get_string('nolinks', 'mod_thesesynthesis'), 'info');
     echo $OUTPUT->footer();
@@ -71,78 +74,13 @@ if (!$links) {
 }
 
 // Formulaire de recherche.
-$promotions = [0 => get_string('allpromotions', 'mod_thesesynthesis')];
-foreach ($links as $link) {
-    $promotions[$link->cm->id] = format_string($link->course->fullname) . ' : ' . format_string($link->these->name);
-}
-$statuses = [-999 => get_string('allstatuses', 'mod_thesesynthesis')];
-foreach (these_all_statuses() as $value) {
-    $statuses[$value] = these_status_label($value);
-}
-$years = [0 => get_string('allyears', 'mod_thesesynthesis')];
-for ($y = (int) date('Y') + 1; $y >= (int) date('Y') - 15; $y--) {
-    $years[$y] = $y;
-}
-$field = function ($label, $control) {
-    return html_writer::div(
-        html_writer::tag('label', $label, ['class' => 'mr-2 me-2 mb-1']) . $control,
-        'form-inline d-flex align-items-center mb-2'
-    );
-};
-echo html_writer::start_tag('form', ['method' => 'get', 'action' => $baseurl->out_omit_querystring(), 'class' => 'mb-3',
-    'id' => 'thesesynthesis-search']);
-echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'id', 'value' => $cm->id]);
-echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'search', 'value' => 1]);
-echo $field(get_string('searchtext', 'mod_thesesynthesis'), html_writer::empty_tag('input', ['type' => 'text', 'name' => 'q',
-    'value' => $text, 'size' => 50, 'class' => 'form-control', 'id' => 'search-q']));
-echo $field(get_string('promotion', 'mod_thesesynthesis'), html_writer::select(
-    $promotions,
-    'cmid',
-    $filtercmid,
-    false,
-    ['class' => 'custom-select form-select']
-));
-echo $field(get_string('defenseyear', 'mod_thesesynthesis'), html_writer::select(
-    $years,
-    'year',
-    $year,
-    false,
-    ['class' => 'custom-select form-select']
-));
-echo $field(get_string('status'), html_writer::select(
-    $statuses,
-    'status',
-    $status,
-    false,
-    ['class' => 'custom-select form-select']
-));
-if ($questions) {
-    echo $OUTPUT->heading(get_string('questionnaire', 'mod_these'), 5, 'mt-3');
-    foreach ($questions as $question) {
-        $name = 'a' . $question->id;
-        $value = $answerfilters[(int) $question->id] ?? '';
-        if (in_array($question->qtype, ['list', 'multi'], true)) {
-            $options = [];
-            foreach (these_question_options($question) as $option) {
-                $options[$option] = format_string($option);
-            }
-            $control = html_writer::select(
-                $options,
-                $name,
-                $value,
-                ['' => get_string('any')],
-                ['class' => 'custom-select form-select', 'id' => 'search-' . $name]
-            );
-        } else {
-            $control = html_writer::empty_tag('input', ['type' => 'text', 'name' => $name, 'value' => $value, 'size' => 40,
-                'class' => 'form-control', 'id' => 'search-' . $name]);
-        }
-        echo $field(format_string($question->label), $control);
-    }
-}
-echo html_writer::tag('button', get_string('search'), ['type' => 'submit', 'class' => 'btn btn-primary mr-1']);
-echo html_writer::link($baseurl, get_string('reset'), ['class' => 'btn btn-secondary']);
-echo html_writer::end_tag('form');
+echo $renderer->render(new output\search_form($baseurl, $cm->id, $links, $questions, [
+    'q' => $text,
+    'cmid' => $filtercmid,
+    'year' => $year,
+    'status' => $status,
+    'answers' => $answerfilters,
+]));
 
 if (!$searched) {
     echo $OUTPUT->footer();
@@ -158,10 +96,5 @@ $rows = thesesynthesis_search($links, $USER->id, [
 ], $questions);
 
 echo $OUTPUT->heading(get_string('searchresults', 'mod_thesesynthesis', count($rows)), 3, 'mt-4');
-if (!$rows) {
-    echo html_writer::div(get_string('searchnoresult', 'mod_thesesynthesis'), 'alert alert-info');
-    echo $OUTPUT->footer();
-    exit;
-}
 echo thesesynthesis_render_search_results($rows, $questions);
 echo $OUTPUT->footer();
