@@ -16,8 +16,8 @@
 
 namespace mod_these\local;
 
+use mod_these\output;
 use core_text;
-use html_writer;
 use stdClass;
 
 /**
@@ -109,7 +109,9 @@ class workflow {
      * @return string HTML
      */
     public static function render_status_badge($status) {
-        return html_writer::span(these_status_label($status), 'badge ' . these_status_badgeclass($status));
+        global $PAGE;
+
+        return $PAGE->get_renderer('mod_these')->render(new output\status_badge($status));
     }
 
     /**
