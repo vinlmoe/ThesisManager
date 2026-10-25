@@ -28,8 +28,7 @@
 // Planning des soutenances.
 
 /**
- * Source du planning pour une activité « Gestion des thèses » : même forme que les liens d'une
- * activité « Suivi des thèses » (voir thesesynthesis_get_active_links()).
+ * Voir \mod_these\local\planning::planning_source().
  *
  * @param stdClass $these
  * @param stdClass $cm
@@ -38,73 +37,53 @@
  * @return stdClass {these, cm, course, context, rights, direct}
  */
 function these_planning_source(stdClass $these, stdClass $cm, context $context, $userid) {
-    return (object) [
-        'these' => $these,
-        'cm' => $cm,
-        'course' => get_course($cm->course),
-        'context' => $context,
-        'rights' => these_get_rights($context, null, $userid),
-        'direct' => has_capability('mod/these:direct', $context, $userid),
-    ];
+    return \mod_these\local\planning::planning_source($these, $cm, $context, $userid);
 }
 
 /**
- * Début (lundi, 0 h) de la semaine qui contient un instant, dans le fuseau de l'utilisateur.
+ * Voir \mod_these\local\planning::planning_week_start().
  *
  * @param int $time
  * @return int
  */
 function these_planning_week_start($time) {
-    $midnight = usergetmidnight($time);
-    $date = usergetdate($midnight);
-    $offset = ((int) $date['wday'] + 6) % 7;
-    // Midi plutôt que minuit avant de revenir à minuit : un changement d'heure dans l'intervalle ne
-    // décale pas le jour.
-    return usergetmidnight($midnight - $offset * DAYSECS + 12 * HOURSECS);
+    return \mod_these\local\planning::planning_week_start($time);
 }
 
 /**
- * Décale un début de semaine d'un nombre de semaines.
+ * Voir \mod_these\local\planning::planning_shift_week().
  *
  * @param int $weekstart
  * @param int $weeks
  * @return int
  */
 function these_planning_shift_week($weekstart, $weeks) {
-    return usergetmidnight($weekstart + $weeks * WEEKSECS + 12 * HOURSECS);
+    return \mod_these\local\planning::planning_shift_week($weekstart, $weeks);
 }
 
 /**
- * Début (1er, 0 h) du mois qui contient un instant, dans le fuseau de l'utilisateur.
+ * Voir \mod_these\local\planning::planning_month_start().
  *
  * @param int $time
  * @return int
  */
 function these_planning_month_start($time) {
-    $date = usergetdate($time);
-    return make_timestamp($date['year'], $date['mon'], 1);
+    return \mod_these\local\planning::planning_month_start($time);
 }
 
 /**
- * Décale un début de mois d'un nombre de mois.
+ * Voir \mod_these\local\planning::planning_shift_month().
  *
  * @param int $monthstart
  * @param int $months
  * @return int
  */
 function these_planning_shift_month($monthstart, $months) {
-    $date = usergetdate($monthstart);
-    return make_timestamp($date['year'], $date['mon'] + $months, 1);
+    return \mod_these\local\planning::planning_shift_month($monthstart, $months);
 }
 
 /**
- * Soutenances prévues sur une période, dans les activités données. La DEVE, la bibliothèque et
- * les détenteurs de mod/these:viewall voient toutes les soutenances d'une activité ; un directeur
- * de thèse, celles des dossiers qu'il dirige.
- *
- * Une soutenance figure au planning dès le dépôt du dossier de soutenance, à la date proposée par
- * l'étudiant ; la date est arrêtée quand la DEVE valide le dossier. Les dossiers abandonnés et les
- * thèses ajournées (revenues avant le dépôt) n'y figurent pas.
+ * Voir \mod_these\local\planning::get_defenses().
  *
  * @param stdClass[] $sources Voir these_planning_source().
  * @param int $from Début de la période (inclus).
@@ -114,53 +93,11 @@ function these_planning_shift_month($monthstart, $months) {
  *                    chronologique.
  */
 function these_get_defenses(array $sources, $from, $to, $userid) {
-    global $DB;
-
-    $defenses = [];
-    foreach ($sources as $source) {
-        $params = [
-            'theseid' => $source->these->id,
-            'minstatus' => THESE_STATUS_DEFENSE_SUBMITTED,
-            'from' => $from,
-            'to' => $to,
-        ];
-        $where = 'theseid = :theseid AND status >= :minstatus AND defensedate >= :from AND defensedate < :to';
-        if (!$source->rights->viewall) {
-            if (!$source->direct) {
-                continue;
-            }
-            $where .= ' AND directorid = :directorid';
-            $params['directorid'] = $userid;
-        }
-        foreach ($DB->get_records_select('these_dossier', $where, $params, 'defensedate ASC, id ASC') as $dossier) {
-            $jury = array_values(these_get_jury($dossier->id));
-            $president = null;
-            foreach ($jury as $member) {
-                if ($member->juryrole === 'president') {
-                    $president = $member;
-                    break;
-                }
-            }
-            $defenses[] = (object) [
-                'dossier' => $dossier,
-                'source' => $source,
-                'student' => $DB->get_record('user', ['id' => $dossier->userid]),
-                'director' => $dossier->directorid ? $DB->get_record('user', ['id' => $dossier->directorid]) : null,
-                'president' => $president,
-                'jury' => $jury,
-                'confirmed' => these_rank_reached($dossier, THESE_STATUS_DEFENSE_VALIDATED),
-            ];
-        }
-    }
-    usort($defenses, function ($a, $b) {
-        return [(int) $a->dossier->defensedate, $a->student ? $a->student->lastname : '']
-            <=> [(int) $b->dossier->defensedate, $b->student ? $b->student->lastname : ''];
-    });
-    return $defenses;
+    return \mod_these\local\planning::get_defenses($sources, $from, $to, $userid);
 }
 
 /**
- * Nombre de soutenances par semaine sur plusieurs semaines, pour la navigation du planning.
+ * Voir \mod_these\local\planning::count_defenses_by_week().
  *
  * @param stdClass[] $sources
  * @param int $weekstart Première semaine.
@@ -169,116 +106,33 @@ function these_get_defenses(array $sources, $from, $to, $userid) {
  * @return int[] début de semaine => nombre de soutenances (semaines sans soutenance omises).
  */
 function these_count_defenses_by_week(array $sources, $weekstart, $weeks, $userid) {
-    $end = these_planning_shift_week($weekstart, $weeks);
-    $counts = [];
-    foreach (these_get_defenses($sources, $weekstart, $end, $userid) as $defense) {
-        $week = these_planning_week_start((int) $defense->dossier->defensedate);
-        $counts[$week] = ($counts[$week] ?? 0) + 1;
-    }
-    return $counts;
+    return \mod_these\local\planning::count_defenses_by_week($sources, $weekstart, $weeks, $userid);
 }
 
 /**
- * Valeurs affichées d'une soutenance, communes à la page, au tableur et au planning PDF.
+ * Voir \mod_these\local\planning::defense_row().
  *
  * @param stdClass $defense Voir these_get_defenses().
  * @return array Textes bruts : day, date, time, student, title, director, president, jury,
  *               location, promotion, devenumber, confirmed, status.
  */
 function these_defense_row(stdClass $defense) {
-    $dossier = $defense->dossier;
-    $name = function ($member) {
-        return trim($member->jurytitle . ' ' . $member->fullname);
-    };
-    $others = array_filter($defense->jury, function ($member) use ($defense) {
-        return $member !== $defense->president;
-    });
-    $roles = these_jury_role_options();
-    $director = $defense->director ? fullname($defense->director) : '';
-    if (!empty($dossier->externaldirector) && trim((string) $dossier->extdirectorname) !== '') {
-        $director = trim((string) $dossier->extdirectorname) . ($director !== '' ? ' (' . $director . ')' : '');
-    }
-    return [
-        'day' => userdate($dossier->defensedate, get_string('strftimedaydate', 'langconfig')),
-        'date' => userdate($dossier->defensedate, get_string('strftimedatefullshort', 'langconfig')),
-        'time' => userdate($dossier->defensedate, get_string('strftimetime', 'langconfig')),
-        'student' => $defense->student ? fullname($defense->student) : '',
-        'title' => format_string(
-            these_subject_field($dossier, 'title', $defense->source->context),
-            true,
-            ['context' => $defense->source->context, 'escape' => false]
-        ),
-        'director' => $director,
-        'president' => $defense->president ? $name($defense->president) : '',
-        'jury' => implode(', ', array_map(function ($member) use ($name, $roles) {
-            // Le libellé d'un rôle peut lui-même contenir des parenthèses (« Directeur de thèse (membre
-            // du jury) ») : il suit le nom après un tiret.
-            return $name($member) . ($member->juryrole === 'member' ? '' : ' – ' . ($roles[$member->juryrole] ?? ''));
-        }, $others)),
-        'location' => trim((string) $dossier->defenselocation),
-        'promotion' => format_string(
-            $defense->source->course->shortname ?: $defense->source->course->fullname,
-            true,
-            ['context' => $defense->source->context, 'escape' => false]
-        ),
-        'devenumber' => (string) $dossier->devenumber,
-        'confirmed' => (bool) $defense->confirmed,
-        'status' => get_string($defense->confirmed ? 'planningconfirmed' : 'planningproposed', 'mod_these'),
-    ];
+    return \mod_these\local\planning::defense_row($defense);
 }
 
 /**
- * Rendu HTML des soutenances d'une période, regroupées par jour.
+ * Voir \mod_these\local\planning::render_planning().
  *
  * @param stdClass[] $defenses Voir these_get_defenses().
  * @param bool $showpromotion Afficher la promotion (planning de plusieurs activités).
  * @return string
  */
 function these_render_planning(array $defenses, $showpromotion) {
-    if (!$defenses) {
-        return html_writer::div(get_string('planningnone', 'mod_these'), 'alert alert-info');
-    }
-    $days = [];
-    foreach ($defenses as $defense) {
-        $days[usergetmidnight($defense->dossier->defensedate)][] = $defense;
-    }
-    $out = '';
-    foreach ($days as $defenses) {
-        $out .= html_writer::tag('h4', s(these_defense_row($defenses[0])['day']), ['class' => 'mt-4']);
-        $table = new html_table();
-        $table->attributes['class'] = 'generaltable these-planning';
-        $table->head = array_merge(
-            [get_string('planningtime', 'mod_these'), get_string('student', 'mod_these')],
-            $showpromotion ? [get_string('planningpromotion', 'mod_these')] : [],
-            [
-                get_string('subjecttitle', 'mod_these'),
-                get_string('director', 'mod_these'),
-                get_string('jury', 'mod_these'),
-                get_string('defenselocation', 'mod_these'),
-            ]
-        );
-        foreach ($defenses as $defense) {
-            $row = these_defense_row($defense);
-            $badge = html_writer::span($row['status'], 'badge ' . ($row['confirmed'] ? 'badge-success' : 'badge-warning'));
-            $url = new moodle_url('/mod/these/dossier.php', [
-                'id' => $defense->source->cm->id,
-                'dossierid' => $defense->dossier->id,
-            ]);
-            $jury = ($row['president'] !== '' ? html_writer::tag('strong', s($row['president'])) . ' ('
-                . s(get_string('juryrolepresident', 'mod_these')) . ')' . html_writer::empty_tag('br') : '') . s($row['jury']);
-            $table->data[] = array_merge(
-                [s($row['time']) . html_writer::empty_tag('br') . $badge, html_writer::link($url, s($row['student']))],
-                $showpromotion ? [s($row['promotion'])] : [],
-                [s($row['title']), s($row['director']), $jury, s($row['location'])]
-            );
-        }
-        $out .= html_writer::table($table);
-    }
-    return $out;
+    return \mod_these\local\planning::render_planning($defenses, $showpromotion);
 }
 
 /**
- * Données du modèle « Planning mensuel des soutenances ».
+ * Voir \mod_these\local\planning::planning_document_context().
  *
  * @param stdClass[] $defenses Voir these_get_defenses().
  * @param string $periodlabel Période (« novembre 2026 »).
@@ -294,86 +148,16 @@ function these_planning_document_context(
     ?stdClass $scope,
     $showpromotion
 ) {
-    $days = [];
-    foreach ($defenses as $defense) {
-        $row = these_defense_row($defense);
-        if (!$showpromotion) {
-            $row['promotion'] = '';
-        }
-        $key = usergetmidnight($defense->dossier->defensedate);
-        if (!isset($days[$key])) {
-            $days[$key] = ['label' => $row['day'], 'defenses' => []];
-        }
-        $days[$key]['defenses'][] = $row;
-    }
-    return [
-        'today' => userdate(time(), '%d/%m/%Y'),
-        'establishment' => [
-            'name' => (string) ($establishment->establishmentname ?? ''),
-            'city' => (string) ($establishment->establishmentcity ?? ''),
-        ],
-        'period' => ['label' => $periodlabel],
-        'count' => count($defenses),
-        'hasdefenses' => !empty($defenses),
-        'days' => array_values($days),
-        'img' => these_doctemplate_images($scope),
-    ];
+    return \mod_these\local\planning::planning_document_context($defenses, $periodlabel, $establishment, $scope, $showpromotion);
 }
 
 /**
- * Données d'exemple du planning mensuel, pour l'aperçu et la vérification du modèle.
+ * Voir \mod_these\local\planning::sample_planning_context().
  *
  * @param stdClass|null $scope
  * @param stdClass|null $activity Activité dont reprendre l'établissement.
  * @return array
  */
 function these_sample_planning_context(?stdClass $scope = null, ?stdClass $activity = null) {
-    $establishment = $activity ?? (object) ['establishmentname' => 'VetAgro Sup', 'establishmentcity' => "Marcy-l'Étoile"];
-    $start = these_planning_month_start(time());
-    $sample = function ($day, $hour, $student, $title, $director, $president, $jury, $location, $confirmed) use ($start) {
-        $time = $start + ($day - 1) * DAYSECS + $hour * HOURSECS;
-        return [
-            'day' => userdate($time, get_string('strftimedaydate', 'langconfig')),
-            'date' => userdate($time, get_string('strftimedatefullshort', 'langconfig')),
-            'time' => userdate($time, get_string('strftimetime', 'langconfig')),
-            'student' => $student, 'title' => $title, 'director' => $director, 'president' => $president,
-            'jury' => $jury, 'location' => $location, 'promotion' => 'Promotion 2026', 'devenumber' => '2026-042',
-            'confirmed' => $confirmed,
-            'status' => get_string($confirmed ? 'planningconfirmed' : 'planningproposed', 'mod_these'),
-        ];
-    };
-    $first = $sample(
-        3,
-        14,
-        'Camille Martin',
-        'Prise en charge de la douleur chronique chez le chien âgé',
-        'Pr Anne Durand',
-        'Pr Jean DUPONT',
-        'Dr Claire BERNARD, Pr Anne DURAND (Directeur de thèse)',
-        'Amphithéâtre Bourgelat',
-        true
-    );
-    $second = $sample(
-        3,
-        16,
-        'Lucas Bernard',
-        'Leptospirose canine en zone périurbaine',
-        'Dr Paul Leroy',
-        'Pr Marie LEFÈVRE',
-        'Dr Paul LEROY (Directeur de thèse), Dr Luc PETIT',
-        'Salle du conseil',
-        false
-    );
-    return [
-        'today' => userdate(time(), '%d/%m/%Y'),
-        'establishment' => [
-            'name' => (string) ($establishment->establishmentname ?? ''),
-            'city' => (string) ($establishment->establishmentcity ?? ''),
-        ],
-        'period' => ['label' => userdate($start, '%B %Y')],
-        'count' => 2,
-        'hasdefenses' => true,
-        'days' => [['label' => $first['day'], 'defenses' => [$first, $second]]],
-        'img' => these_doctemplate_images($scope),
-    ];
+    return \mod_these\local\planning::sample_planning_context($scope, $activity);
 }
