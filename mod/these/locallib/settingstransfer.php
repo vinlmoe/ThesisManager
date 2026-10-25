@@ -30,37 +30,25 @@
 define('THESE_SETTINGS_FORMAT', 'mod_these_settings');
 
 /**
- * Paramètres de l'activité transférables (formulaire de l'activité), avec leur type.
+ * Voir \mod_these\local\settingstransfer::settings_activity_fields().
  *
  * @return array champ => PARAM_*
  */
 function these_settings_activity_fields() {
-    return [
-        'establishmentname' => PARAM_TEXT,
-        'establishmentaddress' => PARAM_TEXT,
-        'establishmentcity' => PARAM_TEXT,
-        'signatoryname' => PARAM_TEXT,
-        'signatorytitle' => PARAM_TEXT,
-        'defaultlocation' => PARAM_TEXT,
-        'minjury' => PARAM_INT,
-        'deveemail' => PARAM_EMAIL,
-        'libraryemail' => PARAM_EMAIL,
-        'universityemail' => PARAM_EMAIL,
-        'reminderdays' => PARAM_INT,
-    ];
+    return \mod_these\local\settingstransfer::settings_activity_fields();
 }
 
 /**
- * Groupes de paramètres transférables, dans l'ordre de présentation.
+ * Voir \mod_these\local\settingstransfer::settings_groups().
  *
  * @return string[]
  */
 function these_settings_groups() {
-    return ['activity', 'emails', 'griditems', 'questions', 'doctemplates', 'docimages'];
+    return \mod_these\local\settingstransfer::settings_groups();
 }
 
 /**
- * Paramètres d'une activité, sous une forme transférable (et enregistrable en JSON).
+ * Voir \mod_these\local\settingstransfer::export_settings().
  *
  * @param stdClass $these
  * @param context $context
@@ -68,76 +56,21 @@ function these_settings_groups() {
  * @return array
  */
 function these_export_settings(stdClass $these, context $context, array $groups) {
-    global $DB;
-
-    $data = ['format' => THESE_SETTINGS_FORMAT, 'version' => 1, 'name' => (string) $these->name, 'groups' => []];
-    if (in_array('activity', $groups, true)) {
-        $data['groups']['activity'] = [];
-        foreach (array_keys(these_settings_activity_fields()) as $field) {
-            $data['groups']['activity'][$field] = $these->$field;
-        }
-    }
-    if (in_array('emails', $groups, true)) {
-        $data['groups']['emails'] = [];
-        foreach ($DB->get_records('these_email_template', ['theseid' => $these->id], 'emailkey') as $record) {
-            $data['groups']['emails'][] = ['emailkey' => $record->emailkey, 'subject' => $record->subject, 'body' => $record->body];
-        }
-    }
-    if (in_array('griditems', $groups, true)) {
-        $data['groups']['griditems'] = [];
-        foreach (these_get_grid_items(these_local_scope($these)) as $items) {
-            foreach ($items as $item) {
-                $data['groups']['griditems'][] = ['itemkey' => $item->itemkey, 'section' => $item->section,
-                    'label' => $item->label, 'conditional' => (int) $item->conditional];
-            }
-        }
-    }
-    if (in_array('questions', $groups, true)) {
-        $data['groups']['questions'] = [];
-        foreach (these_get_questions(these_local_scope($these)) as $question) {
-            $data['groups']['questions'][] = ['qtype' => $question->qtype, 'label' => $question->label,
-                'options' => $question->options, 'required' => (int) $question->required];
-        }
-    }
-    if (in_array('doctemplates', $groups, true)) {
-        $data['groups']['doctemplates'] = [];
-        foreach ($DB->get_records('these_doctemplate', ['theseid' => $these->id], 'doctype') as $record) {
-            $data['groups']['doctemplates'][] = ['doctype' => $record->doctype, 'content' => $record->content];
-        }
-    }
-    if (in_array('docimages', $groups, true)) {
-        $data['groups']['docimages'] = [];
-        $fs = get_file_storage();
-        foreach ($fs->get_area_files($context->id, 'mod_these', 'docimages', 0, 'filename', false) as $file) {
-            $data['groups']['docimages'][] = [
-                'filename' => $file->get_filename(),
-                'content' => base64_encode($file->get_content()),
-            ];
-        }
-    }
-    return $data;
+    return \mod_these\local\settingstransfer::export_settings($these, $context, $groups);
 }
 
 /**
- * Lit un fichier de paramètres exporté.
+ * Voir \mod_these\local\settingstransfer::parse_settings_file().
  *
  * @param string $json
  * @return array|null Données (voir these_export_settings()), null si le fichier n'en est pas un.
  */
 function these_parse_settings_file($json) {
-    $data = json_decode((string) $json, true);
-    if (!is_array($data) || ($data['format'] ?? '') !== THESE_SETTINGS_FORMAT || !is_array($data['groups'] ?? null)) {
-        return null;
-    }
-    return $data;
+    return \mod_these\local\settingstransfer::parse_settings_file($json);
 }
 
 /**
- * Remplace les paramètres choisis d'une activité par ceux transférés. Pour chaque groupe choisi
- * et présent dans les données, les paramètres de l'activité sont remplacés en totalité : un
- * courriel ou un modèle personnalisé dans l'activité mais pas dans la source revient à son texte
- * d'origine. Les éléments inconnus (courriel, document) et les modèles qui ne produisent pas de
- * document sont ignorés et signalés.
+ * Voir \mod_these\local\settingstransfer::import_settings().
  *
  * @param stdClass $these Activité de destination (mise à jour).
  * @param context $context
@@ -147,158 +80,16 @@ function these_parse_settings_file($json) {
  *     skipped (string[])}
  */
 function these_import_settings(stdClass $these, context $context, array $data, array $groups) {
-    global $DB;
-
-    $result = (object) ['activity' => false, 'emails' => 0, 'griditems' => 0, 'questions' => 0, 'doctemplates' => 0,
-        'docimages' => 0, 'skipped' => []];
-    $source = $data['groups'];
-    $transaction = $DB->start_delegated_transaction();
-
-    if (in_array('activity', $groups, true) && is_array($source['activity'] ?? null)) {
-        $update = (object) ['id' => $these->id, 'timemodified' => time()];
-        foreach (these_settings_activity_fields() as $field => $type) {
-            if (array_key_exists($field, $source['activity'])) {
-                $update->$field = clean_param($source['activity'][$field] ?? '', $type);
-            }
-        }
-        if (isset($update->minjury)) {
-            $update->minjury = max(1, (int) $update->minjury);
-        }
-        if (isset($update->reminderdays)) {
-            $update->reminderdays = max(0, (int) $update->reminderdays);
-        }
-        $DB->update_record('these', $update);
-        foreach ((array) $update as $field => $value) {
-            $these->$field = $value;
-        }
-        $result->activity = true;
-    }
-
-    if (in_array('emails', $groups, true) && is_array($source['emails'] ?? null)) {
-        $DB->delete_records('these_email_template', ['theseid' => $these->id]);
-        $definitions = these_get_email_definitions();
-        foreach ($source['emails'] as $email) {
-            $key = (string) ($email['emailkey'] ?? '');
-            if (!isset($definitions[$key])) {
-                $result->skipped[] = get_string('transferskippedemail', 'mod_these', s($key));
-                continue;
-            }
-            these_save_email_template($these->id, $key, (string) ($email['subject'] ?? ''), (string) ($email['body'] ?? ''));
-            $result->emails++;
-        }
-    }
-
-    if (in_array('griditems', $groups, true) && is_array($source['griditems'] ?? null) && $source['griditems']) {
-        $items = [];
-        foreach ($source['griditems'] as $item) {
-            $items[] = (object) [
-                'itemkey' => clean_param((string) ($item['itemkey'] ?? ''), PARAM_ALPHANUM),
-                'section' => (string) ($item['section'] ?? ''),
-                'label' => clean_param((string) ($item['label'] ?? ''), PARAM_TEXT),
-                'conditional' => !empty($item['conditional']),
-            ];
-        }
-        $scope = these_local_scope($these);
-        these_save_grid_items($scope, $items);
-        $result->griditems = count(these_get_grid_items($scope), COUNT_RECURSIVE) - count(these_grid_sections());
-    }
-
-    // Questionnaire : les réponses déjà données aux questions remplacées sont supprimées avec elles.
-    if (in_array('questions', $groups, true) && is_array($source['questions'] ?? null)) {
-        $scope = these_local_scope($these);
-        foreach (array_keys(these_get_questions($scope)) as $questionid) {
-            these_delete_question($scope, $questionid);
-        }
-        foreach ($source['questions'] as $question) {
-            $label = clean_param((string) ($question['label'] ?? ''), PARAM_TEXT);
-            if (trim($label) === '') {
-                continue;
-            }
-            these_save_question($scope, (object) [
-                'qtype' => (string) ($question['qtype'] ?? 'text'),
-                'label' => $label,
-                'options' => clean_param((string) ($question['options'] ?? ''), PARAM_TEXT),
-                'required' => !empty($question['required']),
-            ]);
-            $result->questions++;
-        }
-    }
-
-    if (in_array('doctemplates', $groups, true) && is_array($source['doctemplates'] ?? null)) {
-        $DB->delete_records('these_doctemplate', ['theseid' => $these->id]);
-        $types = these_doctemplate_types();
-        foreach ($source['doctemplates'] as $template) {
-            $type = (string) ($template['doctype'] ?? '');
-            $content = (string) ($template['content'] ?? '');
-            if (!array_key_exists($type, $types)) {
-                $result->skipped[] = get_string('transferskippeddoctemplate', 'mod_these', s($type));
-                continue;
-            }
-            if (($error = these_doctemplate_error(these_local_scope($these), $type, $content, $these)) !== null) {
-                $result->skipped[] = these_doctemplate_label($type) . ' : ' . $error;
-                continue;
-            }
-            these_set_doctemplate(these_local_scope($these), $type, $content);
-            $result->doctemplates++;
-        }
-    }
-
-    if (in_array('docimages', $groups, true) && is_array($source['docimages'] ?? null)) {
-        $fs = get_file_storage();
-        $fs->delete_area_files($context->id, 'mod_these', 'docimages', 0);
-        foreach ($source['docimages'] as $image) {
-            $filename = clean_param((string) ($image['filename'] ?? ''), PARAM_FILE);
-            $content = base64_decode((string) ($image['content'] ?? ''), true);
-            $info = $content !== false ? @getimagesizefromstring($content) : false;
-            if (
-                $filename === '' || !$info || !in_array($info[2], [IMAGETYPE_PNG, IMAGETYPE_JPEG], true)
-                    || $fs->file_exists($context->id, 'mod_these', 'docimages', 0, '/', $filename)
-            ) {
-                $result->skipped[] = get_string('transferskippedimage', 'mod_these', s($filename));
-                continue;
-            }
-            $fs->create_file_from_string([
-                'contextid' => $context->id,
-                'component' => 'mod_these',
-                'filearea' => 'docimages',
-                'itemid' => 0,
-                'filepath' => '/',
-                'filename' => $filename,
-            ], $content);
-            $result->docimages++;
-        }
-    }
-
-    $transaction->allow_commit();
-    return $result;
+    return \mod_these\local\settingstransfer::import_settings($these, $context, $data, $groups);
 }
 
 /**
- * Autres activités « Gestion des thèses » dont un utilisateur gère les paramètres (DEVE) :
- * sources possibles d'un transfert.
+ * Voir \mod_these\local\settingstransfer::settings_transfer_sources().
  *
  * @param stdClass $these Activité courante (exclue).
  * @param int $userid
  * @return array id de l'activité => libellé « cours : activité »
  */
 function these_settings_transfer_sources(stdClass $these, $userid) {
-    global $DB;
-
-    $sources = [];
-    $sql = "SELECT t.id, t.name, c.fullname AS coursename
-              FROM {these} t
-              JOIN {course} c ON c.id = t.course
-             WHERE t.id <> :id
-          ORDER BY c.fullname, t.name";
-    foreach ($DB->get_records_sql($sql, ['id' => $these->id]) as $record) {
-        $cm = get_coursemodule_from_instance('these', $record->id, 0, false, IGNORE_MISSING);
-        if (!$cm) {
-            continue;
-        }
-        $rights = these_get_rights(context_module::instance($cm->id), null, $userid);
-        if ($rights->deve) {
-            $sources[$record->id] = format_string($record->coursename) . ' : ' . format_string($record->name);
-        }
-    }
-    return $sources;
+    return \mod_these\local\settingstransfer::settings_transfer_sources($these, $userid);
 }
