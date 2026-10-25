@@ -1,0 +1,55 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_thesesynthesis/search_form
+
+    Formulaire de recherche des thèses : texte, promotion, année, statut, puis réponses au
+    questionnaire préalable au jury.
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * none
+
+    Context variables required for this template:
+    * action Adresse du formulaire.
+    * cmid Module de l'activité de suivi.
+    * fields, questionfields Champs (contextes de mod_thesesynthesis/search_field).
+    * questionheading Titre des champs du questionnaire, ou false.
+    * searchlabel, resetlabel Libellés des boutons.
+    * reseturl Adresse du formulaire vide.
+
+    Example context (json):
+    {
+        "action": "https://example.com/mod/thesesynthesis/search.php",
+        "cmid": 2,
+        "fields": [{"label": "Texte", "text": {"name": "q", "value": "", "size": 50, "id": "search-q"}, "select": false}],
+        "questionheading": "Questionnaire préalable au jury",
+        "questionfields": [{"label": "Espèce", "text": false, "select": {"name": "a5", "id": "search-a5",
+            "class": "select custom-select custom-select form-select",
+            "options": [{"value": "", "label": "Indifférent", "selected": true}]} }],
+        "searchlabel": "Rechercher",
+        "reseturl": "https://example.com/mod/thesesynthesis/search.php?id=2",
+        "resetlabel": "Réinitialiser"
+    }
+}}
+<form method="get" action="{{action}}" class="mb-3" id="thesesynthesis-search"><input type="hidden" name="id" value="{{cmid}}" /><input type="hidden" name="search" value="1" />{{#fields}}{{> mod_thesesynthesis/search_field}}{{/fields}}
+{{#questionheading}}
+<h5 class="mt-3">{{questionheading}}</h5>
+{{/questionheading}}
+{{#questionfields}}{{> mod_thesesynthesis/search_field}}{{/questionfields}}<button type="submit" class="btn btn-primary mr-1">{{searchlabel}}</button><a href="{{reseturl}}" class="btn btn-secondary">{{resetlabel}}</a></form>
