@@ -1,0 +1,130 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_these/dossier
+
+    Dossier complet. Le contexte est préparé par \mod_these\output\dossier::export_for_template(), qui
+    prend toutes les décisions d'accès : le gabarit affiche ce qu'il reçoit, et ne reçoit le sujet d'une
+    thèse confidentielle que si l'utilisateur doit le connaître.
+
+    returnnotice.comment est rendu sans échappement : c'est le motif du renvoi passé par format_text().
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * none
+
+    Context variables required for this template:
+    * progress Contexte de mod_these/progress.
+    * status Contexte de mod_these/status_badge.
+    * waiting Acteur attendu et date du statut, ou false.
+    * returnnotice Renvoi en cours (title, comment), ou false.
+    * adjourned Avis d'ajournement, ou false.
+    * actionbar Contexte de mod_these/actions, ou false.
+    * subject, registration Contextes de mod_these/detail_section.
+    * embargo Contexte de mod_these/embargo.
+    * subjecthistory Contexte de mod_these/subject_history, ou false.
+    * defense, corrections, answers Contextes de mod_these/detail_section, ou false.
+    * jury Contexte de mod_these/jury, ou false.
+    * juryresend Bouton de renvoi des accès du jury (url, label), ou false.
+    * signeddocuments Contexte de mod_these/signed_documents.
+    * history Contexte de mod_these/history.
+
+    Example context (json):
+    {
+        "progress": {"steps": [
+            {"label": "1. Dépôt du sujet", "actor": "Étudiant", "stateclass": "these-step-done", "separator": false},
+            {"label": "2. Validation du sujet", "actor": "Directeur de thèse", "stateclass": "these-step-current",
+                "separator": false}
+        ]},
+        "status": {"label": "Sujet soumis au directeur", "badgeclass": "badge-info"},
+        "waiting": "En attente : Directeur de thèse — Depuis le 6 janvier 2026",
+        "returnnotice": false,
+        "adjourned": false,
+        "actionbar": {"actions": [{"label": "Modifier le dossier",
+            "url": "https://example.com/mod/these/edit.php?id=2&dossierid=3", "class": "btn btn-primary mr-1 mb-1"}]},
+        "subject": {"hasrows": true, "heading": "Sujet de thèse",
+            "table": {"tableclass": "generaltable these-detail", "hashead": false, "head": [], "rows": [
+                {"class": "lastrow", "cells": [
+                    {"class": "cell c0", "parts": [{"ptext": false, "phtml": false, "pstrong": {"value": "Titre"},
+                        "pstronghtml": false, "pem": false, "pbadge": false, "pspan": false, "plink": false,
+                        "pmuted": false, "pbr": false, "pfiles": false, "pstatus": false}]},
+                    {"class": "cell c1 lastcol", "parts": [{"ptext": false, "phtml": false, "pstrong": false,
+                        "pstronghtml": false, "pem": {"value": "Thèse confidentielle"}, "pbadge": false,
+                        "pspan": false, "plink": false, "pmuted": false, "pbr": false, "pfiles": false,
+                        "pstatus": false}]}
+                ]}
+            ]} },
+        "embargo": {"hasrows": false, "heading": "Diffusion", "table": false},
+        "subjecthistory": false,
+        "registration": {"hasrows": false, "heading": "Enregistrements", "table": false},
+        "defense": false,
+        "corrections": false,
+        "answers": false,
+        "jury": false,
+        "juryresend": false,
+        "signeddocuments": {"hasdocuments": false, "heading": "", "table": false, "warning": false},
+        "history": {"haslogs": false, "heading": "", "table": false}
+    }
+}}
+{{#progress}}
+{{> mod_these/progress}}
+{{/progress}}
+<div class="mb-3">{{#status}}{{> mod_these/status_badge}}{{/status}}{{#waiting}} <span class="text-muted">{{waiting}}</span>{{/waiting}}</div>
+{{#returnnotice}}
+<div class="alert alert-warning"><strong>{{title}}</strong><br />{{{comment}}}</div>
+{{/returnnotice}}
+{{#adjourned}}
+<div class="alert alert-warning">{{adjourned}}</div>
+{{/adjourned}}
+{{#actionbar}}
+<div class="these-actions mb-3">{{> mod_these/actions}}</div>
+{{/actionbar}}
+{{#subject}}
+{{> mod_these/detail_section}}
+{{/subject}}
+{{#embargo}}
+{{> mod_these/embargo}}
+{{/embargo}}
+{{#subjecthistory}}
+{{> mod_these/subject_history}}
+{{/subjecthistory}}
+{{#registration}}
+{{> mod_these/detail_section}}
+{{/registration}}
+{{#defense}}
+{{> mod_these/detail_section}}
+{{/defense}}
+{{#corrections}}
+{{> mod_these/detail_section}}
+{{/corrections}}
+{{#answers}}
+{{> mod_these/detail_section}}
+{{/answers}}
+{{#jury}}
+{{> mod_these/jury}}
+{{/jury}}
+{{#juryresend}}
+<div class="mb-3"><a href="{{url}}" class="btn btn-secondary btn-sm">{{label}}</a></div>
+{{/juryresend}}
+{{#signeddocuments}}
+{{> mod_these/signed_documents}}
+{{/signeddocuments}}
+{{#history}}
+{{> mod_these/history}}
+{{/history}}

@@ -16,9 +16,8 @@
 
 namespace mod_these\local;
 
+use mod_these\output;
 use context;
-use html_writer;
-use moodle_url;
 
 /**
  * Zones de fichiers des dossiers.
@@ -78,20 +77,9 @@ class files {
      * @return string HTML, vide si la zone est vide.
      */
     public static function render_file_links(context $context, $filearea, $dossierid) {
-        $links = [];
-        foreach (these_get_files($context, $filearea, $dossierid) as $file) {
-            $url = moodle_url::make_pluginfile_url(
-                $context->id,
-                'mod_these',
-                $filearea,
-                $dossierid,
-                $file->get_filepath(),
-                $file->get_filename(),
-                true
-            );
-            $links[] = html_writer::link($url, s($file->get_filename()));
-        }
-        return implode(html_writer::empty_tag('br'), $links);
+        global $PAGE;
+
+        return $PAGE->get_renderer('mod_these')->render(new output\file_links($context, $filearea, $dossierid));
     }
 
     /**

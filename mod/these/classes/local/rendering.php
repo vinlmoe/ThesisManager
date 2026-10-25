@@ -17,9 +17,8 @@
 namespace mod_these\local;
 
 use context;
-use context_module;
-use html_table;
 use html_writer;
+use mod_these\output;
 use moodle_url;
 use paging_bar;
 use stdClass;
@@ -156,13 +155,9 @@ class rendering {
      * @return string HTML
      */
     public static function render_actions(array $links, $class = 'btn btn-sm btn-secondary mr-1 mb-1') {
-        $out = '';
-        foreach ($links as $label => $url) {
-            if ($url !== null) {
-                $out .= html_writer::link($url, $label, ['class' => $class]);
-            }
-        }
-        return $out;
+        global $PAGE;
+
+        return $PAGE->get_renderer('mod_these')->render(new output\actions($links, $class));
     }
 
     /**
@@ -212,27 +207,9 @@ class rendering {
      * @return string HTML
      */
     public static function render_progress(stdClass $dossier) {
-        $status = (int) $dossier->status;
-        $rank = these_status_rank($status === THESE_STATUS_CANCELLED ? $dossier->cancelledfromstatus : $status);
-        $items = '';
-        $currentfound = false;
-        foreach (these_progress_steps() as $index => $step) {
-            if ($rank >= $step['done']) {
-                $class = 'these-step-done';
-            } else if (!$currentfound && $status !== THESE_STATUS_CANCELLED) {
-                $class = 'these-step-current';
-                $currentfound = true;
-            } else {
-                $class = 'these-step-todo';
-            }
-            $label = html_writer::span(($index + 1) . '. ' . $step['label'], 'these-step-label')
-                . html_writer::span(these_actor_label($step['actor']), 'these-step-actor');
-            $items .= html_writer::tag('li', $label, ['class' => 'these-step ' . $class]);
-            if ($index === 3) {
-                $items .= html_writer::tag('li', get_string('dormantphase', 'mod_these'), ['class' => 'these-step-separator']);
-            }
-        }
-        return html_writer::tag('ol', $items, ['class' => 'these-progress']);
+        global $PAGE;
+
+        return $PAGE->get_renderer('mod_these')->render(new output\progress($dossier));
     }
 
     /**
@@ -243,18 +220,10 @@ class rendering {
      * @return string HTML
      */
     public static function render_detail_section($heading, array $rows) {
-        $table = new html_table();
-        $table->attributes['class'] = 'generaltable these-detail';
-        foreach ($rows as $label => $value) {
-            if ($value === null || $value === '') {
-                continue;
-            }
-            $table->data[] = [html_writer::tag('strong', $label), $value];
-        }
-        if (empty($table->data)) {
-            return '';
-        }
-        return html_writer::tag('h4', $heading, ['class' => 'mt-4']) . html_writer::table($table);
+        global $PAGE;
+
+        // Valeurs HTML reçues des appelants existants : voir output\detail_section::from_html().
+        return $PAGE->get_renderer('mod_these')->render(output\detail_section::from_html($heading, $rows));
     }
 
     /**
@@ -266,56 +235,9 @@ class rendering {
      * @return string HTML
      */
     public static function render_jury(array $members, $showemail = true, $staff = false) {
-        if (empty($members)) {
-            return '';
-        }
-        $roles = these_jury_role_options();
-        $table = new html_table();
-        $table->attributes['class'] = 'generaltable';
-        $table->head = [get_string('juryrole', 'mod_these'), get_string('juryname', 'mod_these'),
-            get_string('jurytitle', 'mod_these'), get_string('jurystatus', 'mod_these'),
-            get_string('juryinstitution', 'mod_these')];
-        if ($showemail) {
-            $table->head[] = get_string('juryemail', 'mod_these');
-        }
-        if ($staff) {
-            $table->head[] = get_string('juryeligiblecheck', 'mod_these');
-        }
-        foreach ($members as $member) {
-            $row = [$roles[$member->juryrole] ?? s($member->juryrole), s($member->fullname), s($member->jurytitle),
-                s(\mod_these\local\jurors::status_label($member->jurystatus ?? '')), s($member->institution)];
-            if ($showemail) {
-                $row[] = s($member->email);
-            }
-            if ($staff) {
-                if ($member->juryrole === 'guest') {
-                    $eligibility = '-';
-                } else if (!empty($member->eligible)) {
-                    $eligibility = html_writer::span(
-                        get_string('juryeligibilityvalidated', 'mod_these'),
-                        'badge badge-success bg-success'
-                    );
-                } else {
-                    $state = these_jury_eligibility($member);
-                    $eligibility = html_writer::span(
-                        get_string('juryeligibility' . $state, 'mod_these'),
-                        'badge ' . ($state === 'ko' ? 'badge-danger bg-danger' : 'badge-warning bg-warning text-dark')
-                    );
-                }
-                if (!empty($member->notifiedtime)) {
-                    $eligibility .= html_writer::div(
-                        get_string('jurynotifiedon', 'mod_these', userdate(
-                            $member->notifiedtime,
-                            get_string('strftimedatetimeshort', 'langconfig')
-                        )),
-                        'small text-muted'
-                    );
-                }
-                $row[] = $eligibility;
-            }
-            $table->data[] = $row;
-        }
-        return html_writer::tag('h4', get_string('jury', 'mod_these'), ['class' => 'mt-4']) . html_writer::table($table);
+        global $PAGE;
+
+        return $PAGE->get_renderer('mod_these')->render(new output\jury($members, $showemail, $staff));
     }
 
     /**
@@ -330,36 +252,9 @@ class rendering {
      * @return string HTML
      */
     public static function render_history($dossierid, $staffview = true, $knowssubject = true) {
-        global $DB;
+        global $PAGE;
 
-        $logs = $DB->get_records('these_log', ['dossierid' => $dossierid], 'timecreated DESC, id DESC');
-        if (empty($logs)) {
-            return '';
-        }
-        $userids = array_filter(array_unique(array_map(function ($log) {
-            return (int) $log->userid;
-        }, $logs)));
-        $users = $userids ? $DB->get_records_list('user', 'id', $userids) : [];
-
-        $table = new html_table();
-        $table->attributes['class'] = 'generaltable these-history';
-        $table->head = [get_string('date'), get_string('historyaction', 'mod_these'), get_string('historyby', 'mod_these'),
-            get_string('status', 'mod_these'), get_string('historyremark', 'mod_these')];
-        $strman = get_string_manager();
-        foreach ($logs as $log) {
-            $actionkey = 'log' . $log->logaction;
-            $by = $log->userid && isset($users[$log->userid]) ? fullname($users[$log->userid]) : get_string('system', 'mod_these');
-            $row = [
-                userdate($log->timecreated, get_string('strftimedatetimeshort', 'langconfig')),
-                $strman->string_exists($actionkey, 'mod_these') ? get_string($actionkey, 'mod_these') : s($log->logaction),
-                $by,
-                these_status_label($log->tostatus),
-                ($staffview || $log->logaction !== 'returnedtodirector') && ($knowssubject || $log->logaction !== 'subjectchanged')
-                    ? format_text((string) $log->remark, FORMAT_PLAIN) : '',
-            ];
-            $table->data[] = $row;
-        }
-        return html_writer::tag('h4', get_string('history', 'mod_these'), ['class' => 'mt-4']) . html_writer::table($table);
+        return $PAGE->get_renderer('mod_these')->render(new output\history($dossierid, $staffview, $knowssubject));
     }
 
     /**
@@ -442,138 +337,10 @@ class rendering {
         stdClass $rights,
         $withactions = true
     ) {
-        global $DB;
+        global $PAGE;
 
-        $out = these_render_progress($dossier);
-
-        $status = (int) $dossier->status;
-        $actor = these_step_actor($status);
-        $statusline = these_render_status_badge($status);
-        if ($actor !== null) {
-            $statusline .= ' ' . html_writer::span(
-                get_string('waitingfor', 'mod_these', these_actor_label($actor)) . ' — '
-                    . get_string('since', 'mod_these', userdate($dossier->statustime, get_string('strftimedate', 'langconfig'))),
-                'text-muted'
-            );
-        }
-        $out .= html_writer::div($statusline, 'mb-3');
-
-        // Renvoi en cours : affiché au personnel et à son destinataire, avec le motif. Un renvoi de la
-        // DEVE au directeur ne s'adresse pas à l'étudiant, qui n'en voit que le statut.
-        $returnedtostudent = in_array($status, [THESE_STATUS_SUBJECT_RETURNED, THESE_STATUS_DEFENSE_RETURNED], true);
-        $showreturn = $rights->viewall || $rights->director || ($rights->owner && $returnedtostudent);
-        if ($showreturn && !empty($dossier->returntime) && trim((string) $dossier->returncomment) !== '') {
-            $returner = $DB->get_record('user', ['id' => $dossier->returnedby]);
-            $a = (object) [
-                'by' => $returner ? fullname($returner) : get_string('system', 'mod_these'),
-                'date' => userdate($dossier->returntime, get_string('strftimedate', 'langconfig')),
-            ];
-            $out .= html_writer::div(
-                html_writer::tag('strong', get_string('returnedby', 'mod_these', $a)) . html_writer::empty_tag('br')
-                    . format_text($dossier->returncomment, FORMAT_PLAIN),
-                'alert alert-warning'
-            );
-        }
-        if (these_is_adjourned($dossier)) {
-            $out .= html_writer::div(get_string(
-                $rights->student ? 'adjournednoticestudent' : 'adjournednotice',
-                'mod_these',
-                userdate($dossier->statustime, get_string('strftimedate', 'langconfig'))
-            ), 'alert alert-warning');
-        }
-
-        $actions = $withactions
-            ? these_render_actions(these_get_dossier_actions($cm, $dossier, $rights), 'btn btn-primary mr-1 mb-1') : '';
-        if ($actions !== '') {
-            $out .= html_writer::div($actions, 'these-actions mb-3');
-        }
-
-        $student = $DB->get_record('user', ['id' => $dossier->userid]);
-        $director = $dossier->directorid ? $DB->get_record('user', ['id' => $dossier->directorid]) : null;
-
-        // Thèse confidentielle : sujet masqué pour qui ne doit pas le connaître.
-        $knows = $rights->knowssubject;
-        $confidential = !empty($dossier->confidential)
-            ? html_writer::span(get_string('confidentialbadge', 'mod_these'), 'badge badge-danger') : null;
-        $masked = html_writer::tag('em', get_string('confidentialtitle', 'mod_these'));
-        $out .= these_render_detail_section(get_string('subject', 'mod_these'), [
-            get_string('student', 'mod_these') => $student ? fullname($student) : '-',
-            get_string('subjecttitle', 'mod_these') => $knows ? (format_string($dossier->title) ?: '-') : $masked,
-            get_string('confidentialitylabel', 'mod_these') => $confidential,
-            get_string('subjecttitleen', 'mod_these') => $knows ? format_string((string) $dossier->titleen) : $masked,
-            get_string('subjectsummary', 'mod_these') => $knows ? format_text((string) $dossier->summary, FORMAT_PLAIN) : $masked,
-            get_string('subjectkeywords', 'mod_these') => $knows ? s((string) $dossier->keywords) : $masked,
-            get_string('director', 'mod_these') => $director ? fullname($director) : '-',
-            get_string('codirector', 'mod_these') => s((string) $dossier->codirectorname),
-            get_string('subjectdocs', 'mod_these') => these_can_view_filearea('subjectdocs', $rights)
-                ? these_render_file_links($context, 'subjectdocs', $dossier->id) : null,
-        ]);
-        $out .= these_render_embargo($dossier, $rights);
-
-        if ($knows && ($rights->viewall || $rights->director || $rights->owner)) {
-            $out .= these_render_subject_history($context, $dossier);
-        }
-        $out .= these_render_detail_section(get_string('registration', 'mod_these'), [
-            get_string('devenumber', 'mod_these') => s((string) $dossier->devenumber),
-            get_string('libraryref', 'mod_these') => s((string) $dossier->libraryref),
-        ]);
-
-        if (these_rank_reached($dossier, THESE_STATUS_ACTIVE) || $dossier->proposeddate) {
-            $files = function ($filearea) use ($context, $dossier, $rights) {
-                return these_can_view_filearea($filearea, $rights)
-                    ? these_render_file_links($context, $filearea, $dossier->id) : null;
-            };
-            $dateformat = get_string('strftimedaydatetime', 'langconfig');
-            $rows = [
-                get_string('proposeddate', 'mod_these') =>
-                    $dossier->proposeddate ? userdate($dossier->proposeddate, $dateformat) : null,
-                get_string('defensedate', 'mod_these') =>
-                    $dossier->defensedate ? userdate($dossier->defensedate, $dateformat) : null,
-                get_string('defenselocation', 'mod_these') => s((string) $dossier->defenselocation),
-                get_string('manuscript', 'mod_these') => $files('manuscript'),
-                get_string('defensedocs', 'mod_these') => $files('defensedocs'),
-            ];
-            $rows[get_string('directorreport', 'mod_these')] = $files('directorreport');
-            $rows[get_string('generateddocuments', 'mod_these')] = $files('generated');
-            if ($status === THESE_STATUS_CLOSED || these_in_corrections($status)) {
-                $rows[get_string('defenseresult', 'mod_these')] = these_result_label($dossier->defenseresult);
-                $rows[get_string('mention', 'mod_these')] = s(these_mention_label($dossier->mention));
-                $rows[get_string('prizeproposal', 'mod_these')] = $dossier->prizeproposal ? get_string('yes') : null;
-                $rows[get_string('minutes', 'mod_these')] = $files('pv');
-            }
-            $rows[get_string('minutesadjourned', 'mod_these')] = $files('pvadjourned');
-            $out .= these_render_detail_section(get_string('defense', 'mod_these'), $rows);
-            if (!empty($dossier->correctionsrequested)) {
-                $out .= these_render_detail_section(get_string('corrections', 'mod_these'), [
-                    get_string('correctionsnote', 'mod_these') => format_text((string) $dossier->correctionsnote, FORMAT_PLAIN),
-                    get_string('correctionsdone', 'mod_these') => trim((string) $dossier->correctionsdone) !== ''
-                        ? format_text((string) $dossier->correctionsdone, FORMAT_PLAIN) : null,
-                    get_string('correctedmanuscript', 'mod_these') => $files('corrections'),
-                ]);
-            }
-            if ($knows && ($rights->viewall || $rights->director || $rights->owner)) {
-                $out .= these_render_answers((object) ['id' => $dossier->theseid], $dossier);
-            }
-            $showemail = $rights->viewall || $rights->director || $rights->owner;
-            $out .= these_render_jury(these_get_jury($dossier->id), $showemail, $rights->deve);
-            $juryvalidated = (int) $dossier->status >= THESE_STATUS_DEFENSE_VALIDATED
-                && (int) $dossier->status < THESE_STATUS_CLOSED;
-            if ($rights->deve && $juryvalidated) {
-                $out .= html_writer::div(html_writer::link(
-                    new moodle_url('/mod/these/jurynotify.php', [
-                        'id' => $cm->id,
-                        'dossierid' => $dossier->id,
-                        'sesskey' => sesskey(),
-                    ]),
-                    get_string('juryresendaccess', 'mod_these'),
-                    ['class' => 'btn btn-secondary btn-sm']
-                ), 'mb-3');
-            }
-        }
-
-        $out .= these_render_signed_documents($cm, $context, $dossier, $rights);
-        $out .= these_render_history($dossier->id, $rights->viewall || $rights->director, $rights->knowssubject);
-        return $out;
+        $dossierview = new output\dossier($these, $cm, $context, $dossier, $rights, $withactions);
+        return $PAGE->get_renderer('mod_these')->render($dossierview);
     }
 
     /**
@@ -624,28 +391,9 @@ class rendering {
      * @return string HTML
      */
     public static function render_embargo(stdClass $dossier, stdClass $rights) {
-        $bordereau = these_get_bordereau($dossier);
-        if (!$bordereau) {
-            return '';
-        }
-        $diffusion = (string) ($bordereau['diffusion'] ?? '');
-        $rows = [
-            get_string('diffusion', 'mod_these') => in_array($diffusion, ['internet', 'restricted'], true)
-                ? get_string('diffusion' . $diffusion, 'mod_these') : null,
-        ];
-        if (!empty($bordereau['embargo'])) {
-            $until = these_embargo_until($dossier);
-            $rows[get_string('embargo', 'mod_these')] = html_writer::span($until
-                ? get_string('embargorequested', 'mod_these', (object) [
-                    'years' => THESE_EMBARGO_YEARS,
-                    'until' => userdate($until, get_string('strftimedate', 'langconfig')),
-                ])
-                : get_string('embargorequestednodate', 'mod_these', THESE_EMBARGO_YEARS), 'badge badge-warning');
-            if ($rights->knowssubject && trim((string) ($bordereau['embargoreason'] ?? '')) !== '') {
-                $rows[get_string('embargoreason', 'mod_these')] = format_text((string) $bordereau['embargoreason'], FORMAT_PLAIN);
-            }
-        }
-        return these_render_detail_section(get_string('diffusion', 'mod_these'), $rows);
+        global $PAGE;
+
+        return $PAGE->get_renderer('mod_these')->render(new output\embargo($dossier, $rights));
     }
 
     /**
@@ -668,45 +416,8 @@ class rendering {
      * @return string HTML
      */
     public static function render_dossier_table(array $dossiers, stdClass $cm) {
-        global $USER;
+        global $PAGE;
 
-        $context = context_module::instance($cm->id);
-        if (empty($dossiers)) {
-            return html_writer::div(get_string('nodossiers', 'mod_these'), 'alert alert-info');
-        }
-        $table = new html_table();
-        $table->attributes['class'] = 'generaltable these-dossiers';
-        $table->head = [
-            get_string('student', 'mod_these'),
-            get_string('subjecttitle', 'mod_these'),
-            get_string('director', 'mod_these'),
-            get_string('devenumber', 'mod_these'),
-            get_string('status', 'mod_these'),
-            get_string('since', 'mod_these', ''),
-            '',
-        ];
-        $dateformat = get_string('strftimedate', 'langconfig');
-        foreach ($dossiers as $dossier) {
-            $student = (object) [];
-            $director = (object) [];
-            foreach (\core_user\fields::get_name_fields() as $field) {
-                $student->$field = $dossier->{'student' . $field} ?? '';
-                $director->$field = $dossier->{'director' . $field} ?? '';
-            }
-            $url = new moodle_url('/mod/these/dossier.php', ['id' => $cm->id, 'dossierid' => $dossier->id]);
-            $title = these_user_knows_subject($dossier, $context, $USER->id)
-                ? (shorten_text(format_string($dossier->title), 90) ?: '-')
-                : html_writer::tag('em', get_string('confidentialtitle', 'mod_these'));
-            $table->data[] = [
-                fullname($student),
-                $title,
-                $dossier->directorid ? fullname($director) : '-',
-                s((string) $dossier->devenumber),
-                these_render_status_badge($dossier->status),
-                userdate($dossier->statustime, $dateformat),
-                html_writer::link($url, get_string('open', 'mod_these'), ['class' => 'btn btn-sm btn-secondary']),
-            ];
-        }
-        return html_writer::table($table);
+        return $PAGE->get_renderer('mod_these')->render(new output\dossier_table($dossiers, $cm));
     }
 }

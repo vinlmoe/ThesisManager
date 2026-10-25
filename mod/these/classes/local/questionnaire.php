@@ -16,7 +16,7 @@
 
 namespace mod_these\local;
 
-use html_writer;
+use mod_these\output;
 use stdClass;
 
 /**
@@ -231,6 +231,38 @@ class questionnaire {
     }
 
     /**
+     * Section des réponses au questionnaire d'un dossier ; vide (non affichée) sans question.
+     *
+     * Les réponses citent souvent le sujet : l'appelant ne l'affiche qu'à qui connaît le sujet.
+     *
+     * @param stdClass $these Instance (seul id est utilisé).
+     * @param stdClass $dossier
+     * @return output\detail_section
+     */
+    public static function answers_section(stdClass $these, stdClass $dossier): output\detail_section {
+        global $DB;
+
+        $section = new output\detail_section(get_string('questionnaire', 'mod_these'));
+        $answers = these_get_answers($dossier->id);
+        $questions = these_get_questions(these_settings_scope($these));
+        foreach (array_diff(array_keys($answers), array_keys($questions)) as $questionid) {
+            if ($question = $DB->get_record('these_question', ['id' => $questionid])) {
+                $questions[$questionid] = $question;
+            }
+        }
+        foreach ($questions as $question) {
+            $answer = $answers[(int) $question->id] ?? '';
+            $section->add_row(
+                output\parts::stronghtml(format_string($question->label)),
+                [$answer === '' || $answer === []
+                    ? output\parts::span(get_string('questionnaireunanswered', 'mod_these'), 'text-muted')
+                    : output\parts::html(format_text(these_answer_text($answer), FORMAT_PLAIN))]
+            );
+        }
+        return $section;
+    }
+
+    /**
      * Réponses d'un dossier au questionnaire, pour l'affichage (questions en vigueur, puis réponses à
      * des questions d'une autre portée, si l'activité a changé de suivi).
      *
@@ -239,25 +271,8 @@ class questionnaire {
      * @return string HTML ('' si le questionnaire est vide et sans réponse)
      */
     public static function render_answers(stdClass $these, stdClass $dossier) {
-        global $DB;
+        global $PAGE;
 
-        $answers = these_get_answers($dossier->id);
-        $questions = these_get_questions(these_settings_scope($these));
-        foreach (array_diff(array_keys($answers), array_keys($questions)) as $questionid) {
-            if ($question = $DB->get_record('these_question', ['id' => $questionid])) {
-                $questions[$questionid] = $question;
-            }
-        }
-        if (!$questions) {
-            return '';
-        }
-        $rows = [];
-        foreach ($questions as $question) {
-            $answer = $answers[(int) $question->id] ?? '';
-            $rows[format_string($question->label)] = $answer === '' || $answer === []
-                ? html_writer::span(get_string('questionnaireunanswered', 'mod_these'), 'text-muted')
-                : format_text(these_answer_text($answer), FORMAT_PLAIN);
-        }
-        return these_render_detail_section(get_string('questionnaire', 'mod_these'), $rows);
+        return $PAGE->get_renderer('mod_these')->render(self::answers_section($these, $dossier));
     }
 }

@@ -16,13 +16,11 @@
 
 namespace mod_these\local;
 
+use mod_these\output;
 use coding_exception;
 use context;
 use context_module;
 use core_text;
-use html_table;
-use html_writer;
-use moodle_url;
 use stdClass;
 
 /**
@@ -194,38 +192,8 @@ class subjectchange {
      * @return string HTML ('' sans changement de sujet)
      */
     public static function render_subject_history(context $context, stdClass $dossier) {
-        $history = these_get_subject_history($dossier->id);
-        if (!$history) {
-            return '';
-        }
-        $files = [];
-        foreach (these_get_files($context, 'subjectarchive', $dossier->id) as $file) {
-            if (preg_match('/-(\d+)\.pdf$/', $file->get_filename(), $match)) {
-                $files[(int) $match[1]] = $file;
-            }
-        }
-        $table = new html_table();
-        $table->attributes['class'] = 'generaltable these-subjecthistory';
-        $table->head = [get_string('date'), get_string('subjecttitle', 'mod_these'), get_string('director', 'mod_these'),
-            get_string('subjectchangereason', 'mod_these'), get_string('subjectarchive', 'mod_these')];
-        foreach ($history as $entry) {
-            $file = $files[(int) $entry->id] ?? null;
-            $table->data[] = [
-                userdate($entry->timecreated, get_string('strftimedate', 'langconfig')),
-                format_string($entry->title),
-                s((string) $entry->directorname),
-                format_text((string) $entry->reason, FORMAT_PLAIN),
-                $file ? html_writer::link(moodle_url::make_pluginfile_url(
-                    $context->id,
-                    'mod_these',
-                    'subjectarchive',
-                    $dossier->id,
-                    '/',
-                    $file->get_filename(),
-                    true
-                ), $file->get_filename()) : '-',
-            ];
-        }
-        return html_writer::tag('h4', get_string('subjecthistory', 'mod_these'), ['class' => 'mt-4']) . html_writer::table($table);
+        global $PAGE;
+
+        return $PAGE->get_renderer('mod_these')->render(new output\subject_history($context, $dossier));
     }
 }

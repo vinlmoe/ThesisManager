@@ -1,0 +1,70 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_these/table
+
+    Tableau au balisage de html_writer::table() (voir \mod_these\output\table_context) : enveloppe
+    table-responsive, classes header/cell cN, lastcol et lastrow.
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * none
+
+    Context variables required for this template:
+    * tableclass Classes CSS du tableau.
+    * hashead Affiche la ligne d'en-tête.
+    * head En-têtes : text, class, isth (th ; sinon td, pour un en-tête vide).
+    * rows Lignes : class, cells (class, parts : fragments de mod_these/part).
+
+    Example context (json):
+    {
+        "tableclass": "generaltable",
+        "hashead": true,
+        "head": [{"text": "Rôle", "class": "header c0", "isth": true}, {"text": "Nom", "class": "header c1 lastcol", "isth": true}],
+        "rows": [{"class": "lastrow", "cells": [
+            {"class": "cell c0", "parts": [{"ptext": {"value": "Président"}, "phtml": false, "pstrong": false,
+                "pstronghtml": false, "pem": false, "pbadge": false, "pspan": false, "plink": false,
+                "pmuted": false, "pbr": false, "pfiles": false, "pstatus": false}]},
+            {"class": "cell c1 lastcol", "parts": [{"ptext": {"value": "Paul Président"}, "phtml": false,
+                "pstrong": false, "pstronghtml": false, "pem": false, "pbadge": false, "pspan": false,
+                "plink": false, "pmuted": false, "pbr": false, "pfiles": false, "pstatus": false}]}
+        ]}]
+    }
+}}
+<div class="table-responsive"><table class="{{tableclass}}">
+{{#hashead}}
+<thead>
+<tr>
+{{#head}}
+{{#isth}}<th class="{{class}}" scope="col">{{text}}</th>{{/isth}}{{^isth}}<td class="{{class}}">{{text}}</td>{{/isth}}
+{{/head}}
+</tr>
+</thead>
+{{/hashead}}
+<tbody>
+{{#rows}}
+<tr class="{{class}}">
+{{#cells}}
+<td class="{{class}}">{{#parts}}{{> mod_these/part}}{{/parts}}</td>
+{{/cells}}
+</tr>
+{{/rows}}
+</tbody>
+</table>
+</div>

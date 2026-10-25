@@ -1,0 +1,49 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_these/embargo
+
+    Diffusion de la thèse et demande d'embargo, en section de détail. Le motif de l'embargo n'est
+    présent dans le contexte que pour qui connaît le sujet.
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * none
+
+    Context variables required for this template:
+    * hasrows, heading, table Voir mod_these/detail_section.
+
+    Example context (json):
+    {
+        "hasrows": true,
+        "heading": "Diffusion",
+        "table": {"tableclass": "generaltable these-detail", "hashead": false, "head": [], "rows": [
+            {"class": "lastrow", "cells": [
+                {"class": "cell c0", "parts": [{"ptext": false, "phtml": false, "pstrong": {"value": "Embargo"},
+                    "pstronghtml": false, "pem": false, "pbadge": false, "pspan": false, "plink": false,
+                    "pmuted": false, "pbr": false, "pfiles": false, "pstatus": false}]},
+                {"class": "cell c1 lastcol", "parts": [{"ptext": false, "phtml": false, "pstrong": false,
+                    "pstronghtml": false, "pem": false,
+                    "pbadge": {"value": "Demandé pour 5 ans, jusqu'au 3 décembre 2031", "class": "badge badge-warning"},
+                    "pspan": false, "plink": false, "pmuted": false, "pbr": false, "pfiles": false, "pstatus": false}]}
+            ]}
+        ]}
+    }
+}}
+{{> mod_these/detail_section}}

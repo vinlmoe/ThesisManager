@@ -1,0 +1,59 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_these/signed_documents
+
+    Documents signés d'un dossier et état des signatures. Les documents que l'utilisateur ne peut pas
+    voir sont retirés par \mod_these\output\signed_documents::export_for_template().
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * none
+
+    Context variables required for this template:
+    * hasdocuments Au moins un document est disponible.
+    * warning Alerte pour la DEVE (modèle de contrat à revoir), ou false.
+    * heading Titre.
+    * table Contexte de mod_these/table.
+
+    Example context (json):
+    {
+        "hasdocuments": true,
+        "warning": false,
+        "heading": "Documents signés",
+        "table": {"tableclass": "generaltable these-signatures", "hashead": true,
+            "head": [{"text": "Document", "class": "header c0", "isth": true}, {"text": "Signatures", "class": "header c1 lastcol", "isth": true}],
+            "rows": [{"class": "lastrow", "cells": [
+                {"class": "cell c0", "parts": [{"ptext": {"value": "Dépôt du sujet"}, "phtml": false,
+                    "pstrong": false, "pstronghtml": false, "pem": false, "pbadge": false, "pspan": false,
+                    "plink": false, "pmuted": false, "pbr": false, "pfiles": false, "pstatus": false}]},
+                {"class": "cell c1 lastcol", "parts": [{"ptext": {"value": "Télécharger le PDF"}, "phtml": false,
+                    "pstrong": false, "pstronghtml": false, "pem": false, "pbadge": false, "pspan": false,
+                    "plink": false, "pmuted": false, "pbr": false, "pfiles": false, "pstatus": false}]}
+            ]}]
+        }
+    }
+}}
+{{#hasdocuments}}
+<h4 class="mt-4">{{heading}}</h4>
+{{#table}}{{> mod_these/table}}{{/table}}
+{{#warning}}
+<div class="alert alert-warning">{{warning}}</div>
+{{/warning}}
+{{/hasdocuments}}

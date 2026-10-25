@@ -165,10 +165,11 @@ jobs:
 
       - name: Mustache templates
         if: ${{ !cancelled() && steps.moodle_install.outcome == 'success' }}
+        # Le contrôle des gabarits exige un chemin dans le Moodle installé : les copies de moodle/mod/.
         run: |
           check_status=0
-          moodle-plugin-ci mustache mod/these || check_status=1
-          moodle-plugin-ci mustache mod/thesesynthesis || check_status=1
+          moodle-plugin-ci mustache moodle/mod/these || check_status=1
+          moodle-plugin-ci mustache moodle/mod/thesesynthesis || check_status=1
           exit "$check_status"
 
       - name: PHPUnit
