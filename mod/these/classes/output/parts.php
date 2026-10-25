@@ -33,7 +33,7 @@ namespace mod_these\output;
 class parts {
     /** @var string[] Clés de type d'un fragment. */
     const TYPES = ['ptext', 'phtml', 'pstrong', 'pstronghtml', 'pem', 'pbadge', 'pspan', 'plink', 'pmuted', 'pbr',
-        'pfiles', 'pstatus'];
+        'pfiles', 'pstatus', 'pdetails'];
 
     /**
      * Fragment d'un type donné.
@@ -159,6 +159,17 @@ class parts {
      */
     public static function files(array $context): array {
         return self::make('pfiles', $context);
+    }
+
+    /**
+     * Bloc dépliable : un résumé toujours visible et un détail en petit, affiché à la demande.
+     *
+     * @param array[] $summary Fragments du résumé.
+     * @param array[] $body Fragments du détail.
+     * @return array
+     */
+    public static function details(array $summary, array $body): array {
+        return self::make('pdetails', ['summary' => array_values($summary), 'body' => array_values($body)]);
     }
 
     /**
