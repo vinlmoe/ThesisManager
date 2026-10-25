@@ -118,6 +118,27 @@ $string['dormantphase'] = 'dossier dormant';
 
 // Navigation et listes.
 $string['dashboard'] = 'Tableau de bord';
+$string['planning'] = 'Planning des soutenances';
+$string['planningviewweek'] = 'Par semaine';
+$string['planningviewmonth'] = 'Par mois';
+$string['planningweekof'] = 'Semaine du {$a->start} au {$a->end}';
+$string['planningprevweek'] = 'Semaine précédente';
+$string['planningthisweek'] = 'Cette semaine';
+$string['planningnextweek'] = 'Semaine suivante';
+$string['planningprevmonth'] = 'Mois précédent';
+$string['planningthismonth'] = 'Ce mois-ci';
+$string['planningnextmonth'] = 'Mois suivant';
+$string['planninggoto'] = 'Aller au';
+$string['planningcount'] = '{$a} soutenance(s)';
+$string['planningnone'] = 'Aucune soutenance sur cette période.';
+$string['planningtime'] = 'Heure';
+$string['planningpromotion'] = 'Promotion';
+$string['planningconfirmed'] = 'Date arrêtée';
+$string['planningproposed'] = 'Date proposée';
+$string['planningpdfweek'] = 'Imprimer le planning de la semaine (PDF)';
+$string['planningpdfmonth'] = 'Imprimer le planning mensuel (PDF)';
+$string['planningdownload'] = 'Télécharger le planning de la période';
+$string['planningupcoming'] = 'Semaines à venir avec des soutenances';
 $string['todo'] = 'À traiter';
 $string['nothingtodo'] = "Aucune étape du circuit ne vous est attribuée dans cette activité.";
 $string['alldossiers'] = 'Tous les dossiers';
@@ -256,7 +277,8 @@ $string['juryaccessresent'] = '{$a} membre(s) du jury prévenu(s) de nouveau.';
 $string['juryaccess'] = 'Accès du jury';
 $string['juryaccessintro'] = 'Bonjour {$a->name}, vous êtes désigné(e) comme {$a->role} du jury de cette thèse. Vous trouverez '
     . 'ci-dessous les informations de la soutenance et les documents du dossier.';
-$string['juryaccessinvalid'] = "Ce lien d'accès n'est pas (ou plus) valide. Contactez la DEVE.";
+$string['juryaccessinvalid'] = "Ce lien d'accès n'est pas (ou plus) valide : il a été remplacé par un nouvel envoi, la "
+    . "soutenance date de plus de 60 jours, ou le dossier est clos. Contactez la DEVE.";
 $string['juryaccessdocuments'] = 'Documents';
 $string['juryaccessnodocuments'] = "Aucun document n'est encore disponible.";
 
@@ -593,6 +615,10 @@ $string['settingsucblemail_desc'] = 'Adresse à laquelle envoyer les liens de si
 // Formulaire de dépôt de sujet.
 $string['studyyear'] = "Année d'études";
 $string['confidential'] = 'Thèse confidentielle, ne pas divulguer le titre';
+$string['confidential_help'] = 'Le sujet d\'une thèse confidentielle (titre, titre anglais, résumé, mots-clés) n\'est connu que de l\'étudiant, de la DEVE, de la bibliothèque, du directeur de thèse et des membres du jury. La thèse se trouve et figure au planning comme les autres, mais, pour tous les autres (autres enseignants, personnels qui consultent tous les dossiers sans être la DEVE ni la bibliothèque), son titre, ses mots-clés et son résumé sont remplacés par « Thèse confidentielle » (pages, listes, planning, recherche, export, courriels), elle ne se trouve jamais par son sujet, et les documents qui portent le titre ne leur sont pas accessibles.';
+$string['confidentialtitle'] = 'Thèse confidentielle';
+$string['confidentialbadge'] = 'Thèse confidentielle : sujet connu de l\'étudiant, de la DEVE, de la bibliothèque, du directeur et du jury seulement';
+$string['confidentialitylabel'] = 'Confidentialité';
 $string['hetoplink'] = 'Rechercher les mots-clés dans HeTOP';
 $string['keywordscount'] = 'Indiquez de 3 à 5 mots-clés, séparés par des points-virgules.';
 $string['subjectapproval'] = 'Approbation du sujet';
@@ -646,7 +672,8 @@ $string['signaturerequestsent'] = 'Lien de signature envoyé.';
 $string['signaturesrecorded'] = 'Signature enregistrée. Merci.';
 $string['signpagetitle'] = 'Signature de documents de thèse';
 $string['signpageintro'] = 'Signature en qualité de {$a->slot} des documents de la thèse de {$a->student} : « {$a->title} ».';
-$string['signinvalidtoken'] = "Ce lien n'est plus valide : les documents ont déjà été signés, ou une nouvelle invitation a été envoyée.";
+$string['signinvalidtoken'] = "Ce lien n'est plus valide : les documents ont déjà été signés, une nouvelle invitation a été "
+    . "envoyée, ou le lien a expiré (60 jours). Contactez la DEVE pour en recevoir un nouveau.";
 $string['signnothingpending'] = 'Aucun document n\'attend de signature.';
 $string['signdocuments'] = 'Signer les documents';
 
@@ -716,10 +743,20 @@ $string['conclusionstoolong'] = 'Les conclusions comptent {$a->length} caractèr
 $string['conclusionsonepage'] = "Les conclusions ne tiennent pas sur une page avec les signatures : raccourcissez-les ou réduisez le nombre de paragraphes.";
 $string['contracthelp'] = "Choix de l'auteur pour le contrat de diffusion électronique de la thèse (articles 2 et 4). Une thèse "
     . "confidentielle (case cochée au dépôt du sujet) l'est jusqu'à la date indiquée.";
+$string['contracttemplatemissing'] = 'Le contrat type de diffusion n\'a pas été déposé dans les réglages du module : le contrat produit ne contient que les pages du module et ne sera pas scellé tant qu\'il manque.';
+$string['contracttemplateunreadable'] = 'Le contrat type de diffusion déposé dans les réglages du module n\'a pas pu être lu (format PDF non pris en charge) : le contrat produit ne contient que les pages du module et ne sera pas scellé. Déposez le contrat type enregistré dans un format PDF plus ancien (PDF 1.4).';
 $string['bconfidentialuntil'] = "Confidentialité jusqu'au";
 $string['bconfidentialuntil_help'] = 'Ne concerne que les thèses déclarées confidentielles au dépôt du sujet.';
-$string['bembargo'] = "Thèse soumise à embargo (diffusion différée)";
-$string['bembargountil'] = "Embargo jusqu'au";
+$string['bembargo'] = 'Je demande un embargo de diffusion de {$a} ans à compter de la soutenance';
+$string['embargo_help'] = 'Pendant l\'embargo, la thèse est enregistrée et signalée, mais son texte intégral n\'est ni diffusé sur internet ni communiqué à la consultation avant son terme, 5 ans après la date de soutenance. La demande doit être motivée (brevet, publication en cours, données sensibles, partenariat...). Elle figure dans le contrat de diffusion, que le directeur de thèse vise.';
+$string['bembargoreason'] = 'Motif de la demande d\'embargo';
+$string['bembargoreasonrequired'] = 'Indiquez le motif de la demande d\'embargo.';
+$string['embargo'] = 'Embargo de diffusion';
+$string['embargorequested'] = 'Demandé : {$a->years} ans après la soutenance, jusqu\'au {$a->until}';
+$string['embargorequestednodate'] = 'Demandé : {$a} ans après la soutenance (date de soutenance à fixer)';
+$string['embargoreason'] = 'Motif de l\'embargo';
+$string['embargoexport'] = 'Embargo jusqu\'au';
+$string['diffusion'] = 'Diffusion';
 $string['bdiffusion'] = 'Diffusion de la thèse';
 $string['bdiffusion_help'] = "Diffusion en texte intégral sur internet (portail DUMAS, catalogue Sudoc, catalogues des bibliothèques), "
     . "ou consultation de la version papier dans les bibliothèques des écoles vétérinaires et diffusion sur l'intranet de "
@@ -788,10 +825,17 @@ $string['agauthorized'] = "L'étudiant(e) est autorisé(e) à soutenir sa thèse
 
 // Historique et courriels des signatures.
 $string['logsigned'] = 'Document signé';
+$string['logdocumentsealed'] = 'Document scellé';
+$string['dossierchanged'] = 'Ce dossier a été modifié entre-temps (par une autre personne ou par un double envoi du formulaire) : l\'action n\'a pas été enregistrée. Rechargez le dossier pour voir son état actuel.';
+$string['dossierbusy'] = 'Ce dossier est en cours de traitement par une autre action. Réessayez dans un instant.';
 $string['logsignaturesinvalidated'] = 'Signatures invalidées (document modifié)';
 $string['logsignaturerequested'] = 'Signature demandée';
 $string['logsignedinperson'] = 'Signature recueillie sur place';
 $string['emailkeysignaturerequest'] = 'Demande de signature (signataires sans compte)';
+$string['emailkeyagentsignature'] = 'Documents à signer par l\'agent DEVE';
+$string['emailkeysubjectchanged'] = 'Changement de sujet';
+$string['emailkeyadjourned'] = 'Thèse ajournée';
+$string['emailkeyjurydesignation'] = 'Désignation d\'un membre du jury';
 $string['emailjurydesignationsubject'] = 'Désignation au jury de thèse de {$a->student}';
 $string['emailjurydesignationbody'] = 'Bonjour {$a->name},
 
@@ -874,6 +918,7 @@ $string['doctplconformity'] = 'Attestation de conformité (bibliothèque)';
 $string['doctplconvocation'] = 'Convocation à la soutenance';
 $string['doctpljurysheet'] = 'Feuille de jury';
 $string['doctplminutes'] = 'Procès-verbal de soutenance';
+$string['doctplplanning'] = 'Planning des soutenances';
 
 // Transfert des paramètres.
 $string['transfersettings'] = 'Transfert des paramètres';

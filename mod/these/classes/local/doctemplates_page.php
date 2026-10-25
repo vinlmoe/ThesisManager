@@ -52,8 +52,8 @@ class doctemplates_page {
         if ($type !== '' && !array_key_exists($type, $types)) {
             throw new \moodle_exception('invalidparameter', 'debug');
         }
-        $sample = function () use ($scope, $activity) {
-            return these_sample_document_context($scope, $activity);
+        $sample = function () use ($scope, $activity, $type) {
+            return these_doctemplate_sample_context($scope, $type, $activity);
         };
 
         // Aperçu du modèle en vigueur.

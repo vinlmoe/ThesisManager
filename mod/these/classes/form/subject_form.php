@@ -77,6 +77,7 @@ class subject_form extends \moodleform {
         $mform->addElement('textarea', 'title', get_string('subjecttitle', 'mod_these'), ['rows' => 3, 'cols' => 80]);
         $mform->setType('title', PARAM_TEXT);
         $mform->addElement('advcheckbox', 'confidential', '', get_string('confidential', 'mod_these'));
+        $mform->addHelpButton('confidential', 'confidential', 'mod_these');
         $mform->addElement('textarea', 'titleen', get_string('subjecttitleen', 'mod_these'), ['rows' => 2, 'cols' => 80]);
         $mform->setType('titleen', PARAM_TEXT);
         $mform->addElement('text', 'keywords', get_string('subjectkeywords', 'mod_these'), ['size' => 80]);

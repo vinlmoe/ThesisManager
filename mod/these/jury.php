@@ -15,33 +15,47 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Accès d'un membre du jury aux documents du dossier, par le lien personnel reçu à sa désignation :
- * soutenance, composition du jury, manuscrit et documents déposés, rapport du directeur, grille de
- * conformité, conclusions et fiche signalétique.
+ * Accès d'un membre du jury aux documents du dossier : soutenance, composition du jury, manuscrit
+ * et documents déposés, rapport du directeur, grille de conformité, conclusions et fiche
+ * signalétique.
+ *
+ * Deux accès :
+ * - par le lien personnel reçu à sa désignation (jeton), sans compte Moodle ;
+ * - depuis son compte Moodle (activité « Suivi des thèses »), le membre étant reconnu à son
+ *   adresse (paramètre member).
  *
  * @package   mod_these
  * @copyright 2026 Sébastien Lefebvre
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// Pas de require_login(), et c'est volontaire, comme pour la signature par lien : un membre du jury
-// extérieur n'a pas de compte Moodle. L'accès est contrôlé par le jeton personnel du membre (48
-// caractères aléatoires), vérifié juste en dessous, et cesse si le dossier est abandonné.
+// Pas de require_login() pour l'accès par jeton, et c'est volontaire, comme pour la signature par
+// lien : un membre du jury extérieur n'a pas de compte Moodle. L'accès est contrôlé par le jeton
+// personnel du membre (48 caractères aléatoires, dont seule l'empreinte est conservée), vérifié juste
+// en dessous ; il expire après la soutenance et cesse à la clôture ou à l'abandon du dossier.
 // phpcs:ignore moodle.Files.RequireLogin.Missing
 require(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/these/locallib.php');
 
-$token = required_param('token', PARAM_ALPHANUM);
+$token = optional_param('token', '', PARAM_ALPHANUM);
+$memberid = optional_param('member', 0, PARAM_INT);
 $area = optional_param('area', '', PARAM_ALPHA);
 $filename = optional_param('file', '', PARAM_FILE);
 $doc = optional_param('doc', '', PARAM_ALPHA);
 
-$member = these_get_jury_access($token);
-$PAGE->set_url(new moodle_url('/mod/these/jury.php', ['token' => $token]));
+if ($token !== '') {
+    $member = these_get_jury_access($token);
+    $pageparams = ['token' => $token];
+} else {
+    require_login();
+    $member = these_get_jury_member_access($memberid, $USER);
+    $pageparams = ['member' => $memberid];
+}
+$PAGE->set_url(new moodle_url('/mod/these/jury.php', $pageparams));
 $PAGE->set_pagelayout('embedded');
-$PAGE->set_title(get_string('juryaccess', 'mod_these'));
 if (!$member) {
     $PAGE->set_context(context_system::instance());
+    $PAGE->set_title(get_string('juryaccess', 'mod_these'));
     echo $OUTPUT->header();
     echo $OUTPUT->notification(get_string('juryaccessinvalid', 'mod_these'), 'info');
     echo $OUTPUT->footer();
@@ -51,6 +65,7 @@ $dossier = $member->dossier;
 $these = $member->these;
 $context = context_module::instance($member->cm->id);
 $PAGE->set_context($context);
+$PAGE->set_title(get_string('juryaccess', 'mod_these'));
 $PAGE->set_heading(format_string($these->name));
 $allowed = these_jury_documents();
 
@@ -115,7 +130,7 @@ $links = [];
 foreach ($allowed['areas'] as $filearea) {
     foreach (these_get_files($context, $filearea, $dossier->id) as $file) {
         $links[] = html_writer::link(
-            new moodle_url('/mod/these/jury.php', ['token' => $token, 'area' => $filearea, 'file' => $file->get_filename()]),
+            new moodle_url('/mod/these/jury.php', $pageparams + ['area' => $filearea, 'file' => $file->get_filename()]),
             s($file->get_filename())
         ) . ' — ' . get_string($filearea, 'mod_these');
     }
@@ -123,7 +138,7 @@ foreach ($allowed['areas'] as $filearea) {
 foreach ($allowed['documents'] as $doctype) {
     if (these_document_available($dossier, $doctype)) {
         $links[] = html_writer::link(
-            new moodle_url('/mod/these/jury.php', ['token' => $token, 'doc' => $doctype]),
+            new moodle_url('/mod/these/jury.php', $pageparams + ['doc' => $doctype]),
             these_document_label($doctype)
         );
     }

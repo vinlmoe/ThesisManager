@@ -95,10 +95,31 @@ modifié peut être ramené à son origine (`doctemplates/<document>.html`). Les
 logos fournis (`doctemplates/images/`) se remplacent en déposant, dans la même
 page, une image du même nom (*Images des modèles*).
 
-Chaque signature (tracé, nom, date, empreinte SHA-256 du contenu signé) est
-annulée si le contenu signé change ; modifier un modèle ne l'annule pas. Les
-signataires extérieurs reçoivent un lien personnel par courriel ; la DEVE suit
-les signatures (*Suivi des signatures*), relance ou fait signer sur place.
+Chaque signature (tracé, nom, date, empreinte SHA-256 du contenu signé et de sa
+mise en forme) est annulée si le contenu signé change, ou si le modèle du
+document change avant que toutes les signatures soient apposées. Un document
+entièrement signé est **scellé** : son PDF est conservé tel quel, l'empreinte
+SHA-256 de ses octets est inscrite à l'historique du dossier, et une
+modification ultérieure d'un modèle, d'une image ou du contrat type ne le change
+plus. Le contrat de diffusion n'est scellé qu'avec un contrat type lisible ; à
+défaut, le dossier affiche un avertissement à la DEVE.
+
+Les signataires extérieurs reçoivent un lien personnel par courriel, valable
+60 jours ; la DEVE suit les signatures (*Suivi des signatures*), relance (un
+nouveau lien remplace le précédent) ou fait signer sur place. Le lien d'accès du
+jury vaut jusqu'à 60 jours après la soutenance et cesse à la clôture ou à
+l'abandon du dossier ; un membre du jury qui a un compte Moodle à la même adresse
+consulte aussi les documents depuis *Suivi des thèses*, sans lien. Seule
+l'empreinte des jetons de ces liens est conservée en base.
+
+**Valeur des signatures.** Le tracé apposé dans le module est une signature
+électronique *simple* au sens du règlement eIDAS : elle identifie le signataire
+(compte Moodle ou lien personnel reçu à son adresse), date la signature et la lie
+au contenu signé par son empreinte, mais ne repose pas sur un certificat
+qualifié. Il revient à l'établissement de décider pour quels documents elle
+suffit (procès-verbal, contrat de diffusion) ; les documents qui exigent une
+signature avancée ou qualifiée doivent être signés hors du module et déposés
+signés.
 
 ## 3 bis (suite). Grille de conformité, conclusions
 
@@ -132,7 +153,32 @@ les signatures (*Suivi des signatures*), relance ou fait signer sur place.
   dossier.
 - **Suivi multi-promotions** : voir le module `mod_thesesynthesis`.
 
-## 3 bis (compléments). Questionnaire, rapport, procès-verbal, corrections
+## 3 bis (compléments). Thèse confidentielle, embargo
+
+- **Thèse confidentielle** (case de la fiche de sujet) : le sujet (titre, titre
+  anglais, résumé, mots-clés) n'est connu que de l'étudiant, de la DEVE (rôle ou
+  `mod/these:managedeve`), de la bibliothèque (rôle ou
+  `mod/these:managelibrary`, et sa boîte de service), du directeur de thèse et
+  des membres du jury (reconnus à leur adresse ou à celle de leur fiche de
+  l'annuaire). Pour tous les autres, dont les détenteurs de `mod/these:viewall`
+  sans rôle de service, il est remplacé par « Thèse confidentielle » dans le
+  dossier (titre, titre anglais, résumé et mots-clés), les listes, le planning,
+  la recherche (y compris dans *Suivi des thèses*, où la thèse se trouve par
+  l'étudiant, le directeur, le jury ou l'année, jamais par son sujet), l'export
+  du registre et les courriels ; le questionnaire, l'ancien
+  titre d'un changement de sujet et les fichiers ou documents qui portent le
+  titre leur sont masqués, sauf le manuscrit et le manuscrit corrigé. La
+  variable `{{thesis.publictitle}}` des modèles donne « Thèse confidentielle »
+  pour un document destiné à d'autres personnes. Les signataires extérieurs
+  (direction générale, CCEM, université) voient les documents qu'ils signent.
+- **Embargo de diffusion** : au dépôt de la soutenance, l'étudiant peut demander
+  un embargo de 5 ans (`THESE_EMBARGO_YEARS`), motif obligatoire. La fin de
+  l'embargo est calculée à partir de la date de soutenance (arrêtée, à défaut
+  proposée) et reportée au contrat de diffusion, que le directeur vise ; elle
+  figure au dossier (rubrique *Diffusion*) et dans l'export du registre. Le motif
+  n'est montré qu'à qui connaît le sujet.
+
+## 3 bis (autres compléments). Questionnaire, rapport, procès-verbal, corrections
 
 - **Questionnaire préalable au jury** (DEVE, *Questionnaire préalable au jury*) :
   réponse courte, réponse longue, liste, QCM ; questions obligatoires exigées au
@@ -171,7 +217,21 @@ les signatures (*Suivi des signatures*), relance ou fait signer sur place.
   `subjectarchive`) ; l'ancien directeur, la DEVE et la bibliothèque reçoivent
   le courriel *subjectchanged* ; le nouveau sujet repasse la phase 1.
 
-## 3 ter. Transfert des paramètres
+## 3 ter. Planning des soutenances
+
+*Planning des soutenances* (`/mod/these/planning.php`, barre de navigation de
+l'activité ; DEVE, bibliothèque et `mod/these:viewall` pour toutes les
+soutenances, directeur pour les siennes) présente les soutenances de la semaine
+ou du mois, jour par jour, avec la date proposée ou arrêtée, le jury et le lieu.
+Une thèse y figure dès le dépôt du dossier de soutenance ; un dossier abandonné
+ou une thèse ajournée en sort. On passe d'une période à l'autre, on va à une
+date, et la vue semaine liste les semaines à venir qui ont des soutenances. Le
+planning de la période s'imprime (PDF en paysage, modèle de document
+*Planning des soutenances*, modifiable comme les autres) ou se télécharge en
+tableur (CSV, Excel, ODS). L'activité *Suivi des thèses* offre la même page pour
+toutes les promotions suivies.
+
+## 3 quater. Transfert des paramètres
 
 *Transfert des paramètres* (DEVE, barre de navigation de l'activité) reprend les
 paramètres d'une autre activité dont on est la DEVE, ou d'un fichier de

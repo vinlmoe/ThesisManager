@@ -31,6 +31,7 @@ require_once($CFG->dirroot . '/mod/thesesynthesis/locallib.php');
  * @covers     ::thesesynthesis_get_dossiers
  * @covers     ::thesesynthesis_get_juries
  * @covers     ::thesesynthesis_get_available_activities
+ * @covers     \mod_these\local\planning_page
  */
 final class synthesis_test extends \advanced_testcase {
     /**
@@ -124,5 +125,50 @@ final class synthesis_test extends \advanced_testcase {
         $juries = thesesynthesis_get_juries($links, $env->juror);
         $this->assertCount(2, $juries);
         $this->assertSame([], thesesynthesis_get_juries($links, $env->director));
+    }
+
+    /**
+     * Planning des soutenances des promotions suivies : chacun n'y voit que ce qu'il voit à la source,
+     * avec la promotion de chaque étudiant.
+     */
+    public function test_planning_page(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $env = $this->setup_promotions();
+        $monday = these_planning_week_start(time());
+        foreach ($env->activities as $i => $activity) {
+            $DB->update_record('these_dossier', (object) ['id' => $activity->dossier->id, 'status' => THESE_STATUS_SCHEDULED,
+                'title' => 'Thèse ' . $i, 'defensedate' => $monday + DAYSECS + $i * HOURSECS, 'defenselocation' => 'Salle ' . $i]);
+        }
+        $cm = get_coursemodule_from_instance('thesesynthesis', $env->synthesis->id);
+        $context = \context_module::instance($cm->id);
+        $render = function ($user) use ($env, $cm, $context) {
+            global $PAGE;
+            $this->setUser($user);
+            $PAGE = new \moodle_page();
+            $PAGE->set_context($context);
+            $PAGE->set_url(new \moodle_url('/mod/thesesynthesis/planning.php', ['id' => $cm->id]));
+            ob_start();
+            \mod_these\local\planning_page::output(
+                thesesynthesis_get_active_links($env->synthesis->id, $user->id),
+                new \moodle_url('/mod/thesesynthesis/planning.php', ['id' => $cm->id]),
+                these_synthesis_scope($env->synthesis->id),
+                $env->activities[0]->these,
+                true,
+                'Planning'
+            );
+            return ob_get_clean();
+        };
+
+        $html = $render($env->director);
+        $this->assertStringContainsString('Thèse 0', $html);
+        $this->assertStringContainsString('Thèse 1', $html);
+        $this->assertStringContainsString('P1', $html);
+        $this->assertStringContainsString(get_string('planningcount', 'mod_these', 2), $html);
+
+        // La DEVE de la première promotion seulement.
+        $html = $render($env->deve);
+        $this->assertStringContainsString('Thèse 0', $html);
+        $this->assertStringNotContainsString('Thèse 1', $html);
     }
 }

@@ -140,7 +140,7 @@ function thesesynthesis_get_active_links($synthesisid, $userid) {
  * @param array $links Voir thesesynthesis_get_active_links().
  * @param int $userid
  * @param array $filters {status (int|null), search (string), cmid (int)}
- * @return array Liste d'objets {dossier, link, student, director, actor, todo}
+ * @return array Liste d'objets {dossier, link, student, director, actor, todo, knowssubject}
  */
 function thesesynthesis_get_dossiers(array $links, $userid, array $filters = []) {
     global $DB;
@@ -166,10 +166,13 @@ function thesesynthesis_get_dossiers(array $links, $userid, array $filters = [])
                 continue;
             }
             $student = $DB->get_record('user', ['id' => $dossier->userid]);
+            // Thèse confidentielle : titre masqué, et absent de la recherche, pour qui ne doit pas le
+            // connaître.
+            $knows = these_user_knows_subject($dossier, $link->context, $userid);
             $search = core_text::strtolower(trim((string) ($filters['search'] ?? '')));
             if (
-                $search !== '' && strpos(core_text::strtolower(($student ? fullname($student) : '') . ' ' . $dossier->title
-                    . ' ' . $dossier->devenumber), $search) === false
+                $search !== '' && strpos(core_text::strtolower(($student ? fullname($student) : '') . ' '
+                    . ($knows ? $dossier->title : '') . ' ' . $dossier->devenumber), $search) === false
             ) {
                 continue;
             }
@@ -184,6 +187,7 @@ function thesesynthesis_get_dossiers(array $links, $userid, array $filters = [])
                 'director' => $dossier->directorid ? $DB->get_record('user', ['id' => $dossier->directorid]) : null,
                 'actor' => $actor,
                 'todo' => $todo,
+                'knowssubject' => $knows,
             ];
         }
     }
@@ -242,7 +246,10 @@ function thesesynthesis_get_juries(array $links, stdClass $user) {
  * @return string HTML
  */
 function thesesynthesis_render_navlinks(stdClass $cm, context $context) {
-    $links = [get_string('dashboard', 'mod_these') => new moodle_url('/mod/thesesynthesis/view.php', ['id' => $cm->id])];
+    $links = [
+        get_string('dashboard', 'mod_these') => new moodle_url('/mod/thesesynthesis/view.php', ['id' => $cm->id]),
+        get_string('planning', 'mod_these') => new moodle_url('/mod/thesesynthesis/planning.php', ['id' => $cm->id]),
+    ];
     if (has_capability('mod/thesesynthesis:search', $context)) {
         $links[get_string('searchtheses', 'mod_thesesynthesis')] =
             new moodle_url('/mod/thesesynthesis/search.php', ['id' => $cm->id]);
@@ -288,14 +295,18 @@ function thesesynthesis_defense_year(stdClass $dossier) {
  *
  * Dans une activité où l'utilisateur voit tous les dossiers (DEVE, bibliothèque, gestionnaire),
  * tous les dossiers sont cherchés et peuvent être ouverts. Ailleurs, un enseignant ne trouve que
- * les thèses enregistrées par la DEVE, non confidentielles et non annulées, et n'ouvre que celles
- * qu'il dirige.
+ * les thèses enregistrées par la DEVE et non annulées, et n'ouvre que celles qu'il dirige.
+ *
+ * Une thèse confidentielle se trouve comme les autres, mais, pour qui ne doit pas connaître son
+ * sujet (voir these_user_knows_subject()), ni son sujet ni ses réponses au questionnaire n'entrent
+ * dans la recherche ou ne sont renvoyés.
  *
  * @param array $links Voir thesesynthesis_get_active_links().
  * @param int $userid
  * @param array $filters {text, cmid, status (int|null), year (int), answers (questionid => valeur)}
  * @param array $questions Questions filtrables (voir these_get_questions()).
- * @return array Liste d'objets {dossier, link, student, director, canopen, answers, year}
+ * @return array Liste d'objets {dossier, link, student, director, canopen, answers, year,
+ *                     knowssubject}
  */
 function thesesynthesis_search(array $links, $userid, array $filters, array $questions = []) {
     global $DB;
@@ -313,9 +324,16 @@ function thesesynthesis_search(array $links, $userid, array $filters, array $que
         foreach ($DB->get_records('these_dossier', ['theseid' => $link->these->id], 'timemodified DESC') as $dossier) {
             $status = (int) $dossier->status;
             $directs = $link->direct && (int) $dossier->directorid === (int) $userid;
-            $public = !$dossier->confidential && $status !== THESE_STATUS_CANCELLED
-                && these_status_rank($status) >= $registered;
+            // Une thèse confidentielle se trouve comme les autres (promotion, année, étudiant,
+            // directeur, jury), son sujet restant masqué à qui ne doit pas le connaître.
+            $public = $status !== THESE_STATUS_CANCELLED && these_status_rank($status) >= $registered;
             if (!$link->rights->viewall && !$directs && !$public) {
+                continue;
+            }
+            // Thèse confidentielle dont l'utilisateur ne connaît pas le sujet : ni le sujet ni les
+            // réponses au questionnaire n'entrent dans la recherche.
+            $knows = these_user_knows_subject($dossier, $link->context, $userid);
+            if (!$knows && $answerfilters) {
                 continue;
             }
             if (isset($filters['status']) && $filters['status'] !== null && $status !== (int) $filters['status']) {
@@ -345,8 +363,11 @@ function thesesynthesis_search(array $links, $userid, array $filters, array $que
             $student = $DB->get_record('user', ['id' => $dossier->userid]);
             $director = $dossier->directorid ? $DB->get_record('user', ['id' => $dossier->directorid]) : null;
             if ($words) {
-                $haystack = [$dossier->title, $dossier->titleen, $dossier->summary, $dossier->keywords, $dossier->codirectorname,
-                    $dossier->extdirectorname, $student ? fullname($student) : '', $director ? fullname($director) : ''];
+                $haystack = [$dossier->codirectorname, $dossier->extdirectorname, $student ? fullname($student) : '',
+                    $director ? fullname($director) : ''];
+                if ($knows) {
+                    array_push($haystack, $dossier->title, $dossier->titleen, $dossier->summary, $dossier->keywords);
+                }
                 if ($link->rights->viewall) {
                     $haystack[] = $dossier->devenumber;
                     $haystack[] = $dossier->libraryref;
@@ -354,7 +375,7 @@ function thesesynthesis_search(array $links, $userid, array $filters, array $que
                 foreach (these_get_jury($dossier->id) as $member) {
                     $haystack[] = $member->fullname;
                 }
-                foreach ($answers as $answer) {
+                foreach ($knows ? $answers : [] as $answer) {
                     $haystack[] = these_answer_text($answer);
                 }
                 $haystack = thesesynthesis_normalise(implode(' ', $haystack));
@@ -370,7 +391,8 @@ function thesesynthesis_search(array $links, $userid, array $filters, array $que
                 'student' => $student,
                 'director' => $director,
                 'canopen' => $link->rights->viewall || $directs,
-                'answers' => $answers,
+                'answers' => $knows ? $answers : [],
+                'knowssubject' => $knows,
                 'year' => $year,
             ];
         }
@@ -379,4 +401,77 @@ function thesesynthesis_search(array $links, $userid, array $filters, array $que
         return [$b->year, $a->dossier->title] <=> [$a->year, $b->dossier->title];
     });
     return $rows;
+}
+
+/**
+ * Tableau des résultats d'une recherche de thèses. Pour une thèse confidentielle dont l'utilisateur
+ * ne connaît pas le sujet, titre, mots-clés et résumé sont remplacés par « Thèse confidentielle ».
+ *
+ * @param array $rows Voir thesesynthesis_search().
+ * @param array $questions Questions du questionnaire (voir these_get_questions()).
+ * @return string HTML
+ */
+function thesesynthesis_render_search_results(array $rows, array $questions) {
+    global $DB;
+
+    $table = new html_table();
+    $table->attributes['class'] = 'generaltable these-search';
+    $table->head = [
+        get_string('promotion', 'mod_thesesynthesis'),
+        get_string('defenseyear', 'mod_thesesynthesis'),
+        get_string('student', 'mod_these'),
+        get_string('subjecttitle', 'mod_these'),
+        get_string('director', 'mod_these'),
+        get_string('status'),
+        '',
+    ];
+    $masked = html_writer::tag('em', get_string('confidentialtitle', 'mod_these'));
+    foreach ($rows as $row) {
+        // Détails : résumé, mots-clés et réponses au questionnaire.
+        $details = [];
+        if (!$row->knowssubject) {
+            $details[] = html_writer::tag('strong', get_string('subjectkeywords', 'mod_these')) . ' : ' . $masked;
+            $details[] = html_writer::tag('strong', get_string('subjectsummary', 'mod_these')) . ' : ' . $masked;
+        } else {
+            if (trim((string) $row->dossier->keywords) !== '') {
+                $details[] = html_writer::tag('strong', get_string('subjectkeywords', 'mod_these')) . ' : '
+                    . s(implode(', ', these_split_keywords($row->dossier->keywords)));
+            }
+            if (trim((string) $row->dossier->summary) !== '') {
+                $details[] = format_text($row->dossier->summary, FORMAT_PLAIN);
+            }
+            $allquestions = $questions;
+            foreach (array_diff(array_keys($row->answers), array_keys($allquestions)) as $questionid) {
+                if ($question = $DB->get_record('these_question', ['id' => $questionid])) {
+                    $allquestions[$questionid] = $question;
+                }
+            }
+            foreach ($allquestions as $question) {
+                if (isset($row->answers[(int) $question->id])) {
+                    $details[] = html_writer::tag('strong', format_string($question->label)) . ' : '
+                        . s(these_answer_text($row->answers[(int) $question->id]));
+                }
+            }
+        }
+        $title = $row->knowssubject ? format_string($row->dossier->title) : $masked;
+        if ($details) {
+            $title = html_writer::tag('details', html_writer::tag('summary', $title)
+                . html_writer::div(implode(html_writer::empty_tag('br'), $details), 'small mt-1'));
+        }
+        $director = $row->director ? fullname($row->director) : (string) $row->dossier->extdirectorname;
+        $table->data[] = [
+            format_string($row->link->course->shortname ?: $row->link->course->fullname),
+            $row->year ?: '-',
+            s($row->student ? fullname($row->student) : '-'),
+            $title,
+            s($director !== '' ? $director : '-'),
+            these_render_status_badge($row->dossier->status),
+            $row->canopen ? html_writer::link(
+                new moodle_url('/mod/these/dossier.php', ['id' => $row->link->cm->id, 'dossierid' => $row->dossier->id]),
+                get_string('open', 'mod_thesesynthesis'),
+                ['class' => 'btn btn-sm btn-secondary']
+            ) : '',
+        ];
+    }
+    return html_writer::table($table);
 }

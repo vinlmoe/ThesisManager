@@ -34,7 +34,8 @@ require_once($CFG->libdir . '/pdflib.php');
  *
  * margins : haut, droite, bas, gauche (mm) ; header : position de l'en-tête depuis le haut de la
  * page ; footer : position du pied depuis le bas ; font et size : police et taille par défaut ;
- * lineheight : interligne. Sans section, tout le modèle est le contenu.
+ * lineheight : interligne ; orientation : P (portrait, par défaut) ou L (paysage). Sans section,
+ * tout le modèle est le contenu.
  *
  * @package   mod_these
  * @copyright 2026 Sébastien Lefebvre
@@ -63,6 +64,7 @@ class html_document extends \pdf {
             'font' => 'freesans',
             'size' => 10,
             'lineheight' => 1.25,
+            'orientation' => 'P',
         ];
     }
 
@@ -85,6 +87,8 @@ class html_document extends \pdf {
                     }
                 } else if (in_array($name, ['header', 'footer', 'size', 'lineheight'], true)) {
                     $layout[$name] = (float) $value;
+                } else if ($name === 'orientation') {
+                    $layout['orientation'] = strtoupper(substr(trim($value), 0, 1)) === 'L' ? 'L' : 'P';
                 } else if ($name === 'font') {
                     $layout['font'] = preg_replace('/[^a-z0-9]/', '', strtolower($value));
                 }
@@ -131,9 +135,29 @@ class html_document extends \pdf {
         $parsed = self::parse($template);
         $mustache = self::mustache();
         foreach (['header', 'body', 'footer'] as $section) {
-            $parsed[$section] = $parsed[$section] === '' ? '' : $mustache->render($parsed[$section], $context);
+            if ($parsed[$section] !== '') {
+                $parsed[$section] = self::restrict_images($mustache->render($parsed[$section], $context));
+            }
         }
         return $parsed;
+    }
+
+    /**
+     * Retire les images qui ne sont pas fournies par le module. TCPDF sait lire une image par chemin
+     * ou par adresse : un modèle, modifiable par la DEVE, ne doit pas pouvoir lui faire lire un
+     * fichier du serveur ni appeler une adresse du réseau. Seules restent les images des modèles
+     * ({{img.nom}}, contenu précédé de « @ ») et les images en ligne (data:image/...).
+     *
+     * @param string $html
+     * @return string
+     */
+    public static function restrict_images($html) {
+        return preg_replace_callback('/<img\b[^>]*>/i', function ($match) {
+            $allowed = '(?:@|data:image\/)';
+            $hasallowed = preg_match('/\ssrc\s*=\s*(["\'])' . $allowed . '/i', $match[0]);
+            $hasother = preg_match('/\ssrc\s*=\s*(?!(["\'])' . $allowed . ')/i', $match[0]);
+            return $hasallowed && !$hasother ? $match[0] : '';
+        }, $html);
     }
 
     /**
@@ -145,7 +169,7 @@ class html_document extends \pdf {
      * @return string Contenu PDF.
      */
     public static function render($template, array $context, $title = '') {
-        $pdf = new self('P', 'mm', 'A4', true, 'UTF-8');
+        $pdf = new self(self::parse($template)['layout']['orientation'], 'mm', 'A4', true, 'UTF-8');
         // Numéros de page : remplacés par TCPDF à la fin du document.
         $context['pagenumber'] = $pdf->getAliasNumPage();
         $context['pagecount'] = $pdf->getAliasNbPages();

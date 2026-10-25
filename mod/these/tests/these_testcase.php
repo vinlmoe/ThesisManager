@@ -98,6 +98,44 @@ abstract class these_testcase extends \advanced_testcase {
     }
 
     /**
+     * Utilisateur qui voit tous les dossiers (mod/these:viewall) sans être la DEVE ni la bibliothèque :
+     * gestion, scolarité...
+     *
+     * @return \stdClass
+     */
+    protected function viewall_user(): \stdClass {
+        $gen = $this->getDataGenerator();
+        $roleid = $gen->create_role(['shortname' => 'theseviewall' . random_string(4)]);
+        $system = \context_system::instance()->id;
+        assign_capability('mod/these:view', CAP_ALLOW, $roleid, $system);
+        assign_capability('mod/these:viewall', CAP_ALLOW, $roleid, $system);
+        $user = $gen->create_user();
+        $gen->enrol_user($user->id, $this->course->id, $roleid);
+        accesslib_clear_all_caches_for_unit_testing();
+        return $user;
+    }
+
+    /**
+     * Jeton du dernier lien envoyé à une adresse (seule son empreinte est conservée en base).
+     *
+     * @param array $messages Courriels interceptés.
+     * @param string $email Destinataire.
+     * @param string $script Page du lien : sign.php ou jury.php.
+     * @return string
+     */
+    protected function token_sent_to(array $messages, string $email, string $script = 'sign.php'): string {
+        $token = '';
+        foreach ($messages as $message) {
+            $body = quoted_printable_decode($message->body);
+            if ($message->to === $email && preg_match('#' . preg_quote($script, '#') . '\?token=([A-Za-z0-9]+)#', $body, $match)) {
+                $token = $match[1];
+            }
+        }
+        $this->assertNotSame('', $token, 'Aucun lien envoyé à ' . $email);
+        return $token;
+    }
+
+    /**
      * Données de soumission d'un dossier de soutenance (date dans un mois, jury par défaut).
      *
      * @return \stdClass

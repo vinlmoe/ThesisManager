@@ -143,11 +143,12 @@ class defense_form extends \moodleform {
             'optional' => true, 'startyear' => (int) date('Y'), 'stopyear' => (int) date('Y') + 30,
         ]);
         $mform->addHelpButton('bconfidentialuntil', 'bconfidentialuntil', 'mod_these');
-        $mform->addElement('advcheckbox', 'bembargo', '', get_string('bembargo', 'mod_these'));
-        $mform->addElement('date_selector', 'bembargountil', get_string('bembargountil', 'mod_these'), [
-            'startyear' => (int) date('Y'), 'stopyear' => (int) date('Y') + 30,
-        ]);
-        $mform->hideIf('bembargountil', 'bembargo', 'notchecked');
+        // Embargo : diffusion différée de THESE_EMBARGO_YEARS ans après la soutenance, sur demande motivée.
+        $mform->addElement('advcheckbox', 'bembargo', '', get_string('bembargo', 'mod_these', THESE_EMBARGO_YEARS));
+        $mform->addHelpButton('bembargo', 'embargo', 'mod_these');
+        $mform->addElement('textarea', 'bembargoreason', get_string('bembargoreason', 'mod_these'), ['rows' => 3, 'cols' => 80]);
+        $mform->setType('bembargoreason', PARAM_TEXT);
+        $mform->hideIf('bembargoreason', 'bembargo', 'notchecked');
         $mform->addElement('select', 'bdiffusion', get_string('bdiffusion', 'mod_these'), [
             '' => get_string('choosedots'),
             'internet' => get_string('diffusioninternet', 'mod_these'),
@@ -223,6 +224,9 @@ class defense_form extends \moodleform {
             if ($conclusionserror !== null) {
                 $errors['conclusions'] = $conclusionserror;
             }
+        }
+        if (!empty($data['bembargo']) && trim((string) ($data['bembargoreason'] ?? '')) === '') {
+            $errors['bembargoreason'] = get_string('bembargoreasonrequired', 'mod_these');
         }
         if (!isset($errors['bpersonalemail']) && !validate_email($data['bpersonalemail'])) {
             $errors['bpersonalemail'] = get_string('invalidemail');

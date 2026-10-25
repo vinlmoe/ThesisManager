@@ -155,7 +155,7 @@
         <FIELD NAME="eligibleby" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="eligibletime" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="accesstoken" TYPE="char" LENGTH="64" NOTNULL="false" SEQUENCE="false"
-            COMMENT="Jeton d'accès du membre aux documents du dossier"/>
+            COMMENT="Empreinte SHA-256 du jeton d'accès du membre aux documents du dossier"/>
         <FIELD NAME="notifiedtime" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>
@@ -199,12 +199,14 @@
         <FIELD NAME="signername" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="signeremail" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="token" TYPE="char" LENGTH="64" NOTNULL="false" SEQUENCE="false"
-            COMMENT="Secret du lien de signature sans compte, effacé une fois la signature apposée"/>
+            COMMENT="Empreinte SHA-256 du jeton du lien de signature sans compte, effacée une fois la signature apposée"/>
         <FIELD NAME="requesttime" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timesigned" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
             COMMENT="0 tant que la signature est seulement demandée"/>
         <FIELD NAME="contenthash" TYPE="char" LENGTH="64" NOTNULL="false" SEQUENCE="false"
             COMMENT="Empreinte SHA-256 du contenu du document au moment de la signature"/>
+        <FIELD NAME="templatehash" TYPE="char" LENGTH="64" NOTNULL="false" SEQUENCE="false"
+            COMMENT="Empreinte SHA-256 de la mise en forme du document (modèles, images) au moment de la signature"/>
         <FIELD NAME="ipaddress" TYPE="char" LENGTH="45" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
       </FIELDS>

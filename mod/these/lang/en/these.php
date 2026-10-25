@@ -116,6 +116,27 @@ $string['dormantphase'] = 'dormant file';
 
 // Navigation and lists.
 $string['dashboard'] = 'Dashboard';
+$string['planning'] = 'Defence schedule';
+$string['planningviewweek'] = 'By week';
+$string['planningviewmonth'] = 'By month';
+$string['planningweekof'] = 'Week of {$a->start} to {$a->end}';
+$string['planningprevweek'] = 'Previous week';
+$string['planningthisweek'] = 'This week';
+$string['planningnextweek'] = 'Next week';
+$string['planningprevmonth'] = 'Previous month';
+$string['planningthismonth'] = 'This month';
+$string['planningnextmonth'] = 'Next month';
+$string['planninggoto'] = 'Go to';
+$string['planningcount'] = '{$a} defence(s)';
+$string['planningnone'] = 'No defence in this period.';
+$string['planningtime'] = 'Time';
+$string['planningpromotion'] = 'Cohort';
+$string['planningconfirmed'] = 'Date confirmed';
+$string['planningproposed'] = 'Date proposed';
+$string['planningpdfweek'] = 'Print the week\'s schedule (PDF)';
+$string['planningpdfmonth'] = 'Print the monthly schedule (PDF)';
+$string['planningdownload'] = 'Download the schedule for this period';
+$string['planningupcoming'] = 'Upcoming weeks with defences';
 $string['todo'] = 'To do';
 $string['nothingtodo'] = 'No workflow step is assigned to you in this activity.';
 $string['alldossiers'] = 'All files';
@@ -252,7 +273,8 @@ $string['juryaccessresent'] = '{$a} jury member(s) notified again.';
 $string['juryaccess'] = 'Jury access';
 $string['juryaccessintro'] = 'Hello {$a->name}, you are appointed as {$a->role} of the jury of this thesis. Below are the defence '
     . 'details and the file documents.';
-$string['juryaccessinvalid'] = 'This access link is not (or no longer) valid. Contact the registrar.';
+$string['juryaccessinvalid'] = 'This access link is not (or no longer) valid: it was replaced by a new one, the defence '
+    . 'was more than 60 days ago, or the file is closed. Contact the registrar.';
 $string['juryaccessdocuments'] = 'Documents';
 $string['juryaccessnodocuments'] = 'No document is available yet.';
 
@@ -587,6 +609,10 @@ $string['settingsucblemail_desc'] = 'Address receiving signing links; empty: sig
 // Subject form.
 $string['studyyear'] = 'Year of study';
 $string['confidential'] = 'Confidential thesis, do not disclose the title';
+$string['confidential_help'] = 'The subject of a confidential thesis (title, English title, abstract, keywords) is only known to the student, the registrar, the library, the thesis director and the jury members. The thesis can be found and appears in the schedule like any other, but for everyone else (other teachers, staff who see all files without being the registrar or the library), its title, keywords and abstract are replaced by "Confidential thesis" (pages, lists, schedule, search, export, emails), it is never found by its subject, and the documents bearing the title are not available to them.';
+$string['confidentialtitle'] = 'Confidential thesis';
+$string['confidentialbadge'] = 'Confidential thesis: subject known only to the student, the registrar, the library, the director and the jury';
+$string['confidentialitylabel'] = 'Confidentiality';
 $string['hetoplink'] = 'Search keywords in HeTOP';
 $string['keywordscount'] = 'Enter 3 to 5 keywords, separated by semicolons.';
 $string['subjectapproval'] = 'Subject approval';
@@ -640,7 +666,8 @@ $string['signaturerequestsent'] = 'Signing link sent.';
 $string['signaturesrecorded'] = 'Signature recorded. Thank you.';
 $string['signpagetitle'] = 'Signing thesis documents';
 $string['signpageintro'] = 'Signing as {$a->slot} the documents of the thesis of {$a->student}: "{$a->title}".';
-$string['signinvalidtoken'] = 'This link is no longer valid: the documents have already been signed, or a new invitation was sent.';
+$string['signinvalidtoken'] = 'This link is no longer valid: the documents have already been signed, a new invitation was sent, '
+    . 'or the link has expired (60 days). Contact the registrar to receive a new one.';
 $string['signnothingpending'] = 'No document is waiting for a signature.';
 $string['signdocuments'] = 'Sign the documents';
 
@@ -711,10 +738,20 @@ $string['conclusionstoolong'] = 'The conclusions have {$a->length} characters fo
 $string['conclusionsonepage'] = 'The conclusions do not fit on one page with the signatures: shorten them or use fewer paragraphs.';
 $string['contracthelp'] = 'Author choices for the electronic distribution contract (articles 2 and 4). A confidential thesis (box '
     . 'ticked with the subject) stays confidential until the date given.';
+$string['contracttemplatemissing'] = 'The standard distribution contract has not been uploaded in the module settings: the contract only contains the module\'s pages and will not be sealed until it is provided.';
+$string['contracttemplateunreadable'] = 'The standard distribution contract uploaded in the module settings could not be read (unsupported PDF format): the contract only contains the module\'s pages and will not be sealed. Upload the contract saved in an older PDF format (PDF 1.4).';
 $string['bconfidentialuntil'] = 'Confidential until';
 $string['bconfidentialuntil_help'] = 'Only for theses declared confidential with the subject.';
-$string['bembargo'] = 'Thesis under embargo (delayed distribution)';
-$string['bembargountil'] = 'Embargo until';
+$string['bembargo'] = 'I request a {$a}-year distribution embargo from the defence date';
+$string['embargo_help'] = 'During the embargo, the thesis is registered and listed, but its full text is neither distributed online nor available for consultation until the end, 5 years after the defence date. The request must be justified (patent, publication in progress, sensitive data, partnership...). It is stated in the distribution contract, which the thesis director endorses.';
+$string['bembargoreason'] = 'Reason for the embargo request';
+$string['bembargoreasonrequired'] = 'Give the reason for the embargo request.';
+$string['embargo'] = 'Distribution embargo';
+$string['embargorequested'] = 'Requested: {$a->years} years after the defence, until {$a->until}';
+$string['embargorequestednodate'] = 'Requested: {$a} years after the defence (defence date to be set)';
+$string['embargoreason'] = 'Embargo reason';
+$string['embargoexport'] = 'Embargo until';
+$string['diffusion'] = 'Distribution';
 $string['bdiffusion'] = 'Thesis distribution';
 $string['bdiffusion_help'] = 'Full text on the internet (DUMAS, Sudoc, library catalogues), or paper copy in veterinary school '
     . 'libraries and university intranet only.';
@@ -782,10 +819,17 @@ $string['agauthorized'] = 'The student is authorised to defend their veterinary 
 
 // Signature history and emails.
 $string['logsigned'] = 'Document signed';
+$string['logdocumentsealed'] = 'Document sealed';
+$string['dossierchanged'] = 'This file was changed in the meantime (by someone else or by submitting the form twice): the action was not recorded. Reload the file to see its current state.';
+$string['dossierbusy'] = 'This file is being processed by another action. Try again in a moment.';
 $string['logsignaturesinvalidated'] = 'Signatures invalidated (document changed)';
 $string['logsignaturerequested'] = 'Signature requested';
 $string['logsignedinperson'] = 'Signature collected in person';
 $string['emailkeysignaturerequest'] = 'Signature request (signatories without an account)';
+$string['emailkeyagentsignature'] = 'Documents to be signed by the registrar\'s signing officer';
+$string['emailkeysubjectchanged'] = 'Change of subject';
+$string['emailkeyadjourned'] = 'Thesis adjourned';
+$string['emailkeyjurydesignation'] = 'Appointment of a jury member';
 $string['emailjurydesignationsubject'] = 'Appointment to the thesis jury of {$a->student}';
 $string['emailjurydesignationbody'] = 'Hello {$a->name},
 
@@ -868,6 +912,7 @@ $string['doctplconformity'] = 'Conformity certificate (library)';
 $string['doctplconvocation'] = 'Defence notice';
 $string['doctpljurysheet'] = 'Jury sheet';
 $string['doctplminutes'] = 'Defence minutes';
+$string['doctplplanning'] = 'Defence schedule';
 
 // Settings transfer.
 $string['transfersettings'] = 'Settings transfer';

@@ -64,44 +64,21 @@ if ($dataformat !== '') {
         'jury' => get_string('jury', 'mod_these'),
         'result' => get_string('defenseresult', 'mod_these'),
         'mention' => get_string('mention', 'mod_these'),
+        'embargo' => get_string('embargoexport', 'mod_these'),
     ];
     $dossiers = these_get_dossiers($these->id);
     $students = $DB->get_records_list('user', 'id', array_column($dossiers, 'userid'));
     $directors = $DB->get_records_list('user', 'id', array_filter(array_column($dossiers, 'directorid')));
-    $roles = these_jury_role_options();
-    $dateformat = get_string('strftimedatetimeshort', 'langconfig');
 
     $rows = new ArrayIterator(array_values($dossiers));
     $filename = clean_filename(format_string($these->name) . '-' . userdate(time(), '%Y%m%d'));
     \core\dataformat::download_data($filename, $dataformat, $columns, $rows, function ($dossier) use (
         $students,
         $directors,
-        $roles,
-        $dateformat
+        $context
     ) {
-        $student = $students[$dossier->userid] ?? null;
         $director = $directors[$dossier->directorid] ?? null;
-        $jury = array_map(function ($member) use ($roles) {
-            return ($roles[$member->juryrole] ?? $member->juryrole) . ' : ' . $member->fullname;
-        }, these_get_jury($dossier->id));
-        return [
-            'devenumber' => $dossier->devenumber,
-            'student' => $student ? fullname($student) : '',
-            'email' => $student ? $student->email : '',
-            'title' => $dossier->title,
-            'titleen' => $dossier->titleen,
-            'keywords' => $dossier->keywords,
-            'director' => $director ? fullname($director) : '',
-            'codirector' => $dossier->codirectorname,
-            'libraryref' => $dossier->libraryref,
-            'status' => these_status_label($dossier->status),
-            'statustime' => userdate($dossier->statustime, $dateformat),
-            'defensedate' => $dossier->defensedate ? userdate($dossier->defensedate, $dateformat) : '',
-            'defenselocation' => $dossier->defenselocation,
-            'jury' => implode(' ; ', $jury),
-            'result' => (int) $dossier->defenseresult ? these_result_label($dossier->defenseresult) : '',
-            'mention' => these_mention_label($dossier->mention),
-        ];
+        return these_register_row($dossier, $context, $students[$dossier->userid] ?? null, $director);
     });
     die();
 }

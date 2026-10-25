@@ -54,6 +54,7 @@ $string['open'] = 'Open';
 $string['myjuries'] = 'My juries';
 $string['nojuries'] = 'You do not sit on any jury of the followed cohorts.';
 $string['juryaccesspending'] = 'Access given when the registrar validates the jury';
+$string['juryaccessclosed'] = 'Access closed (file closed or defence over)';
 $string['followed'] = 'Followed files';
 $string['nodossiers'] = 'No file.';
 $string['allpromotions'] = 'All cohorts';
@@ -65,10 +66,7 @@ $string['privacy:metadata'] = 'The thesis follow-up activity stores no personal 
 $string['thesesynthesis:managesettings'] = 'Define the document templates, grid and questionnaire of the followed activities';
 $string['thesesynthesis:search'] = 'Search theses';
 $string['searchtheses'] = 'Search theses';
-$string['searchtheses_desc'] = 'Search in the followed "Thesis management" activities: the text is searched in the title, summary, '
-    . 'keywords, names of the student, director and jury members, and answers to the pre-jury questionnaire. The DEVE and the '
-    . 'library find every record of the activities where they have their rights; teachers find theses registered by the DEVE '
-    . 'and not confidential, and those they direct.';
+$string['searchtheses_desc'] = 'Search in the followed "Thesis management" activities: the text is searched in the title, summary, keywords, names of the student, director and jury members, and answers to the pre-jury questionnaire. The DEVE and the library find every record of the activities where they have their rights; teachers find theses registered by the DEVE, and those they direct. A confidential thesis is found by its student, director, jury or year, never by its subject, which stays hidden ("Confidential thesis") from those who must not know it.';
 $string['searchtext'] = 'Text';
 $string['defenseyear'] = 'Defence year';
 $string['allyears'] = 'All years';

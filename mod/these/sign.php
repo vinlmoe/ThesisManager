@@ -80,6 +80,10 @@ if ($token !== '') {
     $inperson = true;
 }
 
+// Signatures devenues caduques (contenu ou mise en forme modifiés depuis) : invalidées avant de
+// présenter les documents.
+these_refresh_signatures($context, $dossier);
+
 // Documents à signer : ceux qui attendent ce signataire et dont les données sont saisies.
 $doctypes = array_values(array_filter(
     these_pending_documents_for_slot($dossier, $slot, $token !== '' ? array_column($pending, 'doctype') : null),

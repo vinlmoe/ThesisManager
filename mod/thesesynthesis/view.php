@@ -72,7 +72,8 @@ $table = function (array $rows) {
         $table->data[] = [
             format_string($row->link->course->shortname ?: $row->link->course->fullname),
             s($row->student ? fullname($row->student) : '-'),
-            format_string($row->dossier->title),
+            $row->knowssubject ? format_string($row->dossier->title)
+                : html_writer::tag('em', get_string('confidentialtitle', 'mod_these')),
             s($row->director ? fullname($row->director) : '-'),
             these_render_status_badge($row->dossier->status),
             $row->actor ? these_actor_label($row->actor) : '-',
@@ -118,13 +119,17 @@ if ($juries) {
     ];
     foreach ($juries as $jury) {
         $date = (int) ($jury->dossier->defensedate ?: $jury->dossier->proposeddate);
-        $access = !empty($jury->member->accesstoken)
-            ? html_writer::link(
-                new moodle_url('/mod/these/jury.php', ['token' => $jury->member->accesstoken]),
+        if (empty($jury->member->notifiedtime)) {
+            $access = html_writer::span(get_string('juryaccesspending', 'mod_thesesynthesis'), 'text-muted');
+        } else if (!these_jury_access_open($jury->dossier, $jury->member)) {
+            $access = html_writer::span(get_string('juryaccessclosed', 'mod_thesesynthesis'), 'text-muted');
+        } else {
+            $access = html_writer::link(
+                new moodle_url('/mod/these/jury.php', ['member' => $jury->member->id]),
                 get_string('juryaccess', 'mod_these'),
                 ['class' => 'btn btn-sm btn-primary']
-            )
-            : html_writer::span(get_string('juryaccesspending', 'mod_thesesynthesis'), 'text-muted');
+            );
+        }
         $jurytable->data[] = [
             format_string($jury->link->course->shortname ?: $jury->link->course->fullname),
             s($jury->student ? fullname($jury->student) : '-'),

@@ -4,9 +4,9 @@
 
 % Version du guide : à mettre à jour à chaque modification, avec une ligne dans l'historique.
 \newcommand{\titreguide}{Guide de la gestion des thèses}
-\newcommand{\versionguide}{1.9}
-\newcommand{\dateguide}{24 octobre 2026}
-\newcommand{\versionthese}{0.9.0}
+\newcommand{\versionguide}{2.0}
+\newcommand{\dateguide}{25 octobre 2026}
+\newcommand{\versionthese}{0.11.2}
 
 \usepackage{guide-commun}
 \usepackage{tikz}
@@ -48,6 +48,13 @@ thèse) et circuit des corrections. \\
 enregistrée ; \og Mes signatures\fg{}. \\
 1.9 & 24 octobre 2026 & Changement de sujet de thèse, avec trace de l'ancien
 sujet et avertissement de l'ancien directeur, de la DEVE et de la bibliothèque. \\
+2.0 & 25 octobre 2026 & Planning des soutenances par semaine et par mois,
+planning mensuel imprimable ; thèse confidentielle (sujet connu de l'étudiant,
+de la DEVE, de la bibliothèque, du directeur et du jury, masqué pour les autres,
+thèse trouvable et au planning) ; demande d'embargo de diffusion de 5 ans ;
+documents signés scellés ; liens par courriel valables 60 jours, accès du jury
+depuis son compte ; valeur des signatures ; sauvegarde ; captures du planning,
+de la thèse confidentielle, de l'embargo et du document scellé. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -224,7 +231,11 @@ Dans la même page d'administration :
   \item[Contrat type de diffusion électronique] le PDF officiel
         (ENS-INI-P308-E04), déposé tel quel. Le module le fait précéder d'une
         page de données et de choix de l'auteur et suivre d'une page de
-        signatures, comme pour les conventions de stage.
+        signatures, comme pour les conventions de stage. Tant qu'il manque ou
+        ne peut pas être lu (PDF trop récent : l'enregistrer en PDF~1.4), le
+        contrat ne contient que les pages du module, n'est pas scellé
+        (section~\ref{sec:integrite}) et le dossier affiche un avertissement
+        à la DEVE.
   \item[Agent DEVE signataire] identifiant ou adresse du compte Moodle de
         l'agent responsable de la DEVE : l'équipe valide sans signer, puis
         l'agent signe depuis \bouton{Mes signatures}
@@ -301,6 +312,8 @@ agir ; les boutons bleus sous la frise sont les actions qui vous attendent.
         cliquez sur \bouton{Proposer un sujet de thèse}.
   \item Remplissez la fiche : titre (et titre anglais), année d'études,
         confidentialité éventuelle, résumé, 3 à 5 mots-clés (liens vers HeTOP).
+        Cochez \bouton{Thèse confidentielle} si le sujet ne doit pas être
+        divulgué (voir l'encadré ci-dessous).
   \item Choisissez votre directeur de thèse dans la liste ou, s'il est
         extérieur à l'école, cochez \bouton{Le directeur de thèse est extérieur à l'établissement} et saisissez
         ses coordonnées ; ajoutez au besoin un co-directeur et des pièces jointes.
@@ -316,6 +329,19 @@ agir ; les boutons bleus sous la frise sont les actions qui vous attendent.
 directeur reçoit un courriel. Le sujet n'est plus modifiable, sauf s'il vous
 est renvoyé.}
 \end{procedure}
+
+\begin{astuce}
+\textbf{Thèse confidentielle.} Le sujet (titre, titre anglais, résumé,
+mots-clés) n'est alors connu que de vous, de la DEVE, de la bibliothèque, de
+votre directeur et des membres de votre jury. Pour tous les autres (autres
+enseignants, personnels qui consultent les dossiers sans être la DEVE ni la
+bibliothèque), il apparaît sous la mention \og Thèse confidentielle\fg{} dans
+les pages, les listes, le planning des soutenances, la recherche, l'export et
+les courriels, et les documents qui portent le titre ne leur sont pas
+accessibles.
+\end{astuce}
+
+\capture[0.8\linewidth]{94_dossier_confidentiel}{Thèse confidentielle vue par un personnel qui ne doit pas en connaître le sujet.}
 
 \capture[0.85\linewidth]{60_etudiant_sujet_signature}{Fiche de sujet : engagements et signature.}
 
@@ -388,7 +414,11 @@ refusé.}
         résumés), le titre anglais et les \textbf{conclusions} (une page au plus
         avec les signatures).
   \item Indiquez vos choix pour le contrat de diffusion (confidentialité,
-        embargo, diffusion sur internet).
+        diffusion sur internet). Pour différer la diffusion, cochez
+        \bouton{Je demande un embargo de diffusion de 5 ans à compter de la
+        soutenance} et indiquez-en le motif (brevet, publication en cours,
+        données sensibles\ldots) : la date de fin, cinq ans après la date de
+        soutenance, est reportée au contrat, que votre directeur vise.
   \item Vérifiez que le questionnaire est rempli, signez, puis cliquez sur
         \bouton{Soumettre au directeur de thèse}.
 \end{etapes}
@@ -397,6 +427,10 @@ directeur rédige son rapport puis valide.}
 \end{procedure}
 
 \capture[0.85\linewidth]{67_etudiant_soutenance_signature}{Dépôt de la soutenance : documents, jury, bordereau, signature.}
+
+\capture[0.85\linewidth]{91_embargo_depot}{Demande d'embargo de diffusion de 5 ans, avec son motif, au dépôt de la soutenance.}
+
+\capture[0.85\linewidth]{92_dossier_diffusion}{Rubrique \og Diffusion\fg{} du dossier : embargo demandé et date de fin.}
 
 \begin{attention}
 Des conclusions trop longues pour tenir sur une page avec les signatures sont
@@ -542,6 +576,44 @@ Quand un \textbf{agent DEVE signataire} est désigné dans les réglages du site
 du sujet et l'agrément administratif depuis \bouton{Mes signatures}. Sans agent
 désigné, la personne qui valide signe elle-même.
 \end{astuce}
+
+\subsection{Planning des soutenances}\label{sec:planning}
+
+Le bouton \bouton{Planning des soutenances} présente les soutenances de la
+semaine, jour par jour : heure, étudiant, titre, directeur, jury (président en
+tête), lieu, et l'état de la date (\og date proposée\fg{} par l'étudiant au
+dépôt, \og date arrêtée\fg{} une fois le dossier validé par la DEVE). Le nom
+de l'étudiant ouvre son dossier. Une thèse figure au planning dès le dépôt du
+dossier de soutenance ; un dossier abandonné ou une thèse ajournée en sort.
+
+\capture[0.85\linewidth]{86_planning_semaine}{Planning des soutenances de la semaine : date arrêtée ou proposée, jury et lieu, semaines à venir.}
+
+\begin{procedure}{Retrouver une soutenance et éditer le planning du mois}{DEVE, bibliothèque, directeurs}
+\begin{etapes}
+  \item Ouvrez \bouton{Planning des soutenances} : la semaine en cours
+        s'affiche, avec la liste des semaines à venir qui ont des soutenances.
+  \item Passez d'une semaine à l'autre (\bouton{Semaine précédente},
+        \bouton{Semaine suivante}, \bouton{Cette semaine}), ou choisissez une
+        date dans \bouton{Aller au}.
+  \item Basculez sur \bouton{Par mois} pour voir tout un mois, puis
+        \bouton{Imprimer le planning mensuel (PDF)} : un tableau en paysage,
+        regroupé par jour, prêt à afficher ou à diffuser.
+  \item Le menu \bouton{Télécharger le planning de la période} produit le
+        même planning en tableur (CSV, Excel, ODS\ldots).
+\end{etapes}
+\end{procedure}
+
+\capture[0.85\linewidth]{87_planning_mois}{Planning du mois, avec l'impression et le téléchargement.}
+
+\capture{88_planning_pdf}{Planning mensuel imprimé (PDF en paysage).}
+
+La DEVE, la bibliothèque et les personnels qui consultent tous les dossiers
+voient toutes les soutenances ; un directeur, celles des thèses qu'il dirige.
+Une thèse confidentielle y figure comme les autres, son titre remplacé par
+\og Thèse confidentielle\fg{} pour qui ne doit pas en connaître le sujet. La mise en forme du planning imprimé est un modèle de
+document comme les autres (\og Planning des soutenances\fg{},
+section~\ref{sec:modeles}) : la DEVE peut en changer l'en-tête, les colonnes ou
+le logo.
 
 \begin{procedure}{Enregistrer le sujet (phase 1)}{Équipe DEVE}
 \begin{etapes}
@@ -764,7 +836,9 @@ DEVE génère les documents de soutenance.}
   \item Après la validation du jury par la DEVE, ouvrez le lien personnel reçu
         par courriel (aucun compte n'est nécessaire), ou, si vous avez un
         compte, la rubrique \bouton{Mes jurys} de l'activité \og Suivi des
-        thèses\fg{}.
+        thèses\fg{}. Le lien vaut jusqu'à 60~jours après la soutenance ; un
+        nouvel envoi par la DEVE le remplace, et il cesse à la clôture du
+        dossier.
   \item Consultez le manuscrit, le rapport du directeur, la grille, les
         conclusions, la fiche signalétique et les réponses au questionnaire
         préalable au jury.
@@ -776,7 +850,8 @@ DEVE génère les documents de soutenance.}
 \begin{procedure}{Signer (président du jury)}{Président}
 \begin{etapes}
   \item Ouvrez le lien \og signature\fg{} reçu par courriel : il couvre tous
-        les documents qui vous attendent (fiche signalétique, conclusions).
+        les documents qui vous attendent (fiche signalétique, conclusions) et
+        vaut 60~jours ; passé ce délai, demandez-en un nouveau à la DEVE.
         Si vous avez un compte Moodle à cette adresse, vous pouvez aussi les
         retrouver dans \bouton{Mes signatures}.
   \item Consultez chaque document en PDF.
@@ -876,9 +951,14 @@ nom de l'étudiant, \var{thesis.title} pour le titre,
 section \texttt{\{\{\#extdirector.present\}\}\ldots\{\{/extdirector.present\}\}}
 n'apparaît que si la condition est remplie ; appliquée à une liste
 (\texttt{jury}), elle se répète pour chaque élément. La première ligne fixe les
-marges, la police et la taille ; un en-tête et un pied de page répétés sur
-chaque page peuvent être définis. La page de modification présente la liste
-complète des variables, avec un exemple de valeur pour chacune.
+marges, la police, la taille et l'orientation (\texttt{orientation="L"} pour un
+document en paysage, comme le planning des soutenances) ; un en-tête et un pied
+de page répétés sur chaque page peuvent être définis. La page de modification
+présente la liste complète des variables, avec un exemple de valeur pour
+chacune. Pour un document destiné à des personnes qui ne connaissent pas le
+sujet d'une thèse confidentielle, \var{thesis.publictitle} donne \og Thèse
+confidentielle\fg{} à la place du titre. Seules les images du module et celles
+déposées dans \bouton{Images des modèles} peuvent être appelées.
 
 \capture{44_modele_edition}{Modification du modèle du dépôt de sujet.}
 
@@ -889,10 +969,13 @@ exemple) est refusé à l'enregistrement avec le message d'erreur.
 
 \begin{attention}
 Quand l'établissement publie une nouvelle version d'un formulaire, on reporte
-ses changements dans le modèle correspondant. Les documents déjà produits ne
-changent pas ; ceux produits ensuite suivent le nouveau modèle. Modifier un
-modèle n'annule aucune signature : seules les données signées sont couvertes
-par l'empreinte, pas leur mise en page.
+ses changements dans le modèle correspondant. Un document \textbf{entièrement
+signé} est scellé et ne change plus ; un document qui attend encore des
+signatures suit le nouveau modèle, et les signatures déjà apposées sont
+annulées, puisque le texte signé a changé : les signataires sont à solliciter
+de nouveau (section~\ref{sec:integrite}). Mieux vaut donc modifier un modèle
+entre deux promotions, ou quand aucun document de ce type n'attend de
+signature.
 \end{attention}
 
 \subsection{Grille de conformité}\label{sec:grille}
@@ -990,7 +1073,13 @@ l'université et un éventuel directeur extérieur n'ont pas de compte Moodle.
 À la validation du dossier de soutenance par la DEVE (et, pour le directeur
 extérieur, à la soumission du sujet), chacun reçoit \textbf{un seul lien}
 couvrant tous les documents qui l'attendent : il les consulte en PDF puis signe
-une fois. Le lien est personnel et cesse de fonctionner une fois utilisé.
+une fois. Le lien est personnel, vaut 60~jours et cesse de fonctionner une fois
+utilisé ; un nouvel envoi par la DEVE remplace le précédent. Seule une empreinte
+du lien est conservée en base. Le lien d'accès du jury aux documents vaut
+jusqu'à 60~jours après la soutenance et cesse à la clôture ou à l'abandon du
+dossier ; un membre du jury qui a un compte Moodle à la même adresse consulte
+aussi les documents depuis \bouton{Mes jurys} de l'activité \og Suivi des
+thèses\fg{}.
 
 La page \bouton{Suivi des signatures} du dossier (DEVE) montre l'état de chaque
 emplacement, permet de \bouton{renvoyer le lien} ou de \bouton{signer sur place}
@@ -1000,7 +1089,7 @@ pour un signataire présent ou sans adresse.
 
 \capture[0.8\linewidth]{41_signature_sur_place}{Signature sur place du président du jury.}
 
-\subsection{Intégrité}
+\subsection{Intégrité}\label{sec:integrite}
 
 Un document signé ne peut pas être modifié en silence : si son contenu change
 après signature (sujet corrigé après un renvoi, conclusions reprises\ldots), les
@@ -1012,8 +1101,39 @@ n'invalident pas les signatures, et chaque signataire ne s'engage que sur sa
 partie : l'agrément administratif saisi par la DEVE n'invalide pas l'agrément
 scientifique du directeur.
 
+La mise en page compte aussi : tant qu'un document attend des signatures, une
+modification de son modèle (ou des images qu'il appelle, ou du contrat type)
+annule celles déjà apposées.
+
+\paragraph{Document scellé.} Dès que la dernière signature attendue est
+apposée, le document est \textbf{scellé} : son PDF est produit une dernière fois
+et conservé tel quel, et son empreinte SHA-256 est inscrite à l'historique du
+dossier (\og Document scellé\fg{}). Une modification ultérieure d'un modèle,
+d'une image ou du contrat type ne le change plus. Si une signature disparaît
+(contenu modifié, ajournement), le scellé est levé et le document sera scellé de
+nouveau une fois toutes ses signatures apposées.
+
+\capture[0.85\linewidth]{93_document_scelle}{Historique du dossier : document signé puis scellé, avec son empreinte SHA-256.}
+
 Les documents, dans leur état de signature, sont joints aux documents de
 soutenance générés et à l'archive transmise à l'université.
+
+\paragraph{Actions simultanées.} Deux actions sur un même dossier ne peuvent
+pas se croiser : si le dossier a changé d'état entre l'ouverture d'une page et
+l'envoi du formulaire (double clic, deux personnes de la DEVE), l'action est
+refusée avec le message \og Ce dossier a été modifié entre-temps\fg{}, et
+rien n'est enregistré. Il suffit de recharger le dossier pour voir son état.
+
+\begin{attention}
+\textbf{Valeur des signatures.} Le tracé apposé dans le module est une
+signature électronique \emph{simple} au sens du règlement européen eIDAS : il
+identifie le signataire (compte Moodle, ou lien personnel reçu à son adresse),
+date la signature et la lie au contenu signé par son empreinte, mais ne repose
+pas sur un certificat qualifié. Il revient à l'établissement de décider pour
+quels documents elle suffit (procès-verbal, contrat de diffusion) ; un document
+qui exige une signature avancée ou qualifiée est signé hors du module puis
+déposé signé.
+\end{attention}
 
 % ===========================================================================
 \section{Annuaire du jury et suivi des thèses}
@@ -1064,7 +1184,10 @@ thèses\fg{} (une par promotion) à suivre. Chacun y trouve :
   \item[Mes jurys] les jurys où il siège, avec la date, le lieu et l'accès aux
         documents dès la validation du jury par la DEVE ;
   \item[Dossiers suivis] ses thèses dirigées, ou tous les dossiers pour la DEVE
-        et la bibliothèque, filtrables par promotion, statut et recherche.
+        et la bibliothèque, filtrables par promotion, statut et recherche ;
+  \item[Planning des soutenances] les soutenances de la semaine ou du mois de
+        toutes les promotions suivies, avec la promotion de chaque étudiant, et
+        le planning mensuel imprimable (section~\ref{sec:planning}).
 \end{description}
 
 \capture[0.85\linewidth]{49_suivi_theses}{Suivi des thèses : jurys d'un enseignant.}
@@ -1095,13 +1218,20 @@ mots-clés, son résumé et ses réponses.
 \midrule
 DEVE, bibliothèque & Tous les dossiers des activités où ils ont leurs droits,
 ouvrables depuis la recherche. \\
-Enseignant & Les thèses dont le sujet est enregistré par la DEVE, non
-confidentielles et non abandonnées ; il n'ouvre que celles qu'il dirige. \\
+Enseignant & Les thèses dont le sujet est enregistré par la DEVE et non
+abandonnées ; il n'ouvre que celles qu'il dirige. \\
+Tous & Une thèse confidentielle se trouve comme les autres (étudiant,
+directeur, jury, année) et figure au planning des soutenances, mais son sujet
+n'est cherché et affiché que pour l'étudiant, la DEVE, la bibliothèque, le
+directeur et le jury : pour les autres, titre, mots-clés et résumé sont
+remplacés par \og Thèse confidentielle\fg{}. \\
 \bottomrule
 \end{tabularx}
 \end{center}
 
 \capture[0.85\linewidth]{56_recherche_theses}{Recherche des thèses par texte et par réponse au questionnaire.}
+
+\capture[0.85\linewidth]{90_recherche_confidentielle}{Recherche par année d'un enseignant : la thèse confidentielle est trouvée, son sujet masqué.}
 
 % ===========================================================================
 \section{Courriels et relances}
@@ -1126,6 +1256,8 @@ Relance & à l'acteur attendu, après le délai de relance \\
 
 Chaque texte est personnalisable par la DEVE (\chemin{Courriels}), avec les
 variables indiquées sous chaque courriel, par exemple \var{student} ou \var{url}.
+Pour une thèse confidentielle, un destinataire qui ne doit pas en connaître le
+sujet reçoit \og Thèse confidentielle\fg{} à la place de \var{title}.
 
 \begin{courriel}{Thèse de \{\{student\}\} : \{\{status\}\}}
 Bonjour,\\[2pt]
@@ -1147,7 +1279,21 @@ Le module implémente l'API de confidentialité de Moodle : l'étudiant peut
 exporter son dossier (sans le rapport du directeur) et en demander
 l'effacement ; un membre du personnel supprimé est dissocié des dossiers qu'il a
 traités, sans que ceux-ci disparaissent. La sauvegarde et la restauration de
-cours recopient le paramétrage et, si les données utilisateur sont incluses,
-les dossiers, leur jury, leur historique et leurs fichiers.
+cours recopient le paramétrage (réglages, courriels, modèles et images, grille,
+questionnaire) et, si les données utilisateur sont incluses, les dossiers, leur
+jury, leur historique, leurs fichiers, leurs signatures et leurs documents
+scellés. Les liens envoyés par courriel ne sont pas restaurés : on renvoie les
+invitations.
+
+\begin{attention}
+Le module ne fait pas de sauvegarde de lui-même. Activer les
+\textbf{sauvegardes automatisées de cours} de Moodle \emph{avec les données
+utilisateur}, et sauvegarder régulièrement le serveur (base de données et
+dossier \texttt{moodledata}) : l'annuaire du jury, les signatures enregistrées
+des utilisateurs, le contrat type et les réglages du site ne sont pas dans la
+sauvegarde d'une activité et ne sont protégés que par celle du serveur. Le
+transfert des paramètres (section~\ref{sec:transfert}) exporte la
+configuration d'une activité, jamais les dossiers.
+\end{attention}
 
 \end{document}
