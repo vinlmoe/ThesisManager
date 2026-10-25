@@ -209,27 +209,9 @@ class rendering {
      * @return string HTML
      */
     public static function render_progress(stdClass $dossier) {
-        $status = (int) $dossier->status;
-        $rank = these_status_rank($status === THESE_STATUS_CANCELLED ? $dossier->cancelledfromstatus : $status);
-        $items = '';
-        $currentfound = false;
-        foreach (these_progress_steps() as $index => $step) {
-            if ($rank >= $step['done']) {
-                $class = 'these-step-done';
-            } else if (!$currentfound && $status !== THESE_STATUS_CANCELLED) {
-                $class = 'these-step-current';
-                $currentfound = true;
-            } else {
-                $class = 'these-step-todo';
-            }
-            $label = html_writer::span(($index + 1) . '. ' . $step['label'], 'these-step-label')
-                . html_writer::span(these_actor_label($step['actor']), 'these-step-actor');
-            $items .= html_writer::tag('li', $label, ['class' => 'these-step ' . $class]);
-            if ($index === 3) {
-                $items .= html_writer::tag('li', get_string('dormantphase', 'mod_these'), ['class' => 'these-step-separator']);
-            }
-        }
-        return html_writer::tag('ol', $items, ['class' => 'these-progress']);
+        global $PAGE;
+
+        return $PAGE->get_renderer('mod_these')->render(new output\progress($dossier));
     }
 
     /**
