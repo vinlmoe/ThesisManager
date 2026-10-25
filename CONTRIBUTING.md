@@ -38,9 +38,9 @@ de `db/upgrade.php` avec son `upgrade_mod_savepoint()`, et l'augmentation de
 doit être essayée sur une copie de base avant la fusion.
 
 Numéros de version : `AAAAMMJJXX` à la date du jour du changement (`XX` de 00 à
-99 pour plusieurs changements le même jour). Les versions publiées jusqu'ici
-portent des dates en avance sur le calendrier : tant que c'est le cas, augmenter
-seulement `XX` de la dernière version, sans avancer davantage la date.
+99 pour plusieurs changements le même jour), jamais une date future. La première
+version publiée est 2026102500 ; toute modification de schéma à partir de là
+passe par une étape de `db/upgrade.php` (à recréer à la première modification).
 
 ## Versions
 

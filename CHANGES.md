@@ -4,7 +4,18 @@ Format : une section par version publiée de `mod_these` (et de `mod_thesesynthe
 quand il change), de la plus récente à la plus ancienne. Une version publiée est
 étiquetée `vX.Y.Z` ; la CI joint alors le guide PDF à la publication GitHub.
 
-## mod_these 0.11.2 (2026103105), mod_thesesynthesis 0.3.2 (2026102904)
+**Première version publiée : `v0.11.2`** (`mod_these` et `mod_thesesynthesis`
+2026102500). Le module n'ayant jamais été installé auparavant, les versions de
+développement ci-dessous (0.9.0 à 0.11.2) sont regroupées dans celle-ci : une
+seule structure de base (`db/install.xml`), sans étape de mise à jour, et des
+numéros de version recalés sur la date. Les numéros entre parenthèses des
+sections de développement ne correspondent à aucune version installable.
+
+## mod_these 0.11.2, mod_thesesynthesis 0.3.2 (2026102500) — première version publiée
+
+- Base : les étapes de `db/upgrade.php` (développement) sont supprimées, le
+  module n'ayant jamais été installé ; numéros de version recalés sur la date
+  (2026102500).
 
 - Planning : le rôle d'un membre du jury suit son nom après un tiret (« Dr DURAND
   Anne – Directeur de thèse (membre du jury) ») au lieu de parenthèses imbriquées.
