@@ -36,6 +36,16 @@ fusion. Affichage inchangé ; numéro de version augmenté à la dernière étap
   `these_render_planning()` et la page du planning (activité et suivi des
   thèses) les rendent. Le titre d'une thèse confidentielle reste masqué par
   `these_defense_row()` avant d'entrer dans le contexte.
+- Étape 3, `mod_thesesynthesis` : renderer `mod_thesesynthesis\output\renderer` ;
+  composants `navlinks`, `message`, `dossier_table` (dossiers à traiter et
+  suivis), `jury_table` (mes jurys), `dossier_filters`, `search_form` et
+  `search_results`, avec les partiels `select` (balisage de
+  `html_writer::select()`) et `search_field`. Les pages du tableau de bord et de
+  la recherche les rendent ; `thesesynthesis_render_navlinks()` et
+  `thesesynthesis_render_search_results()` gardent leur signature. Le titre, les
+  mots-clés, le résumé et les réponses d'une thèse confidentielle n'entrent dans
+  le contexte que pour qui connaît le sujet. Nouveau fragment `pdetails` (bloc
+  dépliable) dans le partiel `mod_these/part`.
 - Les noms de personnes (étudiant, directeur, auteur d'une entrée d'historique)
   sont désormais échappés à l'affichage, comme le reste du texte.
 - Tests : un test par composant (contexte exporté, rendu du gabarit), dont un
