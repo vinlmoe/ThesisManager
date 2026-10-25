@@ -1107,11 +1107,12 @@ Accéder au dossier : {$a->url}';
 
 // Agent DEVE signataire et signature enregistrée.
 $string['agentdeve'] = 'Agent responsable de la DEVE';
-$string['settingsdeveagent'] = 'Agent DEVE signataire';
-$string['settingsdeveagent_desc'] = "Identifiant ou adresse de courriel du compte Moodle de l'agent responsable de la DEVE. L'équipe de "
-    . "la DEVE remplit et vérifie le dossier puis valide sans signer ; l'agent reçoit alors un courriel et signe le visa du sujet "
-    . "et l'agrément administratif depuis « Mes signatures », avec sa signature enregistrée. Laisser vide pour que la personne de "
-    . 'la DEVE qui valide signe elle-même.';
+$string['settingsdeveagent'] = 'Agents DEVE signataires';
+$string['settingsdeveagent_desc'] = "Identifiants ou adresses de courriel des comptes Moodle des agents habilités à signer pour la DEVE, "
+    . "séparés par des virgules ou un par ligne. L'équipe de la DEVE remplit et vérifie le dossier puis valide sans signer ; chaque "
+    . "agent reçoit alors un courriel et retrouve le visa du sujet et l'agrément administratif dans « Mes signatures » : le premier "
+    . "qui signe appose la signature, avec sa signature enregistrée. Laisser vide pour que la personne de la DEVE qui valide signe "
+    . 'elle-même.';
 $string['mysignatures'] = 'Mes signatures';
 $string['mysignatures_desc'] = 'Documents qui attendent votre signature, toutes promotions confondues. Consultez chaque document en '
     . "PDF, cochez ceux à signer, puis signez une seule fois : votre signature enregistrée est reprise d'office.";

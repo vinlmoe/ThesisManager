@@ -15,6 +15,12 @@ développement ne correspondent à aucune version installable ; 0.11.2 n'a jamai
 
 ## En cours (non publiée)
 
+- Plusieurs agents DEVE signataires : le réglage « Agents DEVE signataires »
+  accepte une liste d'identifiants ou d'adresses (virgules, points-virgules ou
+  un par ligne). Chaque agent est prévenu et voit les documents en attente dans
+  « Mes signatures » ; le premier qui signe appose la signature. Avec un seul
+  agent, comportement inchangé. Un agent retiré du réglage ne voit plus les
+  documents en attente.
 - Scans signés hors module : la DEVE joint au dossier le scan d'un document
   signé à la main par un signataire sans compte (contrat de diffusion, fiche
   d'agréments, fiche signalétique, conclusions, dépôt de sujet). Page

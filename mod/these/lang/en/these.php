@@ -1096,11 +1096,12 @@ Open the file: {$a->url}';
 
 // DEVE agent signatory and saved signature.
 $string['agentdeve'] = 'Registrar officer';
-$string['settingsdeveagent'] = 'Registrar signatory';
-$string['settingsdeveagent_desc'] = 'Username or email address of the Moodle account of the officer in charge of the registrar. The '
-    . 'registrar team fills in and checks the file, then validates without signing; the officer then receives an email and signs '
-    . 'the subject visa and the administrative approval from "My signatures", with their saved signature. Leave empty for the '
-    . 'registrar member who validates to sign.';
+$string['settingsdeveagent'] = 'Registrar signatories';
+$string['settingsdeveagent_desc'] = 'Usernames or email addresses of the Moodle accounts of the officers allowed to sign for the '
+    . 'registrar, separated by commas or one per line. The registrar team fills in and checks the file, then validates without '
+    . 'signing; each officer then receives an email and finds the subject visa and the administrative approval in "My signatures": '
+    . 'the first one to sign applies the signature, with their saved signature. Leave empty for the registrar member who validates '
+    . 'to sign.';
 $string['mysignatures'] = 'My signatures';
 $string['mysignatures_desc'] = 'Documents awaiting your signature, all cohorts together. Check each document as a PDF, tick those '
     . 'to sign, then sign once: your saved signature is used by default.';

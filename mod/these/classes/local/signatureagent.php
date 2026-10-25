@@ -95,34 +95,50 @@ class signatureagent {
     }
 
     /**
-     * Compte de l'agent responsable de la DEVE, désigné dans les réglages du site (identifiant ou
-     * adresse de courriel). Sans agent désigné, la personne de la DEVE qui valide signe elle-même.
+     * Comptes des agents DEVE signataires, désignés dans les réglages du site : identifiants ou
+     * adresses de courriel séparés par des virgules, des points-virgules ou des retours à la ligne.
+     * N'importe lequel d'entre eux signe les documents qui attendent un agent. Sans agent désigné, la
+     * personne de la DEVE qui valide signe elle-même.
+     *
+     * @return stdClass[] Comptes actifs, indexés par identifiant, dans l'ordre du réglage.
+     */
+    public static function deve_agents() {
+        global $DB;
+
+        $agents = [];
+        $values = preg_split('/[\s,;]+/', trim((string) get_config('mod_these', 'deveagent')), -1, PREG_SPLIT_NO_EMPTY);
+        foreach ($values as $value) {
+            $field = strpos($value, '@') !== false ? 'email' : 'username';
+            $users = $DB->get_records_select(
+                'user',
+                "LOWER($field) = LOWER(?) AND deleted = 0 AND suspended = 0",
+                [$value],
+                'id ASC',
+                '*',
+                0,
+                1
+            );
+            if ($users) {
+                $user = reset($users);
+                $agents[$user->id] = $user;
+            }
+        }
+        return $agents;
+    }
+
+    /**
+     * Premier agent DEVE signataire désigné, ou null.
      *
      * @return stdClass|null
      */
     public static function deve_agent() {
-        global $DB;
-
-        $value = trim((string) get_config('mod_these', 'deveagent'));
-        if ($value === '') {
-            return null;
-        }
-        $field = strpos($value, '@') !== false ? 'email' : 'username';
-        $users = $DB->get_records_select(
-            'user',
-            "LOWER($field) = LOWER(?) AND deleted = 0 AND suspended = 0",
-            [$value],
-            'id ASC',
-            '*',
-            0,
-            1
-        );
-        return $users ? reset($users) : null;
+        $agents = these_deve_agents();
+        return $agents ? reset($agents) : null;
     }
 
     /**
      * Indique si une personne appose elle-même une signature à un emplacement lors d'une validation :
-     * les emplacements de l'agent DEVE reviennent à l'agent quand il est désigné.
+     * les emplacements de l'agent DEVE reviennent aux agents quand il y en a de désignés.
      *
      * @param string $slot
      * @param int $userid
@@ -132,8 +148,8 @@ class signatureagent {
         if (!in_array($slot, these_agent_slots(), true)) {
             return true;
         }
-        $agent = these_deve_agent();
-        return $agent === null || (int) $agent->id === (int) $userid;
+        $agents = these_deve_agents();
+        return !$agents || isset($agents[(int) $userid]);
     }
 
     /**
@@ -151,9 +167,10 @@ class signatureagent {
     }
 
     /**
-     * Demande à l'agent DEVE de signer les documents d'un dossier qui attendent sa signature : les
-     * signatures en attente lui sont attribuées et il est prévenu par courriel, avec le lien vers
-     * « Mes signatures ».
+     * Demande aux agents DEVE de signer les documents d'un dossier qui attendent leur signature :
+     * chaque agent est prévenu par courriel, avec le lien vers « Mes signatures », et le premier qui
+     * signe appose la signature. Avec un seul agent, les signatures en attente lui sont attribuées ;
+     * avec plusieurs, elles restent ouvertes à chacun d'eux.
      *
      * @param stdClass $these
      * @param stdClass $cm
@@ -164,10 +181,11 @@ class signatureagent {
     public static function request_agent_signatures(stdClass $these, stdClass $cm, stdClass $dossier, array $doctypes) {
         global $DB;
 
-        $agent = these_deve_agent();
-        if ($agent === null) {
+        $agents = these_deve_agents();
+        if (!$agents) {
             return 0;
         }
+        $single = count($agents) === 1 ? reset($agents) : null;
         $now = time();
         $labels = [];
         foreach (these_agent_slots() as $slot) {
@@ -183,9 +201,9 @@ class signatureagent {
                     'dossierid' => $dossier->id,
                     'doctype' => $doctype,
                     'slot' => $slot,
-                    'userid' => (int) $agent->id,
-                    'signername' => fullname($agent),
-                    'signeremail' => $agent->email,
+                    'userid' => $single ? (int) $single->id : 0,
+                    'signername' => $single ? fullname($single) : '',
+                    'signeremail' => $single ? $single->email : '',
                     'token' => null,
                     'requesttime' => $now,
                     'timesigned' => 0,
@@ -205,25 +223,28 @@ class signatureagent {
             return 0;
         }
         $vars = these_email_base_vars($these, $cm, $dossier);
-        $vars['name'] = fullname($agent);
         $vars['document'] = implode(', ', $labels);
         $vars['url'] = (new moodle_url('/mod/these/mysignatures.php'))->out(false);
-        these_send_email($these, 'agentsignature', [$agent], $vars, '', '', $dossier);
+        foreach ($agents as $agent) {
+            $vars['name'] = fullname($agent);
+            these_send_email($these, 'agentsignature', [$agent], $vars, '', '', $dossier);
+        }
+        $names = implode(', ', array_map('fullname', $agents));
         these_log(
             $dossier->id,
             0,
             'signaturerequested',
             $dossier->status,
             $dossier->status,
-            get_string('agentdeve', 'mod_these') . ' (' . fullname($agent) . ') — ' . implode(', ', $labels)
+            get_string('agentdeve', 'mod_these') . ' (' . $names . ') — ' . implode(', ', $labels)
         );
         return count($labels);
     }
 
     /**
-     * Signatures qui attendent un utilisateur connecté : celles demandées à l'agent DEVE, et celles
-     * des signataires invités par courriel (président du jury, directeur extérieur...) dont l'adresse
-     * est celle de son compte.
+     * Signatures qui attendent un utilisateur connecté : pour un agent DEVE désigné, celles qui
+     * attendent un agent, quel qu'il soit ; et celles des signataires invités par courriel (président
+     * du jury, directeur extérieur...) dont l'adresse est celle de son compte.
      *
      * @param stdClass $user
      * @return stdClass[] Signatures en attente, avec dossier, activité et module de cours.
@@ -231,8 +252,17 @@ class signatureagent {
     public static function get_user_pending_signatures(stdClass $user) {
         global $DB;
 
+        $agents = these_deve_agents();
+        $isagent = isset($agents[(int) $user->id]);
+        $agentslots = these_agent_slots();
         $email = core_text::strtolower(trim((string) $user->email));
         $params = ['userid' => $user->id, 'email1' => $email, 'email2' => $email];
+        $agentsql = '';
+        if ($isagent) {
+            [$slotsql, $slotparams] = $DB->get_in_or_equal($agentslots, SQL_PARAMS_NAMED, 'agentslot');
+            $agentsql = " OR (s.token IS NULL AND s.slot $slotsql)";
+            $params += $slotparams;
+        }
         $records = $DB->get_records_sql(
             "SELECT s.*
                FROM {these_signature} s
@@ -240,7 +270,7 @@ class signatureagent {
               WHERE s.timesigned = 0
                 AND d.status <> " . THESE_STATUS_CANCELLED . "
                 AND ((s.token IS NULL AND s.userid = :userid)
-                     OR (s.token IS NOT NULL AND :email1 <> '' AND LOWER(s.signeremail) = :email2))
+                     OR (s.token IS NOT NULL AND :email1 <> '' AND LOWER(s.signeremail) = :email2)$agentsql)
            ORDER BY s.dossierid, s.id",
             $params
         );
@@ -250,6 +280,12 @@ class signatureagent {
             $cm = $dossier ? get_coursemodule_from_instance('these', $dossier->theseid, 0, false, IGNORE_MISSING) : null;
             if (!$cm || !these_document_available($dossier, $signature->doctype)) {
                 continue;
+            }
+            // Signature d'agent : réservée aux agents désignés (s'il y en a), une fois l'étape validée par l'équipe.
+            if ($signature->token === null && in_array($signature->slot, $agentslots, true)) {
+                if (($agents && !$isagent) || !these_agent_document_due($dossier, $signature->doctype)) {
+                    continue;
+                }
             }
             $signature->dossier = $dossier;
             $signature->cm = $cm;

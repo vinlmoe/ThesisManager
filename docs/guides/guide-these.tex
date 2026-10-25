@@ -91,7 +91,7 @@ la soutenance\fg{}. Quatre acteurs y interviennent :
 \end{itemize}
 
 Les membres du jury consultent les documents et le président signe les siens ;
-l'agent responsable de la DEVE signe les documents de la DEVE une fois que son
+un agent habilité de la DEVE signe les documents de la DEVE une fois que son
 équipe a tout vérifié. Les sections \og pas à pas\fg{} décrivent, pour chacun,
 chaque action dans l'ordre.
 
@@ -251,10 +251,11 @@ Dans la même page d'administration :
         contrat ne contient que les pages du module, n'est pas scellé
         (section~\ref{sec:integrite}) et le dossier affiche un avertissement
         à la DEVE.
-  \item[Agent DEVE signataire] identifiant ou adresse du compte Moodle de
-        l'agent responsable de la DEVE : l'équipe valide sans signer, puis
-        l'agent signe depuis \bouton{Mes signatures}
-        (section~\ref{sec:agent}). Vide : la personne qui valide signe.
+  \item[Agents DEVE signataires] identifiants ou adresses des comptes Moodle
+        des agents habilités à signer pour la DEVE, séparés par des virgules ou
+        un par ligne : l'équipe valide sans signer, puis l'un des agents signe
+        depuis \bouton{Mes signatures} (section~\ref{sec:agent}). Vide : la
+        personne qui valide signe.
   \item[Signataires] direction générale, président du CCEM, présidence de
         l'université : nom et adresse. Avec une adresse, le signataire reçoit un
         lien de signature ; sans adresse, la DEVE recueille sa signature sur place.
@@ -595,10 +596,11 @@ et à l'export du registre (CSV, Excel, ODS...).
 \capture{18_tableau_de_bord_deve}{Tableau de bord de la DEVE.}
 
 \begin{astuce}
-Quand un \textbf{agent DEVE signataire} est désigné dans les réglages du site
-(section~\ref{sec:agent}), l'équipe de la DEVE remplit et vérifie, puis
-\emph{valide sans signer} : l'agent reçoit un courriel et signe ensuite le visa
-du sujet et l'agrément administratif depuis \bouton{Mes signatures}. Sans agent
+Quand des \textbf{agents DEVE signataires} sont désignés dans les réglages du
+site (section~\ref{sec:agent}), l'équipe de la DEVE remplit et vérifie, puis
+\emph{valide sans signer} : chaque agent reçoit un courriel, et l'un d'eux signe
+ensuite le visa du sujet et l'agrément administratif depuis \bouton{Mes
+signatures}. Sans agent
 désigné, la personne qui valide signe elle-même.
 \end{astuce}
 
@@ -649,8 +651,8 @@ le logo.
   \item Cliquez sur \bouton{Enregistrer le sujet}, ou renvoyez à l'étudiant ou
         au directeur avec un motif.
 \end{etapes}
-\ensuite{le sujet passe à la bibliothèque ; l'agent DEVE est invité à viser le
-dépôt de sujet. Le numéro d'enregistrement n'est pas encore attribué.}
+\ensuite{le sujet passe à la bibliothèque ; les agents DEVE sont invités à viser
+le dépôt de sujet. Le numéro d'enregistrement n'est pas encore attribué.}
 \end{procedure}
 
 \capture[0.85\linewidth]{63_deve_enregistre_sujet}{Enregistrement du sujet par l'équipe DEVE, sans signature quand un agent est désigné.}
@@ -673,7 +675,7 @@ dépôt de sujet. Le numéro d'enregistrement n'est pas encore attribué.}
 \end{etapes}
 \ensuite{le manuscrit passe à la bibliothèque ; les membres du jury reçoivent
 leur accès aux documents ; les signataires invités (président du jury,
-direction générale, CCEM, université) et l'agent DEVE reçoivent leur demande
+direction générale, CCEM, université) et les agents DEVE reçoivent leur demande
 de signature.}
 \end{procedure}
 
@@ -686,7 +688,7 @@ de signature.}
   \item Dans le dossier, cliquez sur \bouton{Suivi des signatures} : chaque
         document et chaque emplacement y figurent avec leur état.
   \item Pour un signataire qui n'a pas reçu son lien, cliquez sur
-        \bouton{Envoyer le lien} (signataires invités et agent DEVE).
+        \bouton{Envoyer le lien} (signataires invités et agents DEVE).
   \item Pour un signataire présent ou sans adresse, cliquez sur
         \bouton{Signer sur place} : il consulte les documents, trace sa
         signature, puis vous validez.
@@ -798,13 +800,21 @@ décisions du jury.}
 \capture[0.85\linewidth]{85_sujets_precedents}{Trace d'un changement de sujet : sujets précédents et historique.}
 
 % ===========================================================================
-\section{Agent DEVE signataire : pas à pas}\label{sec:agent}
+\section{Agents DEVE signataires : pas à pas}\label{sec:agent}
 
-L'agent responsable de la DEVE (désigné dans \chemin{Administration du site >
-Plugins > Modules d'activité > Gestion des thèses}, réglage \bouton{Agent DEVE
-signataire}) signe le visa du dépôt de sujet, l'agrément administratif et la
-partie \og direction générale représentée par la DEVE\fg{} de la fiche
-d'agréments, une fois que l'équipe a tout vérifié.
+Les agents habilités à signer pour la DEVE (désignés dans \chemin{Administration
+du site > Plugins > Modules d'activité > Gestion des thèses}, réglage
+\bouton{Agents DEVE signataires}) signent le visa du dépôt de sujet, l'agrément
+administratif et la partie \og direction générale représentée par la DEVE\fg{}
+de la fiche d'agréments, une fois que l'équipe a tout vérifié.
+
+\begin{astuce}
+\textbf{Plusieurs agents.} On peut en désigner plusieurs (un responsable et son
+suppléant, par exemple) : chacun reçoit le courriel \og Documents à signer\fg{}
+et voit les mêmes documents dans \bouton{Mes signatures}. Le premier qui signe
+appose la signature, à son nom ; le document disparaît alors de la page des
+autres. Un agent retiré du réglage ne voit plus les documents en attente.
+\end{astuce}
 
 \begin{procedure}{Signer les documents qui vous attendent}{Agent DEVE}
 \begin{etapes}
@@ -1092,9 +1102,9 @@ document, image illisible) sont ignorés et signalés.
 Chaque acteur signe au moment où il agit : la soumission (étudiant) ou la
 validation (directeur, DEVE, bibliothèque) exige sa signature et la
 certification ; une même signature est apposée sur tous les documents de
-l'étape. Quand un agent DEVE signataire est désigné, les signatures de la DEVE
-lui reviennent : l'équipe valide sans signer et l'agent signe ensuite depuis
-\bouton{Mes signatures}.
+l'étape. Quand des agents DEVE signataires sont désignés, les signatures de la
+DEVE leur reviennent : l'équipe valide sans signer et l'un des agents signe
+ensuite depuis \bouton{Mes signatures}.
 
 \paragraph{Signature enregistrée.} Tout utilisateur connecté (étudiant,
 directeur, DEVE, bibliothèque, agent DEVE, membre du jury ayant un compte)
@@ -1108,7 +1118,8 @@ n'utilise jamais une signature enregistrée.
 \paragraph{Mes signatures.} La page \bouton{Mes signatures} (lien dans les
 courriels de demande, et bouton de la barre de navigation quand des documents
 attendent) regroupe, toutes promotions confondues, les documents qui attendent
-la signature de l'utilisateur : ceux de l'agent DEVE, et ceux d'un signataire
+la signature de l'utilisateur : pour un agent DEVE, ceux qui attendent un agent,
+et ceux d'un signataire
 invité dont l'adresse est celle de son compte (président du jury, par exemple).
 
 \subsection{Signataires sans compte}

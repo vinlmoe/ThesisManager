@@ -83,6 +83,57 @@ final class signature_agent_test extends these_testcase {
     }
 
     /**
+     * Plusieurs agents DEVE : chacun est prévenu et retrouve le document ; le premier qui signe
+     * appose la signature et le document disparaît pour les autres ; un agent retiré du réglage ne
+     * voit plus les documents en attente.
+     */
+    public function test_several_agents(): void {
+        $this->setup_activity();
+        $gen = $this->getDataGenerator();
+        $first = $gen->create_user(['username' => 'agent1', 'email' => 'agent1@example.org']);
+        $second = $gen->create_user(['username' => 'agent2', 'email' => 'agent2@example.org']);
+        set_config('deveagent', "agent1,\nAgent2@example.org ; inconnu", 'mod_these');
+        $this->assertSame([(int) $first->id, (int) $second->id], array_map('intval', array_keys(these_deve_agents())));
+        $this->assertTrue(these_signs_slot_at_validation('deve', $first->id));
+        $this->assertTrue(these_signs_slot_at_validation('dgrep', $second->id));
+        $this->assertFalse(these_signs_slot_at_validation('deve', $this->deve->id));
+
+        $sink = $this->redirectEmails();
+        $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
+            'status' => THESE_STATUS_SUBJECT_APPROVED, 'directorid' => $this->director->id,
+        ]);
+        $signature = (object) ['name' => 'Équipe DEVE', 'png' => these_sample_signature_image()];
+        these_validate_step($this->these, $this->cm, $dossier, $this->deve->id, [], '', $signature);
+        $request = these_get_signatures($dossier->id)['subject:deve'];
+        $this->assertEquals(0, $request->timesigned);
+        $this->assertEquals(0, $request->userid);
+        $recipients = array_column($sink->get_messages(), 'to');
+        $this->assertContains('agent1@example.org', $recipients);
+        $this->assertContains('agent2@example.org', $recipients);
+        $this->assertCount(1, these_get_user_pending_signatures($first));
+        $this->assertCount(1, these_get_user_pending_signatures($second));
+        $this->assertCount(0, these_get_user_pending_signatures($this->deve));
+
+        $pending = these_get_user_pending_signatures($second);
+        $item = reset($pending);
+        these_sign_document($this->context, $item->dossier, $item->doctype, $item->slot, $second->id, fullname($second),
+            these_sample_signature_image());
+        $signed = these_get_signatures($dossier->id)['subject:deve'];
+        $this->assertNotEmpty($signed->timesigned);
+        $this->assertEquals($second->id, $signed->userid);
+        $this->assertCount(0, these_get_user_pending_signatures($first));
+
+        // Un agent retiré du réglage ne voit plus les documents qui attendent un agent.
+        $other = $this->generator->create_dossier($this->these, $gen->create_user()->id, [
+            'status' => THESE_STATUS_SUBJECT_APPROVED, 'directorid' => $this->director->id,
+        ]);
+        these_validate_step($this->these, $this->cm, $other, $this->deve->id, [], '', $signature);
+        set_config('deveagent', 'agent2', 'mod_these');
+        $this->assertCount(0, these_get_user_pending_signatures($first));
+        $this->assertCount(1, these_get_user_pending_signatures($second));
+    }
+
+    /**
      * Un membre du jury invité par courriel et qui a un compte à cette adresse retrouve sa
      * signature en attente dans « Mes signatures ».
      */
