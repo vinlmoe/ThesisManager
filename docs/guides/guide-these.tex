@@ -4,7 +4,7 @@
 
 % Version du guide : à mettre à jour à chaque modification, avec une ligne dans l'historique.
 \newcommand{\titreguide}{Guide de la gestion des thèses}
-\newcommand{\versionguide}{2.0}
+\newcommand{\versionguide}{2.1}
 \newcommand{\dateguide}{25 octobre 2026}
 \newcommand{\versionthese}{0.11.3}
 
@@ -55,6 +55,10 @@ thèse trouvable et au planning) ; demande d'embargo de diffusion de 5 ans ;
 documents signés scellés ; liens par courriel valables 60 jours, accès du jury
 depuis son compte ; valeur des signatures ; sauvegarde ; captures du planning,
 de la thèse confidentielle, de l'embargo et du document scellé. \\
+2.1 & 25 octobre 2026 & Captures ajoutées à chaque étape qui n'en avait pas
+(notice de la bibliothèque, éligibilité du jury, renvois, corrections,
+ajournement, documents générés et transmis, dossier complet) ; libellé du
+bouton d'envoi des liens de signature ; précision sur les scans signés. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -169,6 +173,10 @@ Chaque étape de validation propose, à côté du bouton de validation, un bouto
         par exemple pour un rapport à reprendre. Ce motif n'est pas affiché à
         l'étudiant.
 \end{itemize}
+
+\capture[0.85\linewidth]{68_directeur_renvoi}{Renvoi par le directeur : le motif est saisi dans \bouton{Commentaire}.}
+
+\capture[0.85\linewidth]{69_etudiant_soutenance_renvoyee}{Dossier de soutenance renvoyé : le motif s'affiche à l'étudiant.}
 
 Chaque action est inscrite à l'\textbf{historique} du dossier, avec son auteur,
 sa date et son commentaire.
@@ -305,6 +313,8 @@ par défaut, affiche le compte rendu ligne par ligne sans rien créer.
 L'activité \og Gestion des thèses\fg{} ouvre sur \og Mon dossier de thèse\fg{}.
 La frise en haut du dossier indique à tout moment l'étape atteinte et qui doit
 agir ; les boutons bleus sous la frise sont les actions qui vous attendent.
+
+\capture[0.85\linewidth]{01_etudiant_accueil}{Accueil de l'activité : \og Mon dossier de thèse\fg{}.}
 
 \begin{procedure}{Proposer son sujet (phase 1)}{Étudiant}
 \begin{etapes}
@@ -455,6 +465,10 @@ nouveau dépôt revient directement à lui. La validation de la DEVE clôt le
 dossier.}
 \end{procedure}
 
+\capture[0.8\linewidth]{75_dossier_corrections}{Dossier en attente des corrections demandées par le jury.}
+
+\capture[0.8\linewidth]{77_etudiant_corrections_renvoyees}{Vue de l'étudiant : corrections à déposer.}
+
 \capture[0.8\linewidth]{55_corrections_depot}{Dépôt du manuscrit corrigé.}
 
 \begin{procedure}{Après un ajournement}{Étudiant}
@@ -473,6 +487,8 @@ directeur, validation de la DEVE, conformité, documents, nouvelle soutenance.}
 \end{procedure}
 
 \capture[0.85\linewidth]{81_etudiant_ajourne}{Dossier revenu en phase de soutenance après un ajournement.}
+
+\capture[0.85\linewidth]{82_nouveau_depot}{Nouveau dépôt de soutenance, avec le rappel de l'ajournement.}
 
 % ===========================================================================
 \section{Directeur de thèse : pas à pas}
@@ -553,6 +569,8 @@ favorable\fg{}.}
 \end{etapes}
 \ensuite{les corrections passent à la bibliothèque.}
 \end{procedure}
+
+\capture[0.85\linewidth]{76_directeur_corrections}{Validation des corrections par le directeur.}
 
 % ===========================================================================
 \section{DEVE : pas à pas}
@@ -654,6 +672,8 @@ de signature.}
 
 \capture[0.85\linewidth]{71_deve_valide_soutenance}{Validation du dossier de soutenance : numéro, date, jury et éligibilité.}
 
+\capture[0.85\linewidth]{46_jury_eligibilite}{Éligibilité des membres du jury, vérifiée par la DEVE.}
+
 \begin{procedure}{Suivre et recueillir les signatures}{Équipe DEVE}
 \begin{etapes}
   \item Dans le dossier, cliquez sur \bouton{Suivi des signatures} : chaque
@@ -667,6 +687,8 @@ de signature.}
 \end{procedure}
 
 \capture{40_suivi_signatures}{Suivi des signatures d'un dossier.}
+
+\capture[0.85\linewidth]{83_dossier_complet}{Dossier complet : données, jury avec éligibilité vérifiée, documents signés.}
 
 \begin{procedure}{Générer et transmettre les documents de soutenance}{Équipe DEVE}
 \begin{etapes}
@@ -684,6 +706,12 @@ régénérez avant de transmettre de nouveau.}
 \end{procedure}
 
 \capture[0.85\linewidth]{73_deve_documents}{Génération des documents de soutenance.}
+
+\capture[0.8\linewidth]{30_convocation}{Convocation générée en PDF pour un membre du jury.}
+
+\capture[0.8\linewidth]{31_proces_verbal}{Procès-verbal généré en PDF, à cocher et signer le jour de la soutenance.}
+
+\capture[0.85\linewidth]{74_deve_transmis}{Après transmission : courriels envoyés, dossier en \statut{Soutenance programmée}.}
 
 \begin{procedure}{Déposer le procès-verbal}{Équipe DEVE, après la soutenance}
 \begin{etapes}
@@ -719,6 +747,8 @@ suivante).}
         nouveau).
 \end{etapes}
 \end{procedure}
+
+\capture[0.85\linewidth]{79_pv_ajournement}{Procès-verbal saisi avec le résultat \og Ajourné\fg{}.}
 
 \capture[0.85\linewidth]{80_dossier_ajourne}{Dossier ajourné : retour en phase de soutenance, procès-verbal archivé.}
 
@@ -800,6 +830,8 @@ La signature enregistrée se supprime en bas de la page \bouton{Mes signatures}.
 \ensuite{le dossier devient actif ; l'étudiant et son directeur en sont
 prévenus.}
 \end{procedure}
+
+\capture[0.85\linewidth]{07_bibliotheque_notice}{Notice du sujet : référence saisie par la bibliothèque.}
 
 \begin{procedure}{Contrôler la conformité du manuscrit (phase 2)}{Bibliothèque}
 \begin{etapes}
@@ -1082,7 +1114,7 @@ aussi les documents depuis \bouton{Mes jurys} de l'activité \og Suivi des
 thèses\fg{}.
 
 La page \bouton{Suivi des signatures} du dossier (DEVE) montre l'état de chaque
-emplacement, permet de \bouton{renvoyer le lien} ou de \bouton{signer sur place}
+emplacement, permet de \bouton{Envoyer le lien} ou de \bouton{signer sur place}
 pour un signataire présent ou sans adresse.
 
 \capture{40_suivi_signatures}{Suivi des signatures d'un dossier.}
@@ -1131,8 +1163,11 @@ identifie le signataire (compte Moodle, ou lien personnel reçu à son adresse),
 date la signature et la lie au contenu signé par son empreinte, mais ne repose
 pas sur un certificat qualifié. Il revient à l'établissement de décider pour
 quels documents elle suffit (procès-verbal, contrat de diffusion) ; un document
-qui exige une signature avancée ou qualifiée est signé hors du module puis
-déposé signé.
+qui exige une signature avancée ou qualifiée est signé hors du module. Le module
+ne reçoit aujourd'hui de scan signé que pour le procès-verbal (\og Déposer le
+procès-verbal\fg{}, section DEVE) : pour les autres documents, la signature
+apposée sur papier par un signataire extérieur n'est pas jointe au dossier et se
+conserve hors de Moodle.
 \end{attention}
 
 % ===========================================================================
@@ -1253,6 +1288,8 @@ Relance & à l'acteur attendu, après le délai de relance \\
 \bottomrule
 \end{tabularx}
 \end{center}
+
+\capture[0.85\linewidth]{19_courriels}{Liste des courriels personnalisables par la DEVE.}
 
 Chaque texte est personnalisable par la DEVE (\chemin{Courriels}), avec les
 variables indiquées sous chaque courriel, par exemple \var{student} ou \var{url}.
