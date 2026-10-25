@@ -167,7 +167,12 @@ final class helpers_test extends these_testcase {
             'jurycount' => count($jury),
         ]);
         $form->set_data(these_jury_form_data($jury));
-        $mform = (new \ReflectionProperty($form, '_form'))->getValue($form);
+        $property = new \ReflectionProperty($form, '_form');
+        if (PHP_VERSION_ID < 80100) {
+            // Avant PHP 8.1, une propriété protégée n'est lisible par réflexion qu'après ce déverrouillage.
+            $property->setAccessible(true);
+        }
+        $mform = $property->getValue($form);
         foreach ($jury as $i => $member) {
             $this->assertEquals([$member->juryrole], $mform->getElement("juryrole[$i]")->getValue());
         }
