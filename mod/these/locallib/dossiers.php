@@ -115,6 +115,9 @@ function these_set_status(stdClass $dossier, $tostatus, $userid, $action, $remar
 
     $now = time();
     $fromstatus = (int) $dossier->status;
+    if (!these_transition_allowed($fromstatus, $tostatus)) {
+        throw new coding_exception('Transition de statut interdite : ' . $fromstatus . ' vers ' . (int) $tostatus);
+    }
     $update = array_merge($fields, ['id' => $dossier->id, 'status' => (int) $tostatus, 'timemodified' => $now]);
     if ((int) $tostatus !== $fromstatus) {
         $update['statustime'] = $now;

@@ -10,6 +10,11 @@ quand il change), de la plus récente à la plus ancienne. Une version publiée 
   Anne – Directeur de thèse (membre du jury) ») au lieu de parenthèses imbriquées.
 - Recherche des thèses : texte d'introduction mis à jour (thèses confidentielles
   trouvables, sujet masqué).
+- Machine à états explicite : `these_status_transitions()` déclare toutes les
+  transitions de statut autorisées, et `these_set_status()` refuse les autres
+  (test de cohérence avec les étapes et les renvois).
+- CI : couverture des tests mesurée (pcov) sur la configuration Moodle 4.5 ;
+  mesure locale : environ 41 % des lignes des fonctions et classes, hors pages.
 - Guide : captures du planning (semaine, mois, PDF), d'une thèse confidentielle
   (dossier, recherche), de la demande d'embargo et d'un document scellé.
 

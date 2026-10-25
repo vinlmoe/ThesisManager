@@ -56,9 +56,11 @@ jobs:
           - moodle: MOODLE_401_STABLE
             php: "8.0"
             database: mariadb
+            coverage: none
           - moodle: MOODLE_405_STABLE
             php: "8.2"
             database: pgsql
+            coverage: pcov
 
     services:
       postgres:
@@ -101,7 +103,7 @@ jobs:
           extensions: pgsql, mysqli, pdo_pgsql, gd, intl, mbstring, soap, zip
           ini-values: max_input_vars=5000, opcache.enable_cli=1
           tools: composer
-          coverage: none
+          coverage: ${{ matrix.coverage }}
 
       - name: Install moodle-plugin-ci
         run: |
@@ -171,10 +173,15 @@ jobs:
 
       - name: PHPUnit
         if: ${{ !cancelled() && steps.moodle_install.outcome == 'success' }}
+        env:
+          COVERAGE: ${{ matrix.coverage }}
         run: |
+          # Couverture des tests mesurée sur une seule configuration (pcov), affichée dans le journal.
+          options=""
+          if [ "$COVERAGE" = "pcov" ]; then options="--coverage-text"; fi
           check_status=0
-          moodle-plugin-ci phpunit mod/these || check_status=1
-          moodle-plugin-ci phpunit mod/thesesynthesis || check_status=1
+          moodle-plugin-ci phpunit $options mod/these || check_status=1
+          moodle-plugin-ci phpunit $options mod/thesesynthesis || check_status=1
           exit "$check_status"
 
       - name: Behat

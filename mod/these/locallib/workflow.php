@@ -237,6 +237,74 @@ function these_review_steps() {
 }
 
 /**
+ * Transitions de statut autorisées : pour chaque statut, ceux vers lesquels un dossier peut passer.
+ * C'est la machine à états du circuit, rassemblée en un seul endroit et vérifiée par
+ * these_set_status() ; les étapes de validation (these_review_steps()) et les renvois doivent y
+ * figurer.
+ *
+ * Partout : abandon (vers THESE_STATUS_CANCELLED) ; un dossier abandonné peut être rouvert dans le
+ * statut qu'il avait atteint.
+ *
+ * @return array statut => statuts suivants possibles
+ */
+function these_status_transitions() {
+    return [
+        // Phase 1 : sujet.
+        THESE_STATUS_DRAFT => [THESE_STATUS_SUBJECT_SUBMITTED],
+        THESE_STATUS_SUBJECT_SUBMITTED => [THESE_STATUS_SUBJECT_APPROVED, THESE_STATUS_SUBJECT_RETURNED],
+        // Après un renvoi à l'étudiant, le dossier revient à l'étape qui l'a renvoyé (ou chez le
+        // directeur si sa signature est tombée).
+        THESE_STATUS_SUBJECT_RETURNED => [THESE_STATUS_SUBJECT_SUBMITTED, THESE_STATUS_SUBJECT_APPROVED,
+            THESE_STATUS_SUBJECT_REGISTERED],
+        THESE_STATUS_SUBJECT_APPROVED => [THESE_STATUS_SUBJECT_REGISTERED, THESE_STATUS_SUBJECT_RETURNED,
+            THESE_STATUS_SUBJECT_SUBMITTED],
+        THESE_STATUS_SUBJECT_REGISTERED => [THESE_STATUS_ACTIVE, THESE_STATUS_SUBJECT_RETURNED],
+        // Dossier actif : dépôt de la soutenance, ou changement de sujet (nouvelle phase 1).
+        THESE_STATUS_ACTIVE => [THESE_STATUS_DEFENSE_SUBMITTED, THESE_STATUS_SUBJECT_SUBMITTED],
+        // Phase 2 : soutenance.
+        THESE_STATUS_DEFENSE_SUBMITTED => [THESE_STATUS_DEFENSE_APPROVED, THESE_STATUS_DEFENSE_RETURNED],
+        THESE_STATUS_DEFENSE_RETURNED => [THESE_STATUS_DEFENSE_SUBMITTED, THESE_STATUS_DEFENSE_APPROVED,
+            THESE_STATUS_DEFENSE_VALIDATED],
+        THESE_STATUS_DEFENSE_APPROVED => [THESE_STATUS_DEFENSE_VALIDATED, THESE_STATUS_DEFENSE_RETURNED,
+            THESE_STATUS_DEFENSE_SUBMITTED],
+        THESE_STATUS_DEFENSE_VALIDATED => [THESE_STATUS_CONFORM, THESE_STATUS_DEFENSE_RETURNED],
+        THESE_STATUS_CONFORM => [THESE_STATUS_SCHEDULED],
+        // Procès-verbal : clôture, corrections demandées, ou ajournement (retour au dossier actif).
+        THESE_STATUS_SCHEDULED => [THESE_STATUS_CLOSED, THESE_STATUS_CORRECTIONS, THESE_STATUS_ACTIVE],
+        // Corrections.
+        THESE_STATUS_CORRECTIONS => [THESE_STATUS_CORRECTIONS_SUBMITTED, THESE_STATUS_CORRECTIONS_APPROVED,
+            THESE_STATUS_CORRECTIONS_CONFORM],
+        THESE_STATUS_CORRECTIONS_SUBMITTED => [THESE_STATUS_CORRECTIONS_APPROVED, THESE_STATUS_CORRECTIONS],
+        THESE_STATUS_CORRECTIONS_APPROVED => [THESE_STATUS_CORRECTIONS_CONFORM, THESE_STATUS_CORRECTIONS],
+        THESE_STATUS_CORRECTIONS_CONFORM => [THESE_STATUS_CLOSED, THESE_STATUS_CORRECTIONS],
+        THESE_STATUS_CLOSED => [],
+    ];
+}
+
+/**
+ * Indique si un dossier peut passer d'un statut à un autre (voir these_status_transitions()).
+ * Rester dans le même statut est toujours possible.
+ *
+ * @param int $from
+ * @param int $to
+ * @return bool
+ */
+function these_transition_allowed($from, $to) {
+    $from = (int) $from;
+    $to = (int) $to;
+    if ($from === $to) {
+        return true;
+    }
+    if ($to === THESE_STATUS_CANCELLED) {
+        return true;
+    }
+    if ($from === THESE_STATUS_CANCELLED) {
+        return in_array($to, these_all_statuses(), true);
+    }
+    return in_array($to, these_status_transitions()[$from] ?? [], true);
+}
+
+/**
  * Indique si un statut appartient au circuit des corrections demandées par le jury.
  *
  * @param int $status
