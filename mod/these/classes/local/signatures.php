@@ -912,7 +912,15 @@ class signatures {
             $vars['name'] = $signer['name'];
             $vars['document'] = $labels;
             $vars['url'] = (new moodle_url('/mod/these/sign.php', ['token' => $token]))->out(false);
-            these_send_email($these, 'signaturerequest', [these_make_external_user($signer['email'], $signer['name'])], $vars);
+            these_send_email(
+                $these,
+                'signaturerequest',
+                [these_make_external_user($signer['email'], $signer['name'])],
+                $vars,
+                '',
+                '',
+                $dossier
+            );
         }
         these_log(
             $dossier->id,

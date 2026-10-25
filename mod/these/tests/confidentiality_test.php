@@ -171,6 +171,67 @@ final class confidentiality_test extends these_testcase {
     }
 
     /**
+     * Destinataires sans compte : l'université, les membres du jury et les signataires invités du
+     * dossier connaissent le sujet ; toute autre adresse reçoit « Thèse confidentielle ». Les envois
+     * de convocation, de désignation du jury et de demande de signature passent par ce masquage.
+     */
+    public function test_external_recipients_mask_the_title(): void {
+        set_config('dgemail', 'dg@example.org', 'mod_these');
+        $this->setup_activity(['universityemail' => 'scolarite@univ.example.org']);
+        [$dossier] = $this->confidential_dossier(THESE_STATUS_CONFORM);
+        $sink = $this->redirectEmails();
+        $recipients = [
+            these_make_external_user('scolarite@univ.example.org'),
+            these_make_external_user('president@example.com', 'Paul Président'),
+            these_make_external_user('dg@example.org'),
+            these_make_external_user('inconnu@example.org'),
+        ];
+        these_send_email(
+            $this->these,
+            'actionrequired',
+            $recipients,
+            these_email_base_vars($this->these, $this->cm, $dossier) + ['status' => 'x'],
+            '',
+            '',
+            $dossier
+        );
+        $bodies = [];
+        foreach ($sink->get_messages() as $message) {
+            $bodies[$message->to] = quoted_printable_decode($message->body) . ' ' . $message->subject;
+        }
+        foreach (['scolarite@univ.example.org', 'president@example.com', 'dg@example.org'] as $email) {
+            $this->assertStringContainsString('maladie de Carr', $bodies[$email], $email);
+        }
+        $this->assertStringNotContainsString('maladie de Carr', $bodies['inconnu@example.org']);
+        $this->assertStringContainsString(get_string('confidentialtitle', 'mod_these'), $bodies['inconnu@example.org']);
+        $sink->clear();
+
+        // Désignation du jury : le titre est cité au membre (qui connaît le sujet).
+        these_notify_jury($this->these, $this->cm, $dossier);
+        $messages = $sink->get_messages();
+        $this->assertNotEmpty($messages);
+        foreach ($messages as $message) {
+            $this->assertStringContainsString('maladie de Carr', quoted_printable_decode($message->body), $message->to);
+        }
+        $sink->close();
+    }
+
+    /**
+     * Les jetons d'un courriel personnalisé sont remplacés en une seule passe : une valeur contenant
+     * « {{title}} » (commentaire d'un étudiant) ne fait pas apparaître le titre, et un jeton inconnu
+     * est laissé tel quel.
+     */
+    public function test_placeholders_single_pass(): void {
+        $this->resetAfterTest();
+        $vars = ['comment' => 'Voir {{title}} et {{url}}', 'title' => 'Secret', 'url' => 'https://x.example'];
+        $this->assertSame(
+            'Voir {{title}} et {{url}} / Secret / {{inconnu}}',
+            these_render_email_placeholders('{{comment}} / {{title}} / {{inconnu}}', $vars)
+        );
+        $this->assertSame('Secret', these_render_email_placeholders('{{title}}', ['title' => 'Secret', 'comment' => '{{title}}']));
+    }
+
+    /**
      * Demande d'embargo : 5 ans après la soutenance, motif obligatoire ; une date d'embargo saisie
      * avec l'ancien formulaire n'est reprise que tant que l'étudiant ne réenregistre pas.
      */
