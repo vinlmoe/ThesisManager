@@ -26,6 +26,8 @@
 require(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/thesesynthesis/locallib.php');
 
+use mod_thesesynthesis\output;
+
 $id = required_param('id', PARAM_INT);
 $status = optional_param('status', -999, PARAM_INT);
 $search = optional_param('search', '', PARAM_TEXT);
@@ -53,41 +55,7 @@ $alltodo = array_filter(thesesynthesis_get_dossiers($links, $USER->id), function
 });
 $juries = thesesynthesis_get_juries($links, $USER);
 
-// Tableau de dossiers.
-$table = function (array $rows) {
-    $table = new html_table();
-    $table->attributes['class'] = 'generaltable these-dossiers';
-    $table->head = [
-        get_string('promotion', 'mod_thesesynthesis'),
-        get_string('student', 'mod_these'),
-        get_string('subjecttitle', 'mod_these'),
-        get_string('director', 'mod_these'),
-        get_string('status'),
-        get_string('waitingfor', 'mod_thesesynthesis'),
-        get_string('defensedate', 'mod_these'),
-        '',
-    ];
-    foreach ($rows as $row) {
-        $date = (int) ($row->dossier->defensedate ?: $row->dossier->proposeddate);
-        $table->data[] = [
-            format_string($row->link->course->shortname ?: $row->link->course->fullname),
-            s($row->student ? fullname($row->student) : '-'),
-            $row->knowssubject ? format_string($row->dossier->title)
-                : html_writer::tag('em', get_string('confidentialtitle', 'mod_these')),
-            s($row->director ? fullname($row->director) : '-'),
-            these_render_status_badge($row->dossier->status),
-            $row->actor ? these_actor_label($row->actor) : '-',
-            $date ? userdate($date, get_string('strftimedatefullshort', 'langconfig')) : '-',
-            html_writer::link(
-                new moodle_url('/mod/these/dossier.php', ['id' => $row->link->cm->id, 'dossierid' => $row->dossier->id]),
-                get_string('open', 'mod_thesesynthesis'),
-                ['class' => 'btn btn-sm btn-secondary']
-            ),
-        ];
-    }
-    return html_writer::table($table);
-};
-
+$renderer = $PAGE->get_renderer('mod_thesesynthesis');
 echo $OUTPUT->header();
 echo $OUTPUT->heading(format_string($synthesis->name));
 
@@ -100,73 +68,15 @@ if (!$links) {
 
 // À traiter.
 echo $OUTPUT->heading(get_string('todo', 'mod_these'), 3);
-echo $alltodo ? $table($alltodo) : html_writer::div(get_string('nothingtodo', 'mod_these'), 'alert alert-info');
+echo $renderer->render(new output\dossier_table($alltodo, get_string('nothingtodo', 'mod_these')));
 
 // Mes jurys.
 echo $OUTPUT->heading(get_string('myjuries', 'mod_thesesynthesis'), 3, 'mt-4');
-if ($juries) {
-    $roles = these_jury_role_options();
-    $jurytable = new html_table();
-    $jurytable->attributes['class'] = 'generaltable';
-    $jurytable->head = [
-        get_string('promotion', 'mod_thesesynthesis'),
-        get_string('student', 'mod_these'),
-        get_string('subjecttitle', 'mod_these'),
-        get_string('juryrole', 'mod_these'),
-        get_string('defensedate', 'mod_these'),
-        get_string('defenselocation', 'mod_these'),
-        get_string('juryaccessdocuments', 'mod_these'),
-    ];
-    foreach ($juries as $jury) {
-        $date = (int) ($jury->dossier->defensedate ?: $jury->dossier->proposeddate);
-        if (empty($jury->member->notifiedtime)) {
-            $access = html_writer::span(get_string('juryaccesspending', 'mod_thesesynthesis'), 'text-muted');
-        } else if (!these_jury_access_open($jury->dossier, $jury->member)) {
-            $access = html_writer::span(get_string('juryaccessclosed', 'mod_thesesynthesis'), 'text-muted');
-        } else {
-            $access = html_writer::link(
-                new moodle_url('/mod/these/jury.php', ['member' => $jury->member->id]),
-                get_string('juryaccess', 'mod_these'),
-                ['class' => 'btn btn-sm btn-primary']
-            );
-        }
-        $jurytable->data[] = [
-            format_string($jury->link->course->shortname ?: $jury->link->course->fullname),
-            s($jury->student ? fullname($jury->student) : '-'),
-            format_string($jury->dossier->title),
-            s($roles[$jury->member->juryrole] ?? $jury->member->juryrole),
-            $date ? userdate($date, get_string('strftimedaydatetime', 'langconfig')) : '-',
-            s($jury->dossier->defenselocation),
-            $access,
-        ];
-    }
-    echo html_writer::table($jurytable);
-} else {
-    echo html_writer::div(get_string('nojuries', 'mod_thesesynthesis'), 'alert alert-info');
-}
+echo $renderer->render(new output\jury_table($juries));
 
 // Dossiers suivis, avec filtres.
 echo $OUTPUT->heading(get_string('followed', 'mod_thesesynthesis'), 3, 'mt-4');
-$promotions = [0 => get_string('allpromotions', 'mod_thesesynthesis')];
-foreach ($links as $link) {
-    $promotions[$link->cm->id] = format_string($link->course->fullname) . ' : ' . format_string($link->these->name);
-}
-$statuses = [-999 => get_string('allstatuses', 'mod_thesesynthesis')];
-foreach (these_all_statuses() as $value) {
-    $statuses[$value] = these_status_label($value);
-}
-echo html_writer::start_tag('form', [
-    'method' => 'get',
-    'action' => $baseurl->out_omit_querystring(),
-    'class' => 'form-inline mb-3',
-]);
-echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'id', 'value' => $cm->id]);
-echo html_writer::select($promotions, 'cmid', $filtercmid, false, ['class' => 'custom-select mr-2 mb-1']);
-echo html_writer::select($statuses, 'status', $status, false, ['class' => 'custom-select mr-2 mb-1']);
-echo html_writer::empty_tag('input', ['type' => 'text', 'name' => 'search', 'value' => $search, 'class' => 'form-control mr-2 mb-1',
-    'placeholder' => get_string('search')]);
-echo html_writer::tag('button', get_string('filter'), ['type' => 'submit', 'class' => 'btn btn-secondary mb-1']);
-echo html_writer::end_tag('form');
-echo $rows ? $table($rows) : html_writer::div(get_string('nodossiers', 'mod_thesesynthesis'), 'alert alert-info');
+echo $renderer->render(new output\dossier_filters($baseurl, $cm->id, $links, $filtercmid, $status, $search));
+echo $renderer->render(new output\dossier_table($rows, get_string('nodossiers', 'mod_thesesynthesis')));
 
 echo $OUTPUT->footer();
