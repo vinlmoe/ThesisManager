@@ -47,14 +47,17 @@ doit être essayée sur une copie de base avant la fusion.
 
 Numéros de version : `AAAAMMJJXX` à la date du jour du changement (`XX` de 00 à
 99 pour plusieurs changements le même jour), jamais une date future. La première
-version publiée est 2026102500 ; toute modification de schéma à partir de là
+version publiée est 2026102501 ; toute modification de schéma à partir de là
 passe par une étape de `db/upgrade.php` (à recréer à la première modification).
 
 ## Versions
 
-À chaque version publiée : compléter `CHANGES.md`, mettre à jour `release` dans
-les `version.php`, étiqueter `vX.Y.Z` sur `main`. La CI joint alors le guide PDF
-à la publication GitHub.
+Une version se publie par une demande de fusion : nouvelle section en tête de
+`CHANGES.md`, `version` et `release` augmentés dans les `version.php` (et la
+dépendance de `mod_thesesynthesis` si elle change). Une fois fusionnée et la CI
+verte sur `main`, la CI étiquette `vX.Y.Z` (d'après `release` de `mod_these`) et
+crée la publication GitHub, avec la section de `CHANGES.md` pour notes et le
+guide PDF joint. Une version déjà étiquetée n'est pas republiée.
 
 ## Guide
 
