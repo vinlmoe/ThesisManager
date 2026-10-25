@@ -27,33 +27,17 @@
 // Fichiers.
 
 /**
- * Options des gestionnaires de fichiers selon la zone.
+ * Voir \mod_these\local\files::filemanager_options().
  *
  * @param string $filearea
  * @return array
  */
 function these_filemanager_options($filearea) {
-    $options = ['subdirs' => 0, 'maxbytes' => 0, 'maxfiles' => 1, 'accepted_types' => ['.pdf']];
-    switch ($filearea) {
-        case 'subjectdocs':
-        case 'defensedocs':
-            $options['maxfiles'] = 10;
-            $options['accepted_types'] = '*';
-            break;
-        case 'directorreport':
-            $options['accepted_types'] = ['.pdf', '.doc', '.docx', '.odt'];
-            break;
-        case 'pv':
-            // Procès-verbal signé par le jury, scanné en un PDF ou en images.
-            $options['maxfiles'] = 5;
-            $options['accepted_types'] = ['.pdf', '.jpg', '.jpeg', '.png'];
-            break;
-    }
-    return $options;
+    return \mod_these\local\files::filemanager_options($filearea);
 }
 
 /**
- * Fichiers d'une zone d'un dossier, triés par nom.
+ * Voir \mod_these\local\files::get_files().
  *
  * @param context $context
  * @param string $filearea
@@ -61,12 +45,11 @@ function these_filemanager_options($filearea) {
  * @return stored_file[]
  */
 function these_get_files(context $context, $filearea, $dossierid) {
-    $fs = get_file_storage();
-    return array_values($fs->get_area_files($context->id, 'mod_these', $filearea, $dossierid, 'filename', false));
+    return \mod_these\local\files::get_files($context, $filearea, $dossierid);
 }
 
 /**
- * Liens de téléchargement des fichiers d'une zone.
+ * Voir \mod_these\local\files::render_file_links().
  *
  * @param context $context
  * @param string $filearea
@@ -74,24 +57,11 @@ function these_get_files(context $context, $filearea, $dossierid) {
  * @return string HTML, vide si la zone est vide.
  */
 function these_render_file_links(context $context, $filearea, $dossierid) {
-    $links = [];
-    foreach (these_get_files($context, $filearea, $dossierid) as $file) {
-        $url = moodle_url::make_pluginfile_url(
-            $context->id,
-            'mod_these',
-            $filearea,
-            $dossierid,
-            $file->get_filepath(),
-            $file->get_filename(),
-            true
-        );
-        $links[] = html_writer::link($url, s($file->get_filename()));
-    }
-    return implode(html_writer::empty_tag('br'), $links);
+    return \mod_these\local\files::render_file_links($context, $filearea, $dossierid);
 }
 
 /**
- * Indique si une zone de fichiers d'un dossier contient au moins un fichier.
+ * Voir \mod_these\local\files::has_files().
  *
  * @param context $context
  * @param string $filearea
@@ -99,17 +69,15 @@ function these_render_file_links(context $context, $filearea, $dossierid) {
  * @return bool
  */
 function these_has_files(context $context, $filearea, $dossierid) {
-    $fs = get_file_storage();
-    return !$fs->is_area_empty($context->id, 'mod_these', $filearea, $dossierid);
+    return \mod_these\local\files::has_files($context, $filearea, $dossierid);
 }
 
 /**
- * Nombre de fichiers dans une zone de brouillon (contrôle d'un dépôt obligatoire).
+ * Voir \mod_these\local\files::count_draft_files().
  *
  * @param int $draftitemid
  * @return int
  */
 function these_count_draft_files($draftitemid) {
-    $info = file_get_draft_area_info($draftitemid);
-    return (int) $info['filecount'];
+    return \mod_these\local\files::count_draft_files($draftitemid);
 }
