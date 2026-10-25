@@ -27,73 +27,50 @@
 // Directeurs.
 
 /**
- * Utilisateurs inscrits pouvant être choisis comme directeur de thèse.
+ * Voir \mod_these\local\jury::get_potential_directors().
  *
  * @param context $context
  * @return array Utilisateurs indexés par id, triés par nom.
  */
 function these_get_potential_directors(context $context) {
-    $users = get_enrolled_users($context, 'mod/these:direct', 0, 'u.*', 'u.lastname ASC, u.firstname ASC', 0, 0, true);
-    return $users;
+    return \mod_these\local\jury::get_potential_directors($context);
 }
 
 /**
- * Options du sélecteur de directeur, en conservant le directeur actuel même s'il n'est plus
- * inscrit (pour ne pas le perdre silencieusement à l'enregistrement).
+ * Voir \mod_these\local\jury::director_options().
  *
  * @param context $context
  * @param int $currentid
  * @return array id => nom
  */
 function these_director_options(context $context, $currentid = 0) {
-    global $DB;
-
-    $options = [0 => get_string('choosedots')];
-    foreach (these_get_potential_directors($context) as $user) {
-        $options[$user->id] = fullname($user);
-    }
-    if ($currentid && !isset($options[$currentid])) {
-        $user = $DB->get_record('user', ['id' => $currentid]);
-        if ($user) {
-            $options[$currentid] = fullname($user);
-        }
-    }
-    return $options;
+    return \mod_these\local\jury::director_options($context, $currentid);
 }
 
 // Jury.
 
 /**
- * Membres du jury d'un dossier, dans leur ordre.
+ * Voir \mod_these\local\jury::get_jury().
  *
  * @param int $dossierid
  * @return array
  */
 function these_get_jury($dossierid) {
-    global $DB;
-
-    return array_values($DB->get_records('these_jury', ['dossierid' => $dossierid], 'sortorder ASC, id ASC'));
+    return \mod_these\local\jury::get_jury($dossierid);
 }
 
 /**
- * Clé d'identité d'un membre du jury, pour reconnaître le même membre d'une saisie à l'autre.
+ * Voir \mod_these\local\jury::jury_member_key().
  *
  * @param stdClass $member
  * @return string
  */
 function these_jury_member_key(stdClass $member) {
-    if (!empty($member->jurorid)) {
-        return 'j' . (int) $member->jurorid;
-    }
-    return 'e' . core_text::strtolower(trim((string) $member->email)) . '|'
-        . core_text::strtolower(trim((string) $member->fullname));
+    return \mod_these\local\jury::jury_member_key($member);
 }
 
 /**
- * Remplace le jury d'un dossier. Un membre déjà présent (même enseignant de l'annuaire, ou mêmes
- * nom et adresse) garde son accès aux documents et la trace de sa notification ; son éligibilité
- * validée est conservée s'il garde le même rôle et le même statut, sauf si $member->eligible est
- * fourni (saisie de la DEVE).
+ * Voir \mod_these\local\jury::save_jury().
  *
  * @param int $dossierid
  * @param array $members Liste d'objets {juryrole, fullname, jurytitle, institution, email, jurorid?,
@@ -102,50 +79,11 @@ function these_jury_member_key(stdClass $member) {
  * @return void
  */
 function these_save_jury($dossierid, array $members, $userid = 0) {
-    global $DB;
-
-    $previous = [];
-    foreach ($DB->get_records('these_jury', ['dossierid' => $dossierid]) as $record) {
-        $previous[these_jury_member_key($record)] = $record;
-    }
-    $DB->delete_records('these_jury', ['dossierid' => $dossierid]);
-    $sortorder = 0;
-    foreach ($members as $member) {
-        $old = $previous[these_jury_member_key($member)] ?? null;
-        $record = (object) [
-            'dossierid' => $dossierid,
-            'juryrole' => $member->juryrole,
-            'fullname' => $member->fullname,
-            'jurytitle' => $member->jurytitle,
-            'institution' => $member->institution,
-            'email' => $member->email,
-            'sortorder' => $sortorder++,
-            'timecreated' => $old->timecreated ?? time(),
-            'jurorid' => (int) ($member->jurorid ?? 0),
-            'jurystatus' => (string) ($member->jurystatus ?? ''),
-            'eligible' => 0,
-            'eligibleby' => 0,
-            'eligibletime' => 0,
-            'accesstoken' => $old->accesstoken ?? null,
-            'notifiedtime' => (int) ($old->notifiedtime ?? 0),
-        ];
-        if (isset($member->eligible)) {
-            $record->eligible = $member->eligible ? 1 : 0;
-            $record->eligibleby = $member->eligible ? ($old && $old->eligible ? $old->eligibleby : (int) $userid) : 0;
-            $record->eligibletime = $member->eligible ? ($old && $old->eligible ? $old->eligibletime : time()) : 0;
-        } else if ($old && $old->eligible && $old->juryrole === $record->juryrole && $old->jurystatus === $record->jurystatus) {
-            $record->eligible = 1;
-            $record->eligibleby = $old->eligibleby;
-            $record->eligibletime = $old->eligibletime;
-        }
-        $DB->insert_record('these_jury', $record);
-    }
+    return \mod_these\local\jury::save_jury($dossierid, $members, $userid);
 }
 
 /**
- * Ajoute à un formulaire les lignes répétables de saisie du jury : chaque membre est choisi dans
- * l'annuaire des enseignants (titre, établissement, adresse et statut repris de l'annuaire) ou, pour
- * un membre extérieur ou un invité, saisi.
+ * Voir \mod_these\local\jury::add_jury_fields().
  *
  * @param moodleform $form
  * @param MoodleQuickForm $mform
@@ -155,216 +93,63 @@ function these_save_jury($dossierid, array $members, $userid = 0) {
  * @return void
  */
 function these_add_jury_fields(moodleform $form, MoodleQuickForm $mform, $count, $eligibility = false, array $keep = []) {
-    $mform->addElement('header', 'juryheader', get_string('jury', 'mod_these'));
-    $mform->setExpanded('juryheader');
-    $mform->addElement('static', 'juryhelp', '', get_string('juryhelp', 'mod_these'));
-
-    $jurors = [0 => get_string('juryexternal', 'mod_these')] + \mod_these\local\jurors::options(false, $keep);
-    $repeat = [];
-    $repeat[] = $mform->createElement('static', 'jurymemberlabel', '', html_writer::tag('hr', ''));
-    $repeat[] = $mform->createElement('select', 'juryrole', get_string('juryrole', 'mod_these'), these_jury_role_options());
-    $repeat[] = $mform->createElement('select', 'jurorid', get_string('juryjuror', 'mod_these'), $jurors);
-    $repeat[] = $mform->createElement('text', 'juryname', get_string('juryname', 'mod_these'), ['size' => 48]);
-    $repeat[] = $mform->createElement('text', 'jurytitle', get_string('jurytitle', 'mod_these'), ['size' => 48]);
-    $repeat[] = $mform->createElement(
-        'select',
-        'jurystatus',
-        get_string('jurystatus', 'mod_these'),
-        ['' => get_string('choosedots')] + \mod_these\local\jurors::external_statuses()
-    );
-    $repeat[] = $mform->createElement('text', 'juryinstitution', get_string('juryinstitution', 'mod_these'), ['size' => 48]);
-    $repeat[] = $mform->createElement('text', 'juryemail', get_string('juryemail', 'mod_these'), ['size' => 48]);
-    if ($eligibility) {
-        $repeat[] = $mform->createElement('advcheckbox', 'juryeligible', '', get_string('juryeligiblecheck', 'mod_these'));
-    }
-
-    $external = ['jurorid', 'neq', 0];
-    $options = [
-        'jurorid' => ['type' => PARAM_INT, 'helpbutton' => ['juryjuror', 'mod_these']],
-        'juryname' => ['type' => PARAM_TEXT, 'hideif' => $external],
-        'jurytitle' => ['type' => PARAM_TEXT, 'hideif' => $external],
-        'jurystatus' => ['type' => PARAM_ALPHA, 'hideif' => $external],
-        'juryinstitution' => ['type' => PARAM_TEXT, 'hideif' => $external],
-        'juryemail' => ['type' => PARAM_RAW_TRIMMED, 'hideif' => $external],
-    ];
-    $form->repeat_elements(
-        $repeat,
-        max(4, $count + 1),
-        $options,
-        'juryrepeats',
-        'juryaddfields',
-        2,
-        get_string('juryaddmembers', 'mod_these'),
-        true
-    );
+    return \mod_these\local\jury::add_jury_fields($form, $mform, $count, $eligibility, $keep);
 }
 
 /**
- * Valeurs de formulaire correspondant à un jury enregistré (voir these_add_jury_fields()).
+ * Voir \mod_these\local\jury::jury_form_data().
  *
  * @param array $members
  * @return array
  */
 function these_jury_form_data(array $members) {
-    $data = ['juryrole' => [], 'jurorid' => [], 'juryname' => [], 'jurytitle' => [], 'jurystatus' => [],
-        'juryinstitution' => [], 'juryemail' => [], 'juryeligible' => []];
-    foreach (array_values($members) as $i => $member) {
-        $data['juryrole'][$i] = $member->juryrole;
-        $data['jurorid'][$i] = (int) ($member->jurorid ?? 0);
-        $data['juryname'][$i] = $member->fullname;
-        $data['jurytitle'][$i] = $member->jurytitle;
-        $data['jurystatus'][$i] = (string) ($member->jurystatus ?? '');
-        $data['juryinstitution'][$i] = $member->institution;
-        $data['juryemail'][$i] = $member->email;
-        // Pour la DEVE : éligibilité déjà validée, ou évidente (enseignant de l'annuaire au statut admis pour son rôle).
-        $data['juryeligible'][$i] = (int) (!empty($member->eligible) || these_jury_eligibility($member) === 'ok');
-    }
-    return $data;
+    return \mod_these\local\jury::jury_form_data($members);
 }
 
 /**
- * Extrait des données soumises les membres du jury renseignés : enseignant choisi dans l'annuaire
- * (ses titre, nom, établissement, adresse et statut en sont repris), ou ligne au nom non vide.
+ * Voir \mod_these\local\jury::extract_submitted_jury().
  *
  * @param stdClass|array $data
  * @param bool $witheligibility Reprendre la validation d'éligibilité de la DEVE.
  * @return array Liste d'objets {juryrole, fullname, jurytitle, institution, email, jurorid, jurystatus, eligible?}.
  */
 function these_extract_submitted_jury($data, $witheligibility = false) {
-    $data = (array) $data;
-    $members = [];
-    $rows = array_unique(array_merge(array_keys((array) ($data['juryname'] ?? [])), array_keys((array) ($data['jurorid'] ?? []))));
-    sort($rows);
-    foreach ($rows as $i) {
-        $role = $data['juryrole'][$i] ?? 'member';
-        $role = array_key_exists($role, these_jury_role_options()) ? $role : 'member';
-        $juror = \mod_these\local\jurors::get((int) ($data['jurorid'][$i] ?? 0));
-        if ($juror) {
-            $member = (object) [
-                'juryrole' => $role,
-                'fullname' => \mod_these\local\jurors::fullname($juror),
-                'jurytitle' => $juror->title,
-                'institution' => (string) $juror->institution,
-                'email' => (string) $juror->email,
-                'jurorid' => (int) $juror->id,
-                'jurystatus' => $juror->status,
-            ];
-        } else {
-            $name = trim((string) ($data['juryname'][$i] ?? ''));
-            if ($name === '') {
-                continue;
-            }
-            $status = (string) ($data['jurystatus'][$i] ?? '');
-            $member = (object) [
-                'juryrole' => $role,
-                'fullname' => $name,
-                'jurytitle' => trim((string) ($data['jurytitle'][$i] ?? '')),
-                'institution' => trim((string) ($data['juryinstitution'][$i] ?? '')),
-                'email' => trim((string) ($data['juryemail'][$i] ?? '')),
-                'jurorid' => 0,
-                'jurystatus' => array_key_exists($status, \mod_these\local\jurors::external_statuses()) ? $status : '',
-            ];
-        }
-        if ($witheligibility) {
-            $member->eligible = !empty($data['juryeligible'][$i]);
-        }
-        $members[] = $member;
-    }
-    return $members;
+    return \mod_these\local\jury::extract_submitted_jury($data, $witheligibility);
 }
 
 /**
- * Éligibilité d'un membre du jury à son rôle : un invité ne vote pas ; seuls les maîtres de
- * conférences HDR, les professeurs et les émérites peuvent présider ; un enseignant de l'annuaire
- * est éligible d'office aux autres rôles ; un membre extérieur l'est sous réserve de validation par
- * la DEVE.
+ * Voir \mod_these\local\jury::jury_eligibility().
  *
  * @param stdClass $member
  * @return string 'ok', 'tocheck' (à valider par la DEVE) ou 'ko'
  */
 function these_jury_eligibility(stdClass $member) {
-    if ($member->juryrole === 'guest') {
-        return 'ok';
-    }
-    $status = (string) ($member->jurystatus ?? '');
-    if ($member->juryrole === 'president' && !\mod_these\local\jurors::can_preside($status)) {
-        return 'ko';
-    }
-    return !empty($member->jurorid) ? 'ok' : 'tocheck';
+    return \mod_these\local\jury::jury_eligibility($member);
 }
 
 /**
- * Vérifie la composition d'un jury : un et un seul président, éligible à la présidence, au moins
- * $minjury membres votants (les invités ne votent pas), un statut déclaré pour chaque membre
- * extérieur votant, pas deux fois le même enseignant, et des adresses de courriel valides lorsqu'elles
- * sont données.
+ * Voir \mod_these\local\jury::validate_jury().
  *
  * @param array $members Voir these_extract_submitted_jury().
  * @param int $minjury
  * @return string|null Message d'erreur, ou null si le jury est valide.
  */
 function these_validate_jury(array $members, $minjury) {
-    $presidents = 0;
-    $voting = 0;
-    $seen = [];
-    foreach ($members as $member) {
-        if ($member->juryrole === 'president') {
-            $presidents++;
-        }
-        if ($member->juryrole !== 'guest') {
-            $voting++;
-            if (empty($member->jurorid) && (string) ($member->jurystatus ?? '') === '') {
-                return get_string('jurystatusrequired', 'mod_these', s($member->fullname));
-            }
-        }
-        if (!empty($member->jurorid)) {
-            if (isset($seen[$member->jurorid])) {
-                return get_string('juryduplicate', 'mod_these', s($member->fullname));
-            }
-            $seen[$member->jurorid] = true;
-        }
-        if ($member->juryrole === 'president' && these_jury_eligibility($member) === 'ko') {
-            return get_string('jurypresidentnoteligible', 'mod_these', s($member->fullname));
-        }
-        if ($member->email !== '' && !validate_email($member->email)) {
-            return get_string('juryinvalidemail', 'mod_these', s($member->fullname));
-        }
-    }
-    if ($presidents !== 1) {
-        return get_string('juryonepresident', 'mod_these');
-    }
-    if ($voting < (int) $minjury) {
-        return get_string('juryminmembers', 'mod_these', (int) $minjury);
-    }
-    return null;
+    return \mod_these\local\jury::validate_jury($members, $minjury);
 }
 
 /**
- * Validation de l'éligibilité par la DEVE : chaque membre votant doit être coché, et aucun ne peut
- * être inéligible à son rôle.
+ * Voir \mod_these\local\jury::validate_jury_eligibility().
  *
  * @param array $members Voir these_extract_submitted_jury() (avec éligibilité).
  * @return string|null Message d'erreur, ou null.
  */
 function these_validate_jury_eligibility(array $members) {
-    foreach ($members as $member) {
-        if ($member->juryrole === 'guest') {
-            continue;
-        }
-        if (these_jury_eligibility($member) === 'ko') {
-            return get_string('jurypresidentnoteligible', 'mod_these', s($member->fullname));
-        }
-        if (empty($member->eligible)) {
-            return get_string('juryeligiblerequired', 'mod_these', s($member->fullname));
-        }
-    }
-    return null;
+    return \mod_these\local\jury::validate_jury_eligibility($members);
 }
 
 /**
- * Prévient les membres du jury de leur désignation et leur donne accès aux documents du dossier
- * (manuscrit, rapport, grille, conclusions...) par un lien personnel, sans compte Moodle. Seuls les
- * membres pas encore prévenus le sont, sauf $force.
+ * Voir \mod_these\local\jury::notify_jury().
  *
  * @param stdClass $these
  * @param stdClass $cm
@@ -373,129 +158,57 @@ function these_validate_jury_eligibility(array $members) {
  * @return stdClass {sent, failed, missing (noms des membres sans adresse)}
  */
 function these_notify_jury(stdClass $these, stdClass $cm, stdClass $dossier, $force = false) {
-    global $DB;
-
-    $result = (object) ['sent' => 0, 'failed' => 0, 'missing' => []];
-    $student = $DB->get_record('user', ['id' => $dossier->userid]);
-    $date = (int) ($dossier->defensedate ?: $dossier->proposeddate);
-    $roles = these_jury_role_options();
-    foreach (these_get_jury($dossier->id) as $member) {
-        if (!$force && !empty($member->notifiedtime)) {
-            continue;
-        }
-        if (trim((string) $member->email) === '') {
-            $result->missing[] = $member->fullname;
-            continue;
-        }
-        // Seule l'empreinte du jeton est conservée : chaque envoi donne un nouveau lien, qui
-        // remplace le précédent.
-        $token = these_new_token();
-        $DB->set_field('these_jury', 'accesstoken', these_token_hash($token), ['id' => $member->id]);
-        $sent = these_send_email($these, 'jurydesignation', [these_make_external_user($member->email, $member->fullname)], [
-            'name' => trim($member->jurytitle . ' ' . $member->fullname),
-            'role' => $roles[$member->juryrole] ?? $member->juryrole,
-            'student' => $student ? fullname($student) : '',
-            'title' => format_string($dossier->title),
-            'date' => $date ? userdate($date, get_string('strftimedaydatetime', 'langconfig')) : '-',
-            'location' => (string) $dossier->defenselocation,
-            'url' => (new moodle_url('/mod/these/jury.php', ['token' => $token]))->out(false),
-        ]);
-        if ($sent) {
-            $DB->set_field('these_jury', 'notifiedtime', time(), ['id' => $member->id]);
-            $result->sent++;
-        } else {
-            $result->failed++;
-        }
-    }
-    return $result;
+    return \mod_these\local\jury::notify_jury($these, $cm, $dossier, $force);
 }
 
 /**
- * Membre du jury correspondant à un lien d'accès aux documents.
+ * Voir \mod_these\local\jury::get_jury_access().
  *
  * @param string $token
  * @return stdClass|null Membre, avec dossier, these et cm ; null si le lien est inconnu ou n'est plus
  *                       valide (voir these_jury_access_open()).
  */
 function these_get_jury_access($token) {
-    global $DB;
-
-    $token = clean_param($token, PARAM_ALPHANUM);
-    if (strlen($token) < 32) {
-        return null;
-    }
-    $member = $DB->get_record('these_jury', ['accesstoken' => these_token_hash($token)]);
-    return $member ? these_jury_access_member($member) : null;
+    return \mod_these\local\jury::get_jury_access($token);
 }
 
 /**
- * Membre du jury consultant les documents depuis son compte Moodle (activité « Suivi des thèses »),
- * reconnu à son adresse ou à celle de sa fiche dans l'annuaire du jury.
+ * Voir \mod_these\local\jury::get_jury_member_access().
  *
  * @param int $memberid
  * @param stdClass $user
  * @return stdClass|null Voir these_get_jury_access().
  */
 function these_get_jury_member_access($memberid, stdClass $user) {
-    global $DB;
-
-    $email = core_text::strtolower(trim((string) $user->email));
-    $member = $DB->get_record('these_jury', ['id' => $memberid]);
-    if (!$member || $email === '' || empty($member->notifiedtime)) {
-        return null;
-    }
-    $emails = [core_text::strtolower(trim((string) $member->email))];
-    if (!empty($member->jurorid)) {
-        $emails[] = core_text::strtolower(trim((string) $DB->get_field('these_juror', 'email', ['id' => $member->jurorid])));
-    }
-    return in_array($email, $emails, true) ? these_jury_access_member($member) : null;
+    return \mod_these\local\jury::get_jury_member_access($memberid, $user);
 }
 
 /**
- * Complète un membre du jury de son dossier, de son activité et de son module de cours, si son
- * accès aux documents est ouvert.
+ * Voir \mod_these\local\jury::jury_access_member().
  *
  * @param stdClass $member
  * @return stdClass|null
  */
 function these_jury_access_member(stdClass $member) {
-    global $DB;
-
-    $dossier = $DB->get_record('these_dossier', ['id' => $member->dossierid]);
-    if (!$dossier || !these_jury_access_open($dossier, $member)) {
-        return null;
-    }
-    $member->dossier = $dossier;
-    $member->these = $DB->get_record('these', ['id' => $dossier->theseid], '*', MUST_EXIST);
-    $member->cm = get_coursemodule_from_instance('these', $dossier->theseid, 0, false, MUST_EXIST);
-    return $member;
+    return \mod_these\local\jury::jury_access_member($member);
 }
 
 /**
- * Indique si l'accès d'un membre du jury aux documents est ouvert : jusqu'à THESE_TOKEN_LIFETIME
- * après la soutenance (ou après le dernier envoi du lien, s'il est plus tardif), et tant que le
- * dossier n'est ni clos ni abandonné.
+ * Voir \mod_these\local\jury::jury_access_open().
  *
  * @param stdClass $dossier
  * @param stdClass $member
  * @return bool
  */
 function these_jury_access_open(stdClass $dossier, stdClass $member) {
-    if (in_array((int) $dossier->status, [THESE_STATUS_CANCELLED, THESE_STATUS_CLOSED], true)) {
-        return false;
-    }
-    $from = max((int) $member->notifiedtime, (int) ($dossier->defensedate ?: $dossier->proposeddate));
-    return $from > 0 && time() <= $from + THESE_TOKEN_LIFETIME;
+    return \mod_these\local\jury::jury_access_open($dossier, $member);
 }
 
 /**
- * Zones de fichiers et documents signés auxquels le jury a accès.
+ * Voir \mod_these\local\jury::jury_documents().
  *
  * @return array {areas => string[], documents => string[]}
  */
 function these_jury_documents() {
-    return [
-        'areas' => ['manuscript', 'defensedocs', 'directorreport'],
-        'documents' => ['report', 'grid', 'conclusions', 'signaletique'],
-    ];
+    return \mod_these\local\jury::jury_documents();
 }
