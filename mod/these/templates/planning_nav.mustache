@@ -1,0 +1,62 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_these/planning_nav
+
+    Navigation du planning : vue par semaine ou par mois, période précédente, courante et suivante,
+    accès à une date. Les liens et champs sont en ligne : chaque bloc tient sur une ligne pour ne pas
+    ajouter d'espace entre deux boutons.
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * none
+
+    Context variables required for this template:
+    * views Boutons de vue : label, url, class.
+    * periods Boutons de période : label, url, class.
+    * action Adresse du formulaire.
+    * hidden Champs cachés du formulaire : name, value.
+    * gotolabel, gotovalue Libellé et valeur (AAAA-MM-JJ) du champ de date.
+    * submitlabel Libellé du bouton.
+
+    Example context (json):
+    {
+        "views": [
+            {"label": "Par semaine", "url": "https://example.com/mod/these/planning.php?id=2&view=week",
+                "class": "btn btn-sm btn-primary mr-1"},
+            {"label": "Par mois", "url": "https://example.com/mod/these/planning.php?id=2&view=month",
+                "class": "btn btn-sm btn-outline-primary mr-1"}
+        ],
+        "periods": [
+            {"label": "« Semaine précédente", "url": "https://example.com/mod/these/planning.php?id=2&date=1",
+                "class": "btn btn-secondary mb-1 mr-1"},
+            {"label": "Cette semaine", "url": "https://example.com/mod/these/planning.php?id=2&date=2",
+                "class": "btn btn-secondary mb-1 mr-1 active"},
+            {"label": "Semaine suivante »", "url": "https://example.com/mod/these/planning.php?id=2&date=3",
+                "class": "btn btn-secondary mb-1 mr-3"}
+        ],
+        "action": "https://example.com/mod/these/planning.php",
+        "hidden": [{"name": "id", "value": "2"}, {"name": "view", "value": "week"}],
+        "gotolabel": "Aller au",
+        "gotovalue": "2026-11-03",
+        "submitlabel": "Valider"
+    }
+}}
+<div class="mb-3">{{#views}}<a href="{{url}}" class="{{class}}">{{label}}</a>{{/views}}</div>
+<div class="these-planning-nav mb-3">{{#periods}}<a href="{{url}}" class="{{class}}">{{label}}</a>{{/periods}}<form method="get" action="{{action}}" class="form-inline d-inline-flex mb-1">{{#hidden}}<input type="hidden" name="{{name}}" value="{{value}}" />{{/hidden}}<label class="mr-1" for="these-planning-goto">{{gotolabel}}</label><input type="date" name="goto" id="these-planning-goto" value="{{gotovalue}}" class="form-control mr-1" /><input type="submit" value="{{submitlabel}}" class="btn btn-secondary" /></form></div>
