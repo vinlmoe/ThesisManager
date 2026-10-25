@@ -13,8 +13,16 @@ de version recalés sur la date. Les numéros entre parenthèses des sections de
 développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
 été étiquetée.
 
-## mod_these 0.13.0 (2026102504) — scans signés, agents DEVE signataires
+## mod_these 0.13.0 (2026102505) — scans signés, agents DEVE signataires
 
+- Membres du jury et signataires invités ayant un compte Moodle : ils sont
+  reconnus à leur compte, rattaché à leur adresse quand le jury est enregistré
+  (puis à la désignation) ou quand la signature est demandée, et non plus à
+  l'adresse de profil au moment de la consultation. Seul un compte local,
+  confirmé, ni suspendu ni supprimé, et unique à cette adresse est rattaché.
+  Nouveau champ `these_jury.userid` (étape de mise à jour avec rattachement
+  des jurys et des demandes de signature existants), sauvegardé, restauré et
+  déclaré à l'API de confidentialité.
 - Directeur extérieur : le lien de signature du dépôt de sujet ne part plus à
   la soumission par l'étudiant, mais à la validation du sujet par le directeur
   de l'établissement, qui voit désormais les coordonnées saisies (nom, grade,

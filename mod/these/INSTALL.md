@@ -108,8 +108,9 @@ Les signataires extérieurs reçoivent un lien personnel par courriel, valable
 60 jours ; la DEVE suit les signatures (*Suivi des signatures*), relance (un
 nouveau lien remplace le précédent) ou fait signer sur place. Le lien d'accès du
 jury vaut jusqu'à 60 jours après la soutenance et cesse à la clôture ou à
-l'abandon du dossier ; un membre du jury qui a un compte Moodle à la même adresse
-consulte aussi les documents depuis *Suivi des thèses*, sans lien. Seule
+l'abandon du dossier ; un membre du jury qui a un compte Moodle (rattaché à
+son adresse quand le jury est enregistré, puis à sa désignation) consulte aussi
+les documents depuis *Suivi des thèses*, sans lien. Seule
 l'empreinte des jetons de ces liens est conservée en base.
 
 **Valeur des signatures.** Le tracé apposé dans le module est une signature

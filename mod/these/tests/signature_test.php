@@ -185,6 +185,7 @@ final class signature_test extends these_testcase {
      * directeur de l'établissement (pas à la soumission), et sa signature par le lien efface le jeton.
      */
     public function test_external_director_token(): void {
+        global $DB;
         $this->setup_activity();
         $sink = $this->redirectEmails();
         $dossier = these_create_dossier($this->these->id, $this->student->id, $this->student->id);
@@ -204,10 +205,21 @@ final class signature_test extends these_testcase {
         $details = \mod_these\output\dossier::external_director_details($dossier);
         $this->assertSame('Dr Jean Externe, Docteur vétérinaire, Clinique du Lac — externe@example.com', $details);
 
+        // Le directeur extérieur a un compte à cette adresse : il est rattaché à la demande et
+        // retrouve le document dans « Mes signatures » ; un compte suspendu ou pris ensuite, non.
+        $external = $this->getDataGenerator()->create_user(['email' => 'externe@example.com']);
         these_validate_step($this->these, $this->cm, $dossier, $this->director->id);
         $dossier = $this->reload($dossier->id);
         $this->assertContains('externe@example.com', array_column($sink->get_messages(), 'to'));
         $signature = these_get_signatures($dossier->id)['subject:extdirector'];
+        $this->assertSame((int) $external->id, (int) $signature->userid);
+        $this->assertCount(1, these_get_user_pending_signatures($external));
+        $DB->set_field('user', 'suspended', 1, ['id' => $external->id]);
+        $this->assertSame(0, \mod_these\local\rights::account_for_email('externe@example.com'), 'suspendu');
+        $DB->set_field('user', 'suspended', 0, ['id' => $external->id]);
+        $impostor = $this->getDataGenerator()->create_user(['email' => 'externe@example.com']);
+        $this->assertCount(0, these_get_user_pending_signatures($impostor));
+        $this->assertSame(0, \mod_these\local\rights::account_for_email('externe@example.com'), 'deux comptes');
         $this->assertEmpty($signature->timesigned);
         $token = $this->token_sent_to($sink->get_messages(), 'externe@example.com');
         // Seule l'empreinte du jeton est en base.

@@ -63,4 +63,48 @@ final class upgrade_test extends these_testcase {
         $this->assertCount(1, these_get_files($this->context, 'pv', $dossier->id));
         $this->assertGreaterThan($previous, (int) get_config('mod_these', 'version'));
     }
+
+    /**
+     * 2026102505 : les membres du jury et les signataires invités sont rattachés à leur compte
+     * d'après leur adresse (ou celle de leur fiche de l'annuaire), quand il est unique et actif.
+     */
+    public function test_jury_and_signers_linked_to_accounts(): void {
+        global $DB;
+        $this->setup_activity();
+        $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
+            'directorid' => $this->director->id, 'status' => THESE_STATUS_DEFENSE_VALIDATED,
+        ]);
+        $gen = $this->getDataGenerator();
+        $president = $gen->create_user(['email' => 'president@example.org']);
+        $directory = $gen->create_user(['email' => 'annuaire@example.org']);
+        $gen->create_user(['email' => 'double@example.org']);
+        $gen->create_user(['email' => 'double@example.org']);
+        $jurorid = \mod_these\local\jurors::save((object) ['title' => 'Pr', 'lastname' => 'Annuaire', 'firstname' => 'Anne',
+            'email' => 'annuaire@example.org', 'status' => 'pr', 'active' => 1]);
+        $rows = [
+            ['juryrole' => 'president', 'fullname' => 'Paul Président', 'email' => 'president@example.org', 'jurorid' => 0],
+            ['juryrole' => 'member', 'fullname' => 'Anne Annuaire', 'email' => '', 'jurorid' => $jurorid],
+            ['juryrole' => 'member', 'fullname' => 'Deux Comptes', 'email' => 'double@example.org', 'jurorid' => 0],
+            ['juryrole' => 'guest', 'fullname' => 'Sans Compte', 'email' => 'personne@example.org', 'jurorid' => 0],
+        ];
+        foreach ($rows as $i => $row) {
+            $DB->insert_record('these_jury', (object) ($row + ['dossierid' => $dossier->id, 'jurytitle' => '',
+                'institution' => '', 'sortorder' => $i, 'timecreated' => time(), 'userid' => 0]));
+        }
+        $DB->insert_record('these_signature', (object) ['dossierid' => $dossier->id, 'doctype' => 'signaletique',
+            'slot' => 'president', 'userid' => 0, 'signername' => 'Paul Président', 'signeremail' => 'president@example.org',
+            'token' => these_token_hash('x'), 'requesttime' => time(), 'timesigned' => 0, 'timecreated' => time()]);
+
+        $previous = 2026102504;
+        set_config('version', $previous, 'mod_these');
+        $this->assertTrue(xmldb_these_upgrade($previous));
+
+        $members = these_get_jury($dossier->id);
+        $this->assertSame((int) $president->id, (int) $members[0]->userid);
+        $this->assertSame((int) $directory->id, (int) $members[1]->userid);
+        $this->assertSame(0, (int) $members[2]->userid);
+        $this->assertSame(0, (int) $members[3]->userid);
+        $signature = these_get_signatures($dossier->id)['signaletique:president'];
+        $this->assertSame((int) $president->id, (int) $signature->userid);
+    }
 }

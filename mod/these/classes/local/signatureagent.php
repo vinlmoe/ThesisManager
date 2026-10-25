@@ -17,7 +17,6 @@
 namespace mod_these\local;
 
 use context_user;
-use core_text;
 use moodle_url;
 use stdClass;
 
@@ -244,7 +243,8 @@ class signatureagent {
     /**
      * Signatures qui attendent un utilisateur connecté : pour un agent DEVE désigné, celles qui
      * attendent un agent, quel qu'il soit ; et celles des signataires invités par courriel (président
-     * du jury, directeur extérieur...) dont l'adresse est celle de son compte.
+     * du jury, directeur extérieur...) dont le compte a été rattaché à l'adresse invitée au moment de
+     * la demande (these_signature.userid).
      *
      * @param stdClass $user
      * @return stdClass[] Signatures en attente, avec dossier, activité et module de cours.
@@ -255,8 +255,7 @@ class signatureagent {
         $agents = these_deve_agents();
         $isagent = isset($agents[(int) $user->id]);
         $agentslots = these_agent_slots();
-        $email = core_text::strtolower(trim((string) $user->email));
-        $params = ['userid' => $user->id, 'email1' => $email, 'email2' => $email];
+        $params = ['userid' => $user->id];
         $agentsql = '';
         if ($isagent) {
             [$slotsql, $slotparams] = $DB->get_in_or_equal($agentslots, SQL_PARAMS_NAMED, 'agentslot');
@@ -269,8 +268,7 @@ class signatureagent {
                JOIN {these_dossier} d ON d.id = s.dossierid
               WHERE s.timesigned = 0
                 AND d.status <> " . THESE_STATUS_CANCELLED . "
-                AND ((s.token IS NULL AND s.userid = :userid)
-                     OR (s.token IS NOT NULL AND :email1 <> '' AND LOWER(s.signeremail) = :email2)$agentsql)
+                AND (s.userid = :userid$agentsql)
            ORDER BY s.dossierid, s.id",
             $params
         );

@@ -228,6 +228,7 @@ class restore_these_activity_structure_step extends restore_activity_structure_s
             $data->jurorid = 0;
         }
         $data->eligibleby = $this->map_user($data->eligibleby ?? 0);
+        $data->userid = $this->map_user($data->userid ?? 0);
         unset($data->accesstoken);
         $DB->insert_record('these_jury', $data);
     }
