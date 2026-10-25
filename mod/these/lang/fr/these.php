@@ -832,6 +832,10 @@ $string['logsignaturesinvalidated'] = 'Signatures invalidées (document modifié
 $string['logsignaturerequested'] = 'Signature demandée';
 $string['logsignedinperson'] = 'Signature recueillie sur place';
 $string['emailkeysignaturerequest'] = 'Demande de signature (signataires sans compte)';
+$string['emailkeyagentsignature'] = 'Documents à signer par l\'agent DEVE';
+$string['emailkeysubjectchanged'] = 'Changement de sujet';
+$string['emailkeyadjourned'] = 'Thèse ajournée';
+$string['emailkeyjurydesignation'] = 'Désignation d\'un membre du jury';
 $string['emailjurydesignationsubject'] = 'Désignation au jury de thèse de {$a->student}';
 $string['emailjurydesignationbody'] = 'Bonjour {$a->name},
 

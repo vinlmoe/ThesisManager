@@ -826,6 +826,10 @@ $string['logsignaturesinvalidated'] = 'Signatures invalidated (document changed)
 $string['logsignaturerequested'] = 'Signature requested';
 $string['logsignedinperson'] = 'Signature collected in person';
 $string['emailkeysignaturerequest'] = 'Signature request (signatories without an account)';
+$string['emailkeyagentsignature'] = 'Documents to be signed by the registrar\'s signing officer';
+$string['emailkeysubjectchanged'] = 'Change of subject';
+$string['emailkeyadjourned'] = 'Thesis adjourned';
+$string['emailkeyjurydesignation'] = 'Appointment of a jury member';
 $string['emailjurydesignationsubject'] = 'Appointment to the thesis jury of {$a->student}';
 $string['emailjurydesignationbody'] = 'Hello {$a->name},
 

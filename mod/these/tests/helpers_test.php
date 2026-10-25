@@ -28,6 +28,7 @@ require_once(__DIR__ . '/these_testcase.php');
  * @package    mod_these
  * @copyright  2026 Sébastien Lefebvre
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @covers     ::these_get_email_definitions
  * @covers     ::these_validate_jury
  * @covers     ::these_suggest_devenumber
  * @covers     ::these_render_dossier
@@ -173,5 +174,22 @@ final class helpers_test extends these_testcase {
         // Ligne vide supplémentaire : sans valeur, elle affiche la première option, « Membre du jury ».
         $this->assertNull($mform->getElement('juryrole[' . count($jury) . ']')->getValue());
         $this->assertEquals('member', array_key_first(these_jury_role_options()));
+    }
+
+    /**
+     * Chaque courriel personnalisable a son libellé, son objet et son corps par défaut, en français
+     * et en anglais (la page « Courriels » les affiche tous).
+     */
+    public function test_email_strings_exist(): void {
+        global $CFG;
+        foreach (['en', 'fr'] as $lang) {
+            $string = [];
+            include($CFG->dirroot . '/mod/these/lang/' . $lang . '/these.php');
+            foreach (these_get_email_definitions() as $key => $definition) {
+                foreach (['emailkey' . $key, $definition['subjectstring'], $definition['bodystring']] as $identifier) {
+                    $this->assertArrayHasKey($identifier, $string, "$lang : $identifier");
+                }
+            }
+        }
     }
 }
