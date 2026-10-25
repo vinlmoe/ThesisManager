@@ -16,10 +16,8 @@
 
 namespace mod_these\local;
 
+use mod_these\output;
 use context;
-use html_table;
-use html_writer;
-use moodle_url;
 use stdClass;
 
 /**
@@ -240,46 +238,9 @@ class planning {
      * @return string
      */
     public static function render_planning(array $defenses, $showpromotion) {
-        if (!$defenses) {
-            return html_writer::div(get_string('planningnone', 'mod_these'), 'alert alert-info');
-        }
-        $days = [];
-        foreach ($defenses as $defense) {
-            $days[usergetmidnight($defense->dossier->defensedate)][] = $defense;
-        }
-        $out = '';
-        foreach ($days as $defenses) {
-            $out .= html_writer::tag('h4', s(these_defense_row($defenses[0])['day']), ['class' => 'mt-4']);
-            $table = new html_table();
-            $table->attributes['class'] = 'generaltable these-planning';
-            $table->head = array_merge(
-                [get_string('planningtime', 'mod_these'), get_string('student', 'mod_these')],
-                $showpromotion ? [get_string('planningpromotion', 'mod_these')] : [],
-                [
-                    get_string('subjecttitle', 'mod_these'),
-                    get_string('director', 'mod_these'),
-                    get_string('jury', 'mod_these'),
-                    get_string('defenselocation', 'mod_these'),
-                ]
-            );
-            foreach ($defenses as $defense) {
-                $row = these_defense_row($defense);
-                $badge = html_writer::span($row['status'], 'badge ' . ($row['confirmed'] ? 'badge-success' : 'badge-warning'));
-                $url = new moodle_url('/mod/these/dossier.php', [
-                    'id' => $defense->source->cm->id,
-                    'dossierid' => $defense->dossier->id,
-                ]);
-                $jury = ($row['president'] !== '' ? html_writer::tag('strong', s($row['president'])) . ' ('
-                    . s(get_string('juryrolepresident', 'mod_these')) . ')' . html_writer::empty_tag('br') : '') . s($row['jury']);
-                $table->data[] = array_merge(
-                    [s($row['time']) . html_writer::empty_tag('br') . $badge, html_writer::link($url, s($row['student']))],
-                    $showpromotion ? [s($row['promotion'])] : [],
-                    [s($row['title']), s($row['director']), $jury, s($row['location'])]
-                );
-            }
-            $out .= html_writer::table($table);
-        }
-        return $out;
+        global $PAGE;
+
+        return $PAGE->get_renderer('mod_these')->render(new output\planning($defenses, $showpromotion));
     }
 
     /**
