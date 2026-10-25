@@ -86,6 +86,26 @@ final class planning_nav_test extends output_testcase {
     }
 
     /**
+     * Valeur du champ de date au format AAAA-MM-JJ, zéro initial du jour compris (champ vide sinon,
+     * du 1er au 9 du mois).
+     */
+    public function test_goto_value_keeps_leading_zero(): void {
+        $this->resetAfterTest();
+        $this->setTimezone('Europe/Paris');
+        $monday = make_timestamp(2026, 11, 2);
+        $nav = new planning_nav(
+            new \moodle_url('/mod/these/planning.php', ['id' => 7]),
+            'week',
+            $monday,
+            these_planning_shift_week($monday, -1),
+            $monday,
+            these_planning_shift_week($monday, 1),
+            make_timestamp(2026, 11, 4, 12)
+        );
+        $this->assertSame('2026-11-04', $nav->export_for_template($this->renderer())['gotovalue']);
+    }
+
+    /**
      * Rendu : deux blocs, boutons collés, formulaire GET avec le champ de date these-planning-goto.
      */
     public function test_render(): void {
