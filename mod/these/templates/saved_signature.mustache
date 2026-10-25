@@ -1,0 +1,45 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_these/saved_signature
+
+    Signature enregistrée de l'utilisateur (image PNG en data URI) et bouton de suppression, ou
+    mention de son absence.
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * none
+
+    Context variables required for this template:
+    * hassignature L'utilisateur a une signature enregistrée.
+    * src, alt Image.
+    * deleteurl, deletelabel Bouton de suppression.
+    * nonelabel Mention sans signature.
+
+    Example context (json):
+    {"hassignature": true, "src": "data:image/png;base64,iVBORw0KGgo=", "alt": "Signature enregistrée",
+        "deleteurl": "https://example.com/mod/these/mysignatures.php?deletesaved=1", "deletelabel": "Supprimer",
+        "nonelabel": "Aucune signature enregistrée"}
+}}
+{{#hassignature}}
+<div class="mb-2"><img src="{{src}}" alt="{{alt}}" class="border" style="max-height:100px;background:#fff;" /></div><a href="{{deleteurl}}" class="btn btn-secondary">{{deletelabel}}</a>
+{{/hassignature}}
+{{^hassignature}}
+<div class="text-muted">{{nonelabel}}</div>
+{{/hassignature}}

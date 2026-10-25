@@ -30,6 +30,9 @@
 require(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/these/locallib.php');
 
+use mod_these\output;
+use mod_these\output\parts;
+
 $preview = optional_param('preview', 0, PARAM_INT);
 $deletesaved = optional_param('deletesaved', 0, PARAM_BOOL);
 
@@ -68,16 +71,20 @@ if ($preview && isset($pending[$preview])) {
     );
 }
 
+$renderer = $PAGE->get_renderer('mod_these');
 $documents = [];
 foreach ($pending as $signature) {
     $student = $DB->get_record('user', ['id' => $signature->dossier->userid]);
-    $documents[$signature->id] = s($student ? fullname($student) : '-') . ' — '
-        . these_document_label($signature->doctype) . ' (' . these_slot_label($signature->slot) . ') — '
-        . html_writer::link(
+    $documents[$signature->id] = $renderer->render(new output\fragment([
+        parts::text(($student ? fullname($student) : '-') . ' — ' . these_document_label($signature->doctype)
+            . ' (' . these_slot_label($signature->slot) . ') — '),
+        parts::link(
             new moodle_url($PAGE->url, ['preview' => $signature->id]),
             get_string('signpreview', 'mod_these'),
-            ['target' => '_blank']
-        );
+            '',
+            '_blank'
+        ),
+    ]));
 }
 $mform = new \mod_these\form\mysignatures_form($PAGE->url, ['documents' => $documents, 'signername' => fullname($USER)]);
 
@@ -109,7 +116,7 @@ if ($documents && ($data = $mform->get_data())) {
 }
 
 echo $OUTPUT->header();
-echo html_writer::div(get_string('mysignatures_desc', 'mod_these'), 'mb-3');
+echo $renderer->render(new output\message(get_string('mysignatures_desc', 'mod_these'), 'mb-3'));
 if ($documents) {
     $mform->display();
 } else {
@@ -118,19 +125,8 @@ if ($documents) {
 
 // Signature enregistrée.
 echo $OUTPUT->heading(get_string('signaturesaved', 'mod_these'), 3, 'mt-4');
-$saved = these_get_saved_signature($USER->id);
-if ($saved !== null) {
-    echo html_writer::div(
-        html_writer::empty_tag('img', ['src' => 'data:image/png;base64,' . base64_encode($saved),
-        'alt' => get_string('signaturesaved', 'mod_these'), 'class' => 'border', 'style' => 'max-height:100px;background:#fff;']),
-        'mb-2'
-    );
-    echo html_writer::link(
-        new moodle_url($PAGE->url, ['deletesaved' => 1, 'sesskey' => sesskey()]),
-        get_string('signaturesaveddelete', 'mod_these'),
-        ['class' => 'btn btn-secondary']
-    );
-} else {
-    echo html_writer::div(get_string('signaturesavednone', 'mod_these'), 'text-muted');
-}
+echo $renderer->render(new output\saved_signature(
+    these_get_saved_signature($USER->id),
+    new moodle_url($PAGE->url, ['deletesaved' => 1, 'sesskey' => sesskey()])
+));
 echo $OUTPUT->footer();
