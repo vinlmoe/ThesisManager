@@ -106,9 +106,11 @@ class documents {
         }
         $documents[these_document_filename('feuille-de-jury')] = these_render_doctemplate($these, 'jurysheet', $data);
         $documents[these_document_filename('proces-verbal')] = these_render_doctemplate($these, 'minutes', $data);
-        // Documents de l'établissement, dans leur état de signature à la génération.
-        foreach (array_keys(these_document_definitions()) as $doctype) {
-            if (these_document_available($dossier, $doctype)) {
+        // Documents de l'établissement, dans leur état de signature à la génération. Les documents
+        // réservés au personnel (rapport du directeur, grille) n'entrent pas dans cette zone, que
+        // l'étudiant consulte : ils ne sont joints qu'à l'archive transmise à l'université.
+        foreach (these_document_definitions() as $doctype => $definition) {
+            if (!$definition['staffonly'] && these_document_available($dossier, $doctype)) {
                 $documents[these_document_filename($doctype)] = these_signed_document_pdf($these, $context, $dossier, $doctype);
             }
         }
@@ -136,9 +138,39 @@ class documents {
     }
 
     /**
+     * Fichiers de l'archive transmise à l'université : les documents générés, puis les documents de
+     * l'établissement réservés au personnel (rapport du directeur, grille de conformité), rendus à
+     * la demande dans leur état de signature courant.
+     *
+     * @param stdClass $these
+     * @param context $context
+     * @param stdClass $dossier
+     * @return array nom de fichier => stored_file ou chemin d'un fichier temporaire
+     */
+    public static function archive_files(stdClass $these, context $context, stdClass $dossier) {
+        $files = [];
+        foreach (these_get_files($context, 'generated', $dossier->id) as $file) {
+            $files[$file->get_filename()] = $file;
+        }
+        $directory = null;
+        foreach (these_document_definitions() as $doctype => $definition) {
+            if (!$definition['staffonly'] || !these_document_available($dossier, $doctype)) {
+                continue;
+            }
+            $directory = $directory ?? make_request_directory();
+            $filename = these_document_filename($doctype);
+            $path = $directory . '/' . $filename;
+            file_put_contents($path, these_signed_document_pdf($these, $context, $dossier, $doctype));
+            $files[$filename] = $path;
+        }
+        return $files;
+    }
+
+    /**
      * Transmet les documents générés : à chaque membre du jury qui a une adresse, sa convocation ; à
      * l'étudiant, la sienne ; à l'adresse universitaire de l'activité, l'ensemble des documents en
-     * archive. La première transmission fait passer le dossier au statut « soutenance programmée ».
+     * archive, documents réservés au personnel compris. La première transmission fait passer le
+     * dossier au statut « soutenance programmée ».
      *
      * @param stdClass $these
      * @param stdClass $cm
@@ -197,11 +229,12 @@ class documents {
             }
 
             $universityemail = trim((string) $these->universityemail);
-            if ($universityemail !== '' && $files) {
+            $archive = $universityemail !== '' ? self::archive_files($these, $context, $dossier) : [];
+            if ($archive) {
                 $zipname = clean_filename('soutenance-' . ($dossier->devenumber ?: $dossier->id) . '.zip');
                 $zippath = make_request_directory() . '/' . $zipname;
                 $packer = get_file_packer('application/zip');
-                $packer->archive_to_pathname($files, $zippath);
+                $packer->archive_to_pathname($archive, $zippath);
                 $sent = these_send_email(
                     $these,
                     'university',

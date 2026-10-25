@@ -85,14 +85,24 @@ final class scans_test extends these_testcase {
         $content = '%PDF-1.4 contrat signé';
         $draftitemid = $this->draft($this->deve->id, 'contrat.pdf', $content);
 
-        $count = scans::add($this->context, $dossier, $this->deve->id, 'contract', "Pr Frédéric Fleury, président de l'université",
-            make_timestamp(2026, 10, 22, 12), $draftitemid, 'Reçu par courrier.');
+        $count = scans::add(
+            $this->context,
+            $dossier,
+            $this->deve->id,
+            'contract',
+            "Pr Frédéric Fleury, président de l'université",
+            make_timestamp(2026, 10, 22, 12),
+            $draftitemid,
+            'Reçu par courrier.'
+        );
 
         $this->assertSame(1, $count);
         $files = these_get_files($this->context, 'signedscan', $dossier->id);
         $this->assertCount(1, $files);
-        $this->assertSame('2026-10-22-contract-pr-frederic-fleury-president-de-l-universite-contrat.pdf',
-            $files[0]->get_filename());
+        $this->assertSame(
+            '2026-10-22-contract-pr-frederic-fleury-president-de-l-universite-contrat.pdf',
+            $files[0]->get_filename()
+        );
         $this->assertSame($content, $files[0]->get_content());
 
         $log = $DB->get_record('these_log', ['dossierid' => $dossier->id, 'logaction' => 'signedscan'], '*', MUST_EXIST);
@@ -121,8 +131,15 @@ final class scans_test extends these_testcase {
         }
         $this->assertCount(2, these_get_files($this->context, 'signedscan', $dossier->id));
 
-        $this->assertSame(0, scans::add($this->context, $dossier, $this->deve->id, 'agreement', 'CCEM', $date,
-            file_get_unused_draft_itemid()));
+        $this->assertSame(0, scans::add(
+            $this->context,
+            $dossier,
+            $this->deve->id,
+            'agreement',
+            'CCEM',
+            $date,
+            file_get_unused_draft_itemid()
+        ));
         $this->assertSame(2, $DB->count_records('these_log', ['dossierid' => $dossier->id, 'logaction' => 'signedscan']));
     }
 

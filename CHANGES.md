@@ -13,8 +13,15 @@ de version recalés sur la date. Les numéros entre parenthèses des sections de
 développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
 été étiquetée.
 
-## En cours (non publiée)
+## mod_these 0.13.0 (2026102504) — scans signés, agents DEVE signataires
 
+- Documents générés : le rapport du directeur et la grille de conformité,
+  réservés au personnel, n'étaient plus masqués à l'étudiant une fois les
+  documents de soutenance générés (zone « Documents générés », consultable par
+  lui). Ils n'y sont plus rangés ; l'archive transmise à l'université les
+  contient toujours, rendus dans leur état de signature au moment de l'envoi.
+  Première étape de `db/upgrade.php` : elle retire de cette zone les
+  documents réservés déjà déposés par les générations précédentes.
 - Plusieurs agents DEVE signataires : le réglage « Agents DEVE signataires »
   accepte une liste d'identifiants ou d'adresses (virgules, points-virgules ou
   un par ligne). Chaque agent est prévenu et voit les documents en attente dans
@@ -30,6 +37,8 @@ développement ne correspondent à aucune version installable ; 0.11.2 n'a jamai
 - Planning : le champ « Aller au » garde le zéro initial du jour (« 2026-11-04 ») ;
   il s'affichait vide du 1er au 9 du mois, la valeur « 2026-11-4 » n'étant pas
   une date valide pour le navigateur.
+- Style Moodle : quatre fichiers de la version précédente remis au standard
+  (la vérification « Style Moodle » échouait sur `main`).
 
 ## mod_these 0.12.0, mod_thesesynthesis 0.4.0 (2026102502) — rendu par gabarits Mustache
 

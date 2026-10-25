@@ -51,7 +51,13 @@ class scan_form extends \moodleform {
         $mform->addElement('date_selector', 'signeddate', get_string('scansigneddate', 'mod_these'));
         $mform->addRule('signeddate', null, 'required', null, 'client');
 
-        $mform->addElement('filemanager', 'scan', get_string('scanfiles', 'mod_these'), null, these_filemanager_options('signedscan'));
+        $mform->addElement(
+            'filemanager',
+            'scan',
+            get_string('scanfiles', 'mod_these'),
+            null,
+            these_filemanager_options('signedscan')
+        );
         $mform->addHelpButton('scan', 'scanfiles', 'mod_these');
         $mform->addRule('scan', null, 'required', null, 'client');
 

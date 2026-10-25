@@ -31,6 +31,8 @@ require_once(__DIR__ . '/these_testcase.php');
  * @covers     ::these_get_rights
  * @covers     ::these_user_can_act
  * @covers     ::these_can_view_filearea
+ * @covers     ::these_generate_documents
+ * @covers     \mod_these\local\documents
  */
 final class rights_test extends these_testcase {
     /**
@@ -88,6 +90,45 @@ final class rights_test extends these_testcase {
         foreach ([$this->director, $this->deve, $this->librarian] as $user) {
             $this->assertTrue(these_can_view_filearea('directorreport', these_get_rights($this->context, $dossier, $user->id)));
         }
+    }
+
+    /**
+     * La zone « Documents générés », que l'étudiant consulte, ne reçoit jamais les documents réservés
+     * au personnel (rapport du directeur, grille) ; l'archive transmise à l'université, si.
+     */
+    public function test_generated_documents_hide_staff_only_from_student(): void {
+        $this->setup_activity(['universityemail' => 'scolarite@univ.example.com']);
+        $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
+            'status' => THESE_STATUS_CONFORM,
+            'directorid' => $this->director->id,
+            'defensedate' => time() + 10 * DAYSECS,
+            'reporttext' => 'Avis favorable du directeur.',
+        ]);
+        $this->assertTrue(these_document_available($dossier, 'report'));
+        $student = these_get_rights($this->context, $dossier, $this->student->id);
+        $this->assertTrue(these_can_view_filearea('generated', $student));
+        $this->assertFalse(these_can_view_document('report', $student));
+
+        $files = these_generate_documents($this->these, $this->context, $dossier, $this->deve->id);
+        $names = array_map(function ($file) {
+            return $file->get_filename();
+        }, $files);
+        $this->assertContains(these_document_filename('proces-verbal'), $names);
+        $this->assertContains(these_document_filename('conformity'), $names);
+        foreach (these_document_definitions() as $doctype => $definition) {
+            if ($definition['staffonly']) {
+                $this->assertNotContains(these_document_filename($doctype), $names);
+            }
+        }
+
+        $archive = \mod_these\local\documents::archive_files($this->these, $this->context, $dossier);
+        foreach ($names as $name) {
+            $this->assertArrayHasKey($name, $archive);
+        }
+        $report = these_document_filename('report');
+        $this->assertArrayHasKey($report, $archive);
+        $this->assertStringStartsWith('%PDF', file_get_contents($archive[$report]));
+        $this->assertArrayNotHasKey(these_document_filename('grid'), $archive);
     }
 
     /**
