@@ -39,10 +39,11 @@ function these_import_columns() {
  * Voir \mod_these\local\import::find_user().
  *
  * @param string $value
+ * @param stdClass[] $candidates
  * @return stdClass|null
  */
-function these_find_user($value) {
-    return \mod_these\local\import::find_user($value);
+function these_find_user($value, array $candidates) {
+    return \mod_these\local\import::find_user($value, $candidates);
 }
 
 /**

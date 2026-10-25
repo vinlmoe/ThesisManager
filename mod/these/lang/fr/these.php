@@ -399,11 +399,12 @@ $string['import'] = 'Importer';
 $string['importhelp'] = "Reprise de sujets déjà enregistrés hors du module : chaque ligne crée un dossier actif. Colonnes reconnues "
     . "(ligne d'en-tête) : <code>student</code> et <code>title</code> (obligatoires), <code>titleen</code>, <code>summary</code>, "
     . "<code>keywords</code>, <code>director</code>, <code>codirector</code>, <code>devenumber</code>, <code>libraryref</code>. "
-    . "Étudiant et directeur sont désignés par identifiant de connexion, adresse de courriel ou numéro d'identification.";
+    . "Étudiant et directeur sont désignés par identifiant de connexion, adresse de courriel ou numéro d'identification, parmi "
+    . "les participants du cours (étudiants pouvant déposer un sujet, enseignants pouvant diriger).";
 $string['csvfile'] = 'Fichier CSV';
 $string['importdryrun'] = 'Simulation (ne rien créer)';
 $string['importline'] = 'Ligne';
-$string['importusernotfound'] = 'Utilisateur introuvable : {$a}';
+$string['importusernotfound'] = 'Utilisateur introuvable parmi les participants du cours : {$a}';
 $string['importdossierexists'] = 'Cet étudiant a déjà un dossier.';
 $string['importtitlemissing'] = 'Titre manquant.';
 $string['importcreated'] = 'Dossier créé';

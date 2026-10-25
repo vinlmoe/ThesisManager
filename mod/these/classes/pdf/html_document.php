@@ -136,7 +136,7 @@ class html_document extends \pdf {
         $mustache = self::mustache();
         foreach (['header', 'body', 'footer'] as $section) {
             if ($parsed[$section] !== '') {
-                $parsed[$section] = self::restrict_images($mustache->render($parsed[$section], $context));
+                $parsed[$section] = self::restrict_tags(self::restrict_images($mustache->render($parsed[$section], $context)));
             }
         }
         return $parsed;
@@ -158,6 +158,18 @@ class html_document extends \pdf {
             $hasother = preg_match('/\ssrc\s*=\s*(?!(["\'])' . $allowed . ')/i', $match[0]);
             return $hasallowed && !$hasother ? $match[0] : '';
         }, $html);
+    }
+
+    /**
+     * Retire les balises <tcpdf>. Quand la plateforme définit K_TCPDF_CALLS_IN_HTML à vrai, TCPDF y
+     * lit un appel de méthode arbitraire (Image() sur un chemin du serveur, par exemple) : un modèle,
+     * modifiable par la DEVE, ne doit pas pouvoir en contenir, quelle que soit la configuration.
+     *
+     * @param string $html
+     * @return string
+     */
+    public static function restrict_tags($html) {
+        return preg_replace('/<\/?tcpdf\b[^>]*>/i', '', (string) $html);
     }
 
     /**

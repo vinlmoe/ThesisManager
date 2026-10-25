@@ -357,6 +357,24 @@ class rendering {
     }
 
     /**
+     * Prépare une ligne pour un export tableur : une cellule qu'un tableur prendrait pour une formule
+     * (début par =, +, -, @, tabulation ou retour chariot, saisi dans un titre, des mots-clés, un lieu
+     * ou un nom de membre du jury) est précédée d'une apostrophe, que les tableurs affichent comme du
+     * texte. Le HTML et le PDF ne passent pas par ici.
+     *
+     * @param array $row
+     * @return array
+     */
+    public static function spreadsheet_safe(array $row) {
+        foreach ($row as $key => $value) {
+            if (is_string($value) && $value !== '' && strpbrk($value[0], "=+-@\t\r") !== false) {
+                $row[$key] = "'" . $value;
+            }
+        }
+        return $row;
+    }
+
+    /**
      * Diffusion de la thèse choisie au dépôt de la soutenance : mode de diffusion et demande d'embargo,
      * avec sa date de fin (voir these_embargo_until()). Le motif de l'embargo, qui peut révéler le sujet,
      * n'est montré qu'à qui connaît le sujet.

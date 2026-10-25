@@ -32,8 +32,32 @@ require_once(__DIR__ . '/these_testcase.php');
  * @covers     ::these_validate_jury
  * @covers     ::these_suggest_devenumber
  * @covers     ::these_render_dossier
+ * @covers     \mod_these\local\rendering::spreadsheet_safe
+ * @covers     \mod_these\pdf\html_document::restrict_tags
  */
 final class helpers_test extends these_testcase {
+    /**
+     * Export tableur : une cellule commençant comme une formule est précédée d'une apostrophe, les
+     * autres sont inchangées.
+     */
+    public function test_spreadsheet_safe(): void {
+        $this->resetAfterTest();
+        $row = ['a' => '=HYPERLINK("x")', 'b' => '+1', 'c' => '-1', 'd' => '@SUM', 'e' => "\tx", 'f' => 'Titre', 'g' => '',
+            'h' => 3];
+        $expected = ['a' => "'=HYPERLINK(\"x\")", 'b' => "'+1", 'c' => "'-1", 'd' => "'@SUM", 'e' => "'\tx", 'f' => 'Titre',
+            'g' => '', 'h' => 3];
+        $this->assertSame($expected, \mod_these\local\rendering::spreadsheet_safe($row));
+    }
+
+    /**
+     * Modèles de documents : les balises <tcpdf> sont retirées, le reste du HTML est intact.
+     */
+    public function test_restrict_tags(): void {
+        $this->resetAfterTest();
+        $html = '<p>a</p><tcpdf method="Image" params="x"/><b>b</b><TCPDF method="AddPage"></tcpdf><i>c</i>';
+        $this->assertSame('<p>a</p><b>b</b><i>c</i>', \mod_these\pdf\html_document::restrict_tags($html));
+    }
+
     /**
      * Un et un seul président, un minimum de membres votants, des adresses valides.
      */
