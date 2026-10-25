@@ -4,9 +4,9 @@
 
 % Version du guide : à mettre à jour à chaque modification, avec une ligne dans l'historique.
 \newcommand{\titreguide}{Guide de la gestion des thèses}
-\newcommand{\versionguide}{1.9}
-\newcommand{\dateguide}{24 octobre 2026}
-\newcommand{\versionthese}{0.9.0}
+\newcommand{\versionguide}{2.0}
+\newcommand{\dateguide}{25 octobre 2026}
+\newcommand{\versionthese}{0.11.2}
 
 \usepackage{guide-commun}
 \usepackage{tikz}
@@ -48,6 +48,12 @@ thèse) et circuit des corrections. \\
 enregistrée ; \og Mes signatures\fg{}. \\
 1.9 & 24 octobre 2026 & Changement de sujet de thèse, avec trace de l'ancien
 sujet et avertissement de l'ancien directeur, de la DEVE et de la bibliothèque. \\
+2.0 & 25 octobre 2026 & Planning des soutenances par semaine et par mois,
+planning mensuel imprimable ; thèse confidentielle (sujet connu de l'étudiant,
+de la DEVE, de la bibliothèque, du directeur et du jury, masqué pour les autres,
+thèse trouvable et au planning) ; demande d'embargo de diffusion de 5 ans ;
+documents signés scellés ; liens par courriel valables 60 jours, accès du jury
+depuis son compte ; valeur des signatures ; sauvegarde. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -224,7 +230,11 @@ Dans la même page d'administration :
   \item[Contrat type de diffusion électronique] le PDF officiel
         (ENS-INI-P308-E04), déposé tel quel. Le module le fait précéder d'une
         page de données et de choix de l'auteur et suivre d'une page de
-        signatures, comme pour les conventions de stage.
+        signatures, comme pour les conventions de stage. Tant qu'il manque ou
+        ne peut pas être lu (PDF trop récent : l'enregistrer en PDF~1.4), le
+        contrat ne contient que les pages du module, n'est pas scellé
+        (section~\ref{sec:integrite}) et le dossier affiche un avertissement
+        à la DEVE.
   \item[Agent DEVE signataire] identifiant ou adresse du compte Moodle de
         l'agent responsable de la DEVE : l'équipe valide sans signer, puis
         l'agent signe depuis \bouton{Mes signatures}
@@ -926,9 +936,14 @@ nom de l'étudiant, \var{thesis.title} pour le titre,
 section \texttt{\{\{\#extdirector.present\}\}\ldots\{\{/extdirector.present\}\}}
 n'apparaît que si la condition est remplie ; appliquée à une liste
 (\texttt{jury}), elle se répète pour chaque élément. La première ligne fixe les
-marges, la police et la taille ; un en-tête et un pied de page répétés sur
-chaque page peuvent être définis. La page de modification présente la liste
-complète des variables, avec un exemple de valeur pour chacune.
+marges, la police, la taille et l'orientation (\texttt{orientation="L"} pour un
+document en paysage, comme le planning des soutenances) ; un en-tête et un pied
+de page répétés sur chaque page peuvent être définis. La page de modification
+présente la liste complète des variables, avec un exemple de valeur pour
+chacune. Pour un document destiné à des personnes qui ne connaissent pas le
+sujet d'une thèse confidentielle, \var{thesis.publictitle} donne \og Thèse
+confidentielle\fg{} à la place du titre. Seules les images du module et celles
+déposées dans \bouton{Images des modèles} peuvent être appelées.
 
 \capture{44_modele_edition}{Modification du modèle du dépôt de sujet.}
 
@@ -939,10 +954,13 @@ exemple) est refusé à l'enregistrement avec le message d'erreur.
 
 \begin{attention}
 Quand l'établissement publie une nouvelle version d'un formulaire, on reporte
-ses changements dans le modèle correspondant. Les documents déjà produits ne
-changent pas ; ceux produits ensuite suivent le nouveau modèle. Modifier un
-modèle n'annule aucune signature : seules les données signées sont couvertes
-par l'empreinte, pas leur mise en page.
+ses changements dans le modèle correspondant. Un document \textbf{entièrement
+signé} est scellé et ne change plus ; un document qui attend encore des
+signatures suit le nouveau modèle, et les signatures déjà apposées sont
+annulées, puisque le texte signé a changé : les signataires sont à solliciter
+de nouveau (section~\ref{sec:integrite}). Mieux vaut donc modifier un modèle
+entre deux promotions, ou quand aucun document de ce type n'attend de
+signature.
 \end{attention}
 
 \subsection{Grille de conformité}\label{sec:grille}
@@ -1040,7 +1058,13 @@ l'université et un éventuel directeur extérieur n'ont pas de compte Moodle.
 À la validation du dossier de soutenance par la DEVE (et, pour le directeur
 extérieur, à la soumission du sujet), chacun reçoit \textbf{un seul lien}
 couvrant tous les documents qui l'attendent : il les consulte en PDF puis signe
-une fois. Le lien est personnel et cesse de fonctionner une fois utilisé.
+une fois. Le lien est personnel, vaut 60~jours et cesse de fonctionner une fois
+utilisé ; un nouvel envoi par la DEVE remplace le précédent. Seule une empreinte
+du lien est conservée en base. Le lien d'accès du jury aux documents vaut
+jusqu'à 60~jours après la soutenance et cesse à la clôture ou à l'abandon du
+dossier ; un membre du jury qui a un compte Moodle à la même adresse consulte
+aussi les documents depuis \bouton{Mes jurys} de l'activité \og Suivi des
+thèses\fg{}.
 
 La page \bouton{Suivi des signatures} du dossier (DEVE) montre l'état de chaque
 emplacement, permet de \bouton{renvoyer le lien} ou de \bouton{signer sur place}
@@ -1050,7 +1074,7 @@ pour un signataire présent ou sans adresse.
 
 \capture[0.8\linewidth]{41_signature_sur_place}{Signature sur place du président du jury.}
 
-\subsection{Intégrité}
+\subsection{Intégrité}\label{sec:integrite}
 
 Un document signé ne peut pas être modifié en silence : si son contenu change
 après signature (sujet corrigé après un renvoi, conclusions reprises\ldots), les
@@ -1062,8 +1086,37 @@ n'invalident pas les signatures, et chaque signataire ne s'engage que sur sa
 partie : l'agrément administratif saisi par la DEVE n'invalide pas l'agrément
 scientifique du directeur.
 
+La mise en page compte aussi : tant qu'un document attend des signatures, une
+modification de son modèle (ou des images qu'il appelle, ou du contrat type)
+annule celles déjà apposées.
+
+\paragraph{Document scellé.} Dès que la dernière signature attendue est
+apposée, le document est \textbf{scellé} : son PDF est produit une dernière fois
+et conservé tel quel, et son empreinte SHA-256 est inscrite à l'historique du
+dossier (\og Document scellé\fg{}). Une modification ultérieure d'un modèle,
+d'une image ou du contrat type ne le change plus. Si une signature disparaît
+(contenu modifié, ajournement), le scellé est levé et le document sera scellé de
+nouveau une fois toutes ses signatures apposées.
+
 Les documents, dans leur état de signature, sont joints aux documents de
 soutenance générés et à l'archive transmise à l'université.
+
+\paragraph{Actions simultanées.} Deux actions sur un même dossier ne peuvent
+pas se croiser : si le dossier a changé d'état entre l'ouverture d'une page et
+l'envoi du formulaire (double clic, deux personnes de la DEVE), l'action est
+refusée avec le message \og Ce dossier a été modifié entre-temps\fg{}, et
+rien n'est enregistré. Il suffit de recharger le dossier pour voir son état.
+
+\begin{attention}
+\textbf{Valeur des signatures.} Le tracé apposé dans le module est une
+signature électronique \emph{simple} au sens du règlement européen eIDAS : il
+identifie le signataire (compte Moodle, ou lien personnel reçu à son adresse),
+date la signature et la lie au contenu signé par son empreinte, mais ne repose
+pas sur un certificat qualifié. Il revient à l'établissement de décider pour
+quels documents elle suffit (procès-verbal, contrat de diffusion) ; un document
+qui exige une signature avancée ou qualifiée est signé hors du module puis
+déposé signé.
+\end{attention}
 
 % ===========================================================================
 \section{Annuaire du jury et suivi des thèses}
@@ -1184,6 +1237,8 @@ Relance & à l'acteur attendu, après le délai de relance \\
 
 Chaque texte est personnalisable par la DEVE (\chemin{Courriels}), avec les
 variables indiquées sous chaque courriel, par exemple \var{student} ou \var{url}.
+Pour une thèse confidentielle, un destinataire qui ne doit pas en connaître le
+sujet reçoit \og Thèse confidentielle\fg{} à la place de \var{title}.
 
 \begin{courriel}{Thèse de \{\{student\}\} : \{\{status\}\}}
 Bonjour,\\[2pt]
@@ -1205,7 +1260,21 @@ Le module implémente l'API de confidentialité de Moodle : l'étudiant peut
 exporter son dossier (sans le rapport du directeur) et en demander
 l'effacement ; un membre du personnel supprimé est dissocié des dossiers qu'il a
 traités, sans que ceux-ci disparaissent. La sauvegarde et la restauration de
-cours recopient le paramétrage et, si les données utilisateur sont incluses,
-les dossiers, leur jury, leur historique et leurs fichiers.
+cours recopient le paramétrage (réglages, courriels, modèles et images, grille,
+questionnaire) et, si les données utilisateur sont incluses, les dossiers, leur
+jury, leur historique, leurs fichiers, leurs signatures et leurs documents
+scellés. Les liens envoyés par courriel ne sont pas restaurés : on renvoie les
+invitations.
+
+\begin{attention}
+Le module ne fait pas de sauvegarde de lui-même. Activer les
+\textbf{sauvegardes automatisées de cours} de Moodle \emph{avec les données
+utilisateur}, et sauvegarder régulièrement le serveur (base de données et
+dossier \texttt{moodledata}) : l'annuaire du jury, les signatures enregistrées
+des utilisateurs, le contrat type et les réglages du site ne sont pas dans la
+sauvegarde d'une activité et ne sont protégés que par celle du serveur. Le
+transfert des paramètres (section~\ref{sec:transfert}) exporte la
+configuration d'une activité, jamais les dossiers.
+\end{attention}
 
 \end{document}
