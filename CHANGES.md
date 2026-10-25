@@ -13,6 +13,28 @@ de version recalés sur la date. Les numéros entre parenthèses des sections de
 développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
 été étiquetée.
 
+## En cours (non publiée) — rendu par gabarits Mustache
+
+Passage du rendu HTML à l'architecture Moodle standard (composants `renderable`
+et `templatable`, gabarits Mustache, renderer de plugin), en quatre demandes de
+fusion. Affichage inchangé ; numéro de version augmenté à la dernière étape.
+
+- Étape 1, vue du dossier : renderer `mod_these\output\renderer` ; composants
+  `status_badge`, `file_links`, `actions`, `detail_section`, `progress`,
+  `jury`, `history`, `embargo`, `subject_history`, `signed_documents`,
+  `dossier_table` et `dossier` dans `classes/output/`, chacun avec son gabarit
+  dans `templates/` (partiels communs `table` et `part`, au balisage de
+  `html_writer::table()`). Les fonctions `these_render_*()` et les méthodes de
+  `mod_these\local\rendering` gardent leur signature et rendent ces composants.
+  Les décisions d'accès (sujet d'une thèse confidentielle, motifs masqués,
+  documents et zones de fichiers visibles) restent dans `export_for_template()` :
+  le gabarit ne reçoit jamais le sujet masqué.
+- Les noms de personnes (étudiant, directeur, auteur d'une entrée d'historique)
+  sont désormais échappés à l'affichage, comme le reste du texte.
+- Tests : un test par composant (contexte exporté, rendu du gabarit), dont un
+  contrôle sur le contexte entier sérialisé en JSON pour une thèse
+  confidentielle.
+
 ## mod_these 0.11.3, mod_thesesynthesis 0.3.3 (2026102501) — première version publiée
 
 - Publication automatique : sur `main`, une fois la CI verte, la version de
