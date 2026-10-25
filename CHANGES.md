@@ -6,6 +6,13 @@ quand il change), de la plus récente à la plus ancienne. Une version publiée 
 
 ## mod_these 0.11.2 (2026103105), mod_thesesynthesis 0.3.2 (2026102904)
 
+- Planning : le rôle d'un membre du jury suit son nom après un tiret (« Dr DURAND
+  Anne – Directeur de thèse (membre du jury) ») au lieu de parenthèses imbriquées.
+- Recherche des thèses : texte d'introduction mis à jour (thèses confidentielles
+  trouvables, sujet masqué).
+- Guide : captures du planning (semaine, mois, PDF), d'une thèse confidentielle
+  (dossier, recherche), de la demande d'embargo et d'un document scellé.
+
 - Thèse confidentielle **trouvable** : dans « Suivi des thèses », un enseignant
   la trouve comme les autres thèses enregistrées (étudiant, directeur, jury,
   année, promotion), jamais par son sujet ou ses réponses ; elle figure aussi au

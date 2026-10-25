@@ -211,7 +211,9 @@ function these_defense_row(stdClass $defense) {
         'director' => $director,
         'president' => $defense->president ? $name($defense->president) : '',
         'jury' => implode(', ', array_map(function ($member) use ($name, $roles) {
-            return $name($member) . ($member->juryrole === 'member' ? '' : ' (' . ($roles[$member->juryrole] ?? '') . ')');
+            // Le libellé d'un rôle peut lui-même contenir des parenthèses (« Directeur de thèse (membre
+            // du jury) ») : il suit le nom après un tiret.
+            return $name($member) . ($member->juryrole === 'member' ? '' : ' – ' . ($roles[$member->juryrole] ?? ''));
         }, $others)),
         'location' => trim((string) $dossier->defenselocation),
         'promotion' => format_string(

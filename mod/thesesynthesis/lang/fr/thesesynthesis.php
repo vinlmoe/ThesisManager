@@ -67,10 +67,7 @@ $string['privacy:metadata'] = "L'activité Suivi des thèses ne stocke aucune do
 $string['thesesynthesis:managesettings'] = 'Définir les modèles des documents, la grille et le questionnaire des activités suivies';
 $string['thesesynthesis:search'] = 'Rechercher des thèses';
 $string['searchtheses'] = 'Rechercher des thèses';
-$string['searchtheses_desc'] = 'Recherche dans les activités « Gestion des thèses » suivies : le texte est cherché dans le titre, le '
-    . "résumé, les mots-clés, les noms de l'étudiant, du directeur et des membres du jury, et les réponses au questionnaire "
-    . 'préalable au jury. La DEVE et la bibliothèque trouvent tous les dossiers des activités où elles ont leurs droits ; les '
-    . "enseignants, les thèses enregistrées par la DEVE et non confidentielles, ainsi que celles qu'ils dirigent.";
+$string['searchtheses_desc'] = 'Recherche dans les activités « Gestion des thèses » suivies : le texte est cherché dans le titre, le résumé, les mots-clés, les noms de l\'étudiant, du directeur et des membres du jury, et les réponses au questionnaire préalable au jury. La DEVE et la bibliothèque trouvent tous les dossiers des activités où elles ont leurs droits ; les enseignants, les thèses enregistrées par la DEVE, ainsi que celles qu\'ils dirigent. Une thèse confidentielle se trouve par l\'étudiant, le directeur, le jury ou l\'année, jamais par son sujet, qui reste masqué (« Thèse confidentielle ») pour qui ne doit pas le connaître.';
 $string['searchtext'] = 'Texte';
 $string['defenseyear'] = 'Année de soutenance';
 $string['allyears'] = 'Toutes les années';

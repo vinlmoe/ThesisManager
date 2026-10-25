@@ -53,7 +53,8 @@ planning mensuel imprimable ; thèse confidentielle (sujet connu de l'étudiant,
 de la DEVE, de la bibliothèque, du directeur et du jury, masqué pour les autres,
 thèse trouvable et au planning) ; demande d'embargo de diffusion de 5 ans ;
 documents signés scellés ; liens par courriel valables 60 jours, accès du jury
-depuis son compte ; valeur des signatures ; sauvegarde. \\
+depuis son compte ; valeur des signatures ; sauvegarde ; captures du planning,
+de la thèse confidentielle, de l'embargo et du document scellé. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -340,6 +341,8 @@ les courriels, et les documents qui portent le titre ne leur sont pas
 accessibles.
 \end{astuce}
 
+\capture[0.8\linewidth]{94_dossier_confidentiel}{Thèse confidentielle vue par un personnel qui ne doit pas en connaître le sujet.}
+
 \capture[0.85\linewidth]{60_etudiant_sujet_signature}{Fiche de sujet : engagements et signature.}
 
 \begin{procedure}{Corriger un sujet ou un dossier renvoyé}{Étudiant}
@@ -424,6 +427,10 @@ directeur rédige son rapport puis valide.}
 \end{procedure}
 
 \capture[0.85\linewidth]{67_etudiant_soutenance_signature}{Dépôt de la soutenance : documents, jury, bordereau, signature.}
+
+\capture[0.85\linewidth]{91_embargo_depot}{Demande d'embargo de diffusion de 5 ans, avec son motif, au dépôt de la soutenance.}
+
+\capture[0.85\linewidth]{92_dossier_diffusion}{Rubrique \og Diffusion\fg{} du dossier : embargo demandé et date de fin.}
 
 \begin{attention}
 Des conclusions trop longues pour tenir sur une page avec les signatures sont
@@ -579,6 +586,8 @@ dépôt, \og date arrêtée\fg{} une fois le dossier validé par la DEVE). Le no
 de l'étudiant ouvre son dossier. Une thèse figure au planning dès le dépôt du
 dossier de soutenance ; un dossier abandonné ou une thèse ajournée en sort.
 
+\capture[0.85\linewidth]{86_planning_semaine}{Planning des soutenances de la semaine : date arrêtée ou proposée, jury et lieu, semaines à venir.}
+
 \begin{procedure}{Retrouver une soutenance et éditer le planning du mois}{DEVE, bibliothèque, directeurs}
 \begin{etapes}
   \item Ouvrez \bouton{Planning des soutenances} : la semaine en cours
@@ -594,8 +603,14 @@ dossier de soutenance ; un dossier abandonné ou une thèse ajournée en sort.
 \end{etapes}
 \end{procedure}
 
-La DEVE et la bibliothèque voient toutes les soutenances ; un directeur, celles
-des thèses qu'il dirige. La mise en forme du planning imprimé est un modèle de
+\capture[0.85\linewidth]{87_planning_mois}{Planning du mois, avec l'impression et le téléchargement.}
+
+\capture{88_planning_pdf}{Planning mensuel imprimé (PDF en paysage).}
+
+La DEVE, la bibliothèque et les personnels qui consultent tous les dossiers
+voient toutes les soutenances ; un directeur, celles des thèses qu'il dirige.
+Une thèse confidentielle y figure comme les autres, son titre remplacé par
+\og Thèse confidentielle\fg{} pour qui ne doit pas en connaître le sujet. La mise en forme du planning imprimé est un modèle de
 document comme les autres (\og Planning des soutenances\fg{},
 section~\ref{sec:modeles}) : la DEVE peut en changer l'en-tête, les colonnes ou
 le logo.
@@ -1098,6 +1113,8 @@ d'une image ou du contrat type ne le change plus. Si une signature disparaît
 (contenu modifié, ajournement), le scellé est levé et le document sera scellé de
 nouveau une fois toutes ses signatures apposées.
 
+\capture[0.85\linewidth]{93_document_scelle}{Historique du dossier : document signé puis scellé, avec son empreinte SHA-256.}
+
 Les documents, dans leur état de signature, sont joints aux documents de
 soutenance générés et à l'archive transmise à l'université.
 
@@ -1213,6 +1230,8 @@ remplacés par \og Thèse confidentielle\fg{}. \\
 \end{center}
 
 \capture[0.85\linewidth]{56_recherche_theses}{Recherche des thèses par texte et par réponse au questionnaire.}
+
+\capture[0.85\linewidth]{90_recherche_confidentielle}{Recherche par année d'un enseignant : la thèse confidentielle est trouvée, son sujet masqué.}
 
 % ===========================================================================
 \section{Courriels et relances}
