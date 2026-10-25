@@ -16,6 +16,7 @@
 
 namespace mod_these\local;
 
+use mod_these\output;
 use context;
 use context_module;
 use html_table;
@@ -156,13 +157,9 @@ class rendering {
      * @return string HTML
      */
     public static function render_actions(array $links, $class = 'btn btn-sm btn-secondary mr-1 mb-1') {
-        $out = '';
-        foreach ($links as $label => $url) {
-            if ($url !== null) {
-                $out .= html_writer::link($url, $label, ['class' => $class]);
-            }
-        }
-        return $out;
+        global $PAGE;
+
+        return $PAGE->get_renderer('mod_these')->render(new output\actions($links, $class));
     }
 
     /**
