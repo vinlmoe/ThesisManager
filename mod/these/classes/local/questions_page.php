@@ -16,8 +16,7 @@
 
 namespace mod_these\local;
 
-use html_table;
-use html_writer;
+use mod_these\output;
 use moodle_url;
 use mod_these\form\question_form;
 
@@ -42,7 +41,7 @@ class questions_page {
      * @return void
      */
     public static function output(\stdClass $scope, moodle_url $listurl, $navigation = '') {
-        global $DB, $OUTPUT;
+        global $DB, $OUTPUT, $PAGE;
 
         $action = optional_param('action', '', PARAM_ALPHA);
         $questionid = optional_param('questionid', 0, PARAM_INT);
@@ -99,57 +98,24 @@ class questions_page {
             exit;
         }
 
+        $renderer = $PAGE->get_renderer('mod_these');
         echo $OUTPUT->header();
         echo $OUTPUT->heading(get_string('questions', 'mod_these'));
         echo $navigation;
-        echo html_writer::div(get_string($scope->shared ? 'questionsshared_desc' : 'questions_desc', 'mod_these'), 'mb-3');
-
-        $types = these_question_types();
+        $intro = get_string($scope->shared ? 'questionsshared_desc' : 'questions_desc', 'mod_these');
+        echo $renderer->render(new output\message($intro, 'mb-3'));
         if ($questions) {
-            $table = new html_table();
-            $table->attributes['class'] = 'generaltable these-questions';
-            $table->head = [
-                get_string('questionlabel', 'mod_these'),
-                get_string('questiontype', 'mod_these'),
-                get_string('questionoptions', 'mod_these'),
-                get_string('questionrequired', 'mod_these'),
-                get_string('actions'),
-            ];
-            $ids = array_keys($questions);
-            foreach (array_values($questions) as $index => $question) {
-                $params = ['questionid' => $question->id];
-                $actions = [];
-                $actions[] = html_writer::link(new moodle_url($listurl, $params + ['action' => 'edit']), get_string('edit'));
-                if ($index > 0) {
-                    $actions[] = html_writer::link(
-                        new moodle_url($listurl, $params + ['action' => 'up', 'sesskey' => sesskey()]),
-                        get_string('moveup')
-                    );
-                }
-                if ($index < count($ids) - 1) {
-                    $actions[] = html_writer::link(
-                        new moodle_url($listurl, $params + ['action' => 'down', 'sesskey' => sesskey()]),
-                        get_string('movedown')
-                    );
-                }
-                $actions[] = html_writer::link(new moodle_url($listurl, $params + ['action' => 'delete']), get_string('delete'));
-                $table->data[] = [
-                    format_string($question->label),
-                    $types[$question->qtype] ?? $question->qtype,
-                    s(implode(' ; ', these_question_options($question))),
-                    $question->required ? get_string('yes') : get_string('no'),
-                    implode(' | ', $actions),
-                ];
-            }
-            echo html_writer::table($table);
+            echo $renderer->render(new output\question_list($questions, $listurl));
         } else {
             echo $OUTPUT->notification(get_string('questionsnone', 'mod_these'), 'info');
         }
-        echo html_writer::div(html_writer::link(
+        echo $renderer->render(new output\link(
             new moodle_url($listurl, ['action' => 'edit']),
             get_string('questionadd', 'mod_these'),
-            ['class' => 'btn btn-primary']
-        ), 'mb-3');
+            'btn btn-primary',
+            '',
+            'mb-3'
+        ));
         echo $OUTPUT->footer();
     }
 }
