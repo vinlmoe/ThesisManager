@@ -240,18 +240,10 @@ class rendering {
      * @return string HTML
      */
     public static function render_detail_section($heading, array $rows) {
-        $table = new html_table();
-        $table->attributes['class'] = 'generaltable these-detail';
-        foreach ($rows as $label => $value) {
-            if ($value === null || $value === '') {
-                continue;
-            }
-            $table->data[] = [html_writer::tag('strong', $label), $value];
-        }
-        if (empty($table->data)) {
-            return '';
-        }
-        return html_writer::tag('h4', $heading, ['class' => 'mt-4']) . html_writer::table($table);
+        global $PAGE;
+
+        // Valeurs HTML reçues des appelants existants : voir output\detail_section::from_html().
+        return $PAGE->get_renderer('mod_these')->render(output\detail_section::from_html($heading, $rows));
     }
 
     /**

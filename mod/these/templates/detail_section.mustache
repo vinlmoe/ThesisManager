@@ -1,0 +1,52 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_these/detail_section
+
+    Section de détail d'un dossier : titre et tableau libellé / valeur. Rien n'est rendu sans ligne.
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * none
+
+    Context variables required for this template:
+    * hasrows La section a au moins une ligne.
+    * heading Titre de la section.
+    * table Contexte de mod_these/table.
+
+    Example context (json):
+    {
+        "hasrows": true,
+        "heading": "Enregistrements",
+        "table": {"tableclass": "generaltable these-detail", "hashead": false, "head": [], "rows": [
+            {"class": "lastrow", "cells": [
+                {"class": "cell c0", "parts": [{"ptext": false, "phtml": false, "pstrong": {"value": "Numéro DEVE"},
+                    "pstronghtml": false, "pem": false, "pbadge": false, "pspan": false, "plink": false,
+                    "pmuted": false, "pbr": false, "pfiles": false, "pstatus": false}]},
+                {"class": "cell c1 lastcol", "parts": [{"ptext": {"value": "2026-042"}, "phtml": false,
+                    "pstrong": false, "pstronghtml": false, "pem": false, "pbadge": false, "pspan": false,
+                    "plink": false, "pmuted": false, "pbr": false, "pfiles": false, "pstatus": false}]}
+            ]}
+        ]}
+    }
+}}
+{{#hasrows}}
+<h4 class="mt-4">{{heading}}</h4>
+{{#table}}{{> mod_these/table}}{{/table}}
+{{/hasrows}}
