@@ -246,27 +246,9 @@ function thesesynthesis_get_juries(array $links, stdClass $user) {
  * @return string HTML
  */
 function thesesynthesis_render_navlinks(stdClass $cm, context $context) {
-    $links = [
-        get_string('dashboard', 'mod_these') => new moodle_url('/mod/thesesynthesis/view.php', ['id' => $cm->id]),
-        get_string('planning', 'mod_these') => new moodle_url('/mod/thesesynthesis/planning.php', ['id' => $cm->id]),
-    ];
-    if (has_capability('mod/thesesynthesis:search', $context)) {
-        $links[get_string('searchtheses', 'mod_thesesynthesis')] =
-            new moodle_url('/mod/thesesynthesis/search.php', ['id' => $cm->id]);
-    }
-    if (has_capability('mod/thesesynthesis:managelinks', $context)) {
-        $links[get_string('managelinks', 'mod_thesesynthesis')] =
-            new moodle_url('/mod/thesesynthesis/administration.php', ['id' => $cm->id]);
-    }
-    if (has_capability('mod/thesesynthesis:managesettings', $context)) {
-        $links[get_string('doctemplates', 'mod_these')] = new moodle_url('/mod/thesesynthesis/doctemplates.php', ['id' => $cm->id]);
-        $links[get_string('griditems', 'mod_these')] = new moodle_url('/mod/thesesynthesis/griditems.php', ['id' => $cm->id]);
-        $links[get_string('questions', 'mod_these')] = new moodle_url('/mod/thesesynthesis/questions.php', ['id' => $cm->id]);
-    }
-    if (has_capability('mod/thesesynthesis:managejurors', $context)) {
-        $links[get_string('jurors', 'mod_these')] = new moodle_url('/mod/thesesynthesis/jurors.php', ['id' => $cm->id]);
-    }
-    return html_writer::div(these_render_actions($links, 'btn btn-secondary mr-1 mb-1'), 'these-navlinks mb-3');
+    global $PAGE;
+
+    return $PAGE->get_renderer('mod_thesesynthesis')->render(new \mod_thesesynthesis\output\navlinks($cm, $context));
 }
 
 /**

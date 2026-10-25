@@ -1,0 +1,39 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_thesesynthesis/navlinks
+
+    Liens vers les pages de l'activité de suivi, déjà filtrés selon les capacités de l'utilisateur.
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * none
+
+    Context variables required for this template:
+    * buttons Contexte de mod_these/actions.
+
+    Example context (json):
+    {"buttons": {"actions": [
+        {"label": "Tableau de bord", "url": "https://example.com/mod/thesesynthesis/view.php?id=2",
+            "class": "btn btn-secondary mr-1 mb-1"},
+        {"label": "Planning des soutenances", "url": "https://example.com/mod/thesesynthesis/planning.php?id=2",
+            "class": "btn btn-secondary mr-1 mb-1"}
+    ]} }
+}}
+<div class="these-navlinks mb-3">{{#buttons}}{{> mod_these/actions}}{{/buttons}}</div>
