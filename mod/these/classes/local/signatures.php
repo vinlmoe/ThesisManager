@@ -16,9 +16,9 @@
 
 namespace mod_these\local;
 
+use mod_these\output;
 use coding_exception;
 use context;
-use html_table;
 use html_writer;
 use moodle_url;
 use MoodleQuickForm;
@@ -1079,51 +1079,8 @@ class signatures {
      * @return string HTML
      */
     public static function render_signed_documents(stdClass $cm, context $context, stdClass $dossier, stdClass $rights) {
-        $signatures = these_get_signatures($dossier->id);
-        $table = new html_table();
-        $table->attributes['class'] = 'generaltable these-signatures';
-        $table->head = [get_string('document', 'mod_these'), get_string('signatures', 'mod_these'), ''];
-        $dateformat = get_string('strftimedatetimeshort', 'langconfig');
-        foreach (array_keys(these_document_definitions()) as $doctype) {
-            if (!these_document_available($dossier, $doctype) || !these_can_view_document($doctype, $rights)) {
-                continue;
-            }
-            $states = [];
-            foreach (these_document_slots($dossier, $doctype) as $slot) {
-                $signature = $signatures[$doctype . ':' . $slot] ?? null;
-                if ($signature && $signature->timesigned) {
-                    $state = html_writer::span(get_string('signedby', 'mod_these', (object) [
-                        'name' => s($signature->signername),
-                        'date' => userdate($signature->timesigned, $dateformat),
-                    ]), 'badge badge-success');
-                } else if ($signature && $signature->requesttime) {
-                    $state = html_writer::span(get_string(
-                        'signaturerequestedon',
-                        'mod_these',
-                        userdate($signature->requesttime, $dateformat)
-                    ), 'badge badge-warning');
-                } else {
-                    $state = html_writer::span(get_string('signaturepending', 'mod_these'), 'badge badge-light');
-                }
-                $states[] = html_writer::tag('strong', these_slot_label($slot)) . ' : ' . $state;
-            }
-            $url = new moodle_url('/mod/these/document.php', ['id' => $cm->id, 'dossierid' => $dossier->id, 'type' => $doctype]);
-            $table->data[] = [
-                these_document_label($doctype),
-                implode(html_writer::empty_tag('br'), $states),
-                html_writer::link($url, get_string('downloadpdf', 'mod_these'), ['class' => 'btn btn-sm btn-secondary']),
-            ];
-        }
-        if (empty($table->data)) {
-            return '';
-        }
-        $out = html_writer::tag('h4', get_string('signeddocuments', 'mod_these'), ['class' => 'mt-4']) . html_writer::table($table);
-        if (
-            $rights->deve && these_document_available($dossier, 'contract')
-                && ($problem = these_contract_template_problem()) !== null
-        ) {
-            $out .= html_writer::div(get_string($problem, 'mod_these'), 'alert alert-warning');
-        }
-        return $out;
+        global $PAGE;
+
+        return $PAGE->get_renderer('mod_these')->render(new output\signed_documents($cm, $context, $dossier, $rights));
     }
 }
