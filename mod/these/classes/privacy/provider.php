@@ -93,6 +93,7 @@ class provider implements
         ], 'privacy:metadata:these_signature');
 
         $collection->add_database_table('these_jury', [
+            'userid' => 'privacy:metadata:these_jury:userid',
             'fullname' => 'privacy:metadata:these_jury:fullname',
             'email' => 'privacy:metadata:these_jury:email',
             'institution' => 'privacy:metadata:these_jury:institution',
@@ -156,7 +157,8 @@ class provider implements
                     OR d.directorid = :userid2
                     OR d.returnedby = :userid3
                     OR EXISTS (SELECT 1 FROM {these_log} l WHERE l.dossierid = d.id AND l.userid = :userid4)
-                    OR EXISTS (SELECT 1 FROM {these_signature} sg WHERE sg.dossierid = d.id AND sg.userid = :userid5)";
+                    OR EXISTS (SELECT 1 FROM {these_signature} sg WHERE sg.dossierid = d.id AND sg.userid = :userid5)
+                    OR EXISTS (SELECT 1 FROM {these_jury} j WHERE j.dossierid = d.id AND j.userid = :userid6)";
     }
 
     /**
@@ -175,6 +177,7 @@ class provider implements
             'userid3' => $userid,
             'userid4' => $userid,
             'userid5' => $userid,
+            'userid6' => $userid,
         ]);
         // Signature enregistrée, dans le contexte de l'utilisateur.
         if (these_get_saved_signature($userid) !== null) {
@@ -217,6 +220,12 @@ class provider implements
                                              JOIN {modules} m ON m.id = cm.module AND m.name = :modname
                                              JOIN {these_dossier} d ON d.theseid = cm.instance
                                              JOIN {these_signature} sg ON sg.dossierid = d.id
+                                            WHERE cm.id = :instanceid", $params);
+        $userlist->add_from_sql('userid', "SELECT j.userid
+                                             FROM {course_modules} cm
+                                             JOIN {modules} m ON m.id = cm.module AND m.name = :modname
+                                             JOIN {these_dossier} d ON d.theseid = cm.instance
+                                             JOIN {these_jury} j ON j.dossierid = d.id
                                             WHERE cm.id = :instanceid", $params);
     }
 
@@ -512,6 +521,8 @@ class provider implements
             "UPDATE {these_log} SET userid = 0, remark = '' WHERE dossierid $dsql AND userid $insql",
             array_merge($dparams, $inparams)
         );
+        // Membres du jury : le compte est détaché (le membre reste au jury, sous son nom).
+        $DB->set_field_select('these_jury', 'userid', 0, "dossierid $dsql AND userid $insql", array_merge($dparams, $inparams));
         // Signatures du personnel dans les dossiers d'autrui : l'image et l'identité sont effacées,
         // la date de signature est conservée (le document reste marqué comme signé à cette date).
         $signatures = $DB->get_records_select(

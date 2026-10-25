@@ -99,7 +99,8 @@ class jury {
      * Remplace le jury d'un dossier. Un membre déjà présent (même enseignant de l'annuaire, ou mêmes
      * nom et adresse) garde son accès aux documents et la trace de sa notification ; son éligibilité
      * validée est conservée s'il garde le même rôle et le même statut, sauf si $member->eligible est
-     * fourni (saisie de la DEVE).
+     * fourni (saisie de la DEVE). Le compte Moodle de chaque membre est rattaché à son adresse à cet
+     * instant (voir member_account()).
      *
      * @param int $dossierid
      * @param array $members Liste d'objets {juryrole, fullname, jurytitle, institution, email, jurorid?,
@@ -134,6 +135,7 @@ class jury {
                 'eligibletime' => 0,
                 'accesstoken' => $old->accesstoken ?? null,
                 'notifiedtime' => (int) ($old->notifiedtime ?? 0),
+                'userid' => self::member_account($member),
             ];
             if (isset($member->eligible)) {
                 $record->eligible = $member->eligible ? 1 : 0;
@@ -146,6 +148,22 @@ class jury {
             }
             $DB->insert_record('these_jury', $record);
         }
+    }
+
+    /**
+     * Compte Moodle d'un membre du jury, d'après son adresse ou, pour un enseignant de l'annuaire
+     * sans adresse propre, celle de sa fiche (voir rights::account_for_email()).
+     *
+     * @param stdClass $member {email, jurorid?}
+     * @return int Identifiant du compte, ou 0.
+     */
+    public static function member_account(stdClass $member) {
+        $email = trim((string) ($member->email ?? ''));
+        if ($email === '' && !empty($member->jurorid)) {
+            $juror = \mod_these\local\jurors::get((int) $member->jurorid);
+            $email = $juror ? trim((string) $juror->email) : '';
+        }
+        return \mod_these\local\rights::account_for_email($email);
     }
 
     /**
@@ -379,7 +397,8 @@ class jury {
     /**
      * Prévient les membres du jury de leur désignation et leur donne accès aux documents du dossier
      * (manuscrit, rapport, grille, conclusions...) par un lien personnel, sans compte Moodle. Seuls les
-     * membres pas encore prévenus le sont, sauf $force.
+     * membres pas encore prévenus le sont, sauf $force. Un membre sans compte rattaché l'est à cette
+     * occasion si un compte existe désormais à son adresse.
      *
      * @param stdClass $these
      * @param stdClass $cm
@@ -401,6 +420,9 @@ class jury {
             if (trim((string) $member->email) === '') {
                 $result->missing[] = $member->fullname;
                 continue;
+            }
+            if (empty($member->userid) && ($userid = self::member_account($member))) {
+                $DB->set_field('these_jury', 'userid', $userid, ['id' => $member->id]);
             }
             // Seule l'empreinte du jeton est conservée : chaque envoi donne un nouveau lien, qui
             // remplace le précédent.
@@ -445,7 +467,7 @@ class jury {
 
     /**
      * Membre du jury consultant les documents depuis son compte Moodle (activité « Suivi des thèses »),
-     * reconnu à son adresse ou à celle de sa fiche dans l'annuaire du jury.
+     * reconnu à son compte rattaché (these_jury.userid), une fois prévenu de sa désignation.
      *
      * @param int $memberid
      * @param stdClass $user
@@ -454,16 +476,11 @@ class jury {
     public static function get_jury_member_access($memberid, stdClass $user) {
         global $DB;
 
-        $email = core_text::strtolower(trim((string) $user->email));
         $member = $DB->get_record('these_jury', ['id' => $memberid]);
-        if (!$member || $email === '' || empty($member->notifiedtime)) {
+        if (!$member || empty($member->notifiedtime) || empty($user->id) || (int) $member->userid !== (int) $user->id) {
             return null;
         }
-        $emails = [core_text::strtolower(trim((string) $member->email))];
-        if (!empty($member->jurorid)) {
-            $emails[] = core_text::strtolower(trim((string) $DB->get_field('these_juror', 'email', ['id' => $member->jurorid])));
-        }
-        return in_array($email, $emails, true) ? these_jury_access_member($member) : null;
+        return these_jury_access_member($member);
     }
 
     /**

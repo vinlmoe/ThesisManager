@@ -886,7 +886,9 @@ class signatures {
                 'dossierid' => $dossier->id,
                 'doctype' => $doctype,
                 'slot' => $slot,
-                'userid' => 0,
+                // Compte Moodle du signataire s'il en a un : « Mes signatures » et la reprise de sa
+                // signature enregistrée lui sont ouverts, sans dépendre de son adresse de profil.
+                'userid' => \mod_these\local\rights::account_for_email($signer['email']),
                 'signername' => $signer['name'],
                 'signeremail' => $signer['email'],
                 'token' => these_token_hash($token),

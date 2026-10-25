@@ -267,8 +267,8 @@ class rights {
     }
 
     /**
-     * Indique si un utilisateur siège au jury d'un dossier, reconnu à son adresse ou à celle de sa fiche
-     * dans l'annuaire du jury.
+     * Indique si un utilisateur siège au jury d'un dossier, reconnu à son compte (these_jury.userid,
+     * rattaché à son adresse à l'enregistrement du jury : voir these_save_jury()).
      *
      * @param int $dossierid
      * @param int $userid
@@ -277,18 +277,33 @@ class rights {
     public static function user_in_jury($dossierid, $userid) {
         global $DB;
 
-        $email = core_text::strtolower(trim((string) $DB->get_field('user', 'email', ['id' => $userid])));
+        return $userid > 0 && $DB->record_exists('these_jury', ['dossierid' => $dossierid, 'userid' => $userid]);
+    }
+
+    /**
+     * Compte Moodle correspondant à une adresse de courriel : un compte local, confirmé, ni supprimé
+     * ni suspendu, et un seul (plusieurs comptes à la même adresse ne sont rattachés à personne).
+     * Sert à rattacher un membre du jury ou un signataire invité à son compte au moment où la DEVE
+     * ou le circuit l'enregistre, afin que l'accès ne dépende plus de l'adresse de profil affichée
+     * au moment de la consultation.
+     *
+     * @param string $email
+     * @return int Identifiant du compte, ou 0.
+     */
+    public static function account_for_email($email) {
+        global $CFG, $DB;
+
+        $email = core_text::strtolower(trim((string) $email));
         if ($email === '') {
-            return false;
+            return 0;
         }
-        return $DB->record_exists_sql(
-            "SELECT 1
-               FROM {these_jury} j
-          LEFT JOIN {these_juror} r ON r.id = j.jurorid
-              WHERE j.dossierid = :dossierid
-                    AND (LOWER(j.email) = :email1 OR LOWER(r.email) = :email2)",
-            ['dossierid' => $dossierid, 'email1' => $email, 'email2' => $email]
+        $ids = $DB->get_fieldset_select(
+            'user',
+            'id',
+            "LOWER(email) = :email AND deleted = 0 AND suspended = 0 AND confirmed = 1 AND mnethostid = :mnethostid",
+            ['email' => $email, 'mnethostid' => $CFG->mnet_localhost_id]
         );
+        return count($ids) === 1 ? (int) reset($ids) : 0;
     }
 
     /**

@@ -147,7 +147,8 @@ final class integrity_test extends these_testcase {
 
     /**
      * L'accès du jury expire après la soutenance et cesse à la clôture du dossier ; un membre ayant
-     * un compte y accède sans lien, reconnu à son adresse.
+     * un compte y accède sans lien, reconnu à son compte rattaché à l'enregistrement du jury, jamais
+     * à l'adresse de profil d'un autre compte.
      */
     public function test_jury_access_lifetime(): void {
         global $DB;
@@ -164,8 +165,26 @@ final class integrity_test extends these_testcase {
         $member = these_get_jury($dossier->id)[0];
 
         $this->assertNotNull(these_get_jury_access($token));
+        $this->assertSame((int) $juror->id, (int) $member->userid);
         $this->assertNotNull(these_get_jury_member_access($member->id, $juror));
         $this->assertNull(these_get_jury_member_access($member->id, $this->student));
+        $this->assertTrue(these_user_in_jury($dossier->id, $juror->id));
+
+        // Un autre compte qui prend ensuite l'adresse du membre n'obtient rien.
+        $impostor = $this->getDataGenerator()->create_user(['email' => 'autre@example.org']);
+        $DB->set_field('user', 'email', 'juror@example.org', ['id' => $impostor->id]);
+        $impostor = \core_user::get_user($impostor->id);
+        $this->assertNull(these_get_jury_member_access($member->id, $impostor));
+        $this->assertFalse(these_user_in_jury($dossier->id, $impostor->id));
+        // Et un enregistrement du jury avec deux comptes à cette adresse ne rattache personne.
+        these_save_jury($dossier->id, [(object) ['juryrole' => 'president', 'fullname' => 'Jean MARTIN', 'jurytitle' => 'Pr',
+            'institution' => 'VetAgro Sup', 'email' => 'juror@example.org']]);
+        $this->assertSame(0, (int) these_get_jury($dossier->id)[0]->userid);
+        $DB->set_field('user', 'email', 'autre@example.org', ['id' => $impostor->id]);
+        these_save_jury($dossier->id, [(object) ['juryrole' => 'president', 'fullname' => 'Jean MARTIN', 'jurytitle' => 'Pr',
+            'institution' => 'VetAgro Sup', 'email' => 'juror@example.org']]);
+        $member = these_get_jury($dossier->id)[0];
+        $this->assertSame((int) $juror->id, (int) $member->userid);
 
         // Soutenance passée depuis plus longtemps que la durée de validité.
         $DB->set_field('these_dossier', 'defensedate', time() - THESE_TOKEN_LIFETIME - DAYSECS, ['id' => $dossier->id]);

@@ -527,6 +527,8 @@ $string['privacy:metadata:these_dossier:returncomment'] = 'Reason for the last r
 $string['privacy:metadata:these_dossier:returnedby'] = 'Author of the last return.';
 $string['privacy:metadata:these_dossier:timecreated'] = 'File creation date.';
 $string['privacy:metadata:these_jury'] = 'Jury members proposed or set for a defence.';
+$string['privacy:metadata:these_jury:userid'] = 'Moodle account of the jury member, linked to their email address when the jury is '
+    . 'recorded (0 without an account).';
 $string['privacy:metadata:these_jury:fullname'] = 'Jury member name.';
 $string['privacy:metadata:these_jury:email'] = 'Jury member email address.';
 $string['privacy:metadata:these_jury:institution'] = 'Jury member institution.';

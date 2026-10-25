@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="mod/these/db" VERSION="20261024" COMMENT="XMLDB file for module mod_these"
+<XMLDB PATH="mod/these/db" VERSION="20261025" COMMENT="XMLDB file for module mod_these"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
@@ -157,10 +157,13 @@
         <FIELD NAME="accesstoken" TYPE="char" LENGTH="64" NOTNULL="false" SEQUENCE="false"
             COMMENT="Empreinte SHA-256 du jeton d'accès du membre aux documents du dossier"/>
         <FIELD NAME="notifiedtime" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
+            COMMENT="Compte Moodle du membre, rattaché à son adresse à l'enregistrement du jury et à sa désignation ; 0 sans compte"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
         <KEY NAME="dossierid" TYPE="foreign" FIELDS="dossierid" REFTABLE="these_dossier" REFFIELDS="id"/>
+        <KEY NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
       </KEYS>
       <INDEXES>
         <INDEX NAME="accesstoken" UNIQUE="false" FIELDS="accesstoken"/>

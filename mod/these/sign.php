@@ -125,11 +125,11 @@ $links = array_map(function ($doctype) use ($pageparams) {
     )];
 }, $doctypes);
 
-// Signataire connecté avec le compte de l'adresse invitée (membre du jury ayant un compte Moodle,
-// par exemple) : il peut reprendre ou enregistrer sa signature. Jamais pour une signature sur place.
-$signeremail = core_text::strtolower(trim((string) ($token !== '' ? $pending[0]->signeremail : '')));
-$allowsaved = !$inperson && $signeremail !== '' && isloggedin() && !isguestuser()
-    && core_text::strtolower(trim((string) $USER->email)) === $signeremail;
+// Signataire connecté avec le compte rattaché à l'adresse invitée lors de la demande (membre du jury
+// ayant un compte Moodle, par exemple) : il peut reprendre ou enregistrer sa signature. Jamais pour
+// une signature sur place.
+$signeruserid = $token !== '' ? (int) $pending[0]->userid : 0;
+$allowsaved = !$inperson && $signeruserid > 0 && isloggedin() && !isguestuser() && (int) $USER->id === $signeruserid;
 $mform = new \mod_these\form\sign_form($PAGE->url, [
     'documents' => $links ? $renderer->render(new output\bullet_list($links)) : '-',
     'signername' => $signer['name'] !== '' ? $signer['name'] : ($allowsaved ? fullname($USER) : ''),

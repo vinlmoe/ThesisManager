@@ -533,6 +533,8 @@ $string['privacy:metadata:these_dossier:returncomment'] = 'Motif du dernier renv
 $string['privacy:metadata:these_dossier:returnedby'] = 'Auteur du dernier renvoi.';
 $string['privacy:metadata:these_dossier:timecreated'] = 'Date de création du dossier.';
 $string['privacy:metadata:these_jury'] = 'Membres du jury proposés ou retenus pour une soutenance.';
+$string['privacy:metadata:these_jury:userid'] = "Compte Moodle du membre du jury, rattaché à son adresse lors de l'enregistrement du jury "
+    . "(0 sans compte).";
 $string['privacy:metadata:these_jury:fullname'] = 'Nom du membre du jury.';
 $string['privacy:metadata:these_jury:email'] = 'Adresse de courriel du membre du jury.';
 $string['privacy:metadata:these_jury:institution'] = 'Établissement du membre du jury.';

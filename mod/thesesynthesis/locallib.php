@@ -205,8 +205,7 @@ function thesesynthesis_get_dossiers(array $links, $userid, array $filters = [])
 function thesesynthesis_get_juries(array $links, stdClass $user) {
     global $DB;
 
-    $email = trim((string) $user->email);
-    if ($email === '' || !$links) {
+    if (empty($user->id) || !$links) {
         return [];
     }
     $byinstance = [];
@@ -214,15 +213,13 @@ function thesesynthesis_get_juries(array $links, stdClass $user) {
         $byinstance[(int) $link->these->id] = $link;
     }
     [$insql, $params] = $DB->get_in_or_equal(array_keys($byinstance), SQL_PARAMS_NAMED);
-    $params['email'] = core_text::strtolower($email);
-    $params['email2'] = core_text::strtolower($email);
+    $params['userid'] = (int) $user->id;
     $sql = "SELECT j.*, d.theseid
               FROM {these_jury} j
               JOIN {these_dossier} d ON d.id = j.dossierid
-         LEFT JOIN {these_juror} r ON r.id = j.jurorid
              WHERE d.theseid $insql
                AND d.status <> :cancelled
-               AND (LOWER(j.email) = :email OR LOWER(r.email) = :email2)
+               AND j.userid = :userid
           ORDER BY d.defensedate DESC, j.id";
     $params['cancelled'] = THESE_STATUS_CANCELLED;
     $rows = [];
