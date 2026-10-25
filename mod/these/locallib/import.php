@@ -27,47 +27,26 @@
 // Import.
 
 /**
- * Colonnes reconnues dans un fichier d'import de dossiers. « student » et « title » sont
- * obligatoires ; les autres facultatives.
+ * Voir \mod_these\local\import::import_columns().
  *
  * @return string[]
  */
 function these_import_columns() {
-    return ['student', 'title', 'titleen', 'summary', 'keywords', 'director', 'codirector', 'devenumber', 'libraryref'];
+    return \mod_these\local\import::import_columns();
 }
 
 /**
- * Retrouve un utilisateur par identifiant de connexion, adresse de courriel ou numéro
- * d'identification, dans cet ordre.
+ * Voir \mod_these\local\import::find_user().
  *
  * @param string $value
  * @return stdClass|null
  */
 function these_find_user($value) {
-    global $CFG, $DB;
-
-    $value = trim($value);
-    if ($value === '') {
-        return null;
-    }
-    $user = $DB->get_record('user', ['username' => core_text::strtolower($value), 'mnethostid' => $CFG->mnet_localhost_id,
-        'deleted' => 0]);
-    if (!$user) {
-        $users = $DB->get_records_select('user', 'LOWER(email) = LOWER(?) AND deleted = 0', [$value], 'id', '*', 0, 2);
-        $user = count($users) === 1 ? reset($users) : null;
-    }
-    if (!$user) {
-        $users = $DB->get_records('user', ['idnumber' => $value, 'deleted' => 0], 'id', '*', 0, 2);
-        $user = count($users) === 1 ? reset($users) : null;
-    }
-    return $user ?: null;
+    return \mod_these\local\import::find_user($value);
 }
 
 /**
- * Importe des dossiers existants depuis un fichier CSV : chaque ligne crée un dossier au statut
- * « actif » (sujet déjà validé et enregistré hors du module), avec une entrée d'historique
- * « importé ». Les lignes en erreur sont ignorées et signalées ; aucune ligne n'écrase un dossier
- * existant.
+ * Voir \mod_these\local\import::import_dossiers().
  *
  * @param stdClass $these
  * @param string $content Contenu du fichier.
@@ -78,92 +57,5 @@ function these_find_user($value) {
  * @return array Liste de ['line' => int, 'student' => string, 'ok' => bool, 'message' => string].
  */
 function these_import_dossiers(stdClass $these, $content, $delimiter, $encoding, $dryrun, $userid) {
-    global $CFG, $DB;
-
-    require_once($CFG->libdir . '/csvlib.class.php');
-
-    $iid = csv_import_reader::get_new_iid('mod_these');
-    $reader = new csv_import_reader($iid, 'mod_these');
-    $count = $reader->load_csv_content($content, $encoding, $delimiter);
-    if ($count === false) {
-        throw new moodle_exception('importinvalidfile', 'mod_these', '', $reader->get_error());
-    }
-    $columns = array_map(function ($column) {
-        return core_text::strtolower(trim($column));
-    }, $reader->get_columns());
-    foreach (['student', 'title'] as $required) {
-        if (!in_array($required, $columns, true)) {
-            $reader->cleanup();
-            throw new moodle_exception('importmissingcolumn', 'mod_these', '', $required);
-        }
-    }
-
-    $report = [];
-    $seen = [];
-    $numbers = [];
-    $line = 1;
-    $reader->init();
-    while ($row = $reader->next()) {
-        $line++;
-        $values = [];
-        foreach ($columns as $index => $column) {
-            if (in_array($column, these_import_columns(), true)) {
-                $values[$column] = trim((string) ($row[$index] ?? ''));
-            }
-        }
-        $values += array_fill_keys(these_import_columns(), '');
-        $result = ['line' => $line, 'student' => $values['student'], 'ok' => false, 'message' => ''];
-
-        $student = these_find_user($values['student']);
-        $director = $values['director'] !== '' ? these_find_user($values['director']) : null;
-        if (!$student) {
-            $result['message'] = get_string('importusernotfound', 'mod_these', s($values['student']));
-        } else if (
-            isset($seen[$student->id])
-                || $DB->record_exists('these_dossier', ['theseid' => $these->id, 'userid' => $student->id])
-        ) {
-            $result['message'] = get_string('importdossierexists', 'mod_these');
-        } else if ($values['title'] === '') {
-            $result['message'] = get_string('importtitlemissing', 'mod_these');
-        } else if ($values['director'] !== '' && !$director) {
-            $result['message'] = get_string('importusernotfound', 'mod_these', s($values['director']));
-        } else if (
-            $values['devenumber'] !== ''
-                && (isset($numbers[$values['devenumber']]) || these_devenumber_taken($these->id, $values['devenumber']))
-        ) {
-            $result['message'] = get_string('devenumbertaken', 'mod_these');
-        } else {
-            $result['ok'] = true;
-            $result['student'] = fullname($student);
-            $seen[$student->id] = true;
-            if ($values['devenumber'] !== '') {
-                $numbers[$values['devenumber']] = true;
-            }
-            if (!$dryrun) {
-                $now = time();
-                $dossierid = $DB->insert_record('these_dossier', (object) [
-                    'theseid' => $these->id,
-                    'userid' => $student->id,
-                    'status' => THESE_STATUS_ACTIVE,
-                    'statustime' => $now,
-                    'title' => $values['title'],
-                    'titleen' => $values['titleen'],
-                    'summary' => $values['summary'],
-                    'keywords' => $values['keywords'],
-                    'directorid' => $director ? $director->id : 0,
-                    'codirectorname' => $values['codirector'],
-                    'devenumber' => $values['devenumber'],
-                    'libraryref' => $values['libraryref'],
-                    'timecreated' => $now,
-                    'timemodified' => $now,
-                ]);
-                these_log($dossierid, $userid, 'imported', THESE_STATUS_ACTIVE, THESE_STATUS_ACTIVE);
-            }
-            $result['message'] = get_string($dryrun ? 'importwouldcreate' : 'importcreated', 'mod_these');
-        }
-        $report[] = $result;
-    }
-    $reader->close();
-    $reader->cleanup();
-    return $report;
+    return \mod_these\local\import::import_dossiers($these, $content, $delimiter, $encoding, $dryrun, $userid);
 }
