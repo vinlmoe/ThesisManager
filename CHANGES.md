@@ -15,6 +15,11 @@ développement ne correspondent à aucune version installable ; 0.11.2 n'a jamai
 
 ## mod_these 0.13.0 (2026102504) — scans signés, agents DEVE signataires
 
+- Directeur extérieur : le lien de signature du dépôt de sujet ne part plus à
+  la soumission par l'étudiant, mais à la validation du sujet par le directeur
+  de l'établissement, qui voit désormais les coordonnées saisies (nom, grade,
+  établissement, adresse) dans le dossier. L'étudiant ne peut plus obtenir
+  seul une signature « directeur extérieur » sur une adresse de son choix.
 - Documents générés : le rapport du directeur et la grille de conformité,
   réservés au personnel, n'étaient plus masqués à l'étudiant une fois les
   documents de soutenance générés (zone « Documents générés », consultable par

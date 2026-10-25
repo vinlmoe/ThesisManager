@@ -415,9 +415,6 @@ class dossiers {
             if ($signature !== null) {
                 these_sign_document($context, $dossier, 'subject', 'student', $userid, $signature->name, $signature->png);
             }
-            if (!empty($dossier->externaldirector)) {
-                these_request_external_signatures($these, $cm, $dossier, 'subject');
-            }
             these_notify_actor($these, $cm, $dossier);
             return $dossier;
         });

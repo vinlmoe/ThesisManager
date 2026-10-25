@@ -617,7 +617,9 @@ $string['hetoplink'] = 'Search keywords in HeTOP';
 $string['keywordscount'] = 'Enter 3 to 5 keywords, separated by semicolons.';
 $string['subjectapproval'] = 'Subject approval';
 $string['externaldirector'] = 'The thesis director is external to the institution';
-$string['externaldirector_help'] = 'The external director, without a Moodle account, signs the form from a link received by email. '
+$string['extdirector'] = 'External director';
+$string['externaldirector_help'] = 'The external director, without a Moodle account, signs the form from a link received by email, '
+    . 'sent once the subject has been approved by the institution director, who checks these details. '
     . 'Then choose below, as director in the module, the member of the institution who follows the thesis: this member validates '
     . 'the steps and signs as member.';
 $string['directortitle'] = 'Director title';

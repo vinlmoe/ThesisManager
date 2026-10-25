@@ -192,10 +192,12 @@ class workflow {
      */
     public static function review_steps() {
         return [
+            // Le directeur extérieur éventuel n'est invité à signer qu'une fois le sujet validé par le
+            // directeur de l'établissement : l'étudiant saisit son adresse, le directeur la contrôle.
             THESE_STATUS_SUBJECT_SUBMITTED => [
                 'key' => 'directorsubject', 'actor' => 'director',
                 'next' => THESE_STATUS_SUBJECT_APPROVED, 'returnto' => ['student'],
-                'sign' => ['director' => ['subject']], 'request' => [],
+                'sign' => ['director' => ['subject']], 'request' => ['subject'],
             ],
             THESE_STATUS_SUBJECT_APPROVED => [
                 'key' => 'devesubject', 'actor' => 'deve',
