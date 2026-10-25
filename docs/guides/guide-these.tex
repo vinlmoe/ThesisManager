@@ -4,9 +4,9 @@
 
 % Version du guide : à mettre à jour à chaque modification, avec une ligne dans l'historique.
 \newcommand{\titreguide}{Guide de la gestion des thèses}
-\newcommand{\versionguide}{2.1}
+\newcommand{\versionguide}{2.2}
 \newcommand{\dateguide}{25 octobre 2026}
-\newcommand{\versionthese}{0.11.3}
+\newcommand{\versionthese}{0.13.0}
 
 \usepackage{guide-commun}
 \usepackage{tikz}
@@ -59,6 +59,8 @@ de la thèse confidentielle, de l'embargo et du document scellé. \\
 (notice de la bibliothèque, éligibilité du jury, renvois, corrections,
 ajournement, documents générés et transmis, dossier complet) ; libellé du
 bouton d'envoi des liens de signature ; précision sur les scans signés. \\
+2.2 & 25 octobre 2026 & Scans des documents signés hors module, joints au
+dossier par la DEVE et inscrits à l'historique avec leur empreinte. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -1121,6 +1123,34 @@ pour un signataire présent ou sans adresse.
 
 \capture[0.8\linewidth]{41_signature_sur_place}{Signature sur place du président du jury.}
 
+\subsection{Scans des documents signés hors module}\label{sec:scans}
+
+Un signataire sans compte peut signer à la main un document (contrat de
+diffusion, fiche d'agréments, fiche signalétique, conclusions, dépôt de sujet) :
+la DEVE joint alors le scan de ce document signé au dossier, pour conservation.
+Le scan n'ouvre ni ne modifie aucune signature du module ; il figure avec les
+autres documents du dossier.
+
+\begin{procedure}{Joindre le scan d'un document signé hors module}{Équipe DEVE}
+\begin{etapes}
+  \item Ouvrez le dossier (statut \statut{Dossier validé par la DEVE} ou plus avancé,
+        non abandonné) et cliquez sur \bouton{Ajouter un scan signé}.
+  \item Choisissez le \textbf{document signé}, saisissez le nom du
+        \textbf{signataire} et la date de la signature.
+  \item Déposez le ou les fichiers scannés (PDF ou images, 10 fichiers au plus).
+  \item Au besoin, précisez un commentaire, puis cliquez sur
+        \bouton{Enregistrer le scan}.
+\end{etapes}
+\ensuite{les fichiers figurent dans la rubrique \og Scans signés hors module\fg{}
+du dossier, visible de la DEVE et de ceux qui voient tout le dossier. Le dépôt est
+inscrit à l'historique avec l'empreinte SHA-256 de chaque fichier.}
+\end{procedure}
+
+\begin{attention}
+Un scan déposé ne se supprime ni ne se remplace dans le module. Pour corriger un
+dépôt, joignez le bon scan : l'historique garde les deux empreintes.
+\end{attention}
+
 \subsection{Intégrité}\label{sec:integrite}
 
 Un document signé ne peut pas être modifié en silence : si son contenu change
@@ -1163,11 +1193,9 @@ identifie le signataire (compte Moodle, ou lien personnel reçu à son adresse),
 date la signature et la lie au contenu signé par son empreinte, mais ne repose
 pas sur un certificat qualifié. Il revient à l'établissement de décider pour
 quels documents elle suffit (procès-verbal, contrat de diffusion) ; un document
-qui exige une signature avancée ou qualifiée est signé hors du module. Le module
-ne reçoit aujourd'hui de scan signé que pour le procès-verbal (\og Déposer le
-procès-verbal\fg{}, section DEVE) : pour les autres documents, la signature
-apposée sur papier par un signataire extérieur n'est pas jointe au dossier et se
-conserve hors de Moodle.
+qui exige une signature avancée ou qualifiée est signé hors du module, puis son
+scan est joint au dossier (section~\ref{sec:scans}). Ce scan sert à la
+conservation : il ne vaut pas signature qualifiée.
 \end{attention}
 
 % ===========================================================================

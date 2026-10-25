@@ -1066,6 +1066,25 @@ $string['adjournednotice'] = 'Defence adjourned on {$a}: the file is back in the
 $string['adjournednoticestudent'] = 'Your defence was adjourned on {$a}. Submit a new defence file (revised manuscript, date, '
     . 'jury): it will be approved again by your director, the registrar and the library.';
 $string['logadjourned'] = 'Minutes uploaded, defence adjourned: back to the defence phase';
+$string['logsignedscan'] = 'Signed scan uploaded (signed outside the module)';
+$string['scanlogremark'] = 'Document: {$a->doctype}. Signer: {$a->signer}. SHA-256 fingerprint: {$a->files}.';
+$string['signedscans'] = 'Signed scans (outside the module)';
+$string['addsignedscan'] = 'Add a signed scan';
+$string['recordscan'] = 'Save the scan';
+$string['scandoctype'] = 'Signed document';
+$string['scandoctypesubject'] = 'Subject form (E01)';
+$string['scandoctypeagreement'] = 'Approval form (E02)';
+$string['scandoctypesignaletique'] = 'Thesis details form (E03)';
+$string['scandoctypecontract'] = 'Distribution contract (E04)';
+$string['scandoctypeconclusions'] = 'Conclusions';
+$string['scansigner'] = 'Signer';
+$string['scansigneddate'] = 'Signature date';
+$string['scanfiles'] = 'Signed scans (PDF or images)';
+$string['scanfiles_help'] = 'The document signed by hand by the signer, scanned. It is attached to the file for record keeping: it does not replace the signature in the module and cannot be changed afterwards.';
+$string['scanremark'] = 'Comment';
+$string['scanrequired'] = 'Upload at least one scan.';
+$string['scanunavailable'] = 'Signed scans can be uploaded once the file has been validated by the DEVE, and as long as it is not cancelled.';
+$string['scanrecorded'] = '{$a} file(s) attached to the file, fingerprint(s) recorded in the history.';
 $string['emailadjournedsubject'] = 'Thesis of {$a->student}: defence adjourned';
 $string['emailadjournedbody'] = 'Hello,
 

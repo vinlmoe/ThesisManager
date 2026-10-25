@@ -166,6 +166,7 @@ class dossier implements \renderable, \templatable {
             get_string('defensedocs', 'mod_these') => $this->files('defensedocs', $output),
             get_string('directorreport', 'mod_these') => $this->files('directorreport', $output),
             get_string('generateddocuments', 'mod_these') => $this->files('generated', $output),
+            get_string('signedscans', 'mod_these') => $this->files('signedscan', $output),
         ];
         if ($status === THESE_STATUS_CLOSED || these_in_corrections($status)) {
             $rows[get_string('defenseresult', 'mod_these')] = self::text(these_result_label($dossier->defenseresult));

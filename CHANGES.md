@@ -15,6 +15,12 @@ développement ne correspondent à aucune version installable ; 0.11.2 n'a jamai
 
 ## En cours (non publiée)
 
+- Scans signés hors module : la DEVE joint au dossier le scan d'un document
+  signé à la main par un signataire sans compte (contrat de diffusion, fiche
+  d'agréments, fiche signalétique, conclusions, dépôt de sujet). Page
+  `scan.php`, zone de fichiers `signedscan`, empreinte SHA-256 de chaque
+  fichier inscrite à l'historique. Aucune signature du module n'en est modifiée.
+  Sans changement de schéma.
 - Planning : le champ « Aller au » garde le zéro initial du jour (« 2026-11-04 ») ;
   il s'affichait vide du 1er au 9 du mois, la valeur « 2026-11-4 » n'étant pas
   une date valide pour le navigateur.

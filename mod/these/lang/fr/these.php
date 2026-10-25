@@ -1077,6 +1077,25 @@ $string['adjournednotice'] = "Soutenance ajournée le {\$a} : le dossier est rev
 $string['adjournednoticestudent'] = 'Votre soutenance a été ajournée le {$a}. Déposez un nouveau dossier de soutenance (manuscrit '
     . 'retravaillé, date, jury) : il sera de nouveau validé par votre directeur, la DEVE et la bibliothèque.';
 $string['logadjourned'] = 'Procès-verbal déposé, soutenance ajournée : retour en phase de soutenance';
+$string['logsignedscan'] = 'Scan signé déposé hors du module';
+$string['scanlogremark'] = 'Document : {$a->doctype}. Signataire : {$a->signer}. Empreinte SHA-256 : {$a->files}.';
+$string['signedscans'] = 'Scans signés hors module';
+$string['addsignedscan'] = 'Ajouter un scan signé';
+$string['recordscan'] = 'Enregistrer le scan';
+$string['scandoctype'] = 'Document signé';
+$string['scandoctypesubject'] = 'Dépôt de sujet (E01)';
+$string['scandoctypeagreement'] = "Fiche d'agréments (E02)";
+$string['scandoctypesignaletique'] = 'Fiche signalétique (E03)';
+$string['scandoctypecontract'] = 'Contrat de diffusion (E04)';
+$string['scandoctypeconclusions'] = 'Conclusions';
+$string['scansigner'] = 'Signataire';
+$string['scansigneddate'] = 'Date de la signature';
+$string['scanfiles'] = 'Scans signés (PDF ou images)';
+$string['scanfiles_help'] = 'Le document signé à la main par le signataire, scanné. Il est joint au dossier pour conservation : il ne remplace pas la signature du module et ne peut pas être modifié ensuite.';
+$string['scanremark'] = 'Commentaire';
+$string['scanrequired'] = 'Déposez au moins un scan.';
+$string['scanunavailable'] = "Les scans signés se déposent une fois le dossier validé par la DEVE, et tant qu'il n'est pas abandonné.";
+$string['scanrecorded'] = '{$a} fichier(s) joint(s) au dossier, empreinte(s) inscrite(s) à l\'historique.';
 $string['emailadjournedsubject'] = 'Thèse de {$a->student} : soutenance ajournée';
 $string['emailadjournedbody'] = 'Bonjour,
 

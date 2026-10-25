@@ -200,6 +200,10 @@ class rights {
         if ($filearea === 'directorreport') {
             return $rights->director || $rights->viewall;
         }
+        if ($filearea === 'signedscan') {
+            // Scans de documents signés hors module : réservés à la DEVE et à ceux qui voient tout le dossier.
+            return $rights->deve || $rights->viewall;
+        }
         return true;
     }
 
