@@ -15,9 +15,10 @@
     along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 }}
 {{!
-    @template mod_thesesynthesis/message
+    @template mod_these/select
 
-    Message en bloc : introduction d'une page ou alerte d'information.
+    Liste déroulante au balisage de html_writer::select() (voir \mod_these\output\select_context).
+    Sur une ligne, sans saut de ligne final : le partiel est inclus entre des éléments en ligne.
 
     Classes required for JS:
     * none
@@ -26,10 +27,13 @@
     * none
 
     Context variables required for this template:
-    * text Texte brut.
-    * class Classes CSS du bloc.
+    * name, id, class Attributs de la liste.
+    * options Options : value, label, selected.
 
     Example context (json):
-    {"text": "Aucune thèse ne correspond à la recherche.", "class": "alert alert-info"}
+    {"name": "status", "id": "menustatus", "class": "select custom-select custom-select mr-2 mb-1", "options": [
+        {"value": "-999", "label": "Tous les statuts", "selected": true},
+        {"value": "100", "label": "Dossier clos", "selected": false}
+    ]}
 }}
-<div class="{{class}}">{{text}}</div>
+<select class="{{class}}" id="{{id}}" name="{{name}}">{{#options}}<option{{#selected}} selected="selected"{{/selected}} value="{{value}}">{{label}}</option>{{/options}}</select>

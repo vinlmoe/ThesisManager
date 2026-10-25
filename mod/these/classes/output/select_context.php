@@ -14,13 +14,13 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace mod_thesesynthesis\output;
+namespace mod_these\output;
 
 /**
- * Contexte du partiel mod_thesesynthesis/select : le balisage de html_writer::select() (classes
+ * Contexte du partiel mod_these/select : le balisage de html_writer::select() (classes
  * « select custom-select », identifiant « menu<nom> » par défaut, option choisie).
  *
- * @package   mod_thesesynthesis
+ * @package   mod_these
  * @copyright 2026 Sébastien Lefebvre
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */

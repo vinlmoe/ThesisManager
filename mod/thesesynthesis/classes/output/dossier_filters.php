@@ -16,6 +16,7 @@
 
 namespace mod_thesesynthesis\output;
 
+use mod_these\output\select_context;
 use moodle_url;
 
 /**

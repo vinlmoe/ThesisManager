@@ -29,9 +29,9 @@
     Context variables required for this template:
     * label Libellé.
     * text Zone de texte (name, value, size, id), ou false.
-    * select Contexte de mod_thesesynthesis/select, ou false.
+    * select Contexte de mod_these/select, ou false.
 
     Example context (json):
     {"label": "Texte", "text": {"name": "q", "value": "", "size": 50, "id": "search-q"}, "select": false}
 }}
-<div class="form-inline d-flex align-items-center mb-2"><label class="mr-2 me-2 mb-1">{{label}}</label>{{#text}}<input type="text" name="{{name}}" value="{{value}}" size="{{size}}" class="form-control" id="{{id}}" />{{/text}}{{#select}}{{> mod_thesesynthesis/select}}{{/select}}</div>
+<div class="form-inline d-flex align-items-center mb-2"><label class="mr-2 me-2 mb-1">{{label}}</label>{{#text}}<input type="text" name="{{name}}" value="{{value}}" size="{{size}}" class="form-control" id="{{id}}" />{{/text}}{{#select}}{{> mod_these/select}}{{/select}}</div>

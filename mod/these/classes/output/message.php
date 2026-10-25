@@ -14,39 +14,44 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace mod_thesesynthesis\output;
+namespace mod_these\output;
 
 /**
- * Message en bloc : introduction d'une page, ou alerte d'information (aucun résultat).
+ * Bloc de texte : introduction d'une page, alerte, paragraphe. Le contenu est un texte brut ou une
+ * liste de fragments (voir parts) ; les décisions sur ce qui y figure sont prises par l'appelant.
  *
- * @package   mod_thesesynthesis
+ * @package   mod_these
  * @copyright 2026 Sébastien Lefebvre
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class message implements \renderable, \templatable {
-    /** @var string */
-    protected $text;
+    /** @var array[] */
+    protected $parts;
     /** @var string */
     protected $class;
+    /** @var string */
+    protected $tag;
 
     /**
      * Constructeur.
      *
-     * @param string $text Texte brut.
-     * @param string $class Classes CSS du bloc.
+     * @param string|array $content Texte brut, ou liste de fragments.
+     * @param string $class Classes CSS du bloc (vide : sans attribut class).
+     * @param string $tag Balise : div ou p.
      */
-    public function __construct($text, $class = 'alert alert-info') {
-        $this->text = (string) $text;
+    public function __construct($content, $class = 'alert alert-info', $tag = 'div') {
+        $this->parts = is_array($content) ? array_values($content) : [parts::text((string) $content)];
         $this->class = (string) $class;
+        $this->tag = $tag === 'p' ? 'p' : 'div';
     }
 
     /**
-     * Données du gabarit mod_thesesynthesis/message.
+     * Données du gabarit mod_these/message.
      *
      * @param \renderer_base $output
-     * @return array text, class
+     * @return array parts, class, isparagraph
      */
     public function export_for_template(\renderer_base $output): array {
-        return ['text' => $this->text, 'class' => $this->class];
+        return ['parts' => $this->parts, 'class' => $this->class, 'isparagraph' => $this->tag === 'p'];
     }
 }
