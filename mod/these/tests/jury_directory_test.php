@@ -249,4 +249,47 @@ final class jury_directory_test extends these_testcase {
         $this->assertSame([], jurors::course_teachers_missing($this->context));
         $this->assertSame(0, jurors::prefill_from_course($this->context));
     }
+
+    /**
+     * Conflit de jury : un membre (même enseignant de l'annuaire, même adresse ou même nom) qui siège
+     * dans une autre soutenance à moins de deux heures d'écart est signalé ; pas au-delà, ni pour un
+     * dossier abandonné.
+     */
+    public function test_jury_conflicts(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setup_activity();
+        $pr = $this->juror('Martin', 'pr');
+        $time = make_timestamp(2026, 11, 4, 14);
+        $make = function (int $defensedate, array $jury) {
+            $studentid = $this->getDataGenerator()->create_and_enrol($this->course)->id;
+            $dossier = $this->generator->create_dossier($this->these, $studentid, [
+                'status' => THESE_STATUS_DEFENSE_VALIDATED, 'defensedate' => $defensedate,
+            ]);
+            these_save_jury($dossier->id, these_extract_submitted_jury($jury));
+            return $this->reload($dossier->id);
+        };
+        $first = $make($time, ['juryrole' => [0 => 'president', 1 => 'member'], 'jurorid' => [0 => $pr],
+            'juryname' => [1 => 'Claire Externe'], 'juryemail' => [1 => 'claire@example.org'], 'jurytitle' => [1 => 'Dr'],
+            'juryinstitution' => [1 => 'Ailleurs'], 'jurystatus' => [1 => 'mcf']]);
+        $second = $make($time + HOURSECS, ['juryrole' => [0 => 'president'], 'jurorid' => [0 => $pr]]);
+        $third = $make($time + 3 * HOURSECS, ['juryrole' => [0 => 'president'], 'jurorid' => [0 => $pr]]);
+
+        $conflicts = these_jury_conflicts($first);
+        $this->assertCount(1, $conflicts);
+        $this->assertSame('Pr Jean MARTIN', $conflicts[0]->member);
+        $this->assertEquals($time + HOURSECS, $conflicts[0]->time);
+        $this->assertCount(1, these_jury_conflicts($second));
+        $this->assertSame([], these_jury_conflicts($third));
+        $this->assertStringContainsString('Pr Jean MARTIN', these_render_jury_conflicts($first));
+        $this->assertSame('', these_render_jury_conflicts($third));
+
+        // Même adresse, hors annuaire.
+        $other = (object) ['jurorid' => 0, 'fullname' => 'C. Externe', 'email' => 'Claire@example.org', 'jurytitle' => ''];
+        $this->assertCount(1, these_jury_conflicts($second, [$other]));
+
+        // Dossier abandonné : plus de conflit.
+        $DB->set_field('these_dossier', 'status', THESE_STATUS_CANCELLED, ['id' => $second->id]);
+        $this->assertSame([], these_jury_conflicts($first));
+    }
 }

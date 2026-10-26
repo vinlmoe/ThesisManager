@@ -284,6 +284,9 @@ $string['juryaccessnodocuments'] = "Aucun document n'est encore disponible.";
 
 // Annuaire du jury.
 $string['jurors'] = 'Annuaire du jury';
+$string['juryconflicts'] = 'Membre du jury déjà engagé dans un autre jury sur ce créneau (moins de deux heures d\'écart) :';
+$string['juryconflict'] = '{$a->member} siège au jury de la soutenance de {$a->student} le {$a->date} ({$a->activity}).';
+$string['juryconflictshort'] = 'Conflit : {$a->member} déjà au jury de {$a->student} à {$a->time}';
 $string['jurors_desc'] = "Enseignants pouvant diriger une thèse ou siéger au jury, communs à toutes les activités et à toutes les "
     . "promotions. Les formulaires de jury y puisent pour être préremplis. Un enseignant retiré (inactif) n'est plus proposé mais "
     . "reste dans les jurys qui l'ont retenu.";

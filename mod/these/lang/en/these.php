@@ -280,6 +280,9 @@ $string['juryaccessnodocuments'] = 'No document is available yet.';
 
 // Jury directory.
 $string['jurors'] = 'Jury directory';
+$string['juryconflicts'] = 'Jury member already sitting on another jury in this slot (less than two hours apart):';
+$string['juryconflict'] = '{$a->member} sits on the jury of the defence of {$a->student} on {$a->date} ({$a->activity}).';
+$string['juryconflictshort'] = 'Conflict: {$a->member} already on the jury of {$a->student} at {$a->time}';
 $string['jurors_desc'] = 'Teachers who may supervise a thesis or sit on a jury, shared by all activities and all cohorts. Jury forms '
     . 'draw on it to be prefilled. A withdrawn (inactive) teacher is no longer offered but stays in the juries that chose them.';
 $string['jurortitle'] = 'Title';

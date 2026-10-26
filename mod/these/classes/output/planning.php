@@ -70,6 +70,17 @@ class planning implements \renderable, \templatable {
             ];
         }
         $jury[] = parts::text($row['jury']);
+        // Membre déjà engagé dans un autre jury sur le même créneau (personnel qui voit tous les dossiers).
+        if (!empty($defense->source->rights->viewall)) {
+            foreach (these_jury_conflicts($defense->dossier, $defense->jury) as $conflict) {
+                $jury[] = parts::br();
+                $jury[] = parts::badge(get_string('juryconflictshort', 'mod_these', (object) [
+                    'member' => $conflict->member,
+                    'student' => $conflict->student,
+                    'time' => userdate($conflict->time, get_string('strftimedatetimeshort', 'langconfig')),
+                ]), 'badge badge-danger');
+            }
+        }
         return array_merge(
             [
                 [parts::text($row['time']), parts::br(),

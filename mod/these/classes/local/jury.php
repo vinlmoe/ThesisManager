@@ -34,6 +34,9 @@ use stdClass;
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class jury {
+    /** @var int Créneau d'une soutenance : deux soutenances à moins de deux heures d'écart se chevauchent. */
+    const SLOT = 2 * HOURSECS;
+
     /**
      * Utilisateurs inscrits pouvant être choisis comme directeur de thèse.
      *
@@ -93,6 +96,102 @@ class jury {
         }
         return 'e' . core_text::strtolower(trim((string) $member->email)) . '|'
             . core_text::strtolower(trim((string) $member->fullname));
+    }
+
+    /**
+     * Deux membres de jury sont-ils la même personne ? Même enseignant de l'annuaire, même adresse
+     * ou, à défaut d'adresse, même nom.
+     *
+     * @param stdClass $a
+     * @param stdClass $b
+     * @return bool
+     */
+    public static function same_member(stdClass $a, stdClass $b) {
+        if (!empty($a->jurorid) && (int) $a->jurorid === (int) ($b->jurorid ?? 0)) {
+            return true;
+        }
+        $email = function ($member) {
+            return core_text::strtolower(trim((string) ($member->email ?? '')));
+        };
+        if ($email($a) !== '' && $email($b) !== '') {
+            return $email($a) === $email($b);
+        }
+        $name = function ($member) {
+            return core_text::strtolower(preg_replace('/\s+/', ' ', trim((string) $member->fullname)));
+        };
+        return $name($a) !== '' && $name($a) === $name($b);
+    }
+
+    /**
+     * Membres du jury d'un dossier déjà engagés dans un autre jury sur le même créneau (soutenance,
+     * ou à défaut date proposée, à moins de self::SLOT d'écart), toutes promotions confondues. Les
+     * dossiers abandonnés sont ignorés.
+     *
+     * @param stdClass $dossier
+     * @param array|null $members Membres à vérifier (par défaut, le jury enregistré du dossier).
+     * @return stdClass[] {member (nom), time, student (nom), activity (nom de l'activité)}
+     */
+    public static function jury_conflicts(stdClass $dossier, ?array $members = null) {
+        global $DB;
+
+        $time = (int) ($dossier->defensedate ?: $dossier->proposeddate);
+        $members = $members ?? these_get_jury($dossier->id);
+        if (!$time || !$members) {
+            return [];
+        }
+        $params = ['id' => (int) $dossier->id, 'cancelled' => THESE_STATUS_CANCELLED, 'from1' => $time - self::SLOT + 1,
+            'to1' => $time + self::SLOT - 1, 'from2' => $time - self::SLOT + 1, 'to2' => $time + self::SLOT - 1];
+        $others = $DB->get_records_select(
+            'these_dossier',
+            'id <> :id AND status <> :cancelled
+             AND ((defensedate > 0 AND defensedate BETWEEN :from1 AND :to1)
+                  OR (defensedate = 0 AND proposeddate BETWEEN :from2 AND :to2))',
+            $params,
+            'defensedate ASC, proposeddate ASC, id ASC'
+        );
+        $conflicts = [];
+        foreach ($others as $other) {
+            $otherjury = these_get_jury($other->id);
+            foreach ($members as $member) {
+                foreach ($otherjury as $othermember) {
+                    if (!self::same_member($member, $othermember)) {
+                        continue;
+                    }
+                    $student = $DB->get_record('user', ['id' => $other->userid]);
+                    $conflicts[] = (object) [
+                        'member' => trim(($member->jurytitle ?? '') . ' ' . $member->fullname),
+                        'time' => (int) ($other->defensedate ?: $other->proposeddate),
+                        'student' => $student ? fullname($student) : '-',
+                        'activity' => (string) $DB->get_field('these', 'name', ['id' => $other->theseid]),
+                    ];
+                }
+            }
+        }
+        return $conflicts;
+    }
+
+    /**
+     * Avertissement des conflits de jury d'un dossier (voir jury_conflicts()), pour la DEVE.
+     *
+     * @param stdClass $dossier
+     * @return string HTML, vide sans conflit.
+     */
+    public static function render_jury_conflicts(stdClass $dossier) {
+        global $OUTPUT, $PAGE;
+
+        $lines = array_map(function ($conflict) {
+            return get_string('juryconflict', 'mod_these', (object) [
+                'member' => $conflict->member,
+                'date' => userdate($conflict->time, get_string('strftimedaydatetime', 'langconfig')),
+                'student' => $conflict->student,
+                'activity' => format_string($conflict->activity),
+            ]);
+        }, self::jury_conflicts($dossier));
+        if (!$lines) {
+            return '';
+        }
+        $list = $PAGE->get_renderer('mod_these')->render(new \mod_these\output\bullet_list($lines));
+        return $OUTPUT->notification(get_string('juryconflicts', 'mod_these') . $list, 'warning');
     }
 
     /**

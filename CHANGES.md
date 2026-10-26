@@ -30,6 +30,13 @@ développement ne correspondent à aucune version installable ; 0.11.2 n'a jamai
   président du jury), sinon le libellé de l'emplacement ; une signature par
   délégation de la direction générale porte « Direction générale (par
   délégation) ». Le nom des fichiers reprend les emplacements signés.
+- Planification du jury : un membre déjà engagé dans un autre jury sur le même
+  créneau (soutenance ou date proposée à moins de deux heures d'écart, toutes
+  promotions confondues, dossiers abandonnés exclus) est signalé. Badge
+  « Conflit » sous le jury dans le planning (personnel qui voit tous les
+  dossiers), avertissement en tête du dossier, de sa modification et de sa
+  validation. Un même membre est reconnu à l'enseignant de l'annuaire, à son
+  adresse ou, à défaut, à son nom.
 - Sans changement de schéma.
 
 ## mod_these 0.16.0 (2026102603) — signataires des scans, délégation, vérification d'identité

@@ -198,6 +198,9 @@ echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('review' . $step['key'], 'mod_these'));
 echo $renderer->render(new output\link($dossierurl, get_string('back')));
 echo $OUTPUT->box(get_string('dossierof', 'mod_these', $student ? fullname($student) : '-'), 'generalbox mb-3');
+if ($rights->viewall) {
+    echo these_render_jury_conflicts($dossier);
+}
 $mform->display();
 echo these_render_dossier($these, $cm, $context, $dossier, $rights, false);
 echo $OUTPUT->footer();

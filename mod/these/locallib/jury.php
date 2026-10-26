@@ -60,6 +60,27 @@ function these_get_jury($dossierid) {
 }
 
 /**
+ * Voir \mod_these\local\jury::jury_conflicts().
+ *
+ * @param stdClass $dossier
+ * @param array|null $members
+ * @return stdClass[]
+ */
+function these_jury_conflicts(stdClass $dossier, ?array $members = null) {
+    return \mod_these\local\jury::jury_conflicts($dossier, $members);
+}
+
+/**
+ * Voir \mod_these\local\jury::render_jury_conflicts().
+ *
+ * @param stdClass $dossier
+ * @return string
+ */
+function these_render_jury_conflicts(stdClass $dossier) {
+    return \mod_these\local\jury::render_jury_conflicts($dossier);
+}
+
+/**
  * Voir \mod_these\local\jury::jury_member_key().
  *
  * @param stdClass $member

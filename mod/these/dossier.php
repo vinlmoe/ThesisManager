@@ -53,5 +53,8 @@ $student = $DB->get_record('user', ['id' => $dossier->userid]);
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('dossierof', 'mod_these', $student ? fullname($student) : '-'));
 echo these_render_navlinks($cm, $context);
+if ($rights->viewall) {
+    echo these_render_jury_conflicts($dossier);
+}
 echo these_render_dossier($these, $cm, $context, $dossier, $rights);
 echo $OUTPUT->footer();
