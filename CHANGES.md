@@ -13,7 +13,7 @@ de version recalés sur la date. Les numéros entre parenthèses des sections de
 développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
 été étiquetée.
 
-## mod_these 0.17.0 (2026102604) — signature sur place de l'étudiant et du directeur, vérification d'identité préalable
+## mod_these 0.17.0 (2026102605) — signature sur place de l'étudiant et du directeur, vérification d'identité préalable
 
 - Signature sur place ouverte à l'étudiant et au directeur (suivi des
   signatures, « Signatures à recueillir ») pour les documents dont la signature
@@ -39,6 +39,17 @@ développement ne correspondent à aucune version installable ; 0.11.2 n'a jamai
   dossiers), avertissement en tête du dossier, de sa modification et de sa
   validation. Un même membre est reconnu à l'enseignant de l'annuaire, à son
   adresse ou, à défaut, à son nom.
+- Ergonomie (audit du 26 octobre 2026, `docs/qualite/`) :
+  - pages de validation (directeur, DEVE, bibliothèque) : résumé du dossier
+    (étudiant, titre, statut, directeur, n° DEVE, soutenance, manuscrit)
+    au-dessus de la décision, dossier complet replié en dessous ; pages deux
+    fois moins longues ;
+  - « Renvoyer le dossier » devient un bouton secondaire, en rouge, distinct
+    de « Valider » (commentaire toujours obligatoire) ;
+  - accueil et tableau de bord : le nom et la description de l'activité ne
+    sont plus affichés deux fois (l'en-tête d'activité de Moodle les montre) ;
+  - « Mes signatures » : documents groupés par dossier (étudiant, titre,
+    n° DEVE), aucune case cochée d'office.
 - Sans changement de schéma.
 
 ## mod_these 0.16.0 (2026102603) — signataires des scans, délégation, vérification d'identité

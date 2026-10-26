@@ -58,12 +58,8 @@ $PAGE->set_title(format_string($these->name));
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($context);
 
+// Nom et description de l'activité : affichés par l'en-tête d'activité de Moodle (4.0 et plus).
 echo $OUTPUT->header();
-echo $OUTPUT->heading(format_string($these->name));
-
-if ($these->intro) {
-    echo $OUTPUT->box(format_module_intro('these', $these, $cm->id), 'generalbox mod_introbox', 'theseintro');
-}
 
 echo $OUTPUT->heading(get_string('mydossier', 'mod_these'), 3);
 if (!$dossier) {

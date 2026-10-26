@@ -72,12 +72,29 @@ if ($preview && isset($pending[$preview])) {
 }
 
 $renderer = $PAGE->get_renderer('mod_these');
+// Documents groupés par dossier (étudiant, titre, n° DEVE), aucun coché d'office : chacun se coche
+// après avoir consulté son PDF.
 $documents = [];
+$groups = [];
 foreach ($pending as $signature) {
-    $student = $DB->get_record('user', ['id' => $signature->dossier->userid]);
+    $dossier = $signature->dossier;
+    if (!isset($groups[$dossier->id])) {
+        $student = $DB->get_record('user', ['id' => $dossier->userid]);
+        $context = context_module::instance($signature->cm->id);
+        $groups[$dossier->id] = ['heading' => get_string('mysignaturesdossier', 'mod_these', (object) [
+            'student' => $student ? fullname($student) : '-',
+            'title' => format_string(
+                these_subject_field($dossier, 'title', $context),
+                true,
+                ['context' => $context, 'escape' => false]
+            ),
+            'number' => trim((string) $dossier->devenumber) !== '' ? ' — ' . get_string('signinfonumber', 'mod_these')
+                . ' ' . $dossier->devenumber : '',
+        ]), 'ids' => []];
+    }
+    $groups[$dossier->id]['ids'][] = $signature->id;
     $documents[$signature->id] = $renderer->render(new output\fragment([
-        parts::text(($student ? fullname($student) : '-') . ' — ' . these_document_label($signature->doctype)
-            . ' (' . these_slot_label($signature->slot) . ') — '),
+        parts::text(these_document_label($signature->doctype) . ' (' . these_slot_label($signature->slot) . ') — '),
         parts::link(
             new moodle_url($PAGE->url, ['preview' => $signature->id]),
             get_string('signpreview', 'mod_these'),
@@ -86,7 +103,11 @@ foreach ($pending as $signature) {
         ),
     ]));
 }
-$mform = new \mod_these\form\mysignatures_form($PAGE->url, ['documents' => $documents, 'signername' => fullname($USER)]);
+$mform = new \mod_these\form\mysignatures_form($PAGE->url, [
+    'documents' => $documents,
+    'groups' => array_values($groups),
+    'signername' => fullname($USER),
+]);
 
 if ($documents && ($data = $mform->get_data())) {
     $png = these_signature_from_form($data);

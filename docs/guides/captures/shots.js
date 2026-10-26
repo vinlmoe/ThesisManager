@@ -451,10 +451,9 @@ const steps = {
   async '65_agent_signature_enregistree'() {
     // Première signature de l'agent sur un seul document, en enregistrant sa signature.
     const p = await open(await as('agarnier'), these('mysignatures.php'));
+    // Aucun document n'est coché d'office : l'agent coche le premier.
     const docs = p.locator(`${form} input[type=checkbox][name^="sig"]:not([name="signatureconsent"])`);
-    for (let i = 1; i < await docs.count(); i++) {
-      await docs.nth(i).uncheck();
-    }
+    await docs.first().check();
     await draw(p);
     await check(p, '#id_savesignature');
     await check(p, '#id_signatureconsent');

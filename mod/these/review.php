@@ -33,6 +33,7 @@ require(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/these/locallib.php');
 
 use mod_these\output;
+use mod_these\output\parts;
 
 use mod_these\form\review_form;
 
@@ -192,15 +193,44 @@ if ($mform->is_cancelled()) {
 }
 
 $student = $DB->get_record('user', ['id' => $dossier->userid]);
+$director = $dossier->directorid ? $DB->get_record('user', ['id' => $dossier->directorid]) : null;
 
 $renderer = $PAGE->get_renderer('mod_these');
+// Résumé du dossier au-dessus de la décision ; le dossier complet suit, replié, pour ne pas
+// repousser la lecture de ce qui est validé à plusieurs écrans sous les boutons.
+$manuscript = these_can_view_filearea('manuscript', $rights)
+    ? $renderer->render(new output\file_links($context, 'manuscript', $dossier->id)) : '';
+$date = (int) ($dossier->defensedate ?: $dossier->proposeddate);
+$summary = new output\detail_section(get_string('reviewsummary', 'mod_these'), [
+    get_string('signinfostudent', 'mod_these') => [parts::text($student ? fullname($student) : '-')],
+    get_string('signinfotitle', 'mod_these') => [parts::text(format_string(
+        these_subject_field($dossier, 'title', $context),
+        true,
+        ['context' => $context, 'escape' => false]
+    ))],
+    get_string('status') => [parts::text(these_status_label($dossier->status))],
+    get_string('slotdirector', 'mod_these') => $director ? [parts::text(fullname($director))] : null,
+    get_string('signinfonumber', 'mod_these') => trim((string) $dossier->devenumber) !== ''
+        ? [parts::text($dossier->devenumber)] : null,
+    get_string('signinfodefense', 'mod_these') => $date ? [parts::text(
+        userdate($date, get_string('strftimedaydatetime', 'langconfig'))
+        . (trim((string) $dossier->defenselocation) !== '' ? ' — ' . $dossier->defenselocation : '')
+    )] : null,
+    get_string('manuscript', 'mod_these') => $manuscript !== '' ? [parts::html($manuscript)] : null,
+]);
+
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('review' . $step['key'], 'mod_these'));
 echo $renderer->render(new output\link($dossierurl, get_string('back')));
-echo $OUTPUT->box(get_string('dossierof', 'mod_these', $student ? fullname($student) : '-'), 'generalbox mb-3');
 if ($rights->viewall) {
     echo these_render_jury_conflicts($dossier);
 }
+echo $renderer->render($summary);
 $mform->display();
-echo these_render_dossier($these, $cm, $context, $dossier, $rights, false);
+echo html_writer::tag(
+    'details',
+    html_writer::tag('summary', get_string('reviewfulldossier', 'mod_these'), ['class' => 'h4 my-3'])
+        . these_render_dossier($these, $cm, $context, $dossier, $rights, false),
+    ['class' => 'mt-4 these-review-dossier']
+);
 echo $OUTPUT->footer();

@@ -158,7 +158,16 @@ class review_form extends \moodleform {
 
         $buttons = [];
         $buttons[] = $mform->createElement('submit', 'validatestep', get_string('validate' . $stepkey, 'mod_these'));
-        $buttons[] = $mform->createElement('submit', 'returndossier', get_string('returndossier', 'mod_these'));
+        // Renvoi : bouton secondaire, d'alerte, pour ne pas le confondre avec la validation ; un
+        // commentaire est obligatoire (voir validation()).
+        $buttons[] = $mform->createElement(
+            'submit',
+            'returndossier',
+            get_string('returndossier', 'mod_these'),
+            null,
+            false,
+            ['customclassoverride' => 'btn-outline-danger']
+        );
         $buttons[] = $mform->createElement('cancel');
         $mform->addGroup($buttons, 'buttonar', '', [' '], false);
         $mform->closeHeaderBefore('buttonar');

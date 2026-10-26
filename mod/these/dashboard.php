@@ -61,7 +61,7 @@ $PAGE->set_context($context);
 
 $renderer = $PAGE->get_renderer('mod_these');
 echo $OUTPUT->header();
-echo $OUTPUT->heading(format_string($these->name));
+echo $OUTPUT->heading(get_string('dashboard', 'mod_these'));
 echo these_render_navlinks($cm, $context);
 
 // File « À traiter » : les étapes qui attendent l'utilisateur, tous rôles confondus.
