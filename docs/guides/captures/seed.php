@@ -140,6 +140,7 @@ $scope = these_settings_scope($these);
     'dgname' => 'Pr Emmanuelle Soubeyran', 'dgemail' => 'dg@example.org',
     'ccemname' => 'Pr Jean-Luc Cadoré', 'ccememail' => 'ccem@example.org',
     'ucblname' => 'M. Bruno Lina', 'ucblemail' => 'presidence@example.org',
+    'defenserooms' => "Amphithéâtre Bourgelat\nSalle du conseil\nSalle 12 (bâtiment Pasteur)",
 ]);
 $questions = [];
 foreach ([

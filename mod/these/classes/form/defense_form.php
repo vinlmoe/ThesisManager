@@ -65,9 +65,9 @@ class defense_form extends \moodleform {
 
         $mform->addElement('header', 'dateheader', get_string('defenseproposal', 'mod_these'));
         $mform->setExpanded('dateheader');
-        $mform->addElement('date_time_selector', 'proposeddate', get_string('proposeddate', 'mod_these'));
-        $mform->addElement('text', 'defenselocation', get_string('defenselocation', 'mod_these'), ['size' => 64]);
-        $mform->setType('defenselocation', PARAM_TEXT);
+        // Pas de date préremplie (l'heure courante serait refusée) : l'étudiant l'active et la choisit.
+        $mform->addElement('date_time_selector', 'proposeddate', get_string('proposeddate', 'mod_these'), ['optional' => true]);
+        \mod_these\local\scopesettings::add_location_field($mform, $this->_customdata['rooms'] ?? []);
         $mform->addElement('advcheckbox', 'bvisio', '', get_string('visio', 'mod_these'));
 
         these_add_jury_fields($this, $mform, $this->_customdata['jurycount'] ?? 0, false, $this->_customdata['jurorids'] ?? []);
@@ -217,7 +217,9 @@ class defense_form extends \moodleform {
         if (these_count_draft_files($data['manuscript']) < 1) {
             $errors['manuscript'] = get_string('manuscriptrequired', 'mod_these');
         }
-        if ((int) $data['proposeddate'] <= time()) {
+        if (empty($data['proposeddate'])) {
+            $errors['proposeddate'] = get_string('proposeddaterequired', 'mod_these');
+        } else if ((int) $data['proposeddate'] <= time()) {
             $errors['proposeddate'] = get_string('datemustbefuture', 'mod_these');
         }
         if (trim((string) $data['defenselocation']) === '') {
@@ -236,7 +238,7 @@ class defense_form extends \moodleform {
         }
         $juryerror = these_validate_jury(these_extract_submitted_jury($data), $this->_customdata['minjury']);
         if ($juryerror !== null) {
-            $errors['juryname[0]'] = $juryerror;
+            $errors['juryhelp'] = get_string('juryproblem', 'mod_these', $juryerror);
         }
         $required = ['bbirthname', 'bfirstnames', 'bnationality', 'bstreet', 'bpostcode', 'bcity', 'bcountry', 'bpersonalemail',
             'bnbpages', 'bnbrefs', 'bsummaryfr', 'titleen', 'conclusions', 'bdiffusion'];
@@ -281,5 +283,44 @@ class defense_form extends \moodleform {
             $errors['questionnairestatus'] = get_string('questionnairerequired', 'mod_these');
         }
         return array_merge($errors, these_signature_errors($data));
+    }
+
+    /**
+     * Avancement du dépôt, rubrique par rubrique : les contrôles de la soumission (voir validation())
+     * appliqués aux données enregistrées. La signature et l'attestation de la grille, données au
+     * moment de soumettre, ne comptent pas.
+     *
+     * @param array $data Données du formulaire, telles que passées à set_data().
+     * @return array[] Rubriques dans l'ordre du formulaire : name (en-tête), label, missing (champs à compléter).
+     */
+    public function section_progress(array $data): array {
+        $errors = $this->validation(['submitdefense' => 1] + $data, []);
+        unset($errors['gridconfirm']);
+        $sections = [];
+        $header = null;
+        foreach ($this->_form->_elements as $element) {
+            $name = $element->getName();
+            if ($element->getType() === 'header') {
+                $header = $name === 'signatureheader' ? null : $name;
+                if ($header !== null) {
+                    $sections[$header] = ['name' => $header, 'label' => strip_tags($element->_text), 'missing' => 0];
+                }
+            } else if ($header !== null && isset($errors[$name])) {
+                $sections[$header]['missing']++;
+            }
+        }
+        return array_values($sections);
+    }
+
+    /**
+     * Déplie les rubriques à compléter et replie les rubriques complètes (voir section_progress()).
+     *
+     * @param array[] $sections Voir section_progress().
+     * @return void
+     */
+    public function expand_incomplete(array $sections) {
+        foreach ($sections as $section) {
+            $this->_form->setExpanded($section['name'], $section['missing'] > 0);
+        }
     }
 }

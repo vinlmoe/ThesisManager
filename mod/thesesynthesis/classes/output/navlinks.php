@@ -61,11 +61,22 @@ class navlinks implements \renderable, \templatable {
         if (has_capability('mod/thesesynthesis:managelinks', $this->context)) {
             $links[get_string('managelinks', 'mod_thesesynthesis')] = new moodle_url('/mod/thesesynthesis/administration.php', $id);
         }
+        return $links;
+    }
+
+    /**
+     * Pages de paramétrage, regroupées dans le menu « Paramètres ».
+     *
+     * @return array libellé => moodle_url
+     */
+    public function get_settings_links(): array {
+        $id = ['id' => $this->cm->id];
+        $links = [];
         if (has_capability('mod/thesesynthesis:managesettings', $this->context)) {
+            $links[get_string('scopesettings', 'mod_these')] = new moodle_url('/mod/thesesynthesis/parameters.php', $id);
             $links[get_string('doctemplates', 'mod_these')] = new moodle_url('/mod/thesesynthesis/doctemplates.php', $id);
             $links[get_string('griditems', 'mod_these')] = new moodle_url('/mod/thesesynthesis/griditems.php', $id);
             $links[get_string('questions', 'mod_these')] = new moodle_url('/mod/thesesynthesis/questions.php', $id);
-            $links[get_string('scopesettings', 'mod_these')] = new moodle_url('/mod/thesesynthesis/parameters.php', $id);
         }
         if (has_capability('mod/thesesynthesis:managejurors', $this->context)) {
             $links[get_string('jurors', 'mod_these')] = new moodle_url('/mod/thesesynthesis/jurors.php', $id);
@@ -77,10 +88,13 @@ class navlinks implements \renderable, \templatable {
      * Données du gabarit mod_thesesynthesis/navlinks.
      *
      * @param \renderer_base $output
-     * @return array buttons (contexte de mod_these/actions)
+     * @return array buttons (contexte de mod_these/actions), settings (contexte de mod_these/settings_menu)
      */
     public function export_for_template(\renderer_base $output): array {
         $buttons = new \mod_these\output\actions($this->get_links(), 'btn btn-secondary mr-1 mb-1');
-        return ['buttons' => $buttons->export_for_template($output)];
+        return [
+            'buttons' => $buttons->export_for_template($output),
+            'settings' => \mod_these\output\navlinks::settings_menu($this->get_settings_links()),
+        ];
     }
 }

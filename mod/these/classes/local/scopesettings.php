@@ -20,7 +20,7 @@ use context;
 use stdClass;
 
 /**
- * Paramètres du circuit : rôles des services, agents DEVE signataires, durée d'une soutenance, établissement, université,
+ * Paramètres du circuit : rôles des services, agents DEVE signataires, durée et salles des soutenances, établissement, université,
  * signataires et contrat type de diffusion. Aucun n'est un réglage du site : comme les modèles des
  * documents, ils appartiennent à une portée (voir these_settings_scope()), l'activité « Suivi des
  * thèses » qui suit l'activité, sinon l'activité « Gestion des thèses » elle-même (table
@@ -80,7 +80,56 @@ class scopesettings {
             'libraryrole' => (int) $DB->get_field('role', 'id', ['shortname' => 'theselibrary']),
             'deveagent' => '',
             'defenseduration' => 60,
+            'defenserooms' => '',
         ] + self::text_defaults();
+    }
+
+    /**
+     * Salles de soutenance proposées dans une portée, une par ligne du paramètre « defenserooms ».
+     * Sans salle, le lieu par défaut de l'ancien réglage de l'activité, s'il existe.
+     *
+     * @param array $settings Paramètres de la portée (voir get_all()).
+     * @param string $fallback Lieu par défaut de l'activité « Gestion des thèses ».
+     * @return string[] Salles, la première étant proposée par défaut.
+     */
+    public static function rooms(array $settings, $fallback = '') {
+        $rooms = array_values(array_unique(array_filter(
+            array_map('trim', preg_split('/\R/', (string) ($settings['defenserooms'] ?? ''))),
+            'strlen'
+        )));
+        if (!$rooms && trim((string) $fallback) !== '') {
+            $rooms = [trim((string) $fallback)];
+        }
+        return $rooms;
+    }
+
+    /**
+     * Champ « Lieu de soutenance » d'un formulaire : texte libre, avec la liste des salles de la portée
+     * proposée à la saisie.
+     *
+     * @param \MoodleQuickForm $mform
+     * @param string[] $rooms Voir rooms().
+     * @return void
+     */
+    public static function add_location_field(\MoodleQuickForm $mform, array $rooms) {
+        $attributes = ['size' => 64];
+        if ($rooms) {
+            $attributes['list'] = 'these-defense-rooms';
+        }
+        $mform->addElement('text', 'defenselocation', get_string('defenselocation', 'mod_these'), $attributes);
+        $mform->setType('defenselocation', PARAM_TEXT);
+        if ($rooms) {
+            $options = implode('', array_map(function ($room) {
+                return \html_writer::tag('option', '', ['value' => $room]);
+            }, $rooms));
+            $mform->addElement(
+                'static',
+                'defenseroomshelp',
+                '',
+                \html_writer::tag('datalist', $options, ['id' => 'these-defense-rooms'])
+                    . get_string('defenseroomshelp', 'mod_these', implode(' ; ', array_map('s', $rooms)))
+            );
+        }
     }
 
     /**

@@ -1,0 +1,39 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_these/settings_menu
+
+    Menu déroulant « Paramètres » de la barre de navigation : les pages de paramétrage, rarement
+    ouvertes, regroupées derrière un seul bouton.
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * none
+
+    Context variables required for this template:
+    * label Libellé du bouton.
+    * items Liens : label, url.
+
+    Example context (json):
+    {"label": "Paramètres", "items": [
+        {"label": "Modèles des documents", "url": "https://example.com/mod/these/doctemplates.php?id=2"},
+        {"label": "Annuaire du jury", "url": "https://example.com/mod/these/jurors.php?id=2"}
+    ]}
+}}
+<div class="dropdown d-inline-block mr-1 mb-1"><button class="btn btn-secondary dropdown-toggle" type="button" id="these-settings-menu-{{uniqid}}" data-toggle="dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{label}}</button><div class="dropdown-menu dropdown-menu-right dropdown-menu-end" aria-labelledby="these-settings-menu-{{uniqid}}">{{#items}}<a class="dropdown-item" href="{{url}}">{{label}}</a>{{/items}}</div></div>

@@ -63,6 +63,14 @@ class scopesettings_form extends \moodleform {
         $mform->addRule('defenseduration', null, 'required', null, 'client');
         $mform->addRule('defenseduration', null, 'numeric', null, 'client');
         $mform->addElement('static', 'defensedurationdesc', '', get_string('settingsdefenseduration_desc', 'mod_these'));
+        $mform->addElement(
+            'textarea',
+            'defenserooms',
+            get_string('settingsdefenserooms', 'mod_these'),
+            ['rows' => 5, 'cols' => 60]
+        );
+        $mform->setType('defenserooms', PARAM_TEXT);
+        $mform->addElement('static', 'defenseroomsdesc', '', get_string('settingsdefenserooms_desc', 'mod_these'));
 
         $mform->addElement('header', 'documentsheader', get_string('settingsdocuments', 'mod_these'));
         $mform->setExpanded('documentsheader');

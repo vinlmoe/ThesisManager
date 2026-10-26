@@ -80,6 +80,7 @@ foreach ($step['sign'] as $slot => $doctypes) {
         }
     }
 }
+$juryconflicts = $rights->viewall ? these_render_jury_conflicts($dossier) : '';
 $mform = new review_form($PAGE->url, [
     'stepkey' => $step['key'],
     'returnto' => $step['returnto'],
@@ -87,8 +88,11 @@ $mform = new review_form($PAGE->url, [
     'scope' => these_settings_scope($these),
     'gridprefilled' => !empty(these_get_grid($dossier)),
     'minjury' => $these->minjury,
+    'rooms' => these_defense_rooms($these),
     'jurycount' => count($jury),
     'jurorids' => array_map('intval', array_column($jury, 'jurorid')),
+    // Conflits de jury : en tête de la rubrique du jury quand le formulaire la contient, sinon de la page.
+    'juryconflicts' => $juryconflicts,
     'signs' => implode(', ', $signs),
     'signername' => fullname($USER),
     'externaldirector' => !empty($dossier->externaldirector),
@@ -223,8 +227,8 @@ $summary = new output\detail_section(get_string('reviewsummary', 'mod_these'), [
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('review' . $step['key'], 'mod_these'));
 echo $renderer->render(new output\link($dossierurl, get_string('back')));
-if ($rights->viewall) {
-    echo these_render_jury_conflicts($dossier);
+if ($step['key'] !== 'devedefense') {
+    echo $juryconflicts;
 }
 echo $renderer->render($summary);
 $mform->display();

@@ -54,8 +54,10 @@ $mform = new \mod_these\form\dossier_edit_form($PAGE->url, [
     'directors' => these_director_options($context, $dossier->directorid),
     'theseid' => $these->id,
     'minjury' => $these->minjury,
+    'rooms' => these_defense_rooms($these),
     'jurycount' => count($jury),
     'jurorids' => array_map('intval', array_column($jury, 'jurorid')),
+    'juryconflicts' => these_render_jury_conflicts($dossier),
 ]);
 $formdata = (object) array_merge((array) $dossier, these_jury_form_data($jury));
 $formdata->id = $cm->id;
@@ -107,6 +109,5 @@ echo $OUTPUT->heading(get_string('editdossier', 'mod_these'));
 echo $renderer->render(new output\link($dossierurl, get_string('back')));
 echo $OUTPUT->box(get_string('dossierof', 'mod_these', $student ? fullname($student) : '-'), 'generalbox mb-3');
 echo $OUTPUT->box(get_string('editdossierhelp', 'mod_these'), 'generalbox mb-3');
-echo these_render_jury_conflicts($dossier);
 $mform->display();
 echo $OUTPUT->footer();

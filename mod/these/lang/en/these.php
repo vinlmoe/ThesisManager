@@ -112,6 +112,8 @@ $string['stepdevedefense'] = 'Complete file validation';
 $string['steplibraryconformity'] = 'Manuscript compliance';
 $string['stepdocuments'] = 'Defence documents';
 $string['stepminutes'] = 'Minutes';
+$string['progresscurrent'] = 'Step {$a->position} of {$a->total}: {$a->label}';
+$string['progressall'] = 'Show all steps';
 $string['dormantphase'] = 'dormant file';
 
 // Navigation and lists.
@@ -188,6 +190,9 @@ $string['libraryref'] = 'Bibliographic record reference';
 // Defence.
 $string['defense'] = 'Defence';
 $string['depositdefense'] = 'Submit the defence documents';
+$string['defenseprogress'] = 'Progress: {$a->complete} of {$a->total} sections complete. Sections still to complete are expanded below.';
+$string['defensesectioncomplete'] = 'Complete';
+$string['defensesectionmissing'] = '{$a} field(s) to complete';
 $string['defenseintro'] = 'Upload your manuscript and defence documents and propose a date, a location and the jury (a chair and '
     . 'at least {$a} voting members, chair included). You can prepare this submission in several steps ("Save draft"); submitting '
     . 'sends it to your director, who will approve it and attach a report.';
@@ -198,6 +203,8 @@ $string['manuscriptrequired'] = 'The manuscript is required to submit.';
 $string['defensedocs'] = 'Other defence documents';
 $string['defensedocs_help'] = 'Optional: abstract, dissemination authorisation, appendices...';
 $string['defenseproposal'] = 'Defence proposal';
+$string['proposeddaterequired'] = 'Tick « Enable », then choose the proposed date and time.';
+$string['defenseroomshelp'] = 'Suggested rooms: {$a}. You may also enter another location.';
 $string['proposeddate'] = 'Proposed date';
 $string['defensedate'] = 'Defence date';
 $string['defenselocation'] = 'Defence location';
@@ -221,6 +228,7 @@ $string['minutes'] = 'Defence minutes';
 
 // Jury.
 $string['jury'] = 'Jury';
+$string['juryproblem'] = 'Jury composition to correct: {$a}';
 $string['juryhelp'] = 'One row per member. Preferably choose the teacher from the jury directory: title, status, institution '
     . 'and address are taken from it. For an external member or a guest, choose "External member or guest" and fill in the row '
     . '(the status is required for a voting member). Only HDR associate professors, professors and emeriti may chair. The registrar '
@@ -563,6 +571,8 @@ $string['privacy:metadata:jury:title'] = 'Thesis title.';
 $string['privacy:metadata:jury:defensedate'] = 'Defence date and location.';
 
 // Workflow settings ("Thesis follow-up" activity, otherwise the activity itself; no site setting).
+$string['settingsmenu'] = 'Settings';
+$string['sharedsettingslink'] = 'Workflow settings, templates, grid and questionnaire ({$a})';
 $string['scopesettings'] = 'Workflow settings';
 $string['scopesettings_desc'] = 'Service roles, registrar signing agents, institution, university, document signatories and standard '
     . 'distribution contract of this activity. None of them is a site setting.';
@@ -586,6 +596,8 @@ $string['settingsdefenses'] = 'Defences';
 $string['settingsdefenseduration'] = 'Duration of a defence (minutes)';
 $string['settingsdefenseduration_desc'] = 'Used to detect jury conflicts: a member sitting on two overlapping defences is flagged in '
     . 'the schedule and on the file. 60 minutes by default.';
+$string['settingsdefenserooms'] = 'Defence rooms';
+$string['settingsdefenserooms_desc'] = 'One room per line. They are suggested when entering the location (student deposit, DEVE validation and editing); the first one is the default. Another location remains possible.';
 $string['settingsdefensedurationinvalid'] = 'Enter a duration of at least one minute.';
 $string['settingsdocuments'] = 'Documents and signatories';
 $string['settingsdocuments_desc'] = 'Header and signatories of the institution documents produced by the module. Signatories without '

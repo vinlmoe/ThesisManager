@@ -61,8 +61,6 @@ class mod_these_mod_form extends moodleform_mod {
         $mform->setType('signatoryname', PARAM_TEXT);
         $mform->addElement('text', 'signatorytitle', get_string('signatorytitle', 'mod_these'), ['size' => '64']);
         $mform->setType('signatorytitle', PARAM_TEXT);
-        $mform->addElement('text', 'defaultlocation', get_string('defaultlocation', 'mod_these'), ['size' => '64']);
-        $mform->setType('defaultlocation', PARAM_TEXT);
 
         $mform->addElement('header', 'workflowheader', get_string('workflowsettings', 'mod_these'));
         $mform->addElement('text', 'minjury', get_string('minjury', 'mod_these'), ['size' => '4']);

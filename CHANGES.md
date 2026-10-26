@@ -13,7 +13,35 @@ de version recalés sur la date. Les numéros entre parenthèses des sections de
 développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
 été étiquetée.
 
-## mod_these 0.17.0 (2026102606) — signature sur place de l'étudiant et du directeur, vérification d'identité préalable, grille remplie par l'étudiant
+## mod_these 0.17.0 (2026102607) et mod_thesesynthesis 0.6.0 (2026102607) — signature sur place de l'étudiant et du directeur, vérification d'identité préalable, grille remplie par l'étudiant, ergonomie
+
+- Dépôt de la soutenance (audit, amélioration 3) : encadré « Avancement du
+  dépôt » en tête du formulaire, rubrique par rubrique, avec le nombre de
+  champs à compléter (les contrôles de la soumission appliqués aux données
+  enregistrées) ; rubriques complètes repliées, rubriques à compléter
+  dépliées. La date proposée n'est plus préremplie avec l'heure courante :
+  l'étudiant l'active et la choisit.
+- Téléphone (amélioration 4) : la frise ne montre que l'étape en cours
+  (« Étape 5 sur 11 », acteur attendu) ; la frise complète est repliée sous
+  « Voir toutes les étapes ».
+- Navigation de la DEVE (amélioration 6) : boutons des pages de travail
+  (tableau de bord, planning, création, import, export, Mes signatures) et
+  menu « Paramètres » (courriels, annuaire du jury, transfert, paramètres du
+  circuit, modèles, grille, questionnaire). Dans une activité suivie, les
+  quatre pages qui ne faisaient que renvoyer à l'activité de suivi laissent la
+  place à un seul lien vers ses paramètres. Même menu dans l'activité de suivi
+  (`mod_thesesynthesis` 0.6.0).
+- Jury : les erreurs de composition (président, membres votants, éligibilité)
+  et l'avertissement des conflits s'affichent en tête de la rubrique « Jury »
+  des formulaires (dépôt, modification, validation par la DEVE) et au-dessus
+  du tableau du jury dans le dossier, et non plus sur la ligne du premier
+  membre ou en haut de la page.
+- Salles de soutenance : nouveau paramètre du circuit (rubrique
+  « Soutenances », une salle par ligne), proposé à la saisie du lieu (liste
+  de suggestions, un autre lieu reste possible) ; la première salle est
+  proposée par défaut à l'étudiant. Le « lieu de soutenance proposé par
+  défaut » disparaît des réglages de l'activité ; sa valeur sert encore tant
+  qu'aucune salle n'est saisie.
 
 - Grille de conformité remplie par l'étudiant : au dépôt de la soutenance, il
   renseigne le numéro d'avis du comité d'éthique, coche les éléments de la

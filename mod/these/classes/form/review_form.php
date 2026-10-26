@@ -116,10 +116,16 @@ class review_form extends \moodleform {
                 $mform->setType('devenumber', PARAM_TEXT);
                 $mform->addHelpButton('devenumber', 'devenumber', 'mod_these');
                 $mform->addElement('date_time_selector', 'defensedate', get_string('defensedate', 'mod_these'));
-                $mform->addElement('text', 'defenselocation', get_string('defenselocation', 'mod_these'), ['size' => 64]);
-                $mform->setType('defenselocation', PARAM_TEXT);
+                \mod_these\local\scopesettings::add_location_field($mform, $this->_customdata['rooms'] ?? []);
                 $jurycount = $this->_customdata['jurycount'] ?? 0;
-                these_add_jury_fields($this, $mform, $jurycount, true, $this->_customdata['jurorids'] ?? []);
+                these_add_jury_fields(
+                    $this,
+                    $mform,
+                    $jurycount,
+                    true,
+                    $this->_customdata['jurorids'] ?? [],
+                    $this->_customdata['juryconflicts'] ?? ''
+                );
                 $mform->addElement('static', 'juryeligiblehelp', '', get_string('juryeligiblehelp', 'mod_these'));
                 // Agrément administratif.
                 $mform->addElement('header', 'adminheader', get_string('agreementadmin', 'mod_these'));
@@ -247,7 +253,7 @@ class review_form extends \moodleform {
                     $juryerror = these_validate_jury($members, $this->_customdata['minjury'])
                         ?? these_validate_jury_eligibility($members);
                     if ($juryerror !== null) {
-                        $errors['juryrole[0]'] = $juryerror;
+                        $errors['juryhelp'] = get_string('juryproblem', 'mod_these', $juryerror);
                     }
                 }
                 break;

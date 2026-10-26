@@ -55,10 +55,12 @@ $PAGE->set_context($context);
 
 $jury = these_get_jury($dossier->id);
 $returned = (int) $dossier->status === THESE_STATUS_DEFENSE_RETURNED;
+$rooms = these_defense_rooms($these);
 $mform = new defense_form($PAGE->url, [
     'jurycount' => count($jury),
     'jurorids' => array_map('intval', array_column($jury, 'jurorid')),
     'minjury' => $these->minjury,
+    'rooms' => $rooms,
     'these' => $these,
     'context' => $context,
     'submitlabel' => $returned ? 'resubmitdefense' : 'submitdefense',
@@ -99,7 +101,8 @@ foreach ($bordereau as $field => $value) {
         $formdata->{'b' . $field} = $value;
     }
 }
-$formdata->defenselocation = $dossier->defenselocation ?: $these->defaultlocation;
+// Lieu : à défaut, la première salle des paramètres du circuit.
+$formdata->defenselocation = $dossier->defenselocation ?: (string) reset($rooms);
 // Le directeur figure presque toujours au jury : il est proposé d'office au premier dépôt.
 if (empty($jury) && $dossier->directorid && ($director = $DB->get_record('user', ['id' => $dossier->directorid]))) {
     $formdata->juryrole = [1 => 'director'];
@@ -139,6 +142,33 @@ if ($mform->is_cancelled()) {
     );
 }
 
+// Avancement : rubriques complètes repliées, rubriques à compléter dépliées et listées en tête.
+$progress = null;
+if (!$mform->is_submitted()) {
+    $sections = $mform->section_progress((array) $formdata);
+    $mform->expand_incomplete($sections);
+    $items = array_map(function ($section) use ($cm) {
+        $url = new moodle_url('/mod/these/defense.php', ['id' => $cm->id], 'id_' . $section['name']);
+        return [
+            parts::link($url, $section['label'], ''),
+            parts::text(' '),
+            $section['missing']
+                ? parts::badge(get_string('defensesectionmissing', 'mod_these', $section['missing']), 'badge badge-warning')
+                : parts::badge(get_string('defensesectioncomplete', 'mod_these'), 'badge badge-success'),
+        ];
+    }, $sections);
+    $complete = count(array_filter(array_column($sections, 'missing'), function ($missing) {
+        return !$missing;
+    }));
+    $progress = new output\message(array_merge(
+        [parts::strong(get_string('defenseprogress', 'mod_these', (object) [
+            'complete' => $complete,
+            'total' => count($sections),
+        ]))],
+        [parts::html($PAGE->get_renderer('mod_these')->render(new output\bullet_list($items)))]
+    ), 'alert alert-secondary these-defense-progress');
+}
+
 $renderer = $PAGE->get_renderer('mod_these');
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('depositdefense', 'mod_these'));
@@ -157,5 +187,8 @@ if (these_is_adjourned($dossier)) {
     ), 'alert alert-warning'));
 }
 echo $OUTPUT->box(get_string('defenseintro', 'mod_these', (int) $these->minjury), 'generalbox mb-3');
+if ($progress) {
+    echo $renderer->render($progress);
+}
 $mform->display();
 echo $OUTPUT->footer();

@@ -265,9 +265,23 @@ const steps = {
     await p.locator(`${form} input[type=text]`).first().fill('Unité de bactériologie, VetAgro Sup');
     await upto(p, '52_questionnaire_etudiant', form);
   },
+  async '102_avancement_depot'() {
+    const p = await open(await as('lucas'), these('defense.php', { dossierid: ids.lucas }));
+    await region(p, '102_avancement_depot', '.these-defense-progress');
+  },
+  async '104_frise_telephone'() {
+    const p = await as('lucas');
+    await p.setViewportSize({ width: 390, height: 844 });
+    await p.goto(these('view.php'));
+    await p.waitForLoadState('networkidle');
+    const file = path.join(OUT, '104_frise_telephone.png');
+    await p.screenshot({ path: file });
+    console.log('capture', '104_frise_telephone', '844px');
+  },
   async '67_etudiant_soutenance_signature'() {
     const p = await open(await as('lucas'), these('defense.php', { dossierid: ids.lucas }));
     await upload(p, 'manuscript', samplePdf('manuscrit.pdf', 'Manuscrit de thèse'));
+    await check(p, '#id_proposeddate_enabled');
     await p.selectOption('#id_proposeddate_day', '19');
     await p.selectOption('#id_proposeddate_month', '11');
     await p.selectOption('#id_proposeddate_year', '2026');
@@ -365,6 +379,11 @@ const steps = {
   async '18_tableau_de_bord_deve'() {
     const p = await open(await as('sbonnet'), these('dashboard.php'));
     await uptoSection(p, '18_tableau_de_bord_deve', 'À traiter');
+  },
+  async '103_menu_parametres'() {
+    const p = await open(await as('sbonnet'), these('dashboard.php'));
+    await p.click('.these-navlinks .dropdown-toggle');
+    await region(p, '103_menu_parametres', '.these-navlinks', '.these-navlinks .dropdown-menu');
   },
   async '86_planning_semaine'() {
     const p = await open(await as('sbonnet'), these('planning.php', { view: 'week', date: ts('2026-10-28T12:00:00+01:00') }));

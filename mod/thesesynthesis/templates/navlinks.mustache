@@ -27,6 +27,7 @@
 
     Context variables required for this template:
     * buttons Contexte de mod_these/actions.
+    * settings Contexte de mod_these/settings_menu (pages de paramétrage), ou false.
 
     Example context (json):
     {"buttons": {"actions": [
@@ -34,6 +35,6 @@
             "class": "btn btn-secondary mr-1 mb-1"},
         {"label": "Planning des soutenances", "url": "https://example.com/mod/thesesynthesis/planning.php?id=2",
             "class": "btn btn-secondary mr-1 mb-1"}
-    ]} }
+    ]}, "settings": false }
 }}
-<div class="these-navlinks mb-3">{{#buttons}}{{> mod_these/actions}}{{/buttons}}</div>
+<div class="these-navlinks mb-3">{{#buttons}}{{> mod_these/actions}}{{/buttons}}{{#settings}}{{> mod_these/settings_menu}}{{/settings}}</div>

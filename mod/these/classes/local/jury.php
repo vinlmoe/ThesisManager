@@ -272,6 +272,7 @@ class jury {
      * @param int $count Nombre de lignes déjà renseignées.
      * @param bool $eligibility Ajouter la validation d'éligibilité par la DEVE.
      * @param int[] $keep Enseignants de l'annuaire à proposer même s'ils ne sont plus actifs.
+     * @param string $warning Avertissement affiché en tête de la rubrique (HTML, voir render_jury_conflicts()).
      * @return void
      */
     public static function add_jury_fields(
@@ -279,10 +280,15 @@ class jury {
         MoodleQuickForm $mform,
         $count,
         $eligibility = false,
-        array $keep = []
+        array $keep = [],
+        $warning = ''
     ) {
         $mform->addElement('header', 'juryheader', get_string('jury', 'mod_these'));
         $mform->setExpanded('juryheader');
+        if ($warning !== '') {
+            $mform->addElement('static', 'juryconflicts', '', $warning);
+        }
+        // Les erreurs de composition du jury s'affichent ici, en tête de la rubrique.
         $mform->addElement('static', 'juryhelp', '', get_string('juryhelp', 'mod_these'));
 
         $jurors = [0 => get_string('juryexternal', 'mod_these')] + \mod_these\local\jurors::options(false, $keep);

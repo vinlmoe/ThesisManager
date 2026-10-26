@@ -31,13 +31,16 @@ require_once(__DIR__ . '/output_testcase.php');
  */
 final class navlinks_test extends output_testcase {
     /**
-     * Libellés des boutons pour l'utilisateur courant.
+     * Libellés des boutons et du menu « Paramètres » pour l'utilisateur courant.
      *
      * @return string[]
      */
     private function labels(): array {
         $data = (new navlinks($this->env->cm, $this->env->context))->export_for_template($this->renderer());
-        return array_column($data['buttons']['actions'], 'label');
+        return array_merge(
+            array_column($data['buttons']['actions'], 'label'),
+            $data['settings'] ? array_column($data['settings']['items'], 'label') : []
+        );
     }
 
     /**

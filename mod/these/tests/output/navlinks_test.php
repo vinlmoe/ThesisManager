@@ -39,14 +39,21 @@ final class navlinks_test extends output_testcase {
         $labels = function ($user) {
             $this->setUser($user);
             $data = (new navlinks($this->cm, $this->context))->export_for_template($this->renderer());
-            return [$data['haslinks'], array_column($data['buttons']['actions'], 'label')];
+            return [$data['haslinks'], array_column($data['buttons']['actions'], 'label'),
+                $data['settings'] ? array_column($data['settings']['items'], 'label') : []];
         };
-        [$has, $deve] = $labels($this->deve);
+        [$has, $deve, $settings] = $labels($this->deve);
         $this->assertTrue($has);
-        $this->assertContains(get_string('jurors', 'mod_these'), $deve);
+        $this->assertContains(get_string('createdossier', 'mod_these'), $deve);
         $this->assertContains(get_string('export', 'mod_these'), $deve);
-        [, $director] = $labels($this->director);
+        $this->assertNotContains(get_string('jurors', 'mod_these'), $deve);
+        // Paramétrage : dans le menu « Paramètres », toutes les pages quand l'activité n'est pas suivie.
+        $this->assertContains(get_string('jurors', 'mod_these'), $settings);
+        $this->assertContains(get_string('scopesettings', 'mod_these'), $settings);
+        $this->assertContains(get_string('doctemplates', 'mod_these'), $settings);
+        [, $director, $settings] = $labels($this->director);
         $this->assertSame([get_string('dashboard', 'mod_these'), get_string('planning', 'mod_these')], $director);
+        $this->assertSame([], $settings);
         [$has, $student] = $labels($this->student);
         $this->assertFalse($has);
         $this->assertSame([], $student);

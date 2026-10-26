@@ -114,6 +114,8 @@ $string['stepdevedefense'] = 'Validation du dossier complet';
 $string['steplibraryconformity'] = 'Conformité du manuscrit';
 $string['stepdocuments'] = 'Documents de soutenance';
 $string['stepminutes'] = 'Procès-verbal';
+$string['progresscurrent'] = 'Étape {$a->position} sur {$a->total} : {$a->label}';
+$string['progressall'] = 'Voir toutes les étapes';
 $string['dormantphase'] = 'dossier dormant';
 
 // Navigation et listes.
@@ -189,6 +191,9 @@ $string['libraryref'] = 'Référence de la notice bibliographique';
 // Soutenance.
 $string['defense'] = 'Soutenance';
 $string['depositdefense'] = 'Déposer les documents de soutenance';
+$string['defenseprogress'] = 'Avancement du dépôt : {$a->complete} rubrique(s) complète(s) sur {$a->total}. Les rubriques à compléter sont dépliées ci-dessous.';
+$string['defensesectioncomplete'] = 'Complète';
+$string['defensesectionmissing'] = '{$a} champ(s) à compléter';
 $string['defenseintro'] = "Déposez votre manuscrit et les documents de soutenance, et proposez une date, un lieu et la composition du "
     . "jury (un président et au moins {\$a} membres votants, président compris). Vous pouvez préparer ce dépôt en plusieurs fois "
     . "(« Enregistrer le brouillon ») ; la soumission l'envoie à votre directeur, qui le validera en y joignant son rapport.";
@@ -199,6 +204,8 @@ $string['manuscriptrequired'] = 'Le manuscrit est obligatoire pour soumettre.';
 $string['defensedocs'] = 'Autres documents de soutenance';
 $string['defensedocs_help'] = 'Facultatif : résumé, autorisation de diffusion, annexes...';
 $string['defenseproposal'] = 'Proposition de soutenance';
+$string['proposeddaterequired'] = 'Cochez « Activer » puis choisissez la date et l\'heure proposées.';
+$string['defenseroomshelp'] = 'Salles proposées : {$a}. Vous pouvez aussi saisir un autre lieu.';
 $string['proposeddate'] = 'Date proposée';
 $string['defensedate'] = 'Date de soutenance';
 $string['defenselocation'] = 'Lieu de soutenance';
@@ -222,6 +229,7 @@ $string['minutes'] = 'Procès-verbal de soutenance';
 
 // Jury.
 $string['jury'] = 'Jury';
+$string['juryproblem'] = 'Composition du jury à corriger : {$a}';
 $string['juryhelp'] = "Une ligne par membre. Choisissez de préférence l'enseignant dans l'annuaire du jury : son titre, son "
     . "statut, son établissement et son adresse en sont repris. Pour un membre extérieur ou un invité, choisissez « Membre extérieur "
     . "ou invité » et renseignez la ligne (le statut est demandé pour un membre votant). Seuls les maîtres de conférences HDR, les "
@@ -569,6 +577,8 @@ $string['privacy:metadata:jury:title'] = 'Titre de la thèse.';
 $string['privacy:metadata:jury:defensedate'] = 'Date et lieu de la soutenance.';
 
 // Paramètres du circuit (activité « Suivi des thèses », sinon l'activité elle-même ; aucun réglage du site).
+$string['settingsmenu'] = 'Paramètres';
+$string['sharedsettingslink'] = 'Paramètres du circuit, modèles, grille et questionnaire ({$a})';
 $string['scopesettings'] = 'Paramètres du circuit';
 $string['scopesettings_desc'] = "Rôles des services, agents DEVE signataires, établissement, université, signataires des documents et "
     . "contrat type de diffusion de cette activité. Aucun n'est un réglage du site.";
@@ -592,6 +602,8 @@ $string['settingsdefenses'] = 'Soutenances';
 $string['settingsdefenseduration'] = "Durée d'une soutenance (minutes)";
 $string['settingsdefenseduration_desc'] = "Sert à détecter les conflits de jury : un membre qui siège dans deux soutenances qui se chevauchent "
     . "est signalé dans le planning et sur le dossier. 60 minutes par défaut.";
+$string['settingsdefenserooms'] = 'Salles de soutenance';
+$string['settingsdefenserooms_desc'] = 'Une salle par ligne. Elles sont proposées à la saisie du lieu (dépôt de l\'étudiant, validation et modification par la DEVE) ; la première est proposée par défaut. Un autre lieu reste possible.';
 $string['settingsdefensedurationinvalid'] = 'Indiquez une durée d\'au moins une minute.';
 $string['settingsdocuments'] = 'Documents et signataires';
 $string['settingsdocuments_desc'] = "En-tête et signataires des documents de l'établissement produits par le module. Les signataires "

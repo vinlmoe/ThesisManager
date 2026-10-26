@@ -90,6 +90,11 @@ d'office. \\
 2.9 & 26 octobre 2026 & Grille de conformité remplie et attestée par
 l'étudiant au dépôt de la soutenance, préremplie pour le directeur qui la vérifie
 et la signe. \\
+2.10 & 26 octobre 2026 & Avancement du dépôt de la soutenance, date proposée
+non préremplie ; frise réduite à l'étape en cours sur téléphone ; menu
+\og Paramètres\fg{} de la DEVE, un seul lien vers l'activité de suivi ;
+salles de soutenance dans les paramètres du circuit ; erreurs et conflits du
+jury en tête de la rubrique Jury. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -292,7 +297,11 @@ l'activité de suivi.
         l'université : nom et adresse. Avec une adresse, le signataire reçoit un
         lien de signature ; sans adresse, la DEVE recueille sa signature sur place.
   \item[Soutenances] durée d'une soutenance, en minutes (60 par défaut), pour
-        détecter les conflits de jury.
+        détecter les conflits de jury ; \textbf{salles de soutenance}, une par
+        ligne, proposées à la saisie du lieu (dépôt de l'étudiant, validation et
+        modification par la DEVE), la première par défaut. Elles remplacent le
+        \og lieu de soutenance proposé par défaut\fg{} des réglages de
+        l'activité, encore utilisé tant qu'aucune salle n'est saisie.
   \item[Textes] établissement, université (avec son article : \og
         l'Université \ldots\fg{}), lien HeTOP, lieu du visa, intitulés de la
         direction générale et de la présidence de l'université, nom et qualité
@@ -356,9 +365,13 @@ par défaut, affiche le compte rendu ligne par ligne sans rien créer.
 
 L'activité \og Gestion des thèses\fg{} ouvre sur \og Mon dossier de thèse\fg{}.
 La frise en haut du dossier indique à tout moment l'étape atteinte et qui doit
-agir ; les boutons bleus sous la frise sont les actions qui vous attendent.
+agir ; les boutons bleus sous la frise sont les actions qui vous attendent. Sur
+un téléphone, seule l'étape en cours est affichée (\og Étape 5 sur 11\fg{} et
+l'acteur attendu) ; \bouton{Voir toutes les étapes} déplie la frise complète.
 
 \capture[0.85\linewidth]{01_etudiant_accueil}{Accueil de l'activité : \og Mon dossier de thèse\fg{}.}
+
+\capture[0.35\linewidth]{104_frise_telephone}{Sur téléphone : l'étape en cours, la frise repliée, puis les actions.}
 
 \begin{procedure}{Proposer son sujet (phase 1)}{Étudiant}
 \begin{etapes}
@@ -455,10 +468,18 @@ refusé.}
 
 \begin{procedure}{Déposer le dossier de soutenance (phase 2)}{Étudiant}
 \begin{etapes}
-  \item Cliquez sur \bouton{Déposer les documents de soutenance}.
+  \item Cliquez sur \bouton{Déposer les documents de soutenance}. L'encadré
+        \og Avancement du dépôt\fg{} liste les rubriques et le nombre de champs
+        qui restent à compléter ; les rubriques complètes sont repliées, les
+        autres dépliées. Il se met à jour à chaque \bouton{Enregistrer le
+        brouillon}.
   \item Déposez le \textbf{manuscrit} (PDF, obligatoire) et, au besoin, les
         autres documents.
-  \item Proposez la date, l'heure et le lieu de la soutenance.
+  \item Proposez la date et l'heure de la soutenance (cochez
+        \bouton{Activer}, puis choisissez-les : aucune date n'est proposée
+        d'office) et le lieu : les salles des paramètres du circuit sont
+        proposées à la saisie, la première par défaut, mais un autre lieu reste
+        possible.
   \item Composez le jury : un président et au moins le nombre de membres
         votants fixé par l'activité. Choisissez chaque enseignant dans
         l'annuaire ; pour un membre extérieur ou un invité, choisissez
@@ -485,6 +506,8 @@ refusé.}
 \ensuite{le dossier passe en \statut{Soutenance proposée au directeur} ; votre
 directeur rédige son rapport puis valide.}
 \end{procedure}
+
+\capture[0.85\linewidth]{102_avancement_depot}{Avancement du dépôt : rubriques complètes et champs à compléter.}
 
 \capture[0.85\linewidth]{67_etudiant_soutenance_signature}{Dépôt de la soutenance : documents, jury, bordereau, signature.}
 
@@ -634,11 +657,17 @@ favorable\fg{}.}
 
 La DEVE voit tous les dossiers : la file \og À traiter\fg{}, le décompte par
 statut (cliquable pour filtrer) et la liste complète avec recherche par
-étudiant, titre ou numéro. La barre de boutons donne accès à la création d'un
-dossier pour le compte d'un étudiant, à l'import, aux courriels, aux modèles
-des documents (section~\ref{sec:modeles}), à la grille, au questionnaire, à
-l'annuaire du jury, au transfert des paramètres (section~\ref{sec:transfert})
-et à l'export du registre (CSV, Excel, ODS...).
+étudiant, titre ou numéro. La barre de boutons donne accès aux pages de
+travail : tableau de bord, planning, création d'un dossier pour le compte d'un
+étudiant, import, export du registre (CSV, Excel, ODS...) et \bouton{Mes
+signatures}. Les pages de paramétrage, rarement ouvertes, sont regroupées dans
+le menu \bouton{Paramètres} : courriels, annuaire du jury, transfert des
+paramètres (section~\ref{sec:transfert}) et, pour une activité qu'aucune
+activité de suivi ne suit, paramètres du circuit, modèles des documents
+(section~\ref{sec:modeles}), grille et questionnaire. Quand une activité
+\og Suivi des thèses\fg{} porte ces paramètres, un seul lien y mène.
+
+\capture[0.6\linewidth]{103_menu_parametres}{Barre de navigation de la DEVE : pages de travail et menu \bouton{Paramètres} (activité suivie).}
 
 \capture{18_tableau_de_bord_deve}{Tableau de bord de la DEVE : la rubrique \og À traiter\fg{}, suivie du décompte par statut et de la liste de tous les dossiers.}
 
@@ -664,8 +693,11 @@ dossier de soutenance ; un dossier abandonné ou une thèse ajournée en sort.
 l'annuaire, même adresse ou, à défaut, même nom) qui siège déjà dans un autre
 jury sur le même créneau, c'est-à-dire une soutenance (ou une date proposée)
 qui chevauche celle-ci, toutes promotions confondues, est signalé : badge
-rouge \og Conflit\fg{} sous le jury dans le planning, avertissement en tête du
-dossier, de sa modification et de sa validation par la DEVE. Les dossiers
+rouge \og Conflit\fg{} sous le jury dans le planning, avertissement au-dessus
+du jury dans le dossier, dans sa modification et dans sa validation par la
+DEVE. Une erreur de composition (pas de président, trop peu de membres
+votants, éligibilité non vérifiée) s'affiche de même en tête de la rubrique
+\og Jury\fg{}, et non plus sur la ligne du premier membre. Les dossiers
 abandonnés ne comptent pas. L'avertissement ne bloque rien : à la DEVE de
 déplacer la soutenance ou de remplacer le membre. La durée d'une soutenance
 (une heure par défaut) se règle dans les \bouton{Paramètres du circuit},

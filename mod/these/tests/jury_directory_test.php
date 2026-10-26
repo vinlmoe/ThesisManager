@@ -299,4 +299,22 @@ final class jury_directory_test extends these_testcase {
         $DB->set_field('these_dossier', 'status', THESE_STATUS_CANCELLED, ['id' => $second->id]);
         $this->assertSame([], these_jury_conflicts($first));
     }
+
+    /**
+     * Salles de soutenance : une par ligne des paramètres du circuit, sans doublon ; à défaut, le lieu
+     * par défaut de l'ancien réglage de l'activité.
+     */
+    public function test_defense_rooms(): void {
+        $this->resetAfterTest();
+        $this->setup_activity();
+        $this->these->defaultlocation = 'Amphithéâtre';
+        $this->assertSame(['Amphithéâtre'], these_defense_rooms($this->these));
+        \mod_these\local\scopesettings::set(these_settings_scope($this->these), [
+            'defenserooms' => "Salle du conseil\r\n\n  Salle 12  \nSalle du conseil",
+        ]);
+        $this->assertSame(['Salle du conseil', 'Salle 12'], these_defense_rooms($this->these));
+        $this->these->defaultlocation = '';
+        \mod_these\local\scopesettings::set(these_settings_scope($this->these), ['defenserooms' => '']);
+        $this->assertSame([], these_defense_rooms($this->these));
+    }
 }
