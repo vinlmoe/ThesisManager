@@ -741,6 +741,8 @@ quelque chose en attente.}
 
 \begin{procedure}{Enregistrer les validations de l'A6}{Équipe DEVE}
 La validation de l'A6 est saisie \textbf{par la DEVE}, plus par l'étudiant. Elle
+est liée à \textbf{l'étudiant}, pas à son dossier de thèse : elle peut être
+enregistrée avant que le dossier existe, et vaut pour tous ses dossiers. Elle
 figure dans le dossier (rubrique \og Enregistrements\fg{}), dans l'agrément
 administratif et dans la fiche signalétique. Trois façons de la saisir :
 \begin{etapes}
@@ -757,13 +759,14 @@ administratif et dans la fiche signalétique. Trois façons de la saisir :
         ligne d'en-tête et une ligne par étudiant : \texttt{etudiant}
         (identifiant, adresse de courriel ou numéro d'étudiant),
         \texttt{date} (jj/mm/aaaa, ou \og non\fg{}) et, facultative,
-        \texttt{ecole} (Lyon, Alfort, Nantes, Toulouse, Rouen). Lancez d'abord
+        \texttt{ecole} (Lyon, Alfort, Nantes, Toulouse, Rouen). Tout étudiant
+        inscrit au cours peut figurer, avec ou sans dossier. Lancez d'abord
         la simulation, qui vérifie chaque ligne sans rien enregistrer.
 \end{etapes}
-\ensuite{chaque saisie est inscrite à l'historique du dossier (\og Validation
-de l'A6 enregistrée\fg{}). Pour les dossiers où l'étudiant l'avait déclarée
-avant cette version, sa déclaration est reprise tant que la DEVE ne l'a pas
-saisie.}
+\ensuite{chaque saisie est inscrite à l'historique des dossiers de l'étudiant
+(\og Validation de l'A6 enregistrée\fg{}). Pour les dossiers où l'étudiant
+l'avait déclarée avant cette version, sa déclaration est reprise tant que la
+DEVE ne l'a pas saisie.}
 \end{procedure}
 
 \capture[0.85\linewidth]{108_import_a6}{Import des validations de l'A6 : simulation et rapport ligne par ligne.}

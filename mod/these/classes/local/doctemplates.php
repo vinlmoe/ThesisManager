@@ -500,18 +500,15 @@ class doctemplates {
         ];
 
         // Cursus déclaré par l'étudiant (fiche signalétique) et agrément administratif de la DEVE. La
-        // validation de l'A6 est saisie par la DEVE (voir \mod_these\local\a6) ; à défaut, celle que
-        // l'étudiant avait déclarée.
-        $a6recorded = array_key_exists('a6date', $agreementdata) || array_key_exists('a6notyet', $agreementdata);
-        $a6source = $a6recorded ? $agreementdata : $b;
-        $a6notyet = !empty($a6source['a6notyet']) || empty($a6source['a6date']);
-        $a6school = (string) ($agreementdata['a6school'] ?? ($b['a6school'] ?? ''));
+        // validation de l'A6, liée à l'étudiant, est saisie par la DEVE (voir \mod_these\local\a6).
+        $a6 = a6::for_documents((int) ($d->userid ?? 0), $agreementdata, $b);
+        $a6notyet = $a6['notyet'] || !$a6['date'];
         $cursus = [
             'defvdate' => $day($b['defvdate'] ?? 0),
             'defvschool' => $school($b['defvschool'] ?? ''),
             'a6notyet' => $a6notyet,
-            'a6date' => $a6notyet ? '' : $day($a6source['a6date'] ?? 0),
-            'a6school' => $a6notyet ? '' : $school($a6school),
+            'a6date' => $a6notyet ? '' : $day($a6['date']),
+            'a6school' => $a6notyet ? '' : $school($a6['school']),
         ];
         $agreement = [
             'defv' => !empty($agreementdata['defvdate']),
@@ -519,7 +516,7 @@ class doctemplates {
             'mobility' => !empty($agreementdata['mobility']),
             'a6notyet' => $a6notyet,
             'a6' => !$a6notyet,
-            'a6date' => $a6notyet ? '' : $day($a6source['a6date'] ?? 0),
+            'a6date' => $a6notyet ? '' : $day($a6['date']),
         ];
 
         // Jury : liste complète, et places fixes des formulaires (président, membre de

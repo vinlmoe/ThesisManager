@@ -86,7 +86,7 @@ if ($mform->is_cancelled()) {
     // Validation de l'A6 : enregistrée (et inscrite à l'historique) seulement si elle change.
     $a6date = !empty($data->aga6notyet) ? 0 : (int) ($data->aga6date ?? 0);
     $a6school = (string) ($data->aga6school ?? '');
-    if ($a6date !== (int) ($a6['notyet'] ? 0 : $a6['date']) || $a6school !== $a6['school']) {
+    if ($a6date !== $a6['date'] || $a6school !== $a6['school']) {
         $dossier = \mod_these\local\a6::set($dossier, $a6date, $a6school, $USER->id);
     }
 

@@ -24,8 +24,8 @@ global $CFG;
 require_once(__DIR__ . '/these_testcase.php');
 
 /**
- * Validation de l'A6 saisie par la DEVE : lecture des dates et des écoles, import par fichier, action
- * groupée, reprise de la déclaration de l'étudiant à défaut.
+ * Validation de l'A6 saisie par la DEVE et liée à l'étudiant : lecture des dates et des écoles, import
+ * par fichier, action groupée, reprise de la déclaration de l'étudiant à défaut.
  *
  * @package    mod_these
  * @copyright  2026 Sébastien Lefebvre
@@ -52,8 +52,8 @@ final class a6_test extends these_testcase {
     }
 
     /**
-     * Sans saisie de la DEVE, la déclaration de l'étudiant ; la saisie de la DEVE la remplace et est
-     * inscrite à l'historique.
+     * Liée à l'étudiant : sans saisie, la déclaration de son dossier ; la saisie de la DEVE la
+     * remplace pour tous ses dossiers, est inscrite à leur historique, et vaut aussi sans dossier.
      */
     public function test_get_set(): void {
         global $DB;
@@ -65,41 +65,60 @@ final class a6_test extends these_testcase {
         $a6 = a6::get($dossier);
         $this->assertFalse($a6['recorded']);
         $this->assertSame('nantes', $a6['school']);
+        $this->assertFalse(a6::get_for_user($this->student->id)['recorded']);
 
-        $dossier = a6::set($dossier, make_timestamp(2025, 7, 1, 12), '', $this->deve->id);
-        $a6 = a6::get($this->reload($dossier->id));
+        a6::set($dossier, make_timestamp(2025, 7, 1, 12), '', $this->deve->id);
+        $a6 = a6::get_for_user($this->student->id);
         $this->assertTrue($a6['recorded']);
         $this->assertSame(make_timestamp(2025, 7, 1, 12), $a6['date']);
         $this->assertSame('nantes', $a6['school']);
+        $this->assertSame(1, $DB->count_records('these_a6', ['userid' => $this->student->id]));
         $this->assertTrue($DB->record_exists('these_log', ['dossierid' => $dossier->id, 'logaction' => 'a6recorded']));
 
-        a6::set($dossier, 0, 'lyon', $this->deve->id);
+        // Second dossier du même étudiant (autre activité) : même validation.
+        $other = $this->getDataGenerator()->create_module('these', ['course' => $this->course->id]);
+        $second = $this->generator->create_dossier($other, $this->student->id, ['status' => THESE_STATUS_ACTIVE]);
+        $this->assertSame(make_timestamp(2025, 7, 1, 12), a6::get($second)['date']);
+
+        a6::set_for_user($this->student->id, 0, 'lyon', $this->deve->id);
         $this->assertSame(get_string('a6notvalidated', 'mod_these'), a6::label($this->reload($dossier->id)));
+        $this->assertSame(1, $DB->count_records('these_a6', ['userid' => $this->student->id]));
+
+        // Étudiant sans dossier.
+        $nodossier = $this->getDataGenerator()->create_and_enrol($this->course, 'student');
+        a6::set_for_user($nodossier->id, make_timestamp(2025, 7, 2, 12), 'alfort', $this->deve->id);
+        $this->assertSame('alfort', a6::get_for_user($nodossier->id)['school']);
     }
 
     /**
-     * Import : lignes reconnues à leurs en-têtes, simulation sans écriture, erreurs signalées par ligne ;
-     * lecture d'un CSV et d'un classeur Excel.
+     * Import : lignes reconnues à leurs en-têtes, étudiants inscrits au cours avec ou sans dossier,
+     * simulation sans écriture, erreurs signalées par ligne.
      */
     public function test_import(): void {
         $this->setup_activity();
-        $dossier = $this->generator->create_dossier($this->these, $this->student->id, ['status' => THESE_STATUS_ACTIVE]);
+        $this->generator->create_dossier($this->these, $this->student->id, ['status' => THESE_STATUS_ACTIVE]);
+        $nodossier = $this->getDataGenerator()->create_and_enrol($this->course, 'student');
         $outsider = $this->getDataGenerator()->create_user();
         $rows = [
             ['Étudiant', 'Date A6', 'École'],
             [$this->student->username, '01/07/2025', 'Lyon'],
+            [$nodossier->email, 'non', ''],
             [$outsider->username, '01/07/2025', ''],
             ['inconnu', '01/07/2025', ''],
             [$this->student->email, 'demain', ''],
+            [$this->student->email, '01/07/2025', 'Ailleurs'],
         ];
         $report = a6::import($this->these, $rows, true, $this->deve->id);
-        $this->assertSame([true, false, false, false], array_column($report, 'ok'));
-        $this->assertFalse(a6::get($this->reload($dossier->id))['recorded']);
+        $this->assertSame([true, true, false, false, false, false], array_column($report, 'ok'));
+        $this->assertSame(get_string('a6notenrolled', 'mod_these'), $report[2]['message']);
+        $this->assertFalse(a6::get_for_user($this->student->id)['recorded']);
 
-        a6::import($this->these, array_slice($rows, 0, 2), false, $this->deve->id);
-        $a6 = a6::get($this->reload($dossier->id));
+        a6::import($this->these, array_slice($rows, 0, 3), false, $this->deve->id);
+        $a6 = a6::get_for_user($this->student->id);
         $this->assertSame(make_timestamp(2025, 7, 1, 12), $a6['date']);
         $this->assertSame('lyon', $a6['school']);
+        $this->assertTrue(a6::get_for_user($nodossier->id)['notyet']);
+        $this->assertTrue(a6::get_for_user($nodossier->id)['recorded']);
 
         $this->expectException(\moodle_exception::class);
         a6::import($this->these, [['nom', 'prenom']], true, $this->deve->id);

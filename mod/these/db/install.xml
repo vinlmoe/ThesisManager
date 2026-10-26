@@ -324,6 +324,20 @@
         <INDEX NAME="email" UNIQUE="false" FIELDS="email"/>
       </INDEXES>
     </TABLE>
+    <TABLE NAME="these_a6" COMMENT="Validation de l'A6 d'un étudiant, saisie par la DEVE : liée à l'étudiant, commune à toutes les instances et indépendante de tout dossier">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="a6date" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Date de validation, 0 si l'A6 n'est pas validée"/>
+        <FIELD NAME="a6school" TYPE="char" LENGTH="20" NOTNULL="false" SEQUENCE="false" COMMENT="École (voir these_school_options())"/>
+        <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Compte de la DEVE qui l'a saisie"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="userid" TYPE="foreign-unique" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
     <TABLE NAME="these_question" COMMENT="Question du questionnaire préalable au jury, rempli par l'étudiant">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>

@@ -21,12 +21,13 @@ use moodle_exception;
 use stdClass;
 
 /**
- * Validation de l'A6 (année d'approfondissement) d'un étudiant, saisie par la DEVE : dans la
- * validation du dossier de soutenance, la modification d'un dossier, en lot depuis le tableau de bord
- * ou par import d'un fichier (Excel, OpenDocument ou CSV). Elle est conservée dans l'agrément du
- * dossier (a6date, a6notyet, a6school) et reprise par l'agrément administratif et la fiche
- * signalétique. Les dossiers où l'étudiant l'avait déclarée dans sa fiche gardent cette déclaration
- * tant que la DEVE ne l'a pas saisie.
+ * Validation de l'A6 (année d'approfondissement) d'un étudiant, saisie par la DEVE. Elle est liée à
+ * l'étudiant et non à son dossier de thèse (table these_a6, commune à toutes les activités) : elle
+ * peut être enregistrée avant la création du dossier, et vaut pour chacun de ses dossiers. La DEVE la
+ * saisit à la validation du dossier de soutenance, dans la modification d'un dossier, en lot depuis le
+ * tableau de bord ou par import d'un fichier (Excel, OpenDocument ou CSV). L'agrément administratif et
+ * la fiche signalétique la reprennent. Faute de saisie, la valeur d'avant cette table : celle de
+ * l'agrément du dossier, sinon celle que l'étudiant avait déclarée dans sa fiche.
  *
  * @package   mod_these
  * @copyright 2026 Sébastien Lefebvre
@@ -34,65 +35,128 @@ use stdClass;
  */
 class a6 {
     /**
-     * Validation de l'A6 d'un dossier.
+     * Validation de l'A6 d'un étudiant.
      *
-     * @param stdClass $dossier
-     * @return array {date (int, 0 si inconnue), notyet (bool), school (string), recorded (saisie par la DEVE)}
+     * @param int $userid
+     * @param stdClass|null $dossier Dossier dont reprendre l'ancienne valeur, à défaut de saisie.
+     * @return array {date (int, 0 si inconnue ou non validée), notyet (bool), school (string),
+     *               recorded (saisie par la DEVE)}
      */
-    public static function get(stdClass $dossier) {
-        $agreement = these_get_agreement($dossier);
-        if (array_key_exists('a6date', $agreement) || array_key_exists('a6notyet', $agreement)) {
-            $declared = these_get_bordereau($dossier);
-            return [
-                'date' => (int) ($agreement['a6date'] ?? 0),
-                'notyet' => !empty($agreement['a6notyet']),
-                'school' => (string) ($agreement['a6school'] ?? ($declared['a6school'] ?? '')),
-                'recorded' => true,
-            ];
+    public static function get_for_user($userid, ?stdClass $dossier = null) {
+        global $DB;
+
+        $record = $userid ? $DB->get_record('these_a6', ['userid' => (int) $userid]) : null;
+        if ($record) {
+            return ['date' => (int) $record->a6date, 'notyet' => empty($record->a6date),
+                'school' => (string) $record->a6school, 'recorded' => true];
         }
-        $declared = these_get_bordereau($dossier);
-        return [
-            'date' => (int) ($declared['a6date'] ?? 0),
-            'notyet' => !empty($declared['a6notyet']),
-            'school' => (string) ($declared['a6school'] ?? ''),
-            'recorded' => false,
-        ];
+        $legacy = $dossier ? self::legacy(these_get_agreement($dossier), these_get_bordereau($dossier)) : null;
+        return $legacy ?? ['date' => 0, 'notyet' => true, 'school' => '', 'recorded' => false];
     }
 
     /**
-     * Enregistre la validation de l'A6 d'un dossier (agrément) et l'inscrit à l'historique.
+     * Valeur d'avant la table these_a6 : saisie de la DEVE dans l'agrément, sinon déclaration de
+     * l'étudiant dans sa fiche.
+     *
+     * @param array $agreement
+     * @param array $bordereau
+     * @return array|null Voir get_for_user(), null sans aucune valeur.
+     */
+    protected static function legacy(array $agreement, array $bordereau) {
+        $inagreement = array_key_exists('a6date', $agreement) || array_key_exists('a6notyet', $agreement);
+        $source = $inagreement ? $agreement : $bordereau;
+        if (!array_key_exists('a6date', $source) && !array_key_exists('a6notyet', $source)) {
+            return null;
+        }
+        $notyet = !empty($source['a6notyet']) || empty($source['a6date']);
+        return ['date' => $notyet ? 0 : (int) $source['a6date'], 'notyet' => $notyet,
+            'school' => (string) ($agreement['a6school'] ?? ($bordereau['a6school'] ?? '')), 'recorded' => false];
+    }
+
+    /**
+     * Validation de l'A6 de l'étudiant d'un dossier.
      *
      * @param stdClass $dossier
+     * @return array Voir get_for_user().
+     */
+    public static function get(stdClass $dossier) {
+        return self::get_for_user((int) ($dossier->userid ?? 0), $dossier);
+    }
+
+    /**
+     * Validation de l'A6 pour les documents d'un dossier : celle de l'étudiant, sinon celle des données
+     * du document (agrément, fiche), qui servent aussi aux exemples des modèles.
+     *
+     * @param int $userid
+     * @param array $agreement
+     * @param array $bordereau
+     * @return array Voir get_for_user().
+     */
+    public static function for_documents($userid, array $agreement, array $bordereau) {
+        $a6 = self::get_for_user($userid);
+        if ($a6['recorded']) {
+            return $a6;
+        }
+        return self::legacy($agreement, $bordereau) ?? $a6;
+    }
+
+    /**
+     * Enregistre la validation de l'A6 d'un étudiant et l'inscrit à l'historique de ses dossiers.
+     *
+     * @param int $userid Étudiant.
      * @param int $date Date de validation (0 : pas encore validée).
      * @param string $school École (voir these_school_options()), vide pour garder celle connue.
-     * @param int $userid Compte de la DEVE.
-     * @return stdClass Le dossier à jour.
+     * @param int $actorid Compte de la DEVE.
+     * @return void
      */
-    public static function set(stdClass $dossier, $date, $school, $userid) {
+    public static function set_for_user($userid, $date, $school, $actorid) {
         global $DB;
 
-        $current = self::get($dossier);
-        $school = (string) $school !== '' ? (string) $school : $current['school'];
-        $agreement = array_merge(these_get_agreement($dossier), [
+        $userid = (int) $userid;
+        $existing = $DB->get_record('these_a6', ['userid' => $userid]);
+        $record = (object) [
+            'userid' => $userid,
             'a6date' => (int) $date,
-            'a6notyet' => (int) empty($date),
-            'a6school' => $school,
-        ]);
-        $dossier->agreement = json_encode($agreement);
-        $DB->update_record('these_dossier', (object) ['id' => $dossier->id, 'agreement' => $dossier->agreement,
-            'timemodified' => time()]);
-        these_log($dossier->id, $userid, 'a6recorded', $dossier->status, $dossier->status, self::label($dossier));
+            'a6school' => (string) $school !== '' ? (string) $school : (string) ($existing->a6school ?? ''),
+            'usermodified' => (int) $actorid,
+            'timemodified' => time(),
+        ];
+        if ($existing) {
+            $record->id = $existing->id;
+            $DB->update_record('these_a6', $record);
+        } else {
+            $DB->insert_record('these_a6', $record);
+        }
+        $label = self::label_for_user($userid);
+        foreach ($DB->get_records('these_dossier', ['userid' => $userid], '', 'id, status') as $dossier) {
+            these_log($dossier->id, $actorid, 'a6recorded', $dossier->status, $dossier->status, $label);
+        }
+    }
+
+    /**
+     * Enregistre la validation de l'A6 de l'étudiant d'un dossier.
+     *
+     * @param stdClass $dossier
+     * @param int $date
+     * @param string $school Vide pour garder celle connue (y compris celle du dossier, à défaut de saisie).
+     * @param int $actorid
+     * @return stdClass Le dossier.
+     */
+    public static function set(stdClass $dossier, $date, $school, $actorid) {
+        if ((string) $school === '') {
+            $school = self::get($dossier)['school'];
+        }
+        self::set_for_user($dossier->userid, $date, $school, $actorid);
         return $dossier;
     }
 
     /**
-     * Libellé de la validation de l'A6 d'un dossier, pour l'historique et le dossier.
+     * Libellé d'une validation de l'A6 (voir get_for_user()).
      *
-     * @param stdClass $dossier
+     * @param array $a6
      * @return string
      */
-    public static function label(stdClass $dossier) {
-        $a6 = self::get($dossier);
+    protected static function format(array $a6) {
         if ($a6['notyet'] || !$a6['date']) {
             return get_string('a6notvalidated', 'mod_these');
         }
@@ -102,6 +166,26 @@ class a6 {
             $label .= ' (' . $schools[$a6['school']] . ')';
         }
         return $label;
+    }
+
+    /**
+     * Libellé de la validation de l'A6 d'un étudiant.
+     *
+     * @param int $userid
+     * @return string
+     */
+    public static function label_for_user($userid) {
+        return self::format(self::get_for_user($userid));
+    }
+
+    /**
+     * Libellé de la validation de l'A6 de l'étudiant d'un dossier, pour le dossier et le dépôt.
+     *
+     * @param stdClass $dossier
+     * @return string
+     */
+    public static function label(stdClass $dossier) {
+        return self::format(self::get($dossier));
     }
 
     /**
@@ -211,7 +295,8 @@ class a6 {
      * Importe des validations de l'A6 : une ligne par étudiant (identifiant, adresse ou numéro
      * d'étudiant), avec la date de validation (« non » si elle n'est pas encore validée) et, au besoin,
      * l'école. Colonnes reconnues à leur en-tête : etudiant (ou student, identifiant, email), date (ou
-     * datea6, a6), ecole (ou school). Seuls les dossiers de l'activité sont mis à jour.
+     * datea6, a6), ecole (ou school). Tout étudiant inscrit au cours de l'activité peut figurer, qu'il ait
+     * ou non un dossier de thèse.
      *
      * @param stdClass $these
      * @param array[] $rows Voir read_rows().
@@ -243,6 +328,7 @@ class a6 {
             }
         }
 
+        $coursecontext = \context_course::instance($these->course);
         $report = [];
         $line = 1;
         foreach ($rows as $row) {
@@ -250,13 +336,12 @@ class a6 {
             $identifier = trim((string) ($row[$columns['student']] ?? ''));
             $result = ['line' => $line, 'student' => $identifier, 'ok' => false, 'message' => ''];
             $student = these_find_user($identifier);
-            $dossier = $student ? $DB->get_record('these_dossier', ['theseid' => $these->id, 'userid' => $student->id]) : null;
             $date = self::parse_date($row[$columns['date']] ?? '');
             $school = isset($columns['school']) ? self::parse_school($row[$columns['school']] ?? '') : '';
             if (!$student) {
                 $result['message'] = get_string('importusernotfound', 'mod_these', s($identifier));
-            } else if (!$dossier) {
-                $result['message'] = get_string('a6nodossier', 'mod_these');
+            } else if (!is_enrolled($coursecontext, $student)) {
+                $result['message'] = get_string('a6notenrolled', 'mod_these');
             } else if ($date === null) {
                 $result['message'] = get_string('a6baddate', 'mod_these', s((string) ($row[$columns['date']] ?? '')));
             } else if ($school === null) {
@@ -265,7 +350,7 @@ class a6 {
                 $result['ok'] = true;
                 $result['student'] = fullname($student);
                 if (!$dryrun) {
-                    self::set($dossier, $date, $school, $userid);
+                    self::set_for_user($student->id, $date, $school, $userid);
                 }
                 $day = $date ? userdate($date, get_string('strftimedate', 'langconfig')) : '';
                 $result['message'] = $date
