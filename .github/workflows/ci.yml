@@ -43,6 +43,12 @@ jobs:
       - name: Run phpcs
         run: phpcs --standard=phpcs.xml -p
 
+      - name: Portabilité musl (pas de GLOB_BRACE)
+        # GLOB_BRACE n'existe pas dans les PHP compilés avec musl (Alpine) : « Undefined constant ».
+        # Dernière commande de l'étape : son code de retour est celui de l'étape.
+        run: |
+          ! grep -rn "GLOB_BRACE" mod --include='*.php'
+
   moodle:
     # Les deux versions LTS couvertes par $plugin->requires (Moodle 4.0 et plus) : la plus ancienne
     # encore suivie, avec la plus ancienne version de PHP qu'elle accepte, et la plus récente.

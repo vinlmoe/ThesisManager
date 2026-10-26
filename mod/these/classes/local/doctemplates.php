@@ -242,6 +242,24 @@ class doctemplates {
     }
 
     /**
+     * Fichiers image fournis avec le module (doctemplates/images/), par extension puis par nom.
+     *
+     * Un appel à glob() par extension : l'expansion d'accolades n'existe pas dans les PHP compilés
+     * avec musl (Alpine).
+     *
+     * @return string[] chemins complets
+     */
+    public static function doctemplate_image_files() {
+        global $CFG;
+
+        $paths = [];
+        foreach (['png', 'jpg', 'jpeg'] as $extension) {
+            $paths = array_merge($paths, glob($CFG->dirroot . '/mod/these/doctemplates/images/*.' . $extension) ?: []);
+        }
+        return $paths;
+    }
+
+    /**
      * Images utilisables dans les modèles : celles fournies avec le module (doctemplates/images/),
      * remplacées ou complétées par celles déposées par la DEVE dans la portée.
      *
@@ -249,10 +267,8 @@ class doctemplates {
      * @return array nom => source pour TCPDF ('@' suivi du contenu en base64)
      */
     public static function doctemplate_images(?stdClass $scope) {
-        global $CFG;
-
         $images = [];
-        foreach (glob($CFG->dirroot . '/mod/these/doctemplates/images/*.{png,jpg,jpeg}', GLOB_BRACE) ?: [] as $path) {
+        foreach (self::doctemplate_image_files() as $path) {
             $images[these_doctemplate_image_name($path)] = '@' . base64_encode(file_get_contents($path));
         }
         if ($scope && $scope->contextid) {

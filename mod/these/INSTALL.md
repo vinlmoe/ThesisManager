@@ -6,6 +6,9 @@ dépôt et validation du sujet, puis dépôt, validation et soutenance.
 - **Prérequis** : Moodle 4.0 ou supérieur, PHP 7.4+.
 - **Dépendances** : aucune à installer. Les PDF sont produits avec TCPDF (fourni
   par Moodle) et FPDI 2.6 (fourni dans `thirdparty/`, comme pour `mod_stage`).
+- **PHP compilé avec musl** (Alpine) : le module est vérifié sur l'image Docker
+  `erseco/alpine-moodle` et n'utilise pas `GLOB_BRACE`, constante absente de
+  ces PHP ; la CI échoue si elle réapparaît dans `mod/`.
 
 ## 1. Installation
 

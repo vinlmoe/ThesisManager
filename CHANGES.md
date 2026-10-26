@@ -13,6 +13,15 @@ de version recalés sur la date. Les numéros entre parenthèses des sections de
 développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
 été étiquetée.
 
+## Non publié
+
+- Compatibilité avec les PHP compilés avec musl (Alpine) : suppression de
+  `GLOB_BRACE`. Les images des modèles de documents (`doctemplates/images/`)
+  sont lues par un appel à `glob()` par extension. Le module s'arrêtait sur
+  « Undefined constant "mod_these\local\GLOB_BRACE" » sur ces installations
+  (image Docker `erseco/alpine-moodle`). La CI échoue si `GLOB_BRACE`
+  réapparaît. Sans changement de schéma ni de version.
+
 ## mod_these 0.13.0 (2026102504) — scans signés, agents DEVE signataires
 
 - Documents générés : le rapport du directeur et la grille de conformité,
