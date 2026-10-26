@@ -114,6 +114,8 @@ $string['stepdevedefense'] = 'Validation du dossier complet';
 $string['steplibraryconformity'] = 'Conformité du manuscrit';
 $string['stepdocuments'] = 'Documents de soutenance';
 $string['stepminutes'] = 'Procès-verbal';
+$string['progresscurrent'] = 'Étape {$a->position} sur {$a->total} : {$a->label}';
+$string['progressall'] = 'Voir toutes les étapes';
 $string['dormantphase'] = 'dossier dormant';
 
 // Navigation et listes.
@@ -189,6 +191,9 @@ $string['libraryref'] = 'Référence de la notice bibliographique';
 // Soutenance.
 $string['defense'] = 'Soutenance';
 $string['depositdefense'] = 'Déposer les documents de soutenance';
+$string['defenseprogress'] = 'Avancement du dépôt : {$a->complete} rubrique(s) complète(s) sur {$a->total}. Les rubriques à compléter sont dépliées ci-dessous.';
+$string['defensesectioncomplete'] = 'Complète';
+$string['defensesectionmissing'] = '{$a} champ(s) à compléter';
 $string['defenseintro'] = "Déposez votre manuscrit et les documents de soutenance, et proposez une date, un lieu et la composition du "
     . "jury (un président et au moins {\$a} membres votants, président compris). Vous pouvez préparer ce dépôt en plusieurs fois "
     . "(« Enregistrer le brouillon ») ; la soumission l'envoie à votre directeur, qui le validera en y joignant son rapport.";
@@ -199,6 +204,8 @@ $string['manuscriptrequired'] = 'Le manuscrit est obligatoire pour soumettre.';
 $string['defensedocs'] = 'Autres documents de soutenance';
 $string['defensedocs_help'] = 'Facultatif : résumé, autorisation de diffusion, annexes...';
 $string['defenseproposal'] = 'Proposition de soutenance';
+$string['proposeddaterequired'] = 'Cochez « Activer » puis choisissez la date et l\'heure proposées.';
+$string['defenseroomshelp'] = 'Salles proposées : {$a}. Vous pouvez aussi saisir un autre lieu.';
 $string['proposeddate'] = 'Date proposée';
 $string['defensedate'] = 'Date de soutenance';
 $string['defenselocation'] = 'Lieu de soutenance';
@@ -222,6 +229,13 @@ $string['minutes'] = 'Procès-verbal de soutenance';
 
 // Jury.
 $string['jury'] = 'Jury';
+$string['juryproblem'] = 'Composition du jury à corriger : {$a}';
+$string['juryedit'] = 'Modifier la composition du jury';
+$string['juryeligiblecheckof'] = 'Éligibilité de {$a} vérifiée (DEVE)';
+$string['roomconflicts'] = 'Salle déjà occupée sur ce créneau (soutenances qui se chevauchent) :';
+$string['roomconflict'] = '{$a->location} : soutenance de {$a->student} le {$a->date} ({$a->activity}).';
+$string['roomconflictshort'] = 'Salle occupée : {$a->student}, {$a->time}';
+$string['juryhelpdeve'] = "Une ligne par membre, choisi de préférence dans l'annuaire du jury.";
 $string['juryhelp'] = "Une ligne par membre. Choisissez de préférence l'enseignant dans l'annuaire du jury : son titre, son "
     . "statut, son établissement et son adresse en sont repris. Pour un membre extérieur ou un invité, choisissez « Membre extérieur "
     . "ou invité » et renseignez la ligne (le statut est demandé pour un membre votant). Seuls les maîtres de conférences HDR, les "
@@ -261,9 +275,7 @@ $string['juryduplicate'] = '{$a} figure deux fois dans le jury.';
 $string['jurypresidentnoteligible'] = "{\$a} ne peut pas présider le jury : seuls les maîtres de conférences HDR, les professeurs et "
     . "les émérites le peuvent.";
 $string['juryeligiblecheck'] = 'Éligibilité vérifiée (DEVE)';
-$string['juryeligiblehelp'] = "Cochez l'éligibilité de chaque membre votant après vérification (déjà cochée pour les enseignants "
-    . "de l'annuaire dont le statut convient à leur rôle). À la validation, les membres du jury sont prévenus par courriel et "
-    . "reçoivent un lien d'accès aux documents du dossier.";
+$string['juryeligiblehelp'] = "Cochez l'éligibilité de chaque membre votant vérifié (déjà cochée pour l'annuaire).";
 $string['juryeligiblerequired'] = "L'éligibilité de {\$a} n'est pas validée.";
 $string['jurynotified'] = '{$a} membre(s) du jury prévenu(s).';
 $string['jurynotifiedmissing'] = 'Sans adresse, à prévenir par un autre moyen : {$a}.';
@@ -284,6 +296,9 @@ $string['juryaccessnodocuments'] = "Aucun document n'est encore disponible.";
 
 // Annuaire du jury.
 $string['jurors'] = 'Annuaire du jury';
+$string['juryconflicts'] = 'Membre du jury déjà engagé dans un autre jury sur ce créneau (soutenances qui se chevauchent) :';
+$string['juryconflict'] = '{$a->member} siège au jury de la soutenance de {$a->student} le {$a->date} ({$a->activity}).';
+$string['juryconflictshort'] = 'Conflit : {$a->member} déjà au jury de {$a->student} à {$a->time}';
 $string['jurors_desc'] = "Enseignants pouvant diriger une thèse ou siéger au jury, communs à toutes les activités et à toutes les "
     . "promotions. Les formulaires de jury y puisent pour être préremplis. Un enseignant retiré (inactif) n'est plus proposé mais "
     . "reste dans les jurys qui l'ont retenu.";
@@ -318,9 +333,7 @@ $string['reviewdirectorsubject'] = 'Examiner la proposition de sujet';
 $string['reviewdirectorsubject_help'] = "Validez le sujet pour qu'il soit enregistré par la DEVE, ou renvoyez-le à l'étudiant avec vos "
     . "commentaires : il pourra le corriger et vous le soumettre de nouveau.";
 $string['reviewdevesubject'] = 'Enregistrer le sujet (DEVE)';
-$string['reviewdevesubject_help'] = "Vérifiez le sujet : il est ensuite transmis à la bibliothèque. Le numéro d'enregistrement DEVE "
-    . "sera attribué après le dépôt de la thèse, à la validation du dossier de soutenance. Un renvoi "
-    . "peut être adressé à l'étudiant ou au directeur ; à sa nouvelle soumission, le dossier revient directement ici.";
+$string['reviewdevesubject_help'] = "Vérifiez le sujet : il passe ensuite à la bibliothèque.";
 $string['reviewlibrarysubject'] = 'Enregistrer le sujet (bibliothèque)';
 $string['reviewlibrarysubject_help'] = "Indiquez la référence de la notice créée dans le référentiel documentaire. L'enregistrement ouvre "
     . "le dossier, qui reste actif jusqu'au dépôt des documents de soutenance.";
@@ -328,8 +341,7 @@ $string['reviewdirectordefense'] = 'Valider la soutenance et déposer le rapport
 $string['reviewdirectordefense_help'] = "Validez la proposition de soutenance (date, jury) après avoir rédigé votre rapport sur le "
     . "manuscrit (« Rédiger le rapport ») : votre signature est apposée sur le rapport à la validation. Vous pouvez aussi renvoyer le dossier à l'étudiant avec vos commentaires.";
 $string['reviewdevedefense'] = 'Valider le dossier de soutenance (DEVE)';
-$string['reviewdevedefense_help'] = "Vérifiez le dossier complet (manuscrit, documents, rapport du directeur), attribuez le numéro "
-    . "d'enregistrement DEVE et arrêtez la date, le lieu et le jury. La validation transmet le manuscrit à la bibliothèque pour contrôle de conformité.";
+$string['reviewdevedefense_help'] = "Attribuez le numéro, arrêtez la date, le lieu et le jury : le manuscrit passe ensuite à la bibliothèque.";
 $string['reviewlibraryconformity'] = 'Contrôler la conformité du manuscrit';
 $string['reviewlibraryconformity_help'] = "Vérifiez la forme du manuscrit, les normes de présentation et les conditions du dépôt légal. "
     . "La validation délivre l'attestation de conformité ; un manuscrit non conforme est renvoyé à l'étudiant avec le motif.";
@@ -384,8 +396,7 @@ $string['dossierclosed'] = 'Procès-verbal déposé : dossier clôturé.';
 
 // Gestion DEVE.
 $string['editdossier'] = 'Modifier le dossier';
-$string['editdossierhelp'] = "Les modifications n'ont aucun effet sur le statut du dossier. Si la date, le lieu ou le jury changent "
-    . "après la génération des documents de soutenance, ceux-ci seront à régénérer.";
+$string['editdossierhelp'] = "Sans effet sur le statut. Si la date, le lieu ou le jury changent, régénérez les documents de soutenance.";
 $string['dossiersaved'] = 'Dossier enregistré.';
 $string['canceldossier'] = 'Abandonner le dossier';
 $string['cancelhelp'] = "Le dossier est conservé tel quel et peut être rouvert plus tard dans le statut qu'il avait atteint.";
@@ -566,29 +577,59 @@ $string['privacy:metadata:jury:title'] = 'Titre de la thèse.';
 $string['privacy:metadata:jury:defensedate'] = 'Date et lieu de la soutenance.';
 
 // Paramètres du circuit (activité « Suivi des thèses », sinon l'activité elle-même ; aucun réglage du site).
+$string['settingsmenu'] = 'Paramètres';
+$string['sharedsettingslink'] = 'Paramètres du circuit, modèles, grille et questionnaire ({$a})';
+$string['bulkremind'] = 'Relancer les signataires';
+$string['bulkgenerate'] = 'Générer les documents de soutenance';
+$string['bulknotifyjury'] = 'Prévenir les membres du jury pas encore prévenus';
+$string['bulknothing'] = 'Cochez au moins un dossier et choisissez une action.';
+$string['bulkdone'] = '{$a->action} : {$a->done} dossier(s) traité(s), {$a->skipped} ignoré(s) (étape qui ne s\'y prête pas, ou rien en attente).';
+$string['bulkfor'] = 'Pour les dossiers cochés :';
+$string['bulkapply'] = 'Appliquer';
+$string['settingschecktitle'] = 'Réglages à compléter : {$a}';
+$string['settingscheckcomplete'] = 'Réglages complets.';
+$string['settingscheckdone'] = 'Fait';
+$string['settingschecktodo'] = 'À compléter';
+$string['settingscheckoptional'] = 'Facultatif';
+$string['settingscheckinstitution'] = 'Établissement et université';
+$string['settingscheckdg'] = 'Direction générale : intitulé et nom';
+$string['settingscheckccem'] = 'Président du CCEM';
+$string['settingscheckucbl'] = 'Présidence de l\'université : intitulé et nom';
+$string['settingscheckdeve'] = 'Nom de la direction des études';
+$string['settingscheckcontract'] = 'Contrat type de diffusion électronique';
+$string['settingscheckrooms'] = 'Salles de soutenance';
+$string['settingscheckagents'] = 'Agents DEVE signataires';
+$string['settingscheckquestions'] = 'Questionnaire préalable au jury';
+$string['settingscheckimages'] = 'Images des modèles des documents';
+$string['settingscheckimagesmissing'] = 'Images des modèles des documents (manquent : {$a})';
+$string['settingsmissingnotice'] = 'Réglages du circuit à compléter : {$a}.';
 $string['scopesettings'] = 'Paramètres du circuit';
 $string['scopesettings_desc'] = "Rôles des services, agents DEVE signataires, établissement, université, signataires des documents et "
     . "contrat type de diffusion de cette activité. Aucun n'est un réglage du site.";
 $string['scopesettingsshared_desc'] = "Rôles des services, agents DEVE signataires, établissement, université, signataires des documents "
     . "et contrat type de diffusion communs à toutes les activités « Gestion des thèses » suivies. Aucun n'est un réglage du site.";
 $string['settingsroles'] = 'Rôles des services';
-$string['settingsroles_desc'] = "Comme la DEVE est reconnue au rôle « Enseignant », la bibliothèque est reconnue au rôle choisi ici. "
+$string['deverole'] = 'Rôle DEVE';
+$string['deverole_help'] = 'Rôle dont les détenteurs agissent comme DEVE dans les activités de gestion des thèses.';
+$string['libraryrole'] = 'Rôle Bibliothèque';
+$string['libraryrole_help'] = "Rôle dont les détenteurs agissent comme bibliothèque. Par défaut, le rôle interne « Bibliothèque "
+    . "(thèses) » créé à l'installation du module."
+    . ' ' . "Comme la DEVE est reconnue au rôle « Enseignant », la bibliothèque est reconnue au rôle choisi ici. "
     . "Le rôle peut être attribué dans le cours, dans sa catégorie ou au niveau du site (il donne alors accès à toutes les activités "
     . "de gestion des thèses sans inscription). Les capacités du module restent également prises en compte.";
-$string['deverole'] = 'Rôle DEVE';
-$string['deverole_desc'] = 'Rôle dont les détenteurs agissent comme DEVE dans les activités de gestion des thèses.';
-$string['libraryrole'] = 'Rôle Bibliothèque';
-$string['libraryrole_desc'] = "Rôle dont les détenteurs agissent comme bibliothèque. Par défaut, le rôle interne « Bibliothèque "
-    . "(thèses) » créé à l'installation du module.";
 $string['libraryrolename'] = 'Bibliothèque (thèses)';
 $string['libraryroledescription'] = "Rôle interne du module Gestion des thèses : enregistrement des sujets au référentiel documentaire et "
     . "attestation de conformité des manuscrits. À attribuer au niveau du site, d'une catégorie ou d'un cours.";
 
 // Documents (paramètres du circuit).
+$string['settingsdefenses'] = 'Soutenances';
+$string['settingsdefenseduration'] = "Durée d'une soutenance (minutes)";
+$string['settingsdefenseduration_help'] = "Sert à détecter les conflits de jury : un membre qui siège dans deux soutenances qui se chevauchent "
+    . "est signalé dans le planning et sur le dossier. 60 minutes par défaut.";
+$string['settingsdefenserooms'] = 'Salles de soutenance';
+$string['settingsdefenserooms_help'] = 'Une salle par ligne. Elles sont proposées à la saisie du lieu (dépôt de l\'étudiant, validation et modification par la DEVE) ; la première est proposée par défaut. Un autre lieu reste possible.';
+$string['settingsdefensedurationinvalid'] = 'Indiquez une durée d\'au moins une minute.';
 $string['settingsdocuments'] = 'Documents et signataires';
-$string['settingsdocuments_desc'] = "En-tête et signataires des documents de l'établissement produits par le module. Les signataires "
-    . "sans compte Moodle (direction générale, CCEM, présidence de l'université) reçoivent par courriel un lien de signature si leur "
-    . "adresse est renseignée ; sinon la DEVE recueille leur signature sur place.";
 $string['doctplimages'] = 'Images des modèles';
 $string['doctplimages_help'] = "Images (PNG ou JPEG) utilisables dans les modèles de documents par {{img.nom}}, nom étant le nom du "
     . "fichier en minuscules, sans extension ni caractère spécial. Le module n'en fournit aucune : les modèles d'origine appellent "
@@ -603,37 +644,37 @@ $string['doctplimageslotabes'] = "logo de l'ABES (bordereau de thèse)";
 $string['doctplimagepresent'] = 'déposée';
 $string['doctplimagemissing'] = 'à déposer';
 $string['settingsdevename'] = 'Direction des études : nom';
-$string['settingsdevename_desc'] = "Nom de la directrice ou du directeur des études et de la vie étudiante (fiche d'agréments).";
+$string['settingsdevename_help'] = "Nom de la directrice ou du directeur des études et de la vie étudiante (fiche d'agréments).";
 $string['settingsdevetitle'] = 'Direction des études : qualité';
-$string['settingsdevetitle_desc'] = "Qualité imprimée sur la fiche d'agréments (sans article).";
+$string['settingsdevetitle_help'] = "Qualité imprimée sur la fiche d'agréments (sans article).";
 $string['settingscontracttemplate'] = 'Contrat type de diffusion électronique (PDF)';
-$string['settingscontracttemplate_desc'] = "Le contrat officiel (ENS-INI-P308-E04), tel quel. Le module le fait précéder d'une page "
+$string['settingscontracttemplate_help'] = "Le contrat officiel (ENS-INI-P308-E04), tel quel. Le module le fait précéder d'une page "
     . "reprenant les données et les choix de l'auteur et suivre d'une page de signatures.";
 $string['settingsinstitution'] = 'Établissement';
-$string['settingsinstitution_desc'] = 'Nom court utilisé dans les documents (« Visa de la Directrice de … », « Membre de … »).';
+$string['settingsinstitution_help'] = 'Nom court utilisé dans les documents (« Visa de la Directrice de … », « Membre de … »).'
+    . ' ' . "En-tête et signataires des documents de l'établissement produits par le module. Les signataires "
+    . "sans compte Moodle (direction générale, CCEM, présidence de l'université) reçoivent par courriel un lien de signature si leur "
+    . "adresse est renseignée ; sinon la DEVE recueille leur signature sur place.";
 $string['settingsuniversity'] = 'Université';
-$string['settingsuniversity_desc'] = "Université qui délivre le diplôme, précédée de son article (« l'Université … ») : « Pour le président "
+$string['settingsuniversity_help'] = "Université qui délivre le diplôme, précédée de son article (« l'Université … ») : « Pour le président "
     . "de … et par délégation », bibliothèques universitaires du contrat de diffusion.";
 $string['settingshetopurl'] = 'Lien HeTOP';
-$string['settingshetopurl_desc'] = 'Terminologie de référence pour les mots-clés du sujet.';
+$string['settingshetopurl_help'] = 'Terminologie de référence pour les mots-clés du sujet.';
 $string['settingsdgtitle'] = 'Direction générale (intitulé)';
-$string['settingsdgtitle_desc'] = 'Intitulé complet imprimé au-dessus de sa signature, par exemple « La Directrice générale de … ».';
+$string['settingsdgtitle_help'] = 'Intitulé complet imprimé au-dessus de sa signature, par exemple « La Directrice générale de … ».';
 $string['settingsdgname'] = 'Direction générale (nom)';
-$string['settingsdgname_desc'] = '';
 $string['settingsdgemail'] = 'Direction générale (courriel)';
-$string['settingsdgemail_desc'] = 'Adresse à laquelle envoyer les liens de signature ; vide : signature recueillie sur place par la DEVE.';
+$string['settingsdgemail_help'] = 'Adresse à laquelle envoyer les liens de signature ; vide : signature recueillie sur place par la DEVE.';
 $string['settingsvisaplace'] = 'Lieu du visa';
-$string['settingsvisaplace_desc'] = '« Vu, … le » des conclusions, « Fait à » du contrat de diffusion.';
+$string['settingsvisaplace_help'] = '« Vu, … le » des conclusions, « Fait à » du contrat de diffusion.';
 $string['settingsccemname'] = 'CCEM (nom)';
-$string['settingsccemname_desc'] = '';
 $string['settingsccememail'] = 'CCEM (courriel)';
-$string['settingsccememail_desc'] = 'Adresse à laquelle envoyer les liens de signature ; vide : signature recueillie sur place par la DEVE.';
+$string['settingsccememail_help'] = 'Adresse à laquelle envoyer les liens de signature ; vide : signature recueillie sur place par la DEVE.';
 $string['settingsucbltitle'] = 'Présidence de l\'université (intitulé)';
-$string['settingsucbltitle_desc'] = 'Intitulé complet imprimé au-dessus de sa signature (contrat de diffusion), par exemple « Le Président de l\'Université … ».';
+$string['settingsucbltitle_help'] = 'Intitulé complet imprimé au-dessus de sa signature (contrat de diffusion), par exemple « Le Président de l\'Université … ».';
 $string['settingsucblname'] = 'Présidence de l\'université (nom)';
-$string['settingsucblname_desc'] = '';
 $string['settingsucblemail'] = 'Présidence de l\'université (courriel)';
-$string['settingsucblemail_desc'] = 'Adresse à laquelle envoyer les liens de signature ; vide : signature recueillie sur place par la DEVE.';
+$string['settingsucblemail_help'] = 'Adresse à laquelle envoyer les liens de signature ; vide : signature recueillie sur place par la DEVE.';
 
 // Formulaire de dépôt de sujet.
 $string['studyyear'] = "Année d'études";
@@ -685,7 +726,7 @@ $string['signatures'] = 'Signatures';
 $string['document'] = 'Document';
 $string['downloadpdf'] = 'PDF';
 $string['managesignatures'] = 'Suivi des signatures';
-$string['externalsigners'] = 'Signataires sans compte';
+$string['externalsigners'] = 'Signatures à recueillir';
 $string['signer'] = 'Signataire';
 $string['noemail'] = 'pas d\'adresse';
 $string['documentstosign'] = 'Documents à signer';
@@ -694,7 +735,6 @@ $string['signinperson'] = 'Signer sur place';
 $string['signaturerequestsent'] = 'Lien de signature envoyé.';
 $string['signaturesrecorded'] = 'Signature enregistrée. Merci.';
 $string['signpagetitle'] = 'Signature de documents de thèse';
-$string['signpageintro'] = 'Signature en qualité de {$a->slot} des documents de la thèse de {$a->student} : « {$a->title} ».';
 $string['signinvalidtoken'] = "Ce lien n'est plus valide : les documents ont déjà été signés, une nouvelle invitation a été "
     . "envoyée, ou le lien a expiré (60 jours). Contactez la DEVE pour en recevoir un nouveau.";
 $string['signnothingpending'] = 'Aucun document n\'attend de signature.';
@@ -811,6 +851,12 @@ $string['griditemadd'] = 'Ajouter {no} élément(s)';
 $string['griditemssaved'] = 'La grille de conformité est enregistrée.';
 $string['griditemsreset'] = "Rétablir la grille d'origine";
 $string['gridrequired'] = 'Élément à valider.';
+$string['gridstudenthelp'] = "Cochez chaque point que respecte votre manuscrit. Votre directeur vérifiera cette grille, la "
+    . "complétera au besoin et la signera en validant votre soutenance.";
+$string['gridstudentconfirm'] = "J'atteste que mon manuscrit respecte les points cochés de la grille de conformité";
+$string['gridstudentconfirmrequired'] = "Attestez la grille de conformité avant de soumettre le dossier.";
+$string['gridprefilledbystudent'] = "Grille préremplie et attestée par l'étudiant à son dépôt : vérifiez chaque point avant "
+    . "de signer.";
 $string['gridquestion'] = 'La question scientifique est clairement posée et identifiée.';
 $string['gridanswer'] = 'La réponse bibliographique ou expérimentale est satisfaisante.';
 $string['gridbiblio'] = 'La bibliographie est complète, pertinente et actuelle.';
@@ -854,6 +900,7 @@ $string['dossierbusy'] = 'Ce dossier est en cours de traitement par une autre ac
 $string['logsignaturesinvalidated'] = 'Signatures invalidées (document modifié)';
 $string['logsignaturerequested'] = 'Signature demandée';
 $string['logsignedinperson'] = 'Signature recueillie sur place';
+$string['logidentityverified'] = "Identité du signataire vérifiée par la DEVE";
 $string['emailkeysignaturerequest'] = 'Demande de signature (signataires sans compte)';
 $string['emailkeyagentsignature'] = 'Documents à signer par l\'agent DEVE';
 $string['emailkeysubjectchanged'] = 'Changement de sujet';
@@ -889,7 +936,20 @@ $string['signedmethodscan'] = 'à la main, scan joint au dossier';
 $string['signdelegated'] = 'Signature par délégation de la direction générale';
 $string['signdelegated_help'] = "À cocher quand la personne qui signe le fait par délégation de la directrice ou du directeur général : "
     . "la mention « par délégation » accompagne son nom sur le document.";
+$string['signidentity'] = "Vérification de l'identité du signataire";
+$string['signidentity_desc'] = "Vérifiez l'identité de la personne présente (pièce d'identité) avant d'ouvrir la page de signature. "
+    . "La vérification est inscrite à l'historique à votre nom, conservée avec la signature et imprimée sous elle.";
 $string['signidentityverified'] = "Je certifie avoir vérifié l'identité du signataire (pièce d'identité)";
+$string['signidentityopen'] = 'Ouvrir la page de signature';
+$string['signinfoslot'] = 'Signature en qualité de';
+$string['reviewsummary'] = 'Dossier examiné';
+$string['reviewfulldossier'] = 'Dossier complet (cliquer pour déplier)';
+$string['mysignaturesdossier'] = '{$a->student} — « {$a->title} »{$a->number}';
+$string['signinfostudent'] = 'Étudiant';
+$string['signinfotitle'] = 'Titre de la thèse';
+$string['signinfonumber'] = 'N° DEVE';
+$string['signinfodefense'] = 'Soutenance';
+$string['signinfodocuments'] = 'Documents à consulter avant de signer';
 $string['signidentityrequired'] = "Vérifiez l'identité du signataire avant d'enregistrer sa signature.";
 $string['signidentityverifiedby'] = 'identité vérifiée par {$a}';
 $string['scanslots'] = 'Signataires du scan';
@@ -1117,7 +1177,7 @@ $string['adjournednoticestudent'] = 'Votre soutenance a été ajournée le {$a}.
     . 'retravaillé, date, jury) : il sera de nouveau validé par votre directeur, la DEVE et la bibliothèque.';
 $string['logadjourned'] = 'Procès-verbal déposé, soutenance ajournée : retour en phase de soutenance';
 $string['logsignedscan'] = 'Scan signé déposé hors du module';
-$string['scanlogremark'] = 'Document : {$a->doctype}. Signataire : {$a->signer}. Empreinte SHA-256 : {$a->files}.';
+$string['scanlogremark'] = 'Document : {$a->doctype}. Signataires : {$a->signer}. Empreinte SHA-256 : {$a->files}.';
 $string['signedscans'] = 'Scans signés hors module';
 $string['addsignedscan'] = 'Ajouter un scan signé';
 $string['recordscan'] = 'Enregistrer le scan';
@@ -1127,7 +1187,6 @@ $string['scandoctypeagreement'] = "Fiche d'agréments (E02)";
 $string['scandoctypesignaletique'] = 'Fiche signalétique (E03)';
 $string['scandoctypecontract'] = 'Contrat de diffusion (E04)';
 $string['scandoctypeconclusions'] = 'Conclusions';
-$string['scansigner'] = 'Signataire';
 $string['scansigneddate'] = 'Date de la signature';
 $string['scanfiles'] = 'Scans signés (PDF ou images)';
 $string['scanfiles_help'] = 'Le document signé à la main par le signataire, scanné. Il est joint au dossier pour conservation : il ne remplace pas la signature du module et ne peut pas être modifié ensuite.';
@@ -1147,7 +1206,7 @@ Accéder au dossier : {$a->url}';
 // Agent DEVE signataire et signature enregistrée.
 $string['agentdeve'] = 'Agent responsable de la DEVE';
 $string['settingsdeveagent'] = 'Agents DEVE signataires';
-$string['settingsdeveagent_desc'] = "Identifiants ou adresses de courriel des comptes Moodle des agents habilités à signer pour la DEVE, "
+$string['settingsdeveagent_help'] = "Identifiants ou adresses de courriel des comptes Moodle des agents habilités à signer pour la DEVE, "
     . "séparés par des virgules ou un par ligne. L'équipe de la DEVE remplit et vérifie le dossier puis valide sans signer ; chaque "
     . "agent reçoit alors un courriel et retrouve le visa du sujet et l'agrément administratif dans « Mes signatures » : le premier "
     . "qui signe appose la signature, avec sa signature enregistrée. Laisser vide pour que la personne de la DEVE qui valide signe "

@@ -13,6 +13,100 @@ de version recalés sur la date. Les numéros entre parenthèses des sections de
 développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
 été étiquetée.
 
+## mod_these 0.17.0 (2026102608) et mod_thesesynthesis 0.6.0 (2026102607) — signature sur place de l'étudiant et du directeur, vérification d'identité préalable, grille remplie par l'étudiant, ergonomie, simplifications pour la DEVE
+
+- Simplifications pour la DEVE :
+  - validation du dossier de soutenance : jury présenté en tableau ; seules
+    les cases d'éligibilité à vérifier (membres extérieurs votants) restent,
+    au nom du membre ; « Modifier la composition du jury » rouvre la saisie
+    complète. Date et lieu proposés repris, salles proposées ;
+  - « À traiter » : chaque dossier propose directement l'action attendue
+    (validation de l'étape, documents, procès-verbal), à côté d'« Ouvrir » ;
+  - actions groupées sur les dossiers cochés du tableau de bord : relancer
+    les signataires, générer les documents de soutenance, prévenir les
+    membres du jury pas encore prévenus (`bulk.php`, `\mod_these\local\bulk`) ;
+  - conflits de salle : une autre soutenance dans la même salle sur un
+    créneau qui chevauche est signalée (planning, dossier, modification,
+    validation) ;
+  - « Réglages à compléter » en tête des paramètres du circuit (signataires,
+    contrat type, images des modèles, salles…), rappelé sur le tableau de
+    bord de la DEVE tant qu'il manque quelque chose ;
+  - moins de texte : explications des pages de la DEVE repliées sous
+    « Aide », descriptions des paramètres du circuit derrière l'icône d'aide,
+    aides du jury et des validations de la DEVE ramenées à une ligne.
+
+- Dépôt de la soutenance (audit, amélioration 3) : encadré « Avancement du
+  dépôt » en tête du formulaire, rubrique par rubrique, avec le nombre de
+  champs à compléter (les contrôles de la soumission appliqués aux données
+  enregistrées) ; rubriques complètes repliées, rubriques à compléter
+  dépliées. La date proposée n'est plus préremplie avec l'heure courante :
+  l'étudiant l'active et la choisit.
+- Téléphone (amélioration 4) : la frise ne montre que l'étape en cours
+  (« Étape 5 sur 11 », acteur attendu) ; la frise complète est repliée sous
+  « Voir toutes les étapes ».
+- Navigation de la DEVE (amélioration 6) : boutons des pages de travail
+  (tableau de bord, planning, création, import, export, Mes signatures) et
+  menu « Paramètres » (courriels, annuaire du jury, transfert, paramètres du
+  circuit, modèles, grille, questionnaire). Dans une activité suivie, les
+  quatre pages qui ne faisaient que renvoyer à l'activité de suivi laissent la
+  place à un seul lien vers ses paramètres. Même menu dans l'activité de suivi
+  (`mod_thesesynthesis` 0.6.0).
+- Jury : les erreurs de composition (président, membres votants, éligibilité)
+  et l'avertissement des conflits s'affichent en tête de la rubrique « Jury »
+  des formulaires (dépôt, modification, validation par la DEVE) et au-dessus
+  du tableau du jury dans le dossier, et non plus sur la ligne du premier
+  membre ou en haut de la page.
+- Salles de soutenance : nouveau paramètre du circuit (rubrique
+  « Soutenances », une salle par ligne), proposé à la saisie du lieu (liste
+  de suggestions, un autre lieu reste possible) ; la première salle est
+  proposée par défaut à l'étudiant. Le « lieu de soutenance proposé par
+  défaut » disparaît des réglages de l'activité ; sa valeur sert encore tant
+  qu'aucune salle n'est saisie.
+
+- Grille de conformité remplie par l'étudiant : au dépôt de la soutenance, il
+  renseigne le numéro d'avis du comité d'éthique, coche les éléments de la
+  grille (ceux qui ne sont pas « selon la thèse » sont obligatoires) et atteste
+  qu'elle correspond à son manuscrit. Le directeur la reçoit préremplie
+  (« Grille préremplie et attestée par l'étudiant »), la vérifie, la corrige au besoin et
+  la signe à sa validation. Un brouillon enregistré conserve la grille.
+
+- Signature sur place ouverte à l'étudiant et au directeur (suivi des
+  signatures, « Signatures à recueillir ») pour les documents dont la signature
+  a commencé ; la signature est enregistrée sous leur compte.
+- Vérification d'identité préalable : la DEVE coche « Je certifie avoir vérifié
+  l'identité du signataire », puis la page de signature s'ouvre. La
+  vérification est inscrite à l'historique à son nom (« Identité du signataire
+  vérifiée par la DEVE »), conservée avec la signature et imprimée sous elle.
+- Page de signature : les informations du document (qualité du signataire,
+  étudiant, titre, n° DEVE, soutenance, documents à consulter) sont affichées
+  au-dessus de la signature.
+- Scan signé : le nom du signataire n'est plus demandé. Chaque signataire coché
+  porte le nom connu du module (étudiant, directeur, signataires des paramètres,
+  président du jury), sinon le libellé de l'emplacement ; une signature par
+  délégation de la direction générale porte « Direction générale (par
+  délégation) ». Le nom des fichiers reprend les emplacements signés.
+- Planification du jury : un membre déjà engagé dans un autre jury sur le même
+  créneau (soutenances, ou dates proposées, qui se chevauchent ; toutes
+  promotions confondues, dossiers abandonnés exclus) est signalé. La durée
+  d'une soutenance est un nouveau paramètre du circuit (rubrique
+  « Soutenances », 60 minutes par défaut). Badge
+  « Conflit » sous le jury dans le planning (personnel qui voit tous les
+  dossiers), avertissement en tête du dossier, de sa modification et de sa
+  validation. Un même membre est reconnu à l'enseignant de l'annuaire, à son
+  adresse ou, à défaut, à son nom.
+- Ergonomie (audit du 26 octobre 2026, `docs/qualite/`) :
+  - pages de validation (directeur, DEVE, bibliothèque) : résumé du dossier
+    (étudiant, titre, statut, directeur, n° DEVE, soutenance, manuscrit)
+    au-dessus de la décision, dossier complet replié en dessous ; pages deux
+    fois moins longues ;
+  - « Renvoyer le dossier » devient un bouton secondaire, en rouge, distinct
+    de « Valider » (commentaire toujours obligatoire) ;
+  - accueil et tableau de bord : le nom et la description de l'activité ne
+    sont plus affichés deux fois (l'en-tête d'activité de Moodle les montre) ;
+  - « Mes signatures » : documents groupés par dossier (étudiant, titre,
+    n° DEVE), aucune case cochée d'office.
+- Sans changement de schéma.
+
 ## mod_these 0.16.0 (2026102603) — signataires des scans, délégation, vérification d'identité
 
 - Scan d'un document signé hors module : la DEVE coche les signataires dont la

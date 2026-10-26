@@ -70,6 +70,17 @@ class planning implements \renderable, \templatable {
             ];
         }
         $jury[] = parts::text($row['jury']);
+        // Membre déjà engagé dans un autre jury sur le même créneau (personnel qui voit tous les dossiers).
+        if (!empty($defense->source->rights->viewall)) {
+            foreach (these_jury_conflicts($defense->dossier, $defense->jury) as $conflict) {
+                $jury[] = parts::br();
+                $jury[] = parts::badge(get_string('juryconflictshort', 'mod_these', (object) [
+                    'member' => $conflict->member,
+                    'student' => $conflict->student,
+                    'time' => userdate($conflict->time, get_string('strftimedatetimeshort', 'langconfig')),
+                ]), 'badge badge-danger');
+            }
+        }
         return array_merge(
             [
                 [parts::text($row['time']), parts::br(),
@@ -81,9 +92,31 @@ class planning implements \renderable, \templatable {
                 [parts::text($row['title'])],
                 [parts::text($row['director'])],
                 $jury,
-                [parts::text($row['location'])],
+                $this->location_cell($defense, $row['location']),
             ]
         );
+    }
+
+    /**
+     * Cellule du lieu : salle, et badge si une autre soutenance occupe la même salle sur le créneau
+     * (personnel qui voit tous les dossiers).
+     *
+     * @param stdClass $defense Voir these_get_defenses().
+     * @param string $location
+     * @return array Fragments (voir parts).
+     */
+    protected function location_cell(stdClass $defense, string $location): array {
+        $cell = [parts::text($location)];
+        if (!empty($defense->source->rights->viewall)) {
+            foreach (these_room_conflicts($defense->dossier) as $conflict) {
+                $cell[] = parts::br();
+                $cell[] = parts::badge(get_string('roomconflictshort', 'mod_these', (object) [
+                    'student' => $conflict->student,
+                    'time' => userdate($conflict->time, get_string('strftimedatetimeshort', 'langconfig')),
+                ]), 'badge badge-danger');
+            }
+        }
+        return $cell;
     }
 
     /**

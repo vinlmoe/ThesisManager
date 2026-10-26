@@ -23,10 +23,12 @@ require_once($CFG->dirroot . '/mod/these/locallib.php');
 
 /**
  * Documents qui attendent la signature de l'utilisateur connecté (agent DEVE, membre du jury ou
- * autre signataire invité ayant un compte), signés en une fois : une case par document, cochée
- * d'office, puis le bloc de signature (signature enregistrée reprise d'office).
+ * autre signataire invité ayant un compte), signés en une fois : documents groupés par dossier, une
+ * case par document, décochée (le signataire coche ce qu'il a consulté), puis le bloc de signature
+ * (signature enregistrée reprise d'office).
  *
- * customdata : documents (id de signature => libellé HTML), signername.
+ * customdata : documents (id de signature => libellé HTML), groups (liste de {heading, ids}),
+ * signername.
  *
  * @package   mod_these
  * @copyright 2026 Sébastien Lefebvre
@@ -39,18 +41,21 @@ class mysignatures_form extends \moodleform {
     public function definition() {
         $mform = $this->_form;
 
-        $boxes = [];
-        foreach ($this->_customdata['documents'] as $signatureid => $label) {
-            $boxes[] = $mform->createElement('advcheckbox', 'sig' . $signatureid, '', $label);
-            $mform->setDefault('sig' . $signatureid, 1);
+        $mform->addElement('static', 'documentsgroup', get_string('documentstosign', 'mod_these'), '');
+        foreach ($this->_customdata['groups'] ?? [] as $i => $group) {
+            $boxes = [];
+            foreach ($group['ids'] as $signatureid) {
+                $label = $this->_customdata['documents'][$signatureid];
+                $boxes[] = $mform->createElement('advcheckbox', 'sig' . $signatureid, '', $label);
+            }
+            $mform->addGroup(
+                $boxes,
+                'dossiergroup' . $i,
+                \html_writer::tag('strong', s($group['heading'])),
+                \html_writer::empty_tag('br'),
+                false
+            );
         }
-        $mform->addGroup(
-            $boxes,
-            'documentsgroup',
-            get_string('documentstosign', 'mod_these'),
-            \html_writer::empty_tag('br'),
-            false
-        );
         these_add_signature_fields($mform, $this->_customdata['signername'], get_string('signmyintro', 'mod_these'));
         $this->add_action_buttons(false, get_string('signdocuments', 'mod_these'));
     }

@@ -29,6 +29,10 @@
     Context variables required for this template:
     * steps Étapes : label, actor, stateclass (these-step-done, -current, -todo), separator (libellé de
       la phase dormante qui suit l'étape, ou false).
+    * current Étape en cours, résumée sur les petits écrans (label, actor), ou false.
+    * alllabel Libellé du dépliant de la frise complète sur les petits écrans.
+
+    Sur un petit écran, seule l'étape en cours est affichée ; la frise complète est repliée.
 
     Example context (json):
     {"steps": [
@@ -37,8 +41,14 @@
             "separator": "dossier dormant"},
         {"label": "3. Dépôt de la soutenance", "actor": "Étudiant", "stateclass": "these-step-todo",
             "separator": false}
-    ]}
+    ], "current": {"label": "Étape 2 sur 3 : Validation du sujet", "actor": "En attente : Directeur de thèse"},
+    "alllabel": "Voir toutes les étapes"}
 }}
+{{#current}}
+<div class="these-progress-compact d-md-none mb-2"><strong>{{label}}</strong><br><span class="text-muted">{{actor}}</span></div>
+{{/current}}
+<details class="these-progress-mobile d-md-none mb-3">
+<summary>{{alllabel}}</summary>
 <ol class="these-progress">
 {{#steps}}
 <li class="these-step {{stateclass}}"><span class="these-step-label">{{label}}</span><span class="these-step-actor">{{actor}}</span></li>
@@ -47,3 +57,14 @@
 {{/separator}}
 {{/steps}}
 </ol>
+</details>
+<div class="d-none d-md-block">
+<ol class="these-progress">
+{{#steps}}
+<li class="these-step {{stateclass}}"><span class="these-step-label">{{label}}</span><span class="these-step-actor">{{actor}}</span></li>
+{{#separator}}
+<li class="these-step-separator">{{separator}}</li>
+{{/separator}}
+{{/steps}}
+</ol>
+</div>

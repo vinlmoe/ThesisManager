@@ -79,6 +79,25 @@ site : paramètres du circuit dans l'activité de suivi. \\
 2.7 & 26 octobre 2026 & Scan signé : signataires cochés au dépôt, PDF et suivi
 mis à jour ; signature de la direction générale par délégation ; signature sur
 place avec vérification d'identité par la DEVE, conservée et imprimée. \\
+2.8 & 26 octobre 2026 & Signature sur place de l'étudiant et du directeur ;
+vérification d'identité avant l'ouverture de la page de signature ; document à
+signer présenté en tête ; scan sans saisie du nom du signataire ;
+avertissement des conflits de jury (même membre sur le même créneau) ; durée
+d'une soutenance dans les paramètres du circuit ; pages de validation avec le
+résumé du dossier en tête et le dossier complet replié, bouton de renvoi
+distinct ; \og Mes signatures\fg{} groupé par dossier, sans case cochée
+d'office. \\
+2.9 & 26 octobre 2026 & Grille de conformité remplie et attestée par
+l'étudiant au dépôt de la soutenance, préremplie pour le directeur qui la vérifie
+et la signe. \\
+2.10 & 26 octobre 2026 & Avancement du dépôt de la soutenance, date proposée
+non préremplie ; frise réduite à l'étape en cours sur téléphone ; menu
+\og Paramètres\fg{} de la DEVE, un seul lien vers l'activité de suivi ;
+salles de soutenance dans les paramètres du circuit ; erreurs et conflits du
+jury en tête de la rubrique Jury. \\
+2.11 & 26 octobre 2026 & Simplifications pour la DEVE : jury présenté en
+lecture à la validation, action directe dans \og À traiter\fg{}, actions
+groupées, conflits de salle, réglages à compléter. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -261,6 +280,13 @@ documents). Une activité \og Gestion des thèses\fg{} qu'aucune activité de su
 ne suit a ses propres paramètres, sous le même bouton ; suivie, elle renvoie à
 l'activité de suivi.
 
+En tête de la page, l'encadré \og Réglages à compléter\fg{} liste ce qui
+manque encore pour faire tourner le circuit : établissement et université,
+signataires (direction générale, CCEM, présidence de l'université, direction
+des études), contrat type, salles de soutenance et images des modèles (avec le
+lien vers la page des modèles et le nom des images manquantes). Les agents DEVE
+signataires et le questionnaire sont facultatifs.
+
 \capture[0.85\linewidth]{24_parametres_circuit}{Paramètres du circuit, dans l'activité de suivi.}
 
 \begin{description}
@@ -280,6 +306,12 @@ l'activité de suivi.
   \item[Signataires] direction générale, président du CCEM, présidence de
         l'université : nom et adresse. Avec une adresse, le signataire reçoit un
         lien de signature ; sans adresse, la DEVE recueille sa signature sur place.
+  \item[Soutenances] durée d'une soutenance, en minutes (60 par défaut), pour
+        détecter les conflits de jury ; \textbf{salles de soutenance}, une par
+        ligne, proposées à la saisie du lieu (dépôt de l'étudiant, validation et
+        modification par la DEVE), la première par défaut. Elles remplacent le
+        \og lieu de soutenance proposé par défaut\fg{} des réglages de
+        l'activité, encore utilisé tant qu'aucune salle n'est saisie.
   \item[Textes] établissement, université (avec son article : \og
         l'Université \ldots\fg{}), lien HeTOP, lieu du visa, intitulés de la
         direction générale et de la présidence de l'université, nom et qualité
@@ -343,9 +375,13 @@ par défaut, affiche le compte rendu ligne par ligne sans rien créer.
 
 L'activité \og Gestion des thèses\fg{} ouvre sur \og Mon dossier de thèse\fg{}.
 La frise en haut du dossier indique à tout moment l'étape atteinte et qui doit
-agir ; les boutons bleus sous la frise sont les actions qui vous attendent.
+agir ; les boutons bleus sous la frise sont les actions qui vous attendent. Sur
+un téléphone, seule l'étape en cours est affichée (\og Étape 5 sur 11\fg{} et
+l'acteur attendu) ; \bouton{Voir toutes les étapes} déplie la frise complète.
 
 \capture[0.85\linewidth]{01_etudiant_accueil}{Accueil de l'activité : \og Mon dossier de thèse\fg{}.}
+
+\capture[0.35\linewidth]{104_frise_telephone}{Sur téléphone : l'étape en cours, la frise repliée, puis les actions.}
 
 \begin{procedure}{Proposer son sujet (phase 1)}{Étudiant}
 \begin{etapes}
@@ -442,10 +478,18 @@ refusé.}
 
 \begin{procedure}{Déposer le dossier de soutenance (phase 2)}{Étudiant}
 \begin{etapes}
-  \item Cliquez sur \bouton{Déposer les documents de soutenance}.
+  \item Cliquez sur \bouton{Déposer les documents de soutenance}. L'encadré
+        \og Avancement du dépôt\fg{} liste les rubriques et le nombre de champs
+        qui restent à compléter ; les rubriques complètes sont repliées, les
+        autres dépliées. Il se met à jour à chaque \bouton{Enregistrer le
+        brouillon}.
   \item Déposez le \textbf{manuscrit} (PDF, obligatoire) et, au besoin, les
         autres documents.
-  \item Proposez la date, l'heure et le lieu de la soutenance.
+  \item Proposez la date et l'heure de la soutenance (cochez
+        \bouton{Activer}, puis choisissez-les : aucune date n'est proposée
+        d'office) et le lieu : les salles des paramètres du circuit sont
+        proposées à la saisie, la première par défaut, mais un autre lieu reste
+        possible.
   \item Composez le jury : un président et au moins le nombre de membres
         votants fixé par l'activité. Choisissez chaque enseignant dans
         l'annuaire ; pour un membre extérieur ou un invité, choisissez
@@ -460,6 +504,12 @@ refusé.}
         soutenance} et indiquez-en le motif (brevet, publication en cours,
         données sensibles\ldots) : la date de fin, cinq ans après la date de
         soutenance, est reportée au contrat, que votre directeur vise.
+  \item Remplissez la \textbf{grille de conformité} : numéro d'avis du comité
+        d'éthique s'il existe, puis cochez chaque élément respecté par le
+        manuscrit (les éléments \og selon la thèse\fg{} peuvent rester non
+        cochés). Cochez enfin \og J'atteste que mon manuscrit respecte les points
+        cochés de la grille de conformité\fg{}. Votre directeur la reçoit
+        préremplie, la vérifie et la signe.
   \item Vérifiez que le questionnaire est rempli, signez, puis cliquez sur
         \bouton{Soumettre au directeur de thèse}.
 \end{etapes}
@@ -467,7 +517,11 @@ refusé.}
 directeur rédige son rapport puis valide.}
 \end{procedure}
 
+\capture[0.85\linewidth]{102_avancement_depot}{Avancement du dépôt : rubriques complètes et champs à compléter.}
+
 \capture[0.85\linewidth]{67_etudiant_soutenance_signature}{Dépôt de la soutenance : documents, jury, bordereau, signature.}
+
+\capture[0.85\linewidth]{101_etudiant_grille_conformite}{Grille de conformité remplie par l'étudiant au dépôt, avec son attestation.}
 
 \capture[0.85\linewidth]{91_embargo_depot}{Demande d'embargo de diffusion de 5 ans, avec son motif, au dépôt de la soutenance.}
 
@@ -475,8 +529,9 @@ directeur rédige son rapport puis valide.}
 
 \begin{attention}
 Des conclusions trop longues pour tenir sur une page avec les signatures sont
-refusées au dépôt. Le rapport de votre directeur et la grille de conformité ne
-vous sont pas communiqués. Toute modification d'un document déjà signé annule
+refusées au dépôt. Le rapport de votre directeur ne vous est pas communiqué ;
+la grille de conformité que vous avez remplie peut être corrigée par votre
+directeur avant sa signature. Toute modification d'un document déjà signé annule
 les signatures concernées.
 \end{attention}
 
@@ -535,7 +590,8 @@ vers le dossier.
 \begin{etapes}
   \item Ouvrez le dossier depuis \og À traiter\fg{}, puis cliquez sur
         \bouton{Examiner la proposition de sujet}.
-  \item Lisez le sujet (affiché sous le formulaire) et le PDF du dépôt de sujet.
+  \item Lisez le résumé du dossier en tête de la page, le PDF du dépôt de sujet
+        et, au besoin, le \bouton{Dossier complet} replié sous le formulaire.
   \item Pour valider : signez (votre signature enregistrée est cochée d'office
         si vous en avez une) et cliquez sur \bouton{Valider le sujet}.
   \item Pour renvoyer : écrivez le motif dans \bouton{Commentaire} et cliquez
@@ -576,8 +632,9 @@ favorable\fg{}.}
   \item Cliquez sur \bouton{Valider la soutenance et déposer le rapport}.
   \item Vérifiez la ligne \og Rapport du directeur\fg{} : un rapport rédigé
         avec avis favorable est exigé.
-  \item Renseignez le numéro d'avis du comité d'éthique s'il existe, et cochez
-        les éléments de la \textbf{grille de conformité}.
+  \item Vérifiez la \textbf{grille de conformité}, préremplie par
+        l'étudiant à son dépôt (numéro d'avis du comité d'éthique et éléments
+        cochés) ; corrigez-la au besoin.
   \item Indiquez votre fonction (agrément scientifique).
   \item Signez une fois : la signature vaut pour le rapport, la grille, les
         conclusions, l'agrément scientifique et le contrat de diffusion.
@@ -593,8 +650,8 @@ favorable\fg{}.}
 \begin{etapes}
   \item Ouvrez le dossier (statut \statut{Corrections déposées}) et cliquez sur
         \bouton{Valider les corrections (directeur)}.
-  \item Comparez, sous le formulaire, les corrections demandées, les
-        corrections apportées et le manuscrit corrigé.
+  \item Comparez les corrections demandées, les corrections apportées et le
+        manuscrit corrigé (\bouton{Dossier complet}, replié sous le formulaire).
   \item Cliquez sur \bouton{Valider les corrections}, ou renvoyez à
         l'étudiant avec un motif.
 \end{etapes}
@@ -610,13 +667,53 @@ favorable\fg{}.}
 
 La DEVE voit tous les dossiers : la file \og À traiter\fg{}, le décompte par
 statut (cliquable pour filtrer) et la liste complète avec recherche par
-étudiant, titre ou numéro. La barre de boutons donne accès à la création d'un
-dossier pour le compte d'un étudiant, à l'import, aux courriels, aux modèles
-des documents (section~\ref{sec:modeles}), à la grille, au questionnaire, à
-l'annuaire du jury, au transfert des paramètres (section~\ref{sec:transfert})
-et à l'export du registre (CSV, Excel, ODS...).
+étudiant, titre ou numéro. La barre de boutons donne accès aux pages de
+travail : tableau de bord, planning, création d'un dossier pour le compte d'un
+étudiant, import, export du registre (CSV, Excel, ODS...) et \bouton{Mes
+signatures}. Les pages de paramétrage, rarement ouvertes, sont regroupées dans
+le menu \bouton{Paramètres} : courriels, annuaire du jury, transfert des
+paramètres (section~\ref{sec:transfert}) et, pour une activité qu'aucune
+activité de suivi ne suit, paramètres du circuit, modèles des documents
+(section~\ref{sec:modeles}), grille et questionnaire. Quand une activité
+\og Suivi des thèses\fg{} porte ces paramètres, un seul lien y mène.
+
+Pour garder les pages courtes, les explications destinées à la DEVE sont
+repliées sous \bouton{Aide} en tête des pages (paramètres, modèles, grille,
+questionnaire, annuaire, transfert, modification d'un dossier, documents,
+export), et celles des champs des paramètres du circuit derrière l'icône
+d'aide \og ?\fg{}.
+
+\capture[0.6\linewidth]{103_menu_parametres}{Barre de navigation de la DEVE : pages de travail et menu \bouton{Paramètres} (activité suivie).}
+
+Dans \og À traiter\fg{}, chaque dossier propose directement l'action qui vous
+attend (\bouton{Enregistrer le sujet (DEVE)}, \bouton{Valider le dossier de
+soutenance (DEVE)}, \bouton{Documents de soutenance}, \bouton{Déposer le
+procès-verbal}\ldots), à côté de \bouton{Ouvrir} qui mène au dossier. Le
+directeur et la bibliothèque ont de même le bouton de leur validation. Tant
+que des réglages du circuit manquent (signataires, contrat type, images des
+modèles, salles\ldots), un encadré orange le rappelle en tête du tableau de
+bord, avec le lien vers les \bouton{Paramètres du circuit}.
 
 \capture{18_tableau_de_bord_deve}{Tableau de bord de la DEVE : la rubrique \og À traiter\fg{}, suivie du décompte par statut et de la liste de tous les dossiers.}
+
+\begin{procedure}{Agir sur plusieurs dossiers à la fois}{Équipe DEVE}
+\begin{etapes}
+  \item Dans la liste de tous les dossiers (filtrée au besoin par statut),
+        cochez les dossiers concernés.
+  \item Sous la liste, choisissez l'action : \bouton{Relancer les
+        signataires} (agents DEVE et signataires sans compte dont une
+        signature est attendue), \bouton{Générer les documents de soutenance}
+        (manuscrit conforme ou soutenance programmée) ou \bouton{Prévenir les
+        membres du jury pas encore prévenus} (dossier validé, jusqu'à la
+        soutenance).
+  \item Cliquez sur \bouton{Appliquer}.
+\end{etapes}
+\ensuite{un message indique le nombre de dossiers traités et ignorés : une
+action ne porte que sur les dossiers dont l'étape s'y prête, ou qui ont
+quelque chose en attente.}
+\end{procedure}
+
+\capture[0.85\linewidth]{105_actions_groupees}{Actions groupées sous la liste des dossiers.}
 
 \begin{astuce}
 Quand des \textbf{agents DEVE signataires} sont désignés dans les réglages du
@@ -635,6 +732,26 @@ tête), lieu, et l'état de la date (\og date proposée\fg{} par l'étudiant au
 dépôt, \og date arrêtée\fg{} une fois le dossier validé par la DEVE). Le nom
 de l'étudiant ouvre son dossier. Une thèse figure au planning dès le dépôt du
 dossier de soutenance ; un dossier abandonné ou une thèse ajournée en sort.
+
+\paragraph{Conflits de jury.} Un membre du jury (même enseignant de
+l'annuaire, même adresse ou, à défaut, même nom) qui siège déjà dans un autre
+jury sur le même créneau, c'est-à-dire une soutenance (ou une date proposée)
+qui chevauche celle-ci, toutes promotions confondues, est signalé : badge
+rouge \og Conflit\fg{} sous le jury dans le planning, avertissement au-dessus
+du jury dans le dossier, dans sa modification et dans sa validation par la
+DEVE. Une erreur de composition (pas de président, trop peu de membres
+votants, éligibilité non vérifiée) s'affiche de même en tête de la rubrique
+\og Jury\fg{}, et non plus sur la ligne du premier membre. Les dossiers
+abandonnés ne comptent pas. L'avertissement ne bloque rien : à la DEVE de
+déplacer la soutenance ou de remplacer le membre.
+
+\paragraph{Conflits de salle.} De même, une autre soutenance prévue dans la
+même salle (lieu identique, casse et espaces ignorés) sur un créneau qui
+chevauche celui-ci est signalée : badge rouge \og Salle occupée\fg{} sous le
+lieu dans le planning, avertissement au-dessus de la soutenance dans le
+dossier et sous le lieu dans sa modification et sa validation. La durée d'une soutenance
+(une heure par défaut) se règle dans les \bouton{Paramètres du circuit},
+rubrique \og Soutenances\fg{}.
 
 \capture[0.85\linewidth]{86_planning_semaine}{Planning des soutenances de la semaine : date arrêtée ou proposée, jury et lieu, semaines à venir.}
 
@@ -689,10 +806,15 @@ le dépôt de sujet. Le numéro d'enregistrement n'est pas encore attribué.}
         directeur, les réponses au questionnaire.
   \item Contrôlez le \textbf{numéro d'enregistrement DEVE} proposé (le
         suivant de l'année, modifiable mais unique).
-  \item Arrêtez la date, l'heure et le lieu.
-  \item Vérifiez le jury et cochez \bouton{Éligibilité vérifiée (DEVE)} pour chaque
-        membre votant (déjà cochée pour les enseignants de l'annuaire dont le
-        statut convient).
+  \item Arrêtez la date, l'heure et le lieu : la date et le lieu proposés par
+        l'étudiant sont repris, les salles des paramètres proposées. Un conflit
+        de salle s'affiche sous le lieu.
+  \item Vérifiez le jury, présenté en tableau. Seuls les membres dont
+        l'éligibilité est à vérifier (membres extérieurs votants) ont leur case
+        \bouton{Éligibilité de \ldots{} vérifiée (DEVE)} ; elle est déjà validée
+        pour les enseignants de l'annuaire dont le statut convient. Pour changer
+        un membre, cochez \bouton{Modifier la composition du jury} : la saisie
+        complète s'ouvre.
   \item Complétez l'agrément administratif (DEFV, mobilité, A6).
   \item Cliquez sur \bouton{Valider le dossier}.
 \end{etapes}
@@ -704,7 +826,7 @@ de signature.}
 
 \capture[0.85\linewidth]{71_deve_valide_soutenance}{Validation du dossier de soutenance : numéro, date, jury et éligibilité.}
 
-\capture[0.85\linewidth]{46_jury_eligibilite}{Éligibilité des membres du jury, vérifiée par la DEVE.}
+\capture[0.85\linewidth]{46_jury_eligibilite}{Jury présenté en lecture à la validation : seules les éligibilités à vérifier restent à cocher.}
 
 \begin{procedure}{Suivre et recueillir les signatures}{Équipe DEVE}
 \begin{etapes}
@@ -712,12 +834,16 @@ de signature.}
         document et chaque emplacement y figurent avec leur état.
   \item Pour un signataire qui n'a pas reçu son lien, cliquez sur
         \bouton{Envoyer le lien} (signataires invités et agents DEVE).
-  \item Pour un signataire présent ou sans adresse, cliquez sur
-        \bouton{Signer sur place} : il consulte les documents et trace sa
-        signature ; vous cochez \bouton{Je certifie avoir vérifié l'identité du
-        signataire} (pièce d'identité), puis vous validez. Votre compte est
-        conservé avec la signature, inscrit à l'historique et imprimé sous la
-        signature (\og identité vérifiée par la DEVE (Prénom Nom)\fg{}).
+  \item Pour un signataire présent (signataire sans compte, mais aussi
+        étudiant ou directeur), cliquez sur \bouton{Signer sur place}. Vérifiez
+        d'abord son identité (pièce d'identité), cochez \bouton{Je certifie
+        avoir vérifié l'identité du signataire} puis \bouton{Ouvrir la page de
+        signature} : la vérification est inscrite à l'historique à votre nom.
+        La page présente en tête le document à signer (qualité du signataire,
+        étudiant, titre, n° DEVE, soutenance, liens vers les PDF) ; le
+        signataire les consulte, trace sa signature et valide. Votre compte est
+        conservé avec la signature et imprimé dessous (\og identité vérifiée par
+        la DEVE (Prénom Nom)\fg{}).
   \item Pour la direction générale, la personne qui signe \textbf{par
         délégation} saisit son propre nom et coche \bouton{Signature par
         délégation de la direction générale} : \og (par délégation)\fg{}
@@ -852,8 +978,9 @@ autres. Un agent retiré du réglage ne voit plus les documents en attente.
 \begin{etapes}
   \item Ouvrez le lien du courriel \og Documents à signer\fg{}, ou le bouton
         \bouton{Mes signatures} de la barre de navigation de l'activité.
-  \item Consultez chaque document avec \bouton{voir le PDF} ; décochez ceux
-        que vous ne voulez pas signer maintenant.
+  \item Les documents sont groupés par dossier (étudiant, titre, n\textsuperscript{o}
+        DEVE) et aucun n'est coché d'office : consultez chaque document avec
+        \bouton{voir le PDF}, puis cochez ceux que vous signez.
   \item La première fois, tracez votre signature et laissez cochée
         \bouton{Enregistrer cette signature pour mes prochaines signatures}.
         Ensuite, \bouton{Utiliser ma signature enregistrée} est cochée d'office :
@@ -981,7 +1108,7 @@ Dépôt de sujet (E01) & Étudiant & Étudiant (soumission), directeur (validati
 DEVE (visa), directeur extérieur éventuel (lien) \\
 Bordereau de thèse (ABES) & Étudiant & Étudiant (dépôt de soutenance) \\
 Rapport du directeur & Directeur & Directeur \\
-Grille de conformité & Directeur & Directeur \\
+Grille de conformité & Étudiant, vérifiée par le directeur & Directeur \\
 Fiche d'agréments (E02) & DEVE (administratif), directeur (scientifique) &
 DEVE, directeur (ou membre si directeur extérieur), direction générale
 représentée par la DEVE, CCEM \\
@@ -1088,13 +1215,14 @@ signature.
 
 \subsection{Grille de conformité}\label{sec:grille}
 
-Les éléments de la grille de conformité remplie par le directeur se modifient
+Les éléments de la grille de conformité, remplie par l'étudiant à son dépôt de
+soutenance puis vérifiée et signée par le directeur, se modifient
 dans chaque activité : \bouton{Grille de conformité} de la barre de navigation
 (DEVE). Pour chaque élément : rubrique (fond ou forme), libellé, et \og Selon la
 thèse\fg{} s'il peut rester non coché. Vider un libellé supprime l'élément ; les
 lignes vides en bas de liste en ajoutent ; \bouton{Rétablir la grille d'origine}
 revient à la grille de 08-2024. La grille en PDF est produite à partir du
-formulaire rempli par le directeur et des éléments en vigueur : une
+formulaire validé par le directeur et des éléments en vigueur : une
 modification met à jour les grilles (les documents de soutenance déjà générés
 le sont à leur prochaine génération).
 
@@ -1192,10 +1320,11 @@ thèses\fg{}.
 
 La page \bouton{Suivi des signatures} du dossier (DEVE) montre l'état de chaque
 emplacement, permet de \bouton{Envoyer le lien} ou de \bouton{signer sur place}
-pour un signataire présent ou sans adresse. Une signature sur place n'est
-enregistrée qu'une fois cochée la case qui certifie que l'identité du signataire
-a été vérifiée : le compte DEVE concerné est conservé avec la signature et
-inscrit à l'historique. La direction générale peut signer par délégation (case
+pour un signataire présent ou sans adresse. L'étudiant et le directeur y
+figurent aussi, pour la signature sur place, dès que la signature d'un document
+a commencé. La page de signature sur place ne s'ouvre qu'une fois cochée la case
+qui certifie que l'identité du signataire a été vérifiée : le compte DEVE
+concerné est inscrit à l'historique et conservé avec la signature. La direction générale peut signer par délégation (case
 \bouton{Signature par délégation de la direction générale}, avec le nom de la
 personne qui signe). Le suivi précise pour chaque signature la manière de signer
 (\og sur place, identité vérifiée par la DEVE\fg{}, \og à la main, scan joint au
@@ -1203,7 +1332,9 @@ dossier\fg{}) et la délégation.
 
 \capture{40_suivi_signatures}{Suivi des signatures d'un dossier.}
 
-\capture[0.8\linewidth]{41_signature_sur_place}{Signature sur place du président du jury.}
+\capture[0.8\linewidth]{41_verification_identite}{Signature sur place : vérification de l'identité du signataire avant d'ouvrir la page de signature.}
+
+\capture[0.8\linewidth]{41_signature_sur_place}{Signature sur place du président du CCEM : le document à signer est présenté en tête.}
 
 \subsection{Scans des documents signés hors module}\label{sec:scans}
 
@@ -1216,15 +1347,16 @@ ayant signé à la main à la date portée sur le document, ce qui met à jour l
 du document (\og Signé à la main par \ldots{} le \ldots, scan joint au dossier
 par la DEVE\fg{}) et le suivi des signatures ; le document est scellé une fois
 toutes ses signatures réunies. Pour la direction générale, une case précise la
-signature par délégation (le nom saisi au dépôt est alors celui de la personne
-qui a signé). Sans case cochée, le scan est seulement conservé.
+signature par délégation (la signature porte alors \og Direction générale (par
+délégation)\fg{}). Le nom du signataire n'est pas demandé : chacun porte le nom
+connu du module (étudiant, directeur, signataires des paramètres, président du
+jury). Sans case cochée, le scan est seulement conservé.
 
 \begin{procedure}{Joindre le scan d'un document signé hors module}{Équipe DEVE}
 \begin{etapes}
   \item Ouvrez le dossier (statut \statut{Dossier validé par la DEVE} ou plus avancé,
         non abandonné) et cliquez sur \bouton{Ajouter un scan signé}.
-  \item Choisissez le \textbf{document signé}, saisissez le nom du
-        \textbf{signataire} et la date de la signature.
+  \item Choisissez le \textbf{document signé} et la date de la signature.
   \item Cochez les \textbf{signataires du scan} (seuls ceux du document
         choisi sont proposés) et, le cas échéant, la signature par délégation de
         la direction générale.

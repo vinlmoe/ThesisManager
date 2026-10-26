@@ -65,9 +65,9 @@ class defense_form extends \moodleform {
 
         $mform->addElement('header', 'dateheader', get_string('defenseproposal', 'mod_these'));
         $mform->setExpanded('dateheader');
-        $mform->addElement('date_time_selector', 'proposeddate', get_string('proposeddate', 'mod_these'));
-        $mform->addElement('text', 'defenselocation', get_string('defenselocation', 'mod_these'), ['size' => 64]);
-        $mform->setType('defenselocation', PARAM_TEXT);
+        // Pas de date préremplie (l'heure courante serait refusée) : l'étudiant l'active et la choisit.
+        $mform->addElement('date_time_selector', 'proposeddate', get_string('proposeddate', 'mod_these'), ['optional' => true]);
+        \mod_these\local\scopesettings::add_location_field($mform, $this->_customdata['rooms'] ?? []);
         $mform->addElement('advcheckbox', 'bvisio', '', get_string('visio', 'mod_these'));
 
         these_add_jury_fields($this, $mform, $this->_customdata['jurycount'] ?? 0, false, $this->_customdata['jurorids'] ?? []);
@@ -125,6 +125,27 @@ class defense_form extends \moodleform {
             $mform->setType("bkeyword[$i]", PARAM_TEXT);
         }
         $mform->addHelpButton('bkeywordgroup', 'bkeywords', 'mod_these');
+
+        // Grille de conformité : remplie et attestée par l'étudiant, puis vérifiée et signée par le
+        // directeur à la validation (formulaire prérempli).
+        $mform->addElement('header', 'gridheader', get_string('docgrid', 'mod_these'));
+        $mform->addElement('static', 'gridhelp', '', get_string('gridstudenthelp', 'mod_these'));
+        $mform->addElement('text', 'ethicsnumber', get_string('ethicsnumber', 'mod_these'), ['size' => 20]);
+        $mform->setType('ethicsnumber', PARAM_TEXT);
+        foreach (these_get_grid_items(these_settings_scope($this->_customdata['these'])) as $section => $items) {
+            $mform->addElement(
+                'static',
+                'gridsection' . $section,
+                '',
+                \html_writer::tag('strong', get_string('gridsection' . $section, 'mod_these'))
+            );
+            foreach ($items as $key => $item) {
+                $label = format_string($item->label) . ($item->conditional
+                    ? ' ' . \html_writer::span(get_string('gridconditional', 'mod_these'), 'text-muted') : '');
+                $mform->addElement('advcheckbox', 'grid_' . $key, '', $label);
+            }
+        }
+        $mform->addElement('advcheckbox', 'gridconfirm', '', get_string('gridstudentconfirm', 'mod_these'));
 
         // Conclusions, signées ensuite par le directeur, le président du jury et les autorités.
         $mform->addElement('header', 'conclusionsheader', get_string('docconclusions', 'mod_these'));
@@ -196,15 +217,28 @@ class defense_form extends \moodleform {
         if (these_count_draft_files($data['manuscript']) < 1) {
             $errors['manuscript'] = get_string('manuscriptrequired', 'mod_these');
         }
-        if ((int) $data['proposeddate'] <= time()) {
+        if (empty($data['proposeddate'])) {
+            $errors['proposeddate'] = get_string('proposeddaterequired', 'mod_these');
+        } else if ((int) $data['proposeddate'] <= time()) {
             $errors['proposeddate'] = get_string('datemustbefuture', 'mod_these');
         }
         if (trim((string) $data['defenselocation']) === '') {
             $errors['defenselocation'] = get_string('required');
         }
+        // Grille de conformité : éléments obligatoires cochés et attestation de l'étudiant.
+        foreach (these_get_grid_items(these_settings_scope($this->_customdata['these'])) as $items) {
+            foreach ($items as $key => $item) {
+                if (!$item->conditional && empty($data['grid_' . $key])) {
+                    $errors['grid_' . $key] = get_string('gridrequired', 'mod_these');
+                }
+            }
+        }
+        if (empty($data['gridconfirm'])) {
+            $errors['gridconfirm'] = get_string('gridstudentconfirmrequired', 'mod_these');
+        }
         $juryerror = these_validate_jury(these_extract_submitted_jury($data), $this->_customdata['minjury']);
         if ($juryerror !== null) {
-            $errors['juryname[0]'] = $juryerror;
+            $errors['juryhelp'] = get_string('juryproblem', 'mod_these', $juryerror);
         }
         $required = ['bbirthname', 'bfirstnames', 'bnationality', 'bstreet', 'bpostcode', 'bcity', 'bcountry', 'bpersonalemail',
             'bnbpages', 'bnbrefs', 'bsummaryfr', 'titleen', 'conclusions', 'bdiffusion'];
@@ -249,5 +283,44 @@ class defense_form extends \moodleform {
             $errors['questionnairestatus'] = get_string('questionnairerequired', 'mod_these');
         }
         return array_merge($errors, these_signature_errors($data));
+    }
+
+    /**
+     * Avancement du dépôt, rubrique par rubrique : les contrôles de la soumission (voir validation())
+     * appliqués aux données enregistrées. La signature et l'attestation de la grille, données au
+     * moment de soumettre, ne comptent pas.
+     *
+     * @param array $data Données du formulaire, telles que passées à set_data().
+     * @return array[] Rubriques dans l'ordre du formulaire : name (en-tête), label, missing (champs à compléter).
+     */
+    public function section_progress(array $data): array {
+        $errors = $this->validation(['submitdefense' => 1] + $data, []);
+        unset($errors['gridconfirm']);
+        $sections = [];
+        $header = null;
+        foreach ($this->_form->_elements as $element) {
+            $name = $element->getName();
+            if ($element->getType() === 'header') {
+                $header = $name === 'signatureheader' ? null : $name;
+                if ($header !== null) {
+                    $sections[$header] = ['name' => $header, 'label' => strip_tags($element->_text), 'missing' => 0];
+                }
+            } else if ($header !== null && isset($errors[$name])) {
+                $sections[$header]['missing']++;
+            }
+        }
+        return array_values($sections);
+    }
+
+    /**
+     * Déplie les rubriques à compléter et replie les rubriques complètes (voir section_progress()).
+     *
+     * @param array[] $sections Voir section_progress().
+     * @return void
+     */
+    public function expand_incomplete(array $sections) {
+        foreach ($sections as $section) {
+            $this->_form->setExpanded($section['name'], $section['missing'] > 0);
+        }
     }
 }

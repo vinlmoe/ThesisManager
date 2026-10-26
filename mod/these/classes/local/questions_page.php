@@ -103,7 +103,7 @@ class questions_page {
         echo $OUTPUT->heading(get_string('questions', 'mod_these'));
         echo $navigation;
         $intro = get_string($scope->shared ? 'questionsshared_desc' : 'questions_desc', 'mod_these');
-        echo $renderer->render(new output\message($intro, 'mb-3'));
+        echo $renderer->render(output\message::help($intro));
         if ($questions) {
             echo $renderer->render(new output\question_list($questions, $listurl));
         } else {

@@ -246,6 +246,15 @@ const steps = {
     await check(p, '#id_signatureconsent');
     await upto(p, '84_changement_sujet', form);
   },
+  async '101_etudiant_grille_conformite'() {
+    const p = await open(await as('lucas'), these('defense.php', { dossierid: ids.lucas }));
+    await only(p, ['Grille de conformité de la thèse']);
+    const grid = p.locator(`${form} input[type=checkbox][name^="grid"]`);
+    for (let i = 0; i < await grid.count(); i++) {
+      await grid.nth(i).check();
+    }
+    await region(p, '101_etudiant_grille_conformite', fieldset('Grille de conformité de la thèse'));
+  },
   async '52_questionnaire_etudiant'() {
     const p = await open(await as('lucas'), these('questionnaire.php', { dossierid: ids.lucas }));
     const select = p.locator(`${form} select`).first();
@@ -256,9 +265,23 @@ const steps = {
     await p.locator(`${form} input[type=text]`).first().fill('Unité de bactériologie, VetAgro Sup');
     await upto(p, '52_questionnaire_etudiant', form);
   },
+  async '102_avancement_depot'() {
+    const p = await open(await as('lucas'), these('defense.php', { dossierid: ids.lucas }));
+    await region(p, '102_avancement_depot', '.these-defense-progress');
+  },
+  async '104_frise_telephone'() {
+    const p = await as('lucas');
+    await p.setViewportSize({ width: 390, height: 844 });
+    await p.goto(these('view.php'));
+    await p.waitForLoadState('networkidle');
+    const file = path.join(OUT, '104_frise_telephone.png');
+    await p.screenshot({ path: file });
+    console.log('capture', '104_frise_telephone', '844px');
+  },
   async '67_etudiant_soutenance_signature'() {
     const p = await open(await as('lucas'), these('defense.php', { dossierid: ids.lucas }));
     await upload(p, 'manuscript', samplePdf('manuscrit.pdf', 'Manuscrit de thèse'));
+    await check(p, '#id_proposeddate_enabled');
     await p.selectOption('#id_proposeddate_day', '19');
     await p.selectOption('#id_proposeddate_month', '11');
     await p.selectOption('#id_proposeddate_year', '2026');
@@ -331,10 +354,6 @@ const steps = {
   },
   async '70_directeur_valide_soutenance'() {
     const p = await open(await as('hdurand'), these('review.php', { dossierid: ids.chloe }));
-    const grid = p.locator(`${form} input[type=checkbox][name^="grid"]`);
-    for (let i = 0; i < await grid.count(); i++) {
-      await grid.nth(i).check();
-    }
     const title = p.locator('#id_directortitle');
     if (await title.count()) {
       await title.fill('Maître de conférences HDR');
@@ -360,6 +379,20 @@ const steps = {
   async '18_tableau_de_bord_deve'() {
     const p = await open(await as('sbonnet'), these('dashboard.php'));
     await uptoSection(p, '18_tableau_de_bord_deve', 'À traiter');
+  },
+  async '105_actions_groupees'() {
+    const p = await open(await as('sbonnet'), these('dashboard.php'));
+    const boxes = p.locator('.these-bulk-form input[name="dossierids[]"]');
+    const n = await boxes.count();
+    await boxes.nth(n - 1).check();
+    await boxes.nth(n - 2).check();
+    await p.selectOption('.these-bulk-form select[name=bulkaction]', 'remind');
+    await region(p, '105_actions_groupees', `.these-bulk-form tbody tr:nth-child(${n - 2})`, '.these-bulk-form .form-inline');
+  },
+  async '103_menu_parametres'() {
+    const p = await open(await as('sbonnet'), these('dashboard.php'));
+    await p.click('.these-navlinks .dropdown-toggle');
+    await region(p, '103_menu_parametres', '.these-navlinks', '.these-navlinks .dropdown-menu');
   },
   async '86_planning_semaine'() {
     const p = await open(await as('sbonnet'), these('planning.php', { view: 'week', date: ts('2026-10-28T12:00:00+01:00') }));
@@ -394,10 +427,14 @@ const steps = {
     await upto(p, '40_suivi_signatures');
   },
   async '41_signature_sur_place'() {
+    // Vérification de l'identité, puis page de signature (document à signer en tête).
     const p = await open(await as('sbonnet'), these('sign.php', { dossierid: ids.camille, slot: 'ccem' }));
+    await check(p, '#id_identityverified');
+    await upto(p, '41_verification_identite');
+    await Promise.all([p.waitForNavigation(), p.click('#id_submitbutton')]);
+    await grow(p);
     await draw(p);
     await check(p, '#id_signatureconsent');
-    await check(p, '#id_identityverified');
     await upto(p, '41_signature_sur_place');
   },
   async '83_dossier_complet'() {
@@ -447,10 +484,9 @@ const steps = {
   async '65_agent_signature_enregistree'() {
     // Première signature de l'agent sur un seul document, en enregistrant sa signature.
     const p = await open(await as('agarnier'), these('mysignatures.php'));
+    // Aucun document n'est coché d'office : l'agent coche le premier.
     const docs = p.locator(`${form} input[type=checkbox][name^="sig"]:not([name="signatureconsent"])`);
-    for (let i = 1; i < await docs.count(); i++) {
-      await docs.nth(i).uncheck();
-    }
+    await docs.first().check();
     await draw(p);
     await check(p, '#id_savesignature');
     await check(p, '#id_signatureconsent');
@@ -519,7 +555,6 @@ const steps = {
     await p.selectOption('#id_doctype', 'contract');
     await p.waitForTimeout(500);
     await check(p, '#id_sign_contract_ucbl');
-    await p.fill('#id_signer', "Pr Frédéric Fleury, président de l'université");
     await p.selectOption('#id_signeddate_day', '22');
     await p.selectOption('#id_signeddate_month', '10');
     await p.selectOption('#id_signeddate_year', '2026');

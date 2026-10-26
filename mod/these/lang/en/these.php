@@ -112,6 +112,8 @@ $string['stepdevedefense'] = 'Complete file validation';
 $string['steplibraryconformity'] = 'Manuscript compliance';
 $string['stepdocuments'] = 'Defence documents';
 $string['stepminutes'] = 'Minutes';
+$string['progresscurrent'] = 'Step {$a->position} of {$a->total}: {$a->label}';
+$string['progressall'] = 'Show all steps';
 $string['dormantphase'] = 'dormant file';
 
 // Navigation and lists.
@@ -188,6 +190,9 @@ $string['libraryref'] = 'Bibliographic record reference';
 // Defence.
 $string['defense'] = 'Defence';
 $string['depositdefense'] = 'Submit the defence documents';
+$string['defenseprogress'] = 'Progress: {$a->complete} of {$a->total} sections complete. Sections still to complete are expanded below.';
+$string['defensesectioncomplete'] = 'Complete';
+$string['defensesectionmissing'] = '{$a} field(s) to complete';
 $string['defenseintro'] = 'Upload your manuscript and defence documents and propose a date, a location and the jury (a chair and '
     . 'at least {$a} voting members, chair included). You can prepare this submission in several steps ("Save draft"); submitting '
     . 'sends it to your director, who will approve it and attach a report.';
@@ -198,6 +203,8 @@ $string['manuscriptrequired'] = 'The manuscript is required to submit.';
 $string['defensedocs'] = 'Other defence documents';
 $string['defensedocs_help'] = 'Optional: abstract, dissemination authorisation, appendices...';
 $string['defenseproposal'] = 'Defence proposal';
+$string['proposeddaterequired'] = 'Tick « Enable », then choose the proposed date and time.';
+$string['defenseroomshelp'] = 'Suggested rooms: {$a}. You may also enter another location.';
 $string['proposeddate'] = 'Proposed date';
 $string['defensedate'] = 'Defence date';
 $string['defenselocation'] = 'Defence location';
@@ -221,6 +228,13 @@ $string['minutes'] = 'Defence minutes';
 
 // Jury.
 $string['jury'] = 'Jury';
+$string['juryproblem'] = 'Jury composition to correct: {$a}';
+$string['juryedit'] = 'Change the jury composition';
+$string['juryeligiblecheckof'] = 'Eligibility of {$a} checked (registrar)';
+$string['roomconflicts'] = 'Room already booked for this slot (overlapping defences):';
+$string['roomconflict'] = '{$a->location}: defence of {$a->student} on {$a->date} ({$a->activity}).';
+$string['roomconflictshort'] = 'Room booked: {$a->student}, {$a->time}';
+$string['juryhelpdeve'] = "One row per member, preferably chosen from the jury directory.";
 $string['juryhelp'] = 'One row per member. Preferably choose the teacher from the jury directory: title, status, institution '
     . 'and address are taken from it. For an external member or a guest, choose "External member or guest" and fill in the row '
     . '(the status is required for a voting member). Only HDR associate professors, professors and emeriti may chair. The registrar '
@@ -258,8 +272,7 @@ $string['jurystatusrequired'] = 'Give the status of {$a} (external member).';
 $string['juryduplicate'] = '{$a} appears twice in the jury.';
 $string['jurypresidentnoteligible'] = '{$a} cannot chair the jury: only HDR associate professors, professors and emeriti can.';
 $string['juryeligiblecheck'] = 'Eligibility checked (registrar)';
-$string['juryeligiblehelp'] = 'Tick the eligibility of each voting member once checked (already ticked for directory teachers whose '
-    . 'status suits their role). On validation, jury members are notified by email and receive a link to the file documents.';
+$string['juryeligiblehelp'] = "Tick the eligibility of each checked voting member (already ticked for the directory).";
 $string['juryeligiblerequired'] = 'The eligibility of {$a} is not validated.';
 $string['jurynotified'] = '{$a} jury member(s) notified.';
 $string['jurynotifiedmissing'] = 'Without address, to notify by other means: {$a}.';
@@ -280,6 +293,9 @@ $string['juryaccessnodocuments'] = 'No document is available yet.';
 
 // Jury directory.
 $string['jurors'] = 'Jury directory';
+$string['juryconflicts'] = 'Jury member already sitting on another jury in this slot (overlapping defences):';
+$string['juryconflict'] = '{$a->member} sits on the jury of the defence of {$a->student} on {$a->date} ({$a->activity}).';
+$string['juryconflictshort'] = 'Conflict: {$a->member} already on the jury of {$a->student} at {$a->time}';
 $string['jurors_desc'] = 'Teachers who may supervise a thesis or sit on a jury, shared by all activities and all cohorts. Jury forms '
     . 'draw on it to be prefilled. A withdrawn (inactive) teacher is no longer offered but stays in the juries that chose them.';
 $string['jurortitle'] = 'Title';
@@ -313,9 +329,7 @@ $string['reviewdirectorsubject'] = 'Review the subject proposal';
 $string['reviewdirectorsubject_help'] = 'Approve the subject so that the registrar can register it, or return it to the student with '
     . 'your comments: the student can correct it and submit it again.';
 $string['reviewdevesubject'] = 'Register the subject (registrar)';
-$string['reviewdevesubject_help'] = 'Check the subject: it is then sent to the library. The registration number is assigned after '
-    . 'the thesis submission, when the defence file is validated. A return can be '
-    . 'addressed to the student or to the director; when resubmitted, the file comes straight back here.';
+$string['reviewdevesubject_help'] = "Check the subject: it then goes to the library.";
 $string['reviewlibrarysubject'] = 'Record the subject (library)';
 $string['reviewlibrarysubject_help'] = 'Enter the reference of the record created in the library catalogue. This opens the file, '
     . 'which stays active until the defence documents are submitted.';
@@ -323,8 +337,7 @@ $string['reviewdirectordefense'] = 'Approve the defence and upload the report';
 $string['reviewdirectordefense_help'] = 'Approve the defence proposal (date, jury) once your report on the manuscript is written '
     . '("Write the report"): your signature is applied to the report on approval. You can also return the file to the student with your comments.';
 $string['reviewdevedefense'] = 'Validate the defence file (registrar)';
-$string['reviewdevedefense_help'] = 'Check the complete file (manuscript, documents, director report), assign the registration '
-    . 'number and set the date, location and jury. Validation sends the manuscript to the library for the compliance check.';
+$string['reviewdevedefense_help'] = "Assign the number, set the date, location and jury: the manuscript then goes to the library.";
 $string['reviewlibraryconformity'] = 'Check manuscript compliance';
 $string['reviewlibraryconformity_help'] = 'Check the manuscript format, presentation standards and legal deposit requirements. '
     . 'Validation issues the compliance certificate; a non-compliant manuscript is returned to the student with the reason.';
@@ -378,8 +391,7 @@ $string['dossierclosed'] = 'Minutes uploaded: file closed.';
 
 // Registrar management.
 $string['editdossier'] = 'Edit the file';
-$string['editdossierhelp'] = 'Changes do not affect the file status. If the date, location or jury change after the defence '
-    . 'documents were generated, they will have to be regenerated.';
+$string['editdossierhelp'] = "No effect on the status. If the date, location or jury change, regenerate the defence documents.";
 $string['dossiersaved'] = 'File saved.';
 $string['canceldossier'] = 'Abandon the file';
 $string['cancelhelp'] = 'The file is kept as is and can be reopened later at the status it had reached.';
@@ -560,29 +572,59 @@ $string['privacy:metadata:jury:title'] = 'Thesis title.';
 $string['privacy:metadata:jury:defensedate'] = 'Defence date and location.';
 
 // Workflow settings ("Thesis follow-up" activity, otherwise the activity itself; no site setting).
+$string['settingsmenu'] = 'Settings';
+$string['sharedsettingslink'] = 'Workflow settings, templates, grid and questionnaire ({$a})';
+$string['bulkremind'] = 'Remind signatories';
+$string['bulkgenerate'] = 'Generate defence documents';
+$string['bulknotifyjury'] = 'Notify jury members not yet notified';
+$string['bulknothing'] = 'Tick at least one file and choose an action.';
+$string['bulkdone'] = '{$a->action}: {$a->done} file(s) processed, {$a->skipped} skipped (step not suitable, or nothing pending).';
+$string['bulkfor'] = 'For the ticked files:';
+$string['bulkapply'] = 'Apply';
+$string['settingschecktitle'] = 'Settings to complete: {$a}';
+$string['settingscheckcomplete'] = 'Settings complete.';
+$string['settingscheckdone'] = 'Done';
+$string['settingschecktodo'] = 'To complete';
+$string['settingscheckoptional'] = 'Optional';
+$string['settingscheckinstitution'] = 'Institution and university';
+$string['settingscheckdg'] = 'General management: title and name';
+$string['settingscheckccem'] = 'CCEM chair';
+$string['settingscheckucbl'] = 'University presidency: title and name';
+$string['settingscheckdeve'] = 'Name of the director of studies';
+$string['settingscheckcontract'] = 'Standard electronic dissemination contract';
+$string['settingscheckrooms'] = 'Defence rooms';
+$string['settingscheckagents'] = 'Registrar signing agents';
+$string['settingscheckquestions'] = 'Pre-jury questionnaire';
+$string['settingscheckimages'] = 'Document template images';
+$string['settingscheckimagesmissing'] = 'Document template images (missing: {$a})';
+$string['settingsmissingnotice'] = 'Workflow settings to complete: {$a}.';
 $string['scopesettings'] = 'Workflow settings';
 $string['scopesettings_desc'] = 'Service roles, registrar signing agents, institution, university, document signatories and standard '
     . 'distribution contract of this activity. None of them is a site setting.';
 $string['scopesettingsshared_desc'] = 'Service roles, registrar signing agents, institution, university, document signatories and '
     . 'standard distribution contract shared by all the followed thesis activities. None of them is a site setting.';
 $string['settingsroles'] = 'Service roles';
-$string['settingsroles_desc'] = 'Just as the registrar is recognised by the "Teacher" role, the library is recognised by the role chosen '
+$string['deverole'] = 'Registrar role';
+$string['deverole_help'] = 'Role whose holders act as the registrar in thesis activities.';
+$string['libraryrole'] = 'Library role';
+$string['libraryrole_help'] = 'Role whose holders act as the library. By default, the internal "Library (theses)" role created when '
+    . 'the module is installed.'
+    . ' ' . 'Just as the registrar is recognised by the "Teacher" role, the library is recognised by the role chosen '
     . 'here. The role can be assigned in the course, its category or at site level (it then gives access to all thesis activities '
     . 'without enrolment). The module capabilities are also taken into account.';
-$string['deverole'] = 'Registrar role';
-$string['deverole_desc'] = 'Role whose holders act as the registrar in thesis activities.';
-$string['libraryrole'] = 'Library role';
-$string['libraryrole_desc'] = 'Role whose holders act as the library. By default, the internal "Library (theses)" role created when '
-    . 'the module is installed.';
 $string['libraryrolename'] = 'Library (theses)';
 $string['libraryroledescription'] = 'Internal role of the thesis management module: recording subjects in the library catalogue and '
     . 'certifying manuscripts. Assign it at site, category or course level.';
 
 // Documents (workflow settings).
+$string['settingsdefenses'] = 'Defences';
+$string['settingsdefenseduration'] = 'Duration of a defence (minutes)';
+$string['settingsdefenseduration_help'] = 'Used to detect jury conflicts: a member sitting on two overlapping defences is flagged in '
+    . 'the schedule and on the file. 60 minutes by default.';
+$string['settingsdefenserooms'] = 'Defence rooms';
+$string['settingsdefenserooms_help'] = 'One room per line. They are suggested when entering the location (student deposit, DEVE validation and editing); the first one is the default. Another location remains possible.';
+$string['settingsdefensedurationinvalid'] = 'Enter a duration of at least one minute.';
 $string['settingsdocuments'] = 'Documents and signatories';
-$string['settingsdocuments_desc'] = 'Header and signatories of the institution documents produced by the module. Signatories without '
-    . 'a Moodle account (general management, CCEM, university presidency) receive a signing link by email if their address is set; '
-    . 'otherwise the registrar collects their signature in person.';
 $string['doctplimages'] = 'Template images';
 $string['doctplimages_help'] = 'Images (PNG or JPEG) usable in the document templates as {{img.name}}, name being the file name in '
     . 'lower case, without extension or special characters. The module provides none: the default templates use logo, ministere, '
@@ -597,37 +639,37 @@ $string['doctplimageslotabes'] = 'ABES logo (thesis form)';
 $string['doctplimagepresent'] = 'uploaded';
 $string['doctplimagemissing'] = 'to upload';
 $string['settingsdevename'] = 'Head of studies: name';
-$string['settingsdevename_desc'] = 'Name of the head of studies and student life (agreement form).';
+$string['settingsdevename_help'] = 'Name of the head of studies and student life (agreement form).';
 $string['settingsdevetitle'] = 'Head of studies: title';
-$string['settingsdevetitle_desc'] = 'Title printed on the agreement form (without article).';
+$string['settingsdevetitle_help'] = 'Title printed on the agreement form (without article).';
 $string['settingscontracttemplate'] = 'Electronic distribution contract template (PDF)';
-$string['settingscontracttemplate_desc'] = 'The official contract (ENS-INI-P308-E04), as is. The module adds before it a page with the '
+$string['settingscontracttemplate_help'] = 'The official contract (ENS-INI-P308-E04), as is. The module adds before it a page with the '
     . 'author\'s data and choices, and after it a signature page.';
 $string['settingsinstitution'] = 'Institution';
-$string['settingsinstitution_desc'] = 'Short name used in the documents.';
+$string['settingsinstitution_help'] = 'Short name used in the documents.'
+    . ' ' . 'Header and signatories of the institution documents produced by the module. Signatories without '
+    . 'a Moodle account (general management, CCEM, university presidency) receive a signing link by email if their address is set; '
+    . 'otherwise the registrar collects their signature in person.';
 $string['settingsuniversity'] = 'University';
-$string['settingsuniversity_desc'] = 'University awarding the degree, with its French article (« l\'Université … »): « Pour le président de '
+$string['settingsuniversity_help'] = 'University awarding the degree, with its French article (« l\'Université … »): « Pour le président de '
     . '… et par délégation », university libraries of the distribution agreement.';
 $string['settingshetopurl'] = 'HeTOP link';
-$string['settingshetopurl_desc'] = 'Reference terminology for subject keywords.';
+$string['settingshetopurl_help'] = 'Reference terminology for subject keywords.';
 $string['settingsdgtitle'] = 'General management (title)';
-$string['settingsdgtitle_desc'] = 'Full title printed above their signature, in French, for example « La Directrice générale de … ».';
+$string['settingsdgtitle_help'] = 'Full title printed above their signature, in French, for example « La Directrice générale de … ».';
 $string['settingsdgname'] = 'General management (name)';
-$string['settingsdgname_desc'] = '';
 $string['settingsdgemail'] = 'General management (email)';
-$string['settingsdgemail_desc'] = 'Address receiving signing links; empty: signature collected in person by the registrar.';
+$string['settingsdgemail_help'] = 'Address receiving signing links; empty: signature collected in person by the registrar.';
 $string['settingsvisaplace'] = 'Place of approval';
-$string['settingsvisaplace_desc'] = '"Seen, at …" of the conclusions, "Done at" of the distribution contract.';
+$string['settingsvisaplace_help'] = '"Seen, at …" of the conclusions, "Done at" of the distribution contract.';
 $string['settingsccemname'] = 'CCEM (name)';
-$string['settingsccemname_desc'] = '';
 $string['settingsccememail'] = 'CCEM (email)';
-$string['settingsccememail_desc'] = 'Address receiving signing links; empty: signature collected in person by the registrar.';
+$string['settingsccememail_help'] = 'Address receiving signing links; empty: signature collected in person by the registrar.';
 $string['settingsucbltitle'] = 'University presidency (title)';
-$string['settingsucbltitle_desc'] = 'Full title printed above their signature (distribution agreement), in French, for example « Le Président de l\'Université … ».';
+$string['settingsucbltitle_help'] = 'Full title printed above their signature (distribution agreement), in French, for example « Le Président de l\'Université … ».';
 $string['settingsucblname'] = 'University presidency (name)';
-$string['settingsucblname_desc'] = '';
 $string['settingsucblemail'] = 'University presidency (email)';
-$string['settingsucblemail_desc'] = 'Address receiving signing links; empty: signature collected in person by the registrar.';
+$string['settingsucblemail_help'] = 'Address receiving signing links; empty: signature collected in person by the registrar.';
 
 // Subject form.
 $string['studyyear'] = 'Year of study';
@@ -679,7 +721,7 @@ $string['signatures'] = 'Signatures';
 $string['document'] = 'Document';
 $string['downloadpdf'] = 'PDF';
 $string['managesignatures'] = 'Signature tracking';
-$string['externalsigners'] = 'Signatories without an account';
+$string['externalsigners'] = 'Signatures to collect';
 $string['signer'] = 'Signatory';
 $string['noemail'] = 'no address';
 $string['documentstosign'] = 'Documents to sign';
@@ -688,7 +730,6 @@ $string['signinperson'] = 'Sign in person';
 $string['signaturerequestsent'] = 'Signing link sent.';
 $string['signaturesrecorded'] = 'Signature recorded. Thank you.';
 $string['signpagetitle'] = 'Signing thesis documents';
-$string['signpageintro'] = 'Signing as {$a->slot} the documents of the thesis of {$a->student}: "{$a->title}".';
 $string['signinvalidtoken'] = 'This link is no longer valid: the documents have already been signed, a new invitation was sent, '
     . 'or the link has expired (60 days). Contact the registrar to receive a new one.';
 $string['signnothingpending'] = 'No document is waiting for a signature.';
@@ -803,6 +844,12 @@ $string['griditemconditional'] = 'Depending on the thesis (optional)';
 $string['griditemadd'] = 'Add {no} item(s)';
 $string['griditemssaved'] = 'The conformity grid has been saved.';
 $string['griditemsreset'] = 'Restore the original grid';
+$string['gridstudenthelp'] = 'Tick each point your manuscript complies with. Your supervisor will check this list, complete '
+    . 'it if needed and sign it when validating your defence.';
+$string['gridstudentconfirm'] = 'I certify that my manuscript complies with the ticked points of the compliance checklist';
+$string['gridstudentconfirmrequired'] = 'Certify the compliance checklist before submitting the file.';
+$string['gridprefilledbystudent'] = 'Checklist prefilled and certified by the student when submitting: check each point before '
+    . 'signing.';
 $string['gridrequired'] = 'Item to validate.';
 $string['gridquestion'] = 'The scientific question is clearly stated and identified.';
 $string['gridanswer'] = 'The bibliographic or experimental answer is satisfactory.';
@@ -848,6 +895,7 @@ $string['dossierbusy'] = 'This file is being processed by another action. Try ag
 $string['logsignaturesinvalidated'] = 'Signatures invalidated (document changed)';
 $string['logsignaturerequested'] = 'Signature requested';
 $string['logsignedinperson'] = 'Signature collected in person';
+$string['logidentityverified'] = 'Identity of the signatory checked by the registrar';
 $string['emailkeysignaturerequest'] = 'Signature request (signatories without an account)';
 $string['emailkeyagentsignature'] = 'Documents to be signed by the registrar\'s signing officer';
 $string['emailkeysubjectchanged'] = 'Change of subject';
@@ -883,7 +931,20 @@ $string['signedmethodscan'] = 'by hand, scan attached to the file';
 $string['signdelegated'] = 'Signature by delegation of the general management';
 $string['signdelegated_help'] = 'Tick when the person signing does so by delegation of the director general: "by delegation" '
     . 'appears with their name on the document.';
+$string['signidentity'] = 'Checking the identity of the signatory';
+$string['signidentity_desc'] = 'Check the identity of the person present (identity document) before opening the signing page. '
+    . 'The check is recorded in the history under your name, kept with the signature and printed under it.';
 $string['signidentityverified'] = 'I certify that I have checked the identity of the signatory (identity document)';
+$string['signidentityopen'] = 'Open the signing page';
+$string['signinfoslot'] = 'Signing as';
+$string['reviewsummary'] = 'File under review';
+$string['reviewfulldossier'] = 'Complete file (click to expand)';
+$string['mysignaturesdossier'] = '{$a->student} — "{$a->title}"{$a->number}';
+$string['signinfostudent'] = 'Student';
+$string['signinfotitle'] = 'Thesis title';
+$string['signinfonumber'] = 'Registrar number';
+$string['signinfodefense'] = 'Defence';
+$string['signinfodocuments'] = 'Documents to read before signing';
 $string['signidentityrequired'] = 'Check the identity of the signatory before recording their signature.';
 $string['signidentityverifiedby'] = 'identity checked by {$a}';
 $string['scanslots'] = 'Signatories of the scan';
@@ -1106,7 +1167,7 @@ $string['adjournednoticestudent'] = 'Your defence was adjourned on {$a}. Submit 
     . 'jury): it will be approved again by your director, the registrar and the library.';
 $string['logadjourned'] = 'Minutes uploaded, defence adjourned: back to the defence phase';
 $string['logsignedscan'] = 'Signed scan uploaded (signed outside the module)';
-$string['scanlogremark'] = 'Document: {$a->doctype}. Signer: {$a->signer}. SHA-256 fingerprint: {$a->files}.';
+$string['scanlogremark'] = 'Document: {$a->doctype}. Signatories: {$a->signer}. SHA-256 fingerprint: {$a->files}.';
 $string['signedscans'] = 'Signed scans (outside the module)';
 $string['addsignedscan'] = 'Add a signed scan';
 $string['recordscan'] = 'Save the scan';
@@ -1116,7 +1177,6 @@ $string['scandoctypeagreement'] = 'Approval form (E02)';
 $string['scandoctypesignaletique'] = 'Thesis details form (E03)';
 $string['scandoctypecontract'] = 'Distribution contract (E04)';
 $string['scandoctypeconclusions'] = 'Conclusions';
-$string['scansigner'] = 'Signer';
 $string['scansigneddate'] = 'Signature date';
 $string['scanfiles'] = 'Signed scans (PDF or images)';
 $string['scanfiles_help'] = 'The document signed by hand by the signer, scanned. It is attached to the file for record keeping: it does not replace the signature in the module and cannot be changed afterwards.';
@@ -1136,7 +1196,7 @@ Open the file: {$a->url}';
 // DEVE agent signatory and saved signature.
 $string['agentdeve'] = 'Registrar officer';
 $string['settingsdeveagent'] = 'Registrar signatories';
-$string['settingsdeveagent_desc'] = 'Usernames or email addresses of the Moodle accounts of the officers allowed to sign for the '
+$string['settingsdeveagent_help'] = 'Usernames or email addresses of the Moodle accounts of the officers allowed to sign for the '
     . 'registrar, separated by commas or one per line. The registrar team fills in and checks the file, then validates without '
     . 'signing; each officer then receives an email and finds the subject visa and the administrative approval in "My signatures": '
     . 'the first one to sign applies the signature, with their saved signature. Leave empty for the registrar member who validates '

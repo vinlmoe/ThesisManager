@@ -30,6 +30,7 @@
     * hasmembers Le jury a au moins un membre.
     * heading Titre.
     * table Contexte de mod_these/table.
+    * conflicts Avertissement des conflits de jury (HTML), facultatif.
 
     Example context (json):
     {
@@ -50,5 +51,6 @@
 }}
 {{#hasmembers}}
 <h4 class="mt-4">{{heading}}</h4>
+{{{conflicts}}}
 {{#table}}{{> mod_these/table}}{{/table}}
 {{/hasmembers}}

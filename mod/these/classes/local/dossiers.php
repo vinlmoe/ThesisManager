@@ -491,6 +491,17 @@ class dossiers {
                 'conclusions' => (string) these_submitted_value($data, $dossier, 'conclusions'),
                 'bordereau' => json_encode(these_extract_bordereau($data, these_get_bordereau($dossier)), JSON_UNESCAPED_UNICODE),
             ];
+            // Grille de conformité remplie par l'étudiant ; le directeur la vérifie et la signe ensuite.
+            if (property_exists($data, 'ethicsnumber')) {
+                $grid = [];
+                foreach (these_get_grid_items(these_settings_scope($these)) as $items) {
+                    foreach (array_keys($items) as $item) {
+                        $grid[$item] = (int) !empty($data->{'grid_' . $item});
+                    }
+                }
+                $fields['conformitygrid'] = json_encode($grid);
+                $fields['ethicsnumber'] = trim((string) $data->ethicsnumber);
+            }
             // Tant que la DEVE n'a pas arrêté la date, la date retenue suit la proposition de l'étudiant.
             if ((int) $dossier->status === THESE_STATUS_ACTIVE || empty($dossier->defensedate)) {
                 $fields['defensedate'] = (int) $data->proposeddate;

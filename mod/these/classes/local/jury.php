@@ -96,6 +96,200 @@ class jury {
     }
 
     /**
+     * Deux membres de jury sont-ils la même personne ? Même enseignant de l'annuaire, même adresse
+     * ou, à défaut d'adresse, même nom.
+     *
+     * @param stdClass $a
+     * @param stdClass $b
+     * @return bool
+     */
+    public static function same_member(stdClass $a, stdClass $b) {
+        if (!empty($a->jurorid) && (int) $a->jurorid === (int) ($b->jurorid ?? 0)) {
+            return true;
+        }
+        $email = function ($member) {
+            return core_text::strtolower(trim((string) ($member->email ?? '')));
+        };
+        if ($email($a) !== '' && $email($b) !== '') {
+            return $email($a) === $email($b);
+        }
+        $name = function ($member) {
+            return core_text::strtolower(preg_replace('/\s+/', ' ', trim((string) $member->fullname)));
+        };
+        return $name($a) !== '' && $name($a) === $name($b);
+    }
+
+    /**
+     * Durée d'une soutenance d'un dossier, en secondes : paramètre du circuit de son activité.
+     *
+     * @param stdClass $dossier
+     * @return int
+     */
+    public static function defense_duration(stdClass $dossier) {
+        return max(1, (int) scopesettings::for_dossier($dossier)['defenseduration']) * MINSECS;
+    }
+
+    /**
+     * Autres soutenances qui chevauchent celle d'un dossier (date arrêtée, ou à défaut date proposée),
+     * toutes promotions confondues, chacune durant la durée fixée dans les paramètres du circuit de son
+     * activité. Les dossiers abandonnés sont ignorés.
+     *
+     * @param stdClass $dossier
+     * @return stdClass[] Dossiers, par date.
+     */
+    public static function overlapping_dossiers(stdClass $dossier) {
+        global $DB;
+
+        $time = (int) ($dossier->defensedate ?: $dossier->proposeddate);
+        if (!$time) {
+            return [];
+        }
+        // Candidats : soutenances commençant au plus une journée avant et avant la fin de celle-ci ; le
+        // chevauchement est ensuite vérifié avec la durée propre à chacune.
+        $end = $time + self::defense_duration($dossier);
+        $params = ['id' => (int) $dossier->id, 'cancelled' => THESE_STATUS_CANCELLED, 'from1' => $time - DAYSECS,
+            'to1' => $end - 1, 'from2' => $time - DAYSECS, 'to2' => $end - 1];
+        $others = $DB->get_records_select(
+            'these_dossier',
+            'id <> :id AND status <> :cancelled
+             AND ((defensedate > 0 AND defensedate BETWEEN :from1 AND :to1)
+                  OR (defensedate = 0 AND proposeddate BETWEEN :from2 AND :to2))',
+            $params,
+            'defensedate ASC, proposeddate ASC, id ASC'
+        );
+        return array_values(array_filter($others, function ($other) use ($time) {
+            return (int) ($other->defensedate ?: $other->proposeddate) + self::defense_duration($other) > $time;
+        }));
+    }
+
+    /**
+     * Lieu ramené à une forme comparable : casse, espaces.
+     *
+     * @param string|null $location
+     * @return string
+     */
+    public static function normalise_location($location) {
+        return \core_text::strtolower(trim(preg_replace('/\s+/u', ' ', (string) $location)));
+    }
+
+    /**
+     * Autres soutenances prévues dans la même salle sur un créneau qui chevauche celle d'un dossier
+     * (voir overlapping_dossiers()). Les soutenances sans lieu sont ignorées.
+     *
+     * @param stdClass $dossier
+     * @param string|null $location Lieu à vérifier (par défaut, celui du dossier).
+     * @return stdClass[] {location, time, student (nom), activity (nom de l'activité)}
+     */
+    public static function room_conflicts(stdClass $dossier, $location = null) {
+        global $DB;
+
+        $room = self::normalise_location($location ?? $dossier->defenselocation);
+        if ($room === '') {
+            return [];
+        }
+        $conflicts = [];
+        foreach (self::overlapping_dossiers($dossier) as $other) {
+            if (self::normalise_location($other->defenselocation) !== $room) {
+                continue;
+            }
+            $student = $DB->get_record('user', ['id' => $other->userid]);
+            $conflicts[] = (object) [
+                'location' => trim((string) $other->defenselocation),
+                'time' => (int) ($other->defensedate ?: $other->proposeddate),
+                'student' => $student ? fullname($student) : '-',
+                'activity' => (string) $DB->get_field('these', 'name', ['id' => $other->theseid]),
+            ];
+        }
+        return $conflicts;
+    }
+
+    /**
+     * Avertissement des conflits de salle d'un dossier (voir room_conflicts()), pour le personnel.
+     *
+     * @param stdClass $dossier
+     * @return string HTML, vide sans conflit.
+     */
+    public static function render_room_conflicts(stdClass $dossier) {
+        global $OUTPUT, $PAGE;
+
+        $lines = array_map(function ($conflict) {
+            return get_string('roomconflict', 'mod_these', (object) [
+                'location' => $conflict->location,
+                'date' => userdate($conflict->time, get_string('strftimedaydatetime', 'langconfig')),
+                'student' => $conflict->student,
+                'activity' => format_string($conflict->activity),
+            ]);
+        }, self::room_conflicts($dossier));
+        if (!$lines) {
+            return '';
+        }
+        $list = $PAGE->get_renderer('mod_these')->render(new \mod_these\output\bullet_list($lines));
+        return $OUTPUT->notification(get_string('roomconflicts', 'mod_these') . $list, 'warning');
+    }
+
+    /**
+     * Membres du jury d'un dossier déjà engagés dans un autre jury sur le même créneau, toutes
+     * promotions confondues : les deux soutenances (date arrêtée, ou à défaut date proposée) se
+     * chevauchent, chacune durant la durée fixée dans les paramètres du circuit de son activité. Les
+     * dossiers abandonnés sont ignorés.
+     *
+     * @param stdClass $dossier
+     * @param array|null $members Membres à vérifier (par défaut, le jury enregistré du dossier).
+     * @return stdClass[] {member (nom), time, student (nom), activity (nom de l'activité)}
+     */
+    public static function jury_conflicts(stdClass $dossier, ?array $members = null) {
+        global $DB;
+
+        $members = $members ?? these_get_jury($dossier->id);
+        if (!$members) {
+            return [];
+        }
+        $conflicts = [];
+        foreach (self::overlapping_dossiers($dossier) as $other) {
+            $otherjury = these_get_jury($other->id);
+            foreach ($members as $member) {
+                foreach ($otherjury as $othermember) {
+                    if (!self::same_member($member, $othermember)) {
+                        continue;
+                    }
+                    $student = $DB->get_record('user', ['id' => $other->userid]);
+                    $conflicts[] = (object) [
+                        'member' => trim(($member->jurytitle ?? '') . ' ' . $member->fullname),
+                        'time' => (int) ($other->defensedate ?: $other->proposeddate),
+                        'student' => $student ? fullname($student) : '-',
+                        'activity' => (string) $DB->get_field('these', 'name', ['id' => $other->theseid]),
+                    ];
+                }
+            }
+        }
+        return $conflicts;
+    }
+
+    /**
+     * Avertissement des conflits de jury d'un dossier (voir jury_conflicts()), pour la DEVE.
+     *
+     * @param stdClass $dossier
+     * @return string HTML, vide sans conflit.
+     */
+    public static function render_jury_conflicts(stdClass $dossier) {
+        global $OUTPUT, $PAGE;
+
+        $lines = array_map(function ($conflict) {
+            return get_string('juryconflict', 'mod_these', (object) [
+                'member' => $conflict->member,
+                'date' => userdate($conflict->time, get_string('strftimedaydatetime', 'langconfig')),
+                'student' => $conflict->student,
+                'activity' => format_string($conflict->activity),
+            ]);
+        }, self::jury_conflicts($dossier));
+        if (!$lines) {
+            return '';
+        }
+        $list = $PAGE->get_renderer('mod_these')->render(new \mod_these\output\bullet_list($lines));
+        return $OUTPUT->notification(get_string('juryconflicts', 'mod_these') . $list, 'warning');
+    }
+
+    /**
      * Remplace le jury d'un dossier. Un membre déjà présent (même enseignant de l'annuaire, ou mêmes
      * nom et adresse) garde son accès aux documents et la trace de sa notification ; son éligibilité
      * validée est conservée s'il garde le même rôle et le même statut, sauf si $member->eligible est
@@ -158,6 +352,7 @@ class jury {
      * @param int $count Nombre de lignes déjà renseignées.
      * @param bool $eligibility Ajouter la validation d'éligibilité par la DEVE.
      * @param int[] $keep Enseignants de l'annuaire à proposer même s'ils ne sont plus actifs.
+     * @param string $warning Avertissement affiché en tête de la rubrique (HTML, voir render_jury_conflicts()).
      * @return void
      */
     public static function add_jury_fields(
@@ -165,11 +360,17 @@ class jury {
         MoodleQuickForm $mform,
         $count,
         $eligibility = false,
-        array $keep = []
+        array $keep = [],
+        $warning = ''
     ) {
         $mform->addElement('header', 'juryheader', get_string('jury', 'mod_these'));
         $mform->setExpanded('juryheader');
-        $mform->addElement('static', 'juryhelp', '', get_string('juryhelp', 'mod_these'));
+        if ($warning !== '') {
+            $mform->addElement('static', 'juryconflicts', '', $warning);
+        }
+        // Les erreurs de composition du jury s'affichent ici, en tête de la rubrique. La DEVE, qui
+        // connaît les règles, n'a qu'un rappel d'une ligne.
+        $mform->addElement('static', 'juryhelp', '', get_string($eligibility ? 'juryhelpdeve' : 'juryhelp', 'mod_these'));
 
         $jurors = [0 => get_string('juryexternal', 'mod_these')] + \mod_these\local\jurors::options(false, $keep);
         $repeat = [];

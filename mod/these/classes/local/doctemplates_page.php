@@ -157,7 +157,7 @@ class doctemplates_page {
         echo $OUTPUT->heading(get_string('doctemplates', 'mod_these'));
         echo $navigation;
         $intro = get_string($scope->shared ? 'doctemplatesshared_desc' : 'doctemplates_desc', 'mod_these');
-        echo $renderer->render(new output\message($intro, 'mb-3'));
+        echo $renderer->render(output\message::help($intro));
         echo $renderer->render(new output\doctemplate_list($scope, $listurl));
         echo $OUTPUT->heading(get_string('doctplimages', 'mod_these'), 3, 'mt-4');
         // Images appelées par les modèles d'origine : le module n'en fournit aucune.

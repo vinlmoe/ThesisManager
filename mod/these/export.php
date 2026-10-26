@@ -86,6 +86,6 @@ if ($dataformat !== '') {
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('export', 'mod_these'));
 echo these_render_navlinks($cm, $context);
-echo $OUTPUT->box(get_string('exporthelp', 'mod_these'), 'generalbox mb-3');
+echo $PAGE->get_renderer('mod_these')->render(\mod_these\output\message::help(get_string('exporthelp', 'mod_these')));
 echo $OUTPUT->download_dataformat_selector(get_string('exportformat', 'mod_these'), 'export.php', 'dataformat', ['id' => $cm->id]);
 echo $OUTPUT->footer();

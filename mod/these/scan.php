@@ -77,7 +77,6 @@ if ($mform->is_cancelled()) {
         $dossier,
         $USER->id,
         $data->doctype,
-        trim($data->signer),
         (int) $data->signeddate,
         $data->scan,
         trim((string) $data->remark),

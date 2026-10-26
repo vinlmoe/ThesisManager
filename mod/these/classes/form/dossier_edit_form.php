@@ -67,10 +67,20 @@ class dossier_edit_form extends \moodleform {
             get_string('defensedate', 'mod_these'),
             ['optional' => true]
         );
-        $mform->addElement('text', 'defenselocation', get_string('defenselocation', 'mod_these'), ['size' => 64]);
-        $mform->setType('defenselocation', PARAM_TEXT);
+        \mod_these\local\scopesettings::add_location_field(
+            $mform,
+            $this->_customdata['rooms'] ?? [],
+            $this->_customdata['roomconflicts'] ?? ''
+        );
 
-        these_add_jury_fields($this, $mform, $this->_customdata['jurycount'] ?? 0, true, $this->_customdata['jurorids'] ?? []);
+        these_add_jury_fields(
+            $this,
+            $mform,
+            $this->_customdata['jurycount'] ?? 0,
+            true,
+            $this->_customdata['jurorids'] ?? [],
+            $this->_customdata['juryconflicts'] ?? ''
+        );
 
         $this->add_action_buttons();
     }
@@ -92,7 +102,7 @@ class dossier_edit_form extends \moodleform {
         if ($members) {
             $juryerror = these_validate_jury($members, $this->_customdata['minjury']);
             if ($juryerror !== null) {
-                $errors['juryname[0]'] = $juryerror;
+                $errors['juryhelp'] = get_string('juryproblem', 'mod_these', $juryerror);
             }
         }
         return $errors;

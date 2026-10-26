@@ -21,7 +21,9 @@ use moodle_url;
 use stdClass;
 
 /**
- * Tableau de dossiers des listes du tableau de bord.
+ * Tableau de dossiers des listes du tableau de bord. Dans la file « À traiter » (option todo), chaque
+ * dossier propose directement l'action qui attend l'utilisateur ; avec l'option selectable, une case
+ * par dossier sert aux actions groupées de la DEVE.
  *
  * Le titre d'une thèse confidentielle n'entre dans le contexte du gabarit que pour qui connaît son
  * sujet (these_user_knows_subject()) ; les autres reçoivent la mention « Thèse confidentielle ».
@@ -35,16 +37,23 @@ class dossier_table implements \renderable, \templatable {
     protected $dossiers;
     /** @var stdClass */
     protected $cm;
+    /** @var bool */
+    protected $todo;
+    /** @var bool */
+    protected $selectable;
 
     /**
      * Constructeur.
      *
      * @param array $dossiers Voir these_get_dossiers().
      * @param stdClass $cm
+     * @param array $options todo (action directe), selectable (case de sélection, name dossierids[]).
      */
-    public function __construct(array $dossiers, stdClass $cm) {
+    public function __construct(array $dossiers, stdClass $cm, array $options = []) {
         $this->dossiers = $dossiers;
         $this->cm = $cm;
+        $this->todo = !empty($options['todo']);
+        $this->selectable = !empty($options['selectable']);
     }
 
     /**
@@ -85,15 +94,30 @@ class dossier_table implements \renderable, \templatable {
             } else {
                 $title = parts::em(get_string('confidentialtitle', 'mod_these'));
             }
-            $rows[] = [
+            $open = parts::link($url, get_string('open', 'mod_these'), 'btn btn-sm btn-secondary');
+            $actions = [$open];
+            $action = $this->todo
+                ? these_primary_action($this->cm, $dossier, these_get_rights($context, $dossier, $USER->id)) : null;
+            if ($action) {
+                $actions = [parts::link($action[1], $action[0], 'btn btn-sm btn-primary mr-1 mb-1'), $open];
+            }
+            $row = [
                 [parts::text(fullname($student))],
                 [$title],
                 [parts::text($dossier->directorid ? fullname($director) : '-')],
                 [parts::text($dossier->devenumber)],
                 [parts::status((new status_badge($dossier->status))->export_for_template($output))],
                 [parts::text(userdate($dossier->statustime, $dateformat))],
-                [parts::link($url, get_string('open', 'mod_these'), 'btn btn-sm btn-secondary')],
+                $actions,
             ];
+            if ($this->selectable) {
+                $checkbox = parts::checkbox('dossierids[]', (string) $dossier->id, false, 'these-select-' . $dossier->id);
+                array_unshift($row, [$checkbox]);
+            }
+            $rows[] = $row;
+        }
+        if ($this->selectable) {
+            array_unshift($head, get_string('select'));
         }
         return [
             'isempty' => false,

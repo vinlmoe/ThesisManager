@@ -210,8 +210,21 @@ function these_rank_reached(stdClass $dossier, $status) {
  *
  * @param array $dossiers Voir these_get_dossiers().
  * @param stdClass $cm
+ * @param array $options Voir \mod_these\output\dossier_table.
  * @return string HTML
  */
-function these_render_dossier_table(array $dossiers, stdClass $cm) {
-    return \mod_these\local\rendering::render_dossier_table($dossiers, $cm);
+function these_render_dossier_table(array $dossiers, stdClass $cm, array $options = []) {
+    return \mod_these\local\rendering::render_dossier_table($dossiers, $cm, $options);
+}
+
+/**
+ * Voir \mod_these\local\rendering::primary_action().
+ *
+ * @param stdClass $cm
+ * @param stdClass $dossier
+ * @param stdClass $rights
+ * @return array|null
+ */
+function these_primary_action(stdClass $cm, stdClass $dossier, stdClass $rights) {
+    return \mod_these\local\rendering::primary_action($cm, $dossier, $rights);
 }

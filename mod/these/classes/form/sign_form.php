@@ -27,8 +27,9 @@ require_once($CFG->dirroot . '/mod/these/locallib.php');
  * reçu par courriel ou sur place auprès de la DEVE (sign.php). Un signataire connecté avec le
  * compte de l'adresse invitée peut reprendre sa signature enregistrée.
  *
- * La direction générale peut signer par délégation (customdata delegation). Sur place (customdata
- * inperson), la DEVE certifie avoir vérifié l'identité du signataire.
+ * La direction générale peut signer par délégation (customdata delegation). Les documents à signer
+ * sont présentés au-dessus du formulaire (sign.php) ; sur place, la DEVE a d'abord certifié avoir
+ * vérifié l'identité du signataire (identity_form).
  *
  * @package   mod_these
  * @copyright 2026 Sébastien Lefebvre
@@ -46,7 +47,6 @@ class sign_form extends \moodleform {
             $mform->addElement('hidden', $name);
             $mform->setType($name, $type);
         }
-        $mform->addElement('static', 'documents', get_string('documentstosign', 'mod_these'), $this->_customdata['documents']);
         these_add_signature_fields(
             $mform,
             $this->_customdata['signername'],
@@ -56,9 +56,6 @@ class sign_form extends \moodleform {
         if (!empty($this->_customdata['delegation'])) {
             $mform->addElement('advcheckbox', 'delegated', '', get_string('signdelegated', 'mod_these'));
             $mform->addHelpButton('delegated', 'signdelegated', 'mod_these');
-        }
-        if (!empty($this->_customdata['inperson'])) {
-            $mform->addElement('advcheckbox', 'identityverified', '', get_string('signidentityverified', 'mod_these'));
         }
         $this->add_action_buttons(false, get_string('signdocuments', 'mod_these'));
     }
@@ -71,10 +68,6 @@ class sign_form extends \moodleform {
      * @return array
      */
     public function validation($data, $files) {
-        $errors = array_merge(parent::validation($data, $files), these_signature_errors($data));
-        if (!empty($this->_customdata['inperson']) && empty($data['identityverified'])) {
-            $errors['identityverified'] = get_string('signidentityrequired', 'mod_these');
-        }
-        return $errors;
+        return array_merge(parent::validation($data, $files), these_signature_errors($data));
     }
 }

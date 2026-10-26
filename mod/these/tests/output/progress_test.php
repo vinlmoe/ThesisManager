@@ -31,12 +31,17 @@ require_once(__DIR__ . '/output_testcase.php');
  */
 final class progress_test extends output_testcase {
     /**
-     * Contexte : étapes faites, en cours, à venir ; un dossier abandonné n'a pas d'étape en cours.
+     * Contexte : étapes faites, en cours, à venir, résumé de l'étape en cours ; un dossier abandonné
+     * n'a pas d'étape en cours.
      */
     public function test_export_for_template(): void {
         $this->resetAfterTest();
         $dossier = (object) ['status' => THESE_STATUS_DEFENSE_APPROVED, 'cancelledfromstatus' => 0];
-        $steps = (new progress($dossier))->export_for_template($this->renderer())['steps'];
+        $data = (new progress($dossier))->export_for_template($this->renderer());
+        $steps = $data['steps'];
+        $this->assertStringStartsWith(get_string('progresscurrent', 'mod_these', (object) [
+            'position' => 7, 'total' => count(these_progress_steps()), 'label' => '',
+        ]), $data['current']['label']);
         $this->assertCount(count(these_progress_steps()), $steps);
         $this->assertStringStartsWith('1. ', $steps[0]['label']);
         $states = array_column($steps, 'stateclass');
@@ -46,19 +51,24 @@ final class progress_test extends output_testcase {
         $this->assertSame([3], array_keys(array_filter(array_column($steps, 'separator'))));
 
         $cancelled = (object) ['status' => THESE_STATUS_CANCELLED, 'cancelledfromstatus' => THESE_STATUS_DEFENSE_SUBMITTED];
-        $states = array_column((new progress($cancelled))->export_for_template($this->renderer())['steps'], 'stateclass');
-        $this->assertNotContains('these-step-current', $states);
+        $data = (new progress($cancelled))->export_for_template($this->renderer());
+        $this->assertNotContains('these-step-current', array_column($data['steps'], 'stateclass'));
+        $this->assertFalse($data['current']);
     }
 
     /**
-     * Rendu : liste ordonnée these-progress, séparateur de la phase dormante après la quatrième étape.
+     * Rendu : étape en cours résumée et frise repliée pour les petits écrans, frise complète pour les
+     * autres ; séparateur de la phase dormante après la quatrième étape.
      */
     public function test_render(): void {
         $this->resetAfterTest();
         $html = $this->renderer()->render(new progress((object) ['status' => THESE_STATUS_DRAFT, 'cancelledfromstatus' => 0]));
-        $this->assertStringStartsWith('<ol class="these-progress">', $html);
-        $this->assertSame(count(these_progress_steps()), substr_count($html, '<li class="these-step these-step-'));
-        $this->assertSame(1, substr_count($html, '<li class="these-step-separator">'));
+        $this->assertStringStartsWith('<div class="these-progress-compact d-md-none', $html);
+        $this->assertStringContainsString('<details class="these-progress-mobile d-md-none', $html);
+        $this->assertStringContainsString('<div class="d-none d-md-block">', $html);
+        $this->assertSame(2, substr_count($html, '<ol class="these-progress">'));
+        $this->assertSame(2 * count(these_progress_steps()), substr_count($html, '<li class="these-step these-step-'));
+        $this->assertSame(2, substr_count($html, '<li class="these-step-separator">'));
         $this->assertStringContainsString('<span class="these-step-label">1. ', $html);
     }
 }

@@ -46,6 +46,17 @@ class message implements \renderable, \templatable {
     }
 
     /**
+     * Explication repliée sous « Aide » : les pages de la DEVE restent courtes, l'explication est à un
+     * clic.
+     *
+     * @param string $text Texte brut.
+     * @return self
+     */
+    public static function help(string $text): self {
+        return new self([parts::details([parts::text(get_string('help'))], [parts::text($text)])], 'these-help mb-3');
+    }
+
+    /**
      * Données du gabarit mod_these/message.
      *
      * @param \renderer_base $output

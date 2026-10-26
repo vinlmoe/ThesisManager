@@ -22,8 +22,9 @@ require_once($CFG->libdir . '/formslib.php');
 require_once($CFG->dirroot . '/mod/these/locallib.php');
 
 /**
- * Dépôt par la DEVE du scan d'un document signé hors du module : document, signataire, date de la
- * signature, signataires couverts par le scan, fichiers scannés, commentaire.
+ * Dépôt par la DEVE du scan d'un document signé hors du module : document, date de la signature,
+ * signataires couverts par le scan (cochés, leur nom est connu du module), fichiers scannés,
+ * commentaire.
  *
  * customdata : slots, doctype => [emplacement => libellé] des signatures encore attendues ; une case
  * par emplacement, affichée pour son document seulement. Cocher un emplacement l'inscrit comme signé
@@ -47,10 +48,6 @@ class scan_form extends \moodleform {
 
         $mform->addElement('select', 'doctype', get_string('scandoctype', 'mod_these'), \mod_these\local\scans::doctype_options());
         $mform->addRule('doctype', null, 'required', null, 'client');
-
-        $mform->addElement('text', 'signer', get_string('scansigner', 'mod_these'), ['size' => 50]);
-        $mform->setType('signer', PARAM_TEXT);
-        $mform->addRule('signer', null, 'required', null, 'client');
 
         $mform->addElement('date_selector', 'signeddate', get_string('scansigneddate', 'mod_these'));
         $mform->addRule('signeddate', null, 'required', null, 'client');

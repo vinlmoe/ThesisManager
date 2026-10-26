@@ -41,6 +41,7 @@
     * subjecthistory Contexte de mod_these/subject_history, ou false.
     * defense, corrections, answers Contextes de mod_these/detail_section, ou false.
     * jury Contexte de mod_these/jury, ou false.
+    * roomconflicts Avertissement des conflits de salle (HTML), vide sans conflit.
     * juryresend Bouton de renvoi des accès du jury (url, label), ou false.
     * signeddocuments Contexte de mod_these/signed_documents.
     * history Contexte de mod_these/history.
@@ -74,6 +75,7 @@
         "subjecthistory": false,
         "registration": {"hasrows": false, "heading": "Enregistrements", "table": false},
         "defense": false,
+        "roomconflicts": "",
         "corrections": false,
         "answers": false,
         "jury": false,
@@ -107,6 +109,7 @@
 {{#registration}}
 {{> mod_these/detail_section}}
 {{/registration}}
+{{{roomconflicts}}}
 {{#defense}}
 {{> mod_these/detail_section}}
 {{/defense}}

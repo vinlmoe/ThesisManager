@@ -61,8 +61,24 @@ $PAGE->set_context($context);
 
 $renderer = $PAGE->get_renderer('mod_these');
 echo $OUTPUT->header();
-echo $OUTPUT->heading(format_string($these->name));
+echo $OUTPUT->heading(get_string('dashboard', 'mod_these'));
 echo these_render_navlinks($cm, $context);
+// Réglages du circuit encore à compléter : rappel à la DEVE, avec le lien vers les paramètres.
+if ($rights->deve) {
+    $scope = these_settings_scope($these);
+    $missing = count(array_filter(\mod_these\local\scopesettings::checklist($scope), function ($item) {
+        return !$item['complete'] && !$item['optional'];
+    }));
+    if ($missing) {
+        $settingsurl = $scope->shared
+            ? new moodle_url('/mod/thesesynthesis/parameters.php', ['id' => $scope->cmid])
+            : new moodle_url('/mod/these/parameters.php', ['id' => $cm->id]);
+        echo $renderer->render(new output\message([
+            output\parts::text(get_string('settingsmissingnotice', 'mod_these', $missing) . ' '),
+            output\parts::link($settingsurl, get_string('scopesettings', 'mod_these'), ''),
+        ], 'alert alert-warning'));
+    }
+}
 
 // File « À traiter » : les étapes qui attendent l'utilisateur, tous rôles confondus.
 $queue = [];
@@ -78,7 +94,7 @@ if ($rights->library) {
 echo $OUTPUT->heading(get_string('todo', 'mod_these'), 3);
 if ($queue) {
     $todo = these_get_dossiers($these->id, ['queue' => $queue, 'queuedirectorid' => $USER->id]);
-    echo these_render_dossier_table($todo, $cm);
+    echo these_render_dossier_table($todo, $cm, ['todo' => true]);
 } else {
     echo $renderer->render(new output\message(get_string('nothingtodo', 'mod_these')));
 }
@@ -103,7 +119,12 @@ if (!$rights->viewall) {
 }
 $dossiers = these_get_dossiers($these->id, $filters);
 [$pageitems, $pagingbar] = these_paginate($dossiers, $page, $PAGE->url);
-echo these_render_dossier_table($pageitems, $cm);
+if ($rights->deve && $pageitems) {
+    // Actions groupées de la DEVE sur les dossiers cochés.
+    echo $renderer->render(new output\bulk_form($pageitems, $cm));
+} else {
+    echo these_render_dossier_table($pageitems, $cm);
+}
 echo $pagingbar;
 
 echo $OUTPUT->footer();

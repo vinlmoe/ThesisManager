@@ -20,7 +20,7 @@ use context;
 use stdClass;
 
 /**
- * Paramètres du circuit : rôles des services, agents DEVE signataires, établissement, université,
+ * Paramètres du circuit : rôles des services, agents DEVE signataires, durée et salles des soutenances, établissement, université,
  * signataires et contrat type de diffusion. Aucun n'est un réglage du site : comme les modèles des
  * documents, ils appartiennent à une portée (voir these_settings_scope()), l'activité « Suivi des
  * thèses » qui suit l'activité, sinon l'activité « Gestion des thèses » elle-même (table
@@ -79,7 +79,61 @@ class scopesettings {
             'deverole' => (int) $DB->get_field('role', 'id', ['shortname' => 'editingteacher']),
             'libraryrole' => (int) $DB->get_field('role', 'id', ['shortname' => 'theselibrary']),
             'deveagent' => '',
+            'defenseduration' => 60,
+            'defenserooms' => '',
         ] + self::text_defaults();
+    }
+
+    /**
+     * Salles de soutenance proposées dans une portée, une par ligne du paramètre « defenserooms ».
+     * Sans salle, le lieu par défaut de l'ancien réglage de l'activité, s'il existe.
+     *
+     * @param array $settings Paramètres de la portée (voir get_all()).
+     * @param string $fallback Lieu par défaut de l'activité « Gestion des thèses ».
+     * @return string[] Salles, la première étant proposée par défaut.
+     */
+    public static function rooms(array $settings, $fallback = '') {
+        $rooms = array_values(array_unique(array_filter(
+            array_map('trim', preg_split('/\R/', (string) ($settings['defenserooms'] ?? ''))),
+            'strlen'
+        )));
+        if (!$rooms && trim((string) $fallback) !== '') {
+            $rooms = [trim((string) $fallback)];
+        }
+        return $rooms;
+    }
+
+    /**
+     * Champ « Lieu de soutenance » d'un formulaire : texte libre, avec la liste des salles de la portée
+     * proposée à la saisie.
+     *
+     * @param \MoodleQuickForm $mform
+     * @param string[] $rooms Voir rooms().
+     * @param string $warning Avertissement affiché sous le champ (HTML, voir jury::render_room_conflicts()).
+     * @return void
+     */
+    public static function add_location_field(\MoodleQuickForm $mform, array $rooms, $warning = '') {
+        $attributes = ['size' => 64];
+        if ($rooms) {
+            $attributes['list'] = 'these-defense-rooms';
+        }
+        $mform->addElement('text', 'defenselocation', get_string('defenselocation', 'mod_these'), $attributes);
+        $mform->setType('defenselocation', PARAM_TEXT);
+        if ($rooms) {
+            $options = implode('', array_map(function ($room) {
+                return \html_writer::tag('option', '', ['value' => $room]);
+            }, $rooms));
+            $mform->addElement(
+                'static',
+                'defenseroomshelp',
+                '',
+                \html_writer::tag('datalist', $options, ['id' => 'these-defense-rooms'])
+                    . get_string('defenseroomshelp', 'mod_these', implode(' ; ', array_map('s', $rooms)))
+            );
+        }
+        if ($warning !== '') {
+            $mform->addElement('static', 'roomconflicts', '', $warning);
+        }
     }
 
     /**
@@ -192,6 +246,9 @@ class scopesettings {
                 continue;
             }
             $value = is_int($defaults[$name]) ? (string) (int) $value : trim((string) $value);
+            if ($name === 'defenseduration' && (int) $value < 1) {
+                $value = (string) $defaults[$name];
+            }
             $conditions = self::conditions($scope) + ['name' => $name];
             if ($id = $DB->get_field('these_setting', 'id', $conditions)) {
                 $DB->set_field('these_setting', 'value', $value, ['id' => $id]);
@@ -221,6 +278,60 @@ class scopesettings {
      */
     public static function reset_cache() {
         self::cache()->purge();
+    }
+
+    /**
+     * Réglages d'une portée à compléter avant de faire tourner le circuit : textes et signataires
+     * des documents, contrat type, images des modèles, salles de soutenance, questionnaire. Les
+     * agents DEVE signataires sont facultatifs.
+     *
+     * @param stdClass $scope
+     * @return array[] label, complete (bool), optional (bool), url (moodle_url de la page où le régler, ou null : cette page)
+     */
+    public static function checklist(stdClass $scope) {
+        $values = self::get_all($scope);
+        $page = function ($script) use ($scope) {
+            if (!$scope->cmid) {
+                return null;
+            }
+            return new \moodle_url('/mod/' . substr($scope->component, 4) . '/' . $script, ['id' => $scope->cmid]);
+        };
+        $filled = function (array $names) use ($values) {
+            foreach ($names as $name) {
+                if (trim((string) $values[$name]) === '') {
+                    return false;
+                }
+            }
+            return true;
+        };
+        $images = doctemplates::doctemplate_images($scope);
+        $missingimages = array_diff(doctemplates::doctemplate_image_slots(), array_keys($images));
+        $items = [
+            ['settingscheckinstitution', $filled(['institution', 'university']), false, null],
+            ['settingscheckdg', $filled(['dgtitle', 'dgname']), false, null],
+            ['settingscheckccem', $filled(['ccemname']), false, null],
+            ['settingscheckucbl', $filled(['ucbltitle', 'ucblname']), false, null],
+            ['settingscheckdeve', $filled(['devename']), false, null],
+            ['settingscheckcontract', self::contract_template($scope) !== null, false, null],
+            ['settingscheckrooms', (bool) self::rooms($values), false, null],
+            ['settingscheckagents', $filled(['deveagent']), true, null],
+            ['settingscheckquestions', (bool) these_get_questions($scope), true, $page('questions.php')],
+        ];
+        $list = [];
+        foreach ($items as [$key, $complete, $optional, $url]) {
+            $list[] = ['label' => get_string($key, 'mod_these'), 'complete' => $complete, 'optional' => $optional, 'url' => $url];
+        }
+        $list[] = [
+            'label' => $missingimages
+                ? get_string('settingscheckimagesmissing', 'mod_these', implode(', ', array_map(function ($slot) {
+                    return $slot . '.png';
+                }, $missingimages)))
+                : get_string('settingscheckimages', 'mod_these'),
+            'complete' => !$missingimages,
+            'optional' => false,
+            'url' => $page('doctemplates.php'),
+        ];
+        return $list;
     }
 
     /**

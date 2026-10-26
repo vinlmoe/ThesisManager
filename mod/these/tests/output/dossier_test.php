@@ -114,7 +114,8 @@ final class dossier_test extends output_testcase {
         $html = $this->renderer()->render(new dossier($this->these, $this->cm, $this->context, $dossier, $rights));
         $this->assertSame($html, these_render_dossier($this->these, $this->cm, $this->context, $dossier, $rights));
         $this->assert_no_secret($html);
-        $this->assertStringStartsWith('<ol class="these-progress">', $html);
+        $this->assertStringStartsWith('<div class="these-progress-compact', $html);
+        $this->assertStringContainsString('<ol class="these-progress">', $html);
         $order = [
             '<div class="mb-3"><span class="badge ',
             '<h4 class="mt-4">' . get_string('subject', 'mod_these') . '</h4>',

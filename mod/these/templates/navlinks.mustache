@@ -29,13 +29,14 @@
     Context variables required for this template:
     * haslinks Au moins un lien.
     * buttons Contexte de mod_these/actions.
+    * settings Contexte de mod_these/settings_menu, ou false.
 
     Example context (json):
     {"haslinks": true, "buttons": {"actions": [
         {"label": "Tableau de bord", "url": "https://example.com/mod/these/dashboard.php?id=2",
             "class": "btn btn-secondary mr-1 mb-1"}
-    ]} }
+    ]}, "settings": false }
 }}
 {{#haslinks}}
-<div class="these-navlinks mb-3">{{#buttons}}{{> mod_these/actions}}{{/buttons}}</div>
+<div class="these-navlinks mb-3">{{#buttons}}{{> mod_these/actions}}{{/buttons}}{{#settings}}{{> mod_these/settings_menu}}{{/settings}}</div>
 {{/haslinks}}

@@ -353,4 +353,76 @@ final class workflow_test extends these_testcase {
         $dossier = $this->reload($dossier->id);
         $this->assertEquals(THESE_STATUS_DEFENSE_SUBMITTED, $dossier->status);
     }
+
+    /**
+     * Grille de conformité : remplie et attestée par l'étudiant au dépôt de la soutenance, elle est
+     * enregistrée au dossier et préremplit ensuite la validation du directeur.
+     */
+    public function test_student_fills_conformity_grid(): void {
+        $this->setup_activity();
+        $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
+            'status' => THESE_STATUS_ACTIVE, 'directorid' => $this->director->id,
+        ]);
+        $data = $this->defense_data();
+        $data->ethicsnumber = '2526';
+        $keys = [];
+        foreach (these_get_grid_items(these_settings_scope($this->these)) as $items) {
+            foreach (array_keys($items) as $key) {
+                $keys[] = $key;
+                $data->{'grid_' . $key} = 1;
+            }
+        }
+        $data->{'grid_' . $keys[0]} = 0;
+        these_save_defense($this->these, $this->cm, $dossier, $data, false, $this->student->id);
+
+        $dossier = $this->reload($dossier->id);
+        $this->assertSame('2526', $dossier->ethicsnumber);
+        $grid = these_get_grid($dossier);
+        $this->assertSame(count($keys), count($grid));
+        $this->assertSame(0, $grid[$keys[0]]);
+        $this->assertSame(1, $grid[$keys[1]]);
+
+        // Un enregistrement sans grille (formulaire d'une autre étape) ne l'efface pas.
+        these_save_defense($this->these, $this->cm, $dossier, $this->defense_data(), false, $this->student->id);
+        $this->assertSame($grid, these_get_grid($this->reload($dossier->id)));
+    }
+
+    /**
+     * Avancement du dépôt de la soutenance : rubriques à compléter selon les contrôles de la
+     * soumission, signature et attestation de la grille exclues.
+     */
+    public function test_defense_progress(): void {
+        global $PAGE;
+        $this->setup_activity();
+        $this->setUser($this->student);
+        $PAGE->set_url('/mod/these/defense.php', ['id' => $this->cm->id]);
+        $form = new \mod_these\form\defense_form(null, [
+            'minjury' => $this->these->minjury,
+            'these' => $this->these,
+            'context' => $this->context,
+            'submitlabel' => 'submitdefense',
+            'signername' => fullname($this->student),
+            'rooms' => ['Salle du conseil'],
+        ]);
+        $missing = function (array $data) use ($form) {
+            return array_column($form->section_progress($data), 'missing', 'name');
+        };
+        $empty = $missing(['proposeddate' => 0, 'defenselocation' => '', 'manuscript' => 0]);
+        $this->assertArrayNotHasKey('signatureheader', $empty);
+        $this->assertSame(2, $empty['dateheader']);
+        $this->assertGreaterThan(0, $empty['gridheader']);
+
+        $data = ['proposeddate' => time() + WEEKSECS, 'defenselocation' => 'Salle du conseil', 'manuscript' => 0,
+            'conclusions' => 'Conclusions.'];
+        foreach (these_get_grid_items(these_settings_scope($this->these)) as $items) {
+            foreach (array_keys($items) as $key) {
+                $data['grid_' . $key] = 1;
+            }
+        }
+        $progress = $missing($data);
+        $this->assertSame(0, $progress['dateheader']);
+        $this->assertSame(0, $progress['gridheader']);
+        $this->assertSame(0, $progress['conclusionsheader']);
+        $this->assertSame(1, $progress['documentsheader']);
+    }
 }

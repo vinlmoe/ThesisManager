@@ -60,6 +60,27 @@ function these_get_jury($dossierid) {
 }
 
 /**
+ * Voir \mod_these\local\jury::jury_conflicts().
+ *
+ * @param stdClass $dossier
+ * @param array|null $members
+ * @return stdClass[]
+ */
+function these_jury_conflicts(stdClass $dossier, ?array $members = null) {
+    return \mod_these\local\jury::jury_conflicts($dossier, $members);
+}
+
+/**
+ * Voir \mod_these\local\jury::render_jury_conflicts().
+ *
+ * @param stdClass $dossier
+ * @return string
+ */
+function these_render_jury_conflicts(stdClass $dossier) {
+    return \mod_these\local\jury::render_jury_conflicts($dossier);
+}
+
+/**
  * Voir \mod_these\local\jury::jury_member_key().
  *
  * @param stdClass $member
@@ -90,10 +111,18 @@ function these_save_jury($dossierid, array $members, $userid = 0) {
  * @param int $count Nombre de lignes déjà renseignées.
  * @param bool $eligibility Ajouter la validation d'éligibilité par la DEVE.
  * @param int[] $keep Enseignants de l'annuaire à proposer même s'ils ne sont plus actifs.
+ * @param string $warning Avertissement affiché en tête de la rubrique (HTML).
  * @return void
  */
-function these_add_jury_fields(moodleform $form, MoodleQuickForm $mform, $count, $eligibility = false, array $keep = []) {
-    return \mod_these\local\jury::add_jury_fields($form, $mform, $count, $eligibility, $keep);
+function these_add_jury_fields(
+    moodleform $form,
+    MoodleQuickForm $mform,
+    $count,
+    $eligibility = false,
+    array $keep = [],
+    $warning = ''
+) {
+    return \mod_these\local\jury::add_jury_fields($form, $mform, $count, $eligibility, $keep, $warning);
 }
 
 /**
@@ -211,4 +240,39 @@ function these_jury_access_open(stdClass $dossier, stdClass $member) {
  */
 function these_jury_documents() {
     return \mod_these\local\jury::jury_documents();
+}
+
+/**
+ * Salles de soutenance proposées pour une activité : celles des paramètres du circuit de sa portée,
+ * à défaut le lieu par défaut de l'ancien réglage de l'activité.
+ *
+ * @param stdClass $these
+ * @return string[]
+ */
+function these_defense_rooms(stdClass $these) {
+    return \mod_these\local\scopesettings::rooms(
+        \mod_these\local\scopesettings::for_these($these),
+        (string) ($these->defaultlocation ?? '')
+    );
+}
+
+/**
+ * Voir \mod_these\local\jury::room_conflicts().
+ *
+ * @param stdClass $dossier
+ * @param string|null $location
+ * @return stdClass[]
+ */
+function these_room_conflicts(stdClass $dossier, $location = null) {
+    return \mod_these\local\jury::room_conflicts($dossier, $location);
+}
+
+/**
+ * Voir \mod_these\local\jury::render_room_conflicts().
+ *
+ * @param stdClass $dossier
+ * @return string HTML
+ */
+function these_render_room_conflicts(stdClass $dossier) {
+    return \mod_these\local\jury::render_room_conflicts($dossier);
 }

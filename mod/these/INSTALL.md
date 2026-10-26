@@ -123,11 +123,13 @@ défaut, le dossier affiche un avertissement à la DEVE.
 
 Les signataires extérieurs reçoivent un lien personnel par courriel, valable
 60 jours ; la DEVE suit les signatures (*Suivi des signatures*), relance (un
-nouveau lien remplace le précédent) ou fait signer sur place, après avoir coché
-la vérification de l'identité du signataire (son compte est conservé avec la
-signature et imprimé dessous). La direction générale peut signer par
-délégation. Au dépôt du scan d'un document signé à la main, la DEVE coche les
-signataires couverts : PDF et suivi des signatures sont mis à jour. Le lien d'accès du
+nouveau lien remplace le précédent) ou fait signer sur place un signataire
+présent, étudiant et directeur compris : elle coche d'abord la vérification de
+son identité, puis la page de signature s'ouvre, le document à signer en tête
+(son compte est inscrit à l'historique, conservé avec la signature et imprimé
+dessous). La direction générale peut signer par délégation. Au dépôt du scan
+d'un document signé à la main, la DEVE coche les signataires couverts, sans
+saisir leur nom : PDF et suivi des signatures sont mis à jour. Le lien d'accès du
 jury vaut jusqu'à 60 jours après la soutenance et cesse à la clôture ou à
 l'abandon du dossier ; un membre du jury qui a un compte Moodle à la même adresse
 consulte aussi les documents depuis *Suivi des thèses*, sans lien. Seule
@@ -248,7 +250,11 @@ l'activité ; DEVE, bibliothèque et `mod/these:viewall` pour toutes les
 soutenances, directeur pour les siennes) présente les soutenances de la semaine
 ou du mois, jour par jour, avec la date proposée ou arrêtée, le jury et le lieu.
 Une thèse y figure dès le dépôt du dossier de soutenance ; un dossier abandonné
-ou une thèse ajournée en sort. On passe d'une période à l'autre, on va à une
+ou une thèse ajournée en sort. Un membre du jury déjà engagé dans un autre jury
+sur le même créneau (soutenances qui se chevauchent, durée d'une soutenance dans
+les paramètres du circuit, 60 minutes par défaut, toutes promotions confondues)
+est signalé par un badge « Conflit », et la DEVE en est avertie en
+tête du dossier, de sa modification et de sa validation. On passe d'une période à l'autre, on va à une
 date, et la vue semaine liste les semaines à venir qui ont des soutenances. Le
 planning de la période s'imprime (PDF en paysage, modèle de document
 *Planning des soutenances*, modifiable comme les autres) ou se télécharge en

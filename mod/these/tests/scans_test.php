@@ -90,7 +90,6 @@ final class scans_test extends these_testcase {
             $dossier,
             $this->deve->id,
             'contract',
-            "Pr Frédéric Fleury, président de l'université",
             make_timestamp(2026, 10, 22, 12),
             $draftitemid,
             'Reçu par courrier.'
@@ -100,7 +99,7 @@ final class scans_test extends these_testcase {
         $files = these_get_files($this->context, 'signedscan', $dossier->id);
         $this->assertCount(1, $files);
         $this->assertSame(
-            '2026-10-22-contract-pr-frederic-fleury-president-de-l-universite-contrat.pdf',
+            '2026-10-22-contract-contrat.pdf',
             $files[0]->get_filename()
         );
         $this->assertSame($content, $files[0]->get_content());
@@ -125,7 +124,10 @@ final class scans_test extends these_testcase {
         global $DB;
         $this->setup_activity();
         $this->setUser($this->deve);
-        \mod_these\local\scopesettings::set(these_local_scope($this->these), ['dgname' => 'Pr Directrice']);
+        \mod_these\local\scopesettings::set(
+            these_local_scope($this->these),
+            ['dgname' => 'Pr Directrice', 'ucblname' => 'M. Président']
+        );
         $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
             'status' => THESE_STATUS_SCHEDULED, 'directorid' => $this->director->id,
             'bordereau' => json_encode(['birthname' => 'MARTIN', 'diffusion' => 'restricted']),
@@ -141,7 +143,6 @@ final class scans_test extends these_testcase {
             $dossier,
             $this->deve->id,
             'contract',
-            'M. Délégué',
             $date,
             $draftitemid,
             '',
@@ -150,13 +151,13 @@ final class scans_test extends these_testcase {
 
         $signatures = these_get_signatures($dossier->id);
         $dg = $signatures['contract:dg'];
-        // Par délégation : le nom saisi, celui de la personne qui a signé.
-        $this->assertSame('M. Délégué', $dg->signername);
+        // Par délégation : la personne qui a signé n'est pas connue, la signature porte l'emplacement.
+        $this->assertSame(get_string('slotdg', 'mod_these'), $dg->signername);
         $this->assertEquals($date, $dg->timesigned);
         $this->assertSame('scan', $dg->method);
         $this->assertEquals(1, $dg->delegated);
         $this->assertEquals($this->deve->id, $dg->verifiedby);
-        $this->assertSame('M. Délégué', $signatures['contract:ucbl']->signername);
+        $this->assertSame('M. Président', $signatures['contract:ucbl']->signername);
         $this->assertEquals(0, $signatures['contract:ucbl']->delegated);
         $this->assertArrayNotHasKey('contract:ccem', $signatures);
         $this->assertArrayNotHasKey('contract:student', $signatures);
@@ -164,7 +165,12 @@ final class scans_test extends these_testcase {
 
         // Mention du PDF : à la main, par délégation, scan enregistré par la DEVE.
         $data = these_document_context($this->these, $this->context, $dossier, 'contract');
-        $this->assertStringContainsString(get_string('pdfdelegated', 'mod_these', 'M. Délégué'), $data['sigcaption']['dg']);
+        $this->assertStringContainsString(
+            get_string('pdfdelegated', 'mod_these', get_string('slotdg', 'mod_these')),
+            $data['sigcaption']['dg']
+        );
+        $files = these_get_files($this->context, 'signedscan', $dossier->id);
+        $this->assertSame('2026-10-22-contract-dg-ucbl-contrat.pdf', $files[0]->get_filename());
         $this->assertStringContainsString(fullname($this->deve), $data['sigcaption']['dg']);
         $this->assertSame('', $data['sigsrc']['dg']);
         $this->assertTrue($data['signed']['dg']);
@@ -211,7 +217,7 @@ final class scans_test extends these_testcase {
         $date = make_timestamp(2026, 10, 22, 12);
         foreach ([1, 2] as $unused) {
             $draftitemid = $this->draft($this->deve->id, 'scan.png', 'image');
-            $this->assertSame(1, scans::add($this->context, $dossier, $this->deve->id, 'agreement', 'CCEM', $date, $draftitemid));
+            $this->assertSame(1, scans::add($this->context, $dossier, $this->deve->id, 'agreement', $date, $draftitemid));
         }
         $this->assertCount(2, these_get_files($this->context, 'signedscan', $dossier->id));
 
@@ -220,7 +226,6 @@ final class scans_test extends these_testcase {
             $dossier,
             $this->deve->id,
             'agreement',
-            'CCEM',
             $date,
             file_get_unused_draft_itemid()
         ));

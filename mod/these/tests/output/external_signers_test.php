@@ -72,6 +72,40 @@ final class external_signers_test extends output_testcase {
     }
 
     /**
+     * Étudiant et directeur : proposés à la signature sur place pour un document dont la signature a
+     * commencé, sans relance par courriel ; pas pour un document dont aucune signature n'existe.
+     */
+    public function test_student_and_director_in_person(): void {
+        $this->setup_activity();
+        $this->setUser($this->deve);
+        $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
+            'status' => THESE_STATUS_SUBJECT_SUBMITTED, 'directorid' => $this->director->id,
+        ]);
+        $url = new \moodle_url('/mod/these/signatures.php', ['id' => $this->cm->id, 'dossierid' => $dossier->id]);
+        $this->assertStringNotContainsString('slot=director', json_encode((new external_signers($this->cm, $dossier, $url))
+            ->export_for_template($this->renderer()), JSON_UNESCAPED_SLASHES));
+
+        these_sign_document(
+            $this->context,
+            $dossier,
+            'subject',
+            'student',
+            $this->student->id,
+            'Étudiant',
+            these_sample_signature_image()
+        );
+        $json = json_encode(
+            (new external_signers($this->cm, $dossier, $url))->export_for_template($this->renderer()),
+            JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+        );
+        $this->assertStringContainsString('slot=director', $json);
+        $this->assertStringContainsString(fullname($this->director), $json);
+        $this->assertStringNotContainsString('resend=director', $json);
+        $this->assertStringNotContainsString('slot=student', $json);
+        $this->assertSame((int) $this->director->id, these_inperson_signer($dossier, 'director')['userid']);
+    }
+
+    /**
      * Rendu : titre et tableau ; titre seul sans signataire en attente.
      */
     public function test_render(): void {
