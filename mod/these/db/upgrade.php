@@ -147,5 +147,63 @@ function xmldb_these_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2026102603, 'these');
     }
 
+    if ($oldversion < 2026102700) {
+        // Le directeur de thèse siège au jury sans voter : il faut au moins deux membres votants,
+        // président compris. Les activités restées au minimum d'origine (trois, directeur compris)
+        // passent à deux.
+        $dbman = $DB->get_manager();
+        $table = new xmldb_table('these');
+        $field = new xmldb_field('minjury', XMLDB_TYPE_INTEGER, '3', null, XMLDB_NOTNULL, null, '2', 'defaultlocation');
+        $dbman->change_field_default($table, $field);
+        $DB->set_field('these', 'minjury', 2, ['minjury' => 3]);
+        upgrade_mod_savepoint(true, 2026102700, 'these');
+    }
+
+    if ($oldversion < 2026102703) {
+        // Validation de l'A6 : liée à l'étudiant, plus au dossier. Les saisies de la DEVE déjà faites
+        // dans l'agrément d'un dossier sont reprises (la plus récente par étudiant).
+        $dbman = $DB->get_manager();
+        $table = new xmldb_table('these_a6');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('a6date', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('a6school', XMLDB_TYPE_CHAR, '20', null, null, null, null);
+        $table->add_field('usermodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('userid', XMLDB_KEY_FOREIGN_UNIQUE, ['userid'], 'user', ['id']);
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+        $rs = $DB->get_recordset_select(
+            'these_dossier',
+            'agreement IS NOT NULL',
+            null,
+            'timemodified ASC',
+            'id, userid, agreement, timemodified'
+        );
+        foreach ($rs as $dossier) {
+            $agreement = json_decode((string) $dossier->agreement, true);
+            if (!is_array($agreement) || !(array_key_exists('a6date', $agreement) || array_key_exists('a6notyet', $agreement))) {
+                continue;
+            }
+            $record = (object) [
+                'userid' => (int) $dossier->userid,
+                'a6date' => empty($agreement['a6notyet']) ? (int) ($agreement['a6date'] ?? 0) : 0,
+                'a6school' => (string) ($agreement['a6school'] ?? ''),
+                'usermodified' => 0,
+                'timemodified' => (int) $dossier->timemodified,
+            ];
+            if ($id = $DB->get_field('these_a6', 'id', ['userid' => $record->userid])) {
+                $record->id = $id;
+                $DB->update_record('these_a6', $record);
+            } else {
+                $DB->insert_record('these_a6', $record);
+            }
+        }
+        $rs->close();
+        upgrade_mod_savepoint(true, 2026102703, 'these');
+    }
+
     return true;
 }

@@ -109,6 +109,14 @@ class provider implements
             'institution' => 'privacy:metadata:these_juror:institution',
         ], 'privacy:metadata:these_juror');
 
+        $collection->add_database_table('these_a6', [
+            'userid' => 'privacy:metadata:these_a6:userid',
+            'a6date' => 'privacy:metadata:these_a6:a6date',
+            'a6school' => 'privacy:metadata:these_a6:a6school',
+            'usermodified' => 'privacy:metadata:these_a6:usermodified',
+            'timemodified' => 'privacy:metadata:these_a6:timemodified',
+        ], 'privacy:metadata:these_a6');
+
         $collection->add_database_table('these_subjecthistory', [
             'title' => 'privacy:metadata:these_subjecthistory:title',
             'summary' => 'privacy:metadata:these_subjecthistory:summary',
@@ -176,8 +184,8 @@ class provider implements
             'userid4' => $userid,
             'userid5' => $userid,
         ]);
-        // Signature enregistrée, dans le contexte de l'utilisateur.
-        if (these_get_saved_signature($userid) !== null) {
+        // Signature enregistrée et validation de l'A6, dans le contexte de l'utilisateur.
+        if (these_get_saved_signature($userid) !== null || self::has_a6($userid)) {
             $contextlist->add_user_context($userid);
         }
         return $contextlist;
@@ -191,7 +199,10 @@ class provider implements
      */
     public static function get_users_in_context(userlist $userlist) {
         $context = $userlist->get_context();
-        if ($context instanceof \context_user && these_get_saved_signature($context->instanceid) !== null) {
+        if (
+            $context instanceof \context_user
+                && (these_get_saved_signature($context->instanceid) !== null || self::has_a6($context->instanceid))
+        ) {
             $userlist->add_user($context->instanceid);
             return;
         }
@@ -233,6 +244,14 @@ class provider implements
         $user = $contextlist->get_user();
         foreach ($contextlist->get_contexts() as $context) {
             if ($context instanceof \context_user && (int) $context->instanceid === (int) $user->id) {
+                $a6 = $DB->get_record('these_a6', ['userid' => $user->id]);
+                if ($a6) {
+                    writer::with_context($context)->export_data([get_string('a6validation', 'mod_these')], (object) [
+                        'a6date' => $a6->a6date ? transform::date($a6->a6date) : get_string('a6notvalidated', 'mod_these'),
+                        'a6school' => (string) $a6->a6school,
+                        'timemodified' => transform::datetime($a6->timemodified),
+                    ]);
+                }
                 writer::with_context($context)->export_area_files(
                     [get_string('signaturesaved', 'mod_these')],
                     'mod_these',
@@ -427,6 +446,7 @@ class provider implements
 
         if ($context instanceof \context_user) {
             these_delete_saved_signature($context->instanceid);
+            $DB->delete_records('these_a6', ['userid' => $context->instanceid]);
             return;
         }
         if (!$context instanceof context_module) {
@@ -476,6 +496,7 @@ class provider implements
         if ($context instanceof \context_user) {
             if (in_array((int) $context->instanceid, array_map('intval', $userids), true)) {
                 these_delete_saved_signature($context->instanceid);
+                $DB->delete_records('these_a6', ['userid' => $context->instanceid]);
             }
             return;
         }
@@ -527,5 +548,16 @@ class provider implements
                 'id' => $signature->id, 'userid' => 0, 'signername' => '', 'signeremail' => '', 'ipaddress' => '',
             ]);
         }
+    }
+
+    /**
+     * L'utilisateur a-t-il une validation de l'A6 enregistrée ?
+     *
+     * @param int $userid
+     * @return bool
+     */
+    protected static function has_a6($userid) {
+        global $DB;
+        return $DB->record_exists('these_a6', ['userid' => $userid]);
     }
 }

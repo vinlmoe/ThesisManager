@@ -103,6 +103,11 @@ class notifications {
                 'bodystring' => 'emailreminderbody',
                 'vars' => ['student', 'activity', 'title', 'status', 'days', 'url'],
             ],
+            'digest' => [
+                'subjectstring' => 'emaildigestsubject',
+                'bodystring' => 'emaildigestbody',
+                'vars' => ['activity', 'todo', 'signatures', 'defenses', 'conflicts', 'url'],
+            ],
         ];
     }
 
@@ -533,5 +538,164 @@ class notifications {
         $actor = these_actor_label(these_step_actor($dossier->status));
         these_log($dossier->id, 0, 'reminded', $dossier->status, $dossier->status, $actor);
         return true;
+    }
+
+    /**
+     * Relance les signataires dont une signature attend depuis plus longtemps que le délai de relance
+     * de l'activité : signataires sans compte (nouveau lien, s'ils ont une adresse) et agents DEVE
+     * désignés. La relance remet le délai à zéro ; elle est répétée tant que la signature manque.
+     *
+     * @param int|null $now
+     * @return int Signataires relancés.
+     */
+    public static function send_signature_reminders($now = null) {
+        global $DB;
+
+        $now = $now ?? time();
+        [$statussql, $params] = $DB->get_in_or_equal(
+            [THESE_STATUS_CLOSED, THESE_STATUS_CANCELLED],
+            SQL_PARAMS_NAMED,
+            'st',
+            false
+        );
+        $records = $DB->get_records_sql(
+            "SELECT s.id, s.dossierid, s.slot, s.requesttime, t.reminderdays
+               FROM {these_signature} s
+               JOIN {these_dossier} d ON d.id = s.dossierid
+               JOIN {these} t ON t.id = d.theseid
+              WHERE s.timesigned = 0 AND s.requesttime > 0 AND t.reminderdays > 0 AND d.status $statussql",
+            $params
+        );
+        $due = [];
+        foreach ($records as $record) {
+            if ((int) $record->requesttime <= $now - (int) $record->reminderdays * DAYSECS) {
+                $due[(int) $record->dossierid][$record->slot] = true;
+            }
+        }
+        $sent = 0;
+        foreach ($due as $dossierid => $slots) {
+            $dossier = $DB->get_record('these_dossier', ['id' => $dossierid]);
+            $these = $dossier ? $DB->get_record('these', ['id' => $dossier->theseid]) : null;
+            $cm = $these ? get_coursemodule_from_instance('these', $these->id, 0, false, IGNORE_MISSING) : null;
+            if (!$cm) {
+                continue;
+            }
+            $available = array_values(array_filter(array_keys(these_document_definitions()), function ($doctype) use ($dossier) {
+                return these_document_available($dossier, $doctype);
+            }));
+            $signers = these_external_signers($dossier);
+            foreach (array_keys($slots) as $slot) {
+                $email = (string) ($signers[$slot]['email'] ?? '');
+                if (
+                    isset($signers[$slot]) && $email !== '' && validate_email($email)
+                        && these_request_signature($these, $cm, $dossier, $slot, $available) !== null
+                ) {
+                    $sent++;
+                }
+            }
+            if (
+                array_intersect(array_keys($slots), these_agent_slots()) && these_deve_agents($these)
+                    && these_request_agent_signatures($these, $cm, $dossier, $available) > 0
+            ) {
+                $sent++;
+            }
+        }
+        return $sent;
+    }
+
+    /**
+     * Contenu du récapitulatif hebdomadaire de la DEVE pour une activité : dossiers qui l'attendent,
+     * signatures en attente depuis plus d'une semaine, soutenances des sept prochains jours et
+     * conflits de jury ou de salle des quinze prochains jours.
+     *
+     * @param stdClass $these
+     * @param int|null $now
+     * @return array todo, signatures, defenses, conflicts (lignes de texte)
+     */
+    public static function digest_content(stdClass $these, $now = null) {
+        global $DB;
+
+        $now = $now ?? time();
+        $name = function ($userid) use ($DB) {
+            $user = $DB->get_record('user', ['id' => $userid]);
+            return $user ? fullname($user) : '-';
+        };
+        $content = ['todo' => [], 'signatures' => [], 'defenses' => [], 'conflicts' => []];
+        foreach (these_get_dossiers($these->id, ['queue' => ['deve']]) as $dossier) {
+            $content['todo'][] = $name($dossier->userid) . ' : ' . these_status_label($dossier->status);
+        }
+        $signatures = $DB->get_records_sql(
+            "SELECT s.id, s.dossierid, s.doctype, s.slot, d.userid
+               FROM {these_signature} s
+               JOIN {these_dossier} d ON d.id = s.dossierid
+              WHERE d.theseid = :theseid AND s.timesigned = 0 AND s.requesttime > 0 AND s.requesttime <= :before
+                AND d.status <> :cancelled AND d.status <> :closed
+           ORDER BY s.dossierid, s.id",
+            ['theseid' => $these->id, 'before' => $now - WEEKSECS, 'cancelled' => THESE_STATUS_CANCELLED,
+                'closed' => THESE_STATUS_CLOSED]
+        );
+        foreach ($signatures as $signature) {
+            $content['signatures'][] = $name($signature->userid) . ' : ' . these_document_label($signature->doctype)
+                . ' (' . these_slot_label($signature->slot) . ')';
+        }
+        $dateformat = get_string('strftimedaydatetime', 'langconfig');
+        $upcoming = $DB->get_records_select(
+            'these_dossier',
+            'theseid = ? AND status >= ? AND defensedate BETWEEN ? AND ?',
+            [$these->id, THESE_STATUS_DEFENSE_VALIDATED, $now, $now + 2 * WEEKSECS],
+            'defensedate ASC'
+        );
+        foreach ($upcoming as $dossier) {
+            if ((int) $dossier->defensedate < $now + WEEKSECS) {
+                $content['defenses'][] = userdate($dossier->defensedate, $dateformat) . ' : ' . $name($dossier->userid)
+                    . (trim((string) $dossier->defenselocation) !== '' ? ' (' . $dossier->defenselocation . ')' : '');
+            }
+            $jury = count(these_jury_conflicts($dossier));
+            $rooms = count(these_room_conflicts($dossier));
+            if ($jury || $rooms) {
+                $content['conflicts'][] = $name($dossier->userid) . ', ' . userdate($dossier->defensedate, $dateformat) . ' : '
+                    . get_string('digestconflicts', 'mod_these', (object) ['jury' => $jury, 'rooms' => $rooms]);
+            }
+        }
+        return $content;
+    }
+
+    /**
+     * Envoie à la DEVE de chaque activité son récapitulatif hebdomadaire (voir digest_content()), si
+     * le paramètre « weeklydigest » de la portée l'active et qu'il y a quelque chose à signaler.
+     *
+     * @param int|null $now
+     * @return int Activités pour lesquelles un récapitulatif est parti.
+     */
+    public static function send_weekly_digests($now = null) {
+        global $DB;
+
+        $sent = 0;
+        foreach ($DB->get_records('these') as $these) {
+            $cm = get_coursemodule_from_instance('these', $these->id, 0, false, IGNORE_MISSING);
+            if (!$cm || empty(scopesettings::for_these($these)['weeklydigest'])) {
+                continue;
+            }
+            $content = self::digest_content($these, $now);
+            if (!array_filter($content)) {
+                continue;
+            }
+            $lines = function (array $items) {
+                return $items ? '- ' . implode("\n- ", $items) : get_string('digestnone', 'mod_these');
+            };
+            $vars = [
+                'activity' => format_string($these->name),
+                'todo' => $lines($content['todo']),
+                'signatures' => $lines($content['signatures']),
+                'defenses' => $lines($content['defenses']),
+                'conflicts' => $lines($content['conflicts']),
+                'url' => (new moodle_url('/mod/these/dashboard.php', ['id' => $cm->id]))->out(false),
+            ];
+            $context = context_module::instance($cm->id);
+            if (these_send_email($these, 'digest', these_get_service_recipients($these, $context, 'deve'), $vars)) {
+                $sent++;
+            }
+        }
+        return $sent;
     }
 }

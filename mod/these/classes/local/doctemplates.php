@@ -54,6 +54,7 @@ class doctemplates {
             'jurysheet' => null,
             'minutes' => null,
             'planning' => null,
+            'teachinglist' => null,
         ];
     }
 
@@ -498,21 +499,24 @@ class doctemplates {
             'correctionsnote' => (string) ($d->correctionsnote ?? ''),
         ];
 
-        // Cursus déclaré par l'étudiant (fiche signalétique) et agrément administratif de la DEVE.
+        // Cursus déclaré par l'étudiant (fiche signalétique) et agrément administratif de la DEVE. La
+        // validation de l'A6, liée à l'étudiant, est saisie par la DEVE (voir \mod_these\local\a6).
+        $a6 = a6::for_documents((int) ($d->userid ?? 0), $agreementdata, $b);
+        $a6notyet = $a6['notyet'] || !$a6['date'];
         $cursus = [
             'defvdate' => $day($b['defvdate'] ?? 0),
             'defvschool' => $school($b['defvschool'] ?? ''),
-            'a6notyet' => !empty($b['a6notyet']),
-            'a6date' => empty($b['a6notyet']) ? $day($b['a6date'] ?? 0) : '',
-            'a6school' => empty($b['a6notyet']) ? $school($b['a6school'] ?? '') : '',
+            'a6notyet' => $a6notyet,
+            'a6date' => $a6notyet ? '' : $day($a6['date']),
+            'a6school' => $a6notyet ? '' : $school($a6['school']),
         ];
         $agreement = [
             'defv' => !empty($agreementdata['defvdate']),
             'defvdate' => $day($agreementdata['defvdate'] ?? 0),
             'mobility' => !empty($agreementdata['mobility']),
-            'a6notyet' => !empty($agreementdata['a6notyet']),
-            'a6' => empty($agreementdata['a6notyet']) && !empty($agreementdata['a6date']),
-            'a6date' => empty($agreementdata['a6notyet']) ? $day($agreementdata['a6date'] ?? 0) : '',
+            'a6notyet' => $a6notyet,
+            'a6' => !$a6notyet,
+            'a6date' => $a6notyet ? '' : $day($a6['date']),
         ];
 
         // Jury : liste complète, et places fixes des formulaires (président, membre de
@@ -560,8 +564,9 @@ class doctemplates {
             $jurydirector = ['name' => $thesisdirector['name'], 'fullname' => $thesisdirector['name'],
                 'institution' => $external ? $extdirector['institution'] : (string) ($config['institution'] ?? '')] + $empty;
         }
+        // Membres votants : ni le directeur de thèse ni les invités.
         $voting = array_values(array_filter($jury, function ($item) {
-            return $item['role'] !== 'guest';
+            return !in_array($item['role'], ['director', 'guest'], true);
         }));
 
         // Rapport, grille et conclusions du directeur.
@@ -954,8 +959,8 @@ class doctemplates {
     }
 
     /**
-     * Données d'exemple d'un modèle : celles d'un dossier, ou celles d'un mois de soutenances pour le
-     * planning mensuel.
+     * Données d'exemple d'un modèle : celles d'un dossier, celles d'un mois de soutenances pour le
+     * planning mensuel, ou une liste d'enseignants pour la liste du corps enseignant.
      *
      * @param stdClass|null $scope
      * @param string $type Voir these_doctemplate_types().
@@ -965,6 +970,9 @@ class doctemplates {
     public static function doctemplate_sample_context(?stdClass $scope, $type, ?stdClass $activity = null) {
         if ($type === 'planning') {
             return these_sample_planning_context($scope, $activity);
+        }
+        if ($type === 'teachinglist') {
+            return jurors::sample_teaching_list_context($scope, $activity);
         }
         return these_sample_document_context($scope, $activity);
     }

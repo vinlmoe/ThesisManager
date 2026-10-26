@@ -51,7 +51,7 @@ class jury implements \renderable, \templatable {
      * @return array Fragments.
      */
     protected function eligibility(\stdClass $member): array {
-        if ($member->juryrole === 'guest') {
+        if (!\mod_these\local\jury::is_voting($member)) {
             return [parts::text('-')];
         }
         if (!empty($member->eligible)) {

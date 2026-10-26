@@ -13,6 +13,54 @@ de version recalés sur la date. Les numéros entre parenthèses des sections de
 développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
 été étiquetée.
 
+## mod_these 0.18.0 (2026102703) — directeur non votant, liste du corps enseignant, aides pour la DEVE
+
+- Validation de l'A6 saisie par la DEVE, plus par l'étudiant (le dépôt de la
+  soutenance la rappelle) : à la validation du dossier de soutenance, dans
+  « Modifier un dossier », en lot depuis le tableau de bord (action
+  « Enregistrer la validation de l'A6 », date et école) ou par import d'un
+  fichier Excel, OpenDocument ou CSV (`a6import.php`, colonnes etudiant, date,
+  ecole, avec simulation). Elle est liée à l'étudiant, pas au dossier :
+  nouvelle table `these_a6` (une ligne par étudiant, commune à toutes les
+  activités), enregistrable avant la création du dossier, valable pour tous
+  ses dossiers ; reprise par l'agrément administratif et la fiche
+  signalétique, inscrite à l'historique de ses dossiers, déclarée pour la vie
+  privée (export, suppression). Mise à jour 2026102703 : création de la table,
+  reprise des saisies déjà faites dans l'agrément ; à défaut de saisie, la
+  déclaration antérieure de l'étudiant (`\mod_these\local\a6`).
+- Relance automatique des signatures : la tâche quotidienne redemande les
+  signatures en attente depuis plus que le délai de relance de l'activité
+  (nouveau lien aux signataires sans compte qui ont une adresse, rappel aux
+  agents DEVE) ; le délai repart à zéro à chaque relance.
+- Récapitulatif hebdomadaire de la DEVE (tâche du lundi, 7 h 30) : dossiers
+  qui l'attendent, signatures en attente depuis plus d'une semaine,
+  soutenances des sept prochains jours, conflits de jury ou de salle des
+  quinze prochains jours ; courriel personnalisable « Récapitulatif
+  hebdomadaire de la DEVE », désactivable dans les paramètres du circuit
+  (`weeklydigest`). Rien n'est envoyé sans rien à signaler.
+- Calendrier Moodle : un événement de cours par soutenance dont la date est
+  arrêtée (étudiant, date, durée, salle, jury ; titre sauf thèse
+  confidentielle), déplacé avec la soutenance, supprimé à l'abandon ou à
+  l'ajournement (`\mod_these\local\calendar`, synchronisé à chaque
+  changement du dossier et chaque jour).
+- « Modifier un dossier » allégé : sujet et enregistrements repliés, jury en
+  lecture comme à la validation (31 champs visibles ramenés à 8).
+- Téléphone : le tableau du jury présenté en lecture défile dans sa colonne
+  au lieu d'élargir la page de 300 pixels.
+
+- Jury : le directeur de thèse siège sans voter (rôle « Directeur de thèse
+  (non votant) »). Il faut au moins deux membres votants, président compris :
+  minimum par défaut de l'activité ramené de 3 à 2, et activités restées à 3
+  passées à 2 à la mise à jour. Le directeur n'a pas d'éligibilité à valider
+  et ne signe plus le procès-verbal parmi les membres votants.
+- Liste du corps enseignant en PDF, à inclure dans les thèses : enseignants
+  actifs de l'annuaire dont l'établissement est celui des paramètres du
+  circuit, groupés par statut (professeurs d'abord), à jour au jour du
+  téléchargement. Nouveau modèle de document « Liste du corps enseignant »,
+  modifiable par la DEVE ; téléchargeable depuis l'annuaire du jury et, pour
+  l'étudiant, depuis le dépôt de la soutenance (`teachinglist.php`).
+- Mise à jour 2026102700 : valeur par défaut de `minjury` à 2.
+
 ## mod_these 0.17.0 (2026102609) et mod_thesesynthesis 0.6.0 (2026102609) — signature sur place de l'étudiant et du directeur, vérification d'identité préalable, grille remplie par l'étudiant, ergonomie, simplifications pour la DEVE
 
 - Simplifications pour la DEVE :

@@ -20,7 +20,8 @@ namespace mod_these\task;
  * Tâche planifiée : relance l'acteur attendu (directeur, DEVE, bibliothèque, ou étudiant dont le
  * dossier a été renvoyé) quand un dossier attend à la même étape depuis plus longtemps que le
  * délai de relance de son activité. La relance est répétée à chaque nouveau délai écoulé, tant
- * que l'étape n'a pas avancé.
+ * que l'étape n'a pas avancé. Relance de même les signataires attendus (voir
+ * notifications::send_signature_reminders()) et accorde le calendrier aux soutenances.
  *
  * @package   mod_these
  * @copyright 2026 Sébastien Lefebvre
@@ -68,5 +69,12 @@ class send_reminders extends \core\task\scheduled_task {
         if ($sent > 0) {
             mtrace("mod_these : $sent relance(s) envoyée(s).");
         }
+        // Signatures attendues depuis plus que le délai de relance.
+        $signers = \mod_these\local\notifications::send_signature_reminders();
+        if ($signers > 0) {
+            mtrace("mod_these : $signers signataire(s) relancé(s).");
+        }
+        // Calendrier : soutenances arrêtées (y compris celles fixées avant la synchronisation).
+        \mod_these\local\calendar::sync_all();
     }
 }

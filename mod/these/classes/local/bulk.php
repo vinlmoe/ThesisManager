@@ -21,7 +21,7 @@ use stdClass;
 
 /**
  * Actions groupées de la DEVE sur les dossiers cochés au tableau de bord : relance des signataires,
- * génération des documents de soutenance, accès du jury. Chaque action ne s'applique qu'aux dossiers
+ * génération des documents de soutenance, accès du jury, validation de l'A6. Chaque action ne s'applique qu'aux dossiers
  * dont l'étape s'y prête ; les autres sont comptés comme ignorés.
  *
  * @package   mod_these
@@ -39,6 +39,7 @@ class bulk {
             'remind' => get_string('bulkremind', 'mod_these'),
             'generate' => get_string('bulkgenerate', 'mod_these'),
             'notifyjury' => get_string('bulknotifyjury', 'mod_these'),
+            'a6' => get_string('bulka6', 'mod_these'),
         ];
     }
 
@@ -51,9 +52,18 @@ class bulk {
      * @param stdClass $dossier
      * @param string $action Voir actions().
      * @param int $userid Compte de la DEVE.
-     * @return bool L'action a porté (relance envoyée, documents générés, membre prévenu).
+     * @param array $params Paramètres de l'action : a6date (horodatage, 0 si l'A6 n'est pas validée), a6school.
+     * @return bool L'action a porté (relance envoyée, documents générés, membre prévenu, A6 enregistrée).
      */
-    public static function apply(stdClass $these, stdClass $cm, context $context, stdClass $dossier, $action, $userid) {
+    public static function apply(
+        stdClass $these,
+        stdClass $cm,
+        context $context,
+        stdClass $dossier,
+        $action,
+        $userid,
+        array $params = []
+    ) {
         $status = (int) $dossier->status;
         switch ($action) {
             case 'remind':
@@ -79,6 +89,12 @@ class bulk {
                     return false;
                 }
                 these_generate_documents($these, $context, $dossier, $userid);
+                return true;
+            case 'a6':
+                if ($status === THESE_STATUS_CANCELLED || !array_key_exists('a6date', $params)) {
+                    return false;
+                }
+                a6::set($dossier, (int) $params['a6date'], (string) ($params['a6school'] ?? ''), $userid);
                 return true;
             case 'notifyjury':
                 if ($status < THESE_STATUS_DEFENSE_VALIDATED || $status > THESE_STATUS_SCHEDULED) {

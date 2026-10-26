@@ -61,6 +61,8 @@ $mform = new defense_form($PAGE->url, [
     'jurorids' => array_map('intval', array_column($jury, 'jurorid')),
     'minjury' => $these->minjury,
     'rooms' => $rooms,
+    'a6label' => get_string('a6bydevestatus', 'mod_these', \mod_these\local\a6::label($dossier)),
+    'teachinglisturl' => new moodle_url('/mod/these/teachinglist.php', ['cmid' => $cm->id]),
     'these' => $these,
     'context' => $context,
     'submitlabel' => $returned ? 'resubmitdefense' : 'submitdefense',

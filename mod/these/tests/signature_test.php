@@ -196,7 +196,9 @@ final class signature_test extends these_testcase {
         $data->extdirectoremail = 'externe@example.com';
         $dossier = these_save_subject($this->these, $this->cm, $dossier, $data, true, $this->student->id, $this->signature());
 
-        $this->assertContains('externe@example.com', array_column($sink->get_messages(), 'to'));
+        // Nouveau lien, valable.
+        $token = $this->token_sent_to($sink->get_messages(), 'externe@example.com');
+        $this->assertCount(1, these_get_signatures_by_token($token));
         $signature = these_get_signatures($dossier->id)['subject:extdirector'];
         $this->assertEmpty($signature->timesigned);
         $token = $this->token_sent_to($sink->get_messages(), 'externe@example.com');
@@ -218,6 +220,37 @@ final class signature_test extends these_testcase {
         );
         $this->assertEmpty(these_get_signatures_by_token($token));
         $this->assertEmpty(these_get_signatures_by_token('court'));
+    }
+
+    /**
+     * Relance automatique : une signature attendue depuis plus que le délai de relance est redemandée
+     * (nouveau lien), et le délai repart de zéro.
+     */
+    public function test_signature_reminders(): void {
+        global $DB;
+        $this->setup_activity();
+        $sink = $this->redirectEmails();
+        $dossier = these_create_dossier($this->these->id, $this->student->id, $this->student->id);
+        $data = $this->subject_data();
+        $data->externaldirector = 1;
+        $data->extdirectorname = 'Dr Jean Externe';
+        $data->extdirectorgrade = 'Docteur vétérinaire';
+        $data->extdirectorinstitution = 'Clinique du Lac';
+        $data->extdirectoremail = 'externe@example.com';
+        $dossier = these_save_subject($this->these, $this->cm, $dossier, $data, true, $this->student->id, $this->signature());
+        $sink->clear();
+
+        // Délai de relance (14 jours) pas encore écoulé.
+        $this->assertSame(0, \mod_these\local\notifications::send_signature_reminders());
+        $conditions = ['dossierid' => $dossier->id, 'slot' => 'extdirector'];
+        $DB->set_field('these_signature', 'requesttime', time() - 20 * DAYSECS, $conditions);
+        $this->assertSame(1, \mod_these\local\notifications::send_signature_reminders());
+        // Nouveau lien, valable.
+        $token = $this->token_sent_to($sink->get_messages(), 'externe@example.com');
+        $this->assertCount(1, these_get_signatures_by_token($token));
+        $signature = these_get_signatures($dossier->id)['subject:extdirector'];
+        $this->assertGreaterThan(time() - HOURSECS, (int) $signature->requesttime);
+        $this->assertSame(0, \mod_these\local\notifications::send_signature_reminders());
     }
 
     /**

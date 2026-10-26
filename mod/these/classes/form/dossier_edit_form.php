@@ -59,6 +59,12 @@ class dossier_edit_form extends \moodleform {
         $mform->setType('devenumber', PARAM_TEXT);
         $mform->addElement('text', 'libraryref', get_string('libraryref', 'mod_these'), ['size' => 40]);
         $mform->setType('libraryref', PARAM_TEXT);
+        // Validation de l'A6, saisie par la DEVE (voir \mod_these\local\a6).
+        $mform->addElement('advcheckbox', 'aga6notyet', '', get_string('aga6notyet', 'mod_these'));
+        $mform->addElement('date_selector', 'aga6date', get_string('aga6date', 'mod_these'), ['optional' => true]);
+        $mform->hideIf('aga6date', 'aga6notyet', 'checked');
+        $mform->addElement('select', 'aga6school', get_string('bschool', 'mod_these'), these_school_options());
+        $mform->hideIf('aga6school', 'aga6notyet', 'checked');
 
         $mform->addElement('header', 'defenseheader', get_string('defense', 'mod_these'));
         $mform->addElement(
@@ -81,6 +87,12 @@ class dossier_edit_form extends \moodleform {
             $this->_customdata['jurorids'] ?? [],
             $this->_customdata['juryconflicts'] ?? ''
         );
+        these_jury_readonly($mform, array_values($this->_customdata['jury'] ?? []));
+
+        // Page courte : sujet et enregistrements repliés, la soutenance (le plus souvent modifiée) ouverte.
+        $mform->setExpanded('subjectheader', false);
+        $mform->setExpanded('registrationheader', false);
+        $mform->setExpanded('defenseheader', true);
 
         $this->add_action_buttons();
     }

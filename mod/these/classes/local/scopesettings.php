@@ -82,6 +82,7 @@ class scopesettings {
             'libraryagent' => '',
             'defenseduration' => 60,
             'defenserooms' => '',
+            'weeklydigest' => 1,
         ] + self::text_defaults();
     }
 

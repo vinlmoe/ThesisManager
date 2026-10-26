@@ -129,8 +129,11 @@ switch ($step['key']) {
         $declared = these_get_bordereau($dossier);
         $formdata->agdefvdate = $agreement['defvdate'] ?? ($declared['defvdate'] ?? 0);
         $formdata->agmobility = $agreement['mobility'] ?? 0;
-        $formdata->aga6notyet = $agreement['a6notyet'] ?? ($declared['a6notyet'] ?? 0);
-        $formdata->aga6date = $agreement['a6date'] ?? ($declared['a6date'] ?? 0);
+        // Validation de l'A6 : saisie par la DEVE (ici, à la modification du dossier, en lot ou par import).
+        $a6 = \mod_these\local\a6::get($dossier);
+        $formdata->aga6notyet = (int) ($a6['notyet'] || !$a6['date']);
+        $formdata->aga6date = $a6['date'];
+        $formdata->aga6school = $a6['school'];
         break;
 }
 $mform->set_data($formdata);
@@ -176,9 +179,14 @@ if ($mform->is_cancelled()) {
             $fields['agreement'] = json_encode(array_merge(these_get_agreement($dossier), [
                 'defvdate' => (int) $data->agdefvdate,
                 'mobility' => (int) !empty($data->agmobility),
-                'a6notyet' => (int) !empty($data->aga6notyet),
-                'a6date' => !empty($data->aga6notyet) ? 0 : (int) $data->aga6date,
             ]));
+            // Validation de l'A6 : liée à l'étudiant (voir \mod_these\local\a6), enregistrée si elle change.
+            $a6date = !empty($data->aga6notyet) ? 0 : (int) $data->aga6date;
+            $a6school = (string) ($data->aga6school ?? '');
+            $a6 = \mod_these\local\a6::get($dossier);
+            if (!$a6['recorded'] || $a6date !== $a6['date'] || $a6school !== $a6['school']) {
+                \mod_these\local\a6::set($dossier, $a6date, $a6school, $USER->id);
+            }
             these_save_jury($dossier->id, these_extract_submitted_jury($data, true), $USER->id);
             break;
     }

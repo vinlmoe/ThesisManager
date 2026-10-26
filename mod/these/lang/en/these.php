@@ -53,7 +53,7 @@ $string['signatorytitle'] = 'Signatory position';
 $string['defaultlocation'] = 'Default defence location';
 $string['workflowsettings'] = 'Workflow and notifications';
 $string['minjury'] = 'Minimum voting jury members';
-$string['minjury_help'] = 'Minimum number of voting members (chair included, guests excluded) required in the jury, both when the '
+$string['minjury_help'] = 'Minimum number of voting members (chair included, thesis director and guests excluded) required in the jury, both when the '
     . 'student proposes it and when the registrar validates it.';
 $string['minjuryinvalid'] = 'Enter a number greater than or equal to 1.';
 $string['deveemail'] = 'Registrar service address';
@@ -193,8 +193,8 @@ $string['depositdefense'] = 'Submit the defence documents';
 $string['defenseprogress'] = 'Progress: {$a->complete} of {$a->total} sections complete. Sections still to complete are expanded below.';
 $string['defensesectioncomplete'] = 'Complete';
 $string['defensesectionmissing'] = '{$a} field(s) to complete';
-$string['defenseintro'] = 'Upload your manuscript and defence documents and propose a date, a location and the jury (a chair and '
-    . 'at least {$a} voting members, chair included). You can prepare this submission in several steps ("Save draft"); submitting '
+$string['defenseintro'] = 'Upload your manuscript and defence documents and propose a date, a location and the jury (at least '
+    . '{$a} voting members, chair included; your director sits without voting). You can prepare this submission in several steps ("Save draft"); submitting '
     . 'sends it to your director, who will approve it and attach a report.';
 $string['defensedocuments'] = 'Defence documents';
 $string['manuscript'] = 'Manuscript (PDF)';
@@ -237,11 +237,11 @@ $string['roomconflictshort'] = 'Room booked: {$a->student}, {$a->time}';
 $string['juryhelpdeve'] = "One row per member, preferably chosen from the jury directory.";
 $string['juryhelp'] = 'One row per member. Preferably choose the teacher from the jury directory: title, status, institution '
     . 'and address are taken from it. For an external member or a guest, choose "External member or guest" and fill in the row '
-    . '(the status is required for a voting member). Only HDR associate professors, professors and emeriti may chair. The registrar '
+    . '(the status is required for a voting member; the thesis director sits without voting). Only HDR associate professors, professors and emeriti may chair. The registrar '
     . 'then validates the eligibility of each member; members are then notified by email and receive a link to the file documents.';
 $string['juryrole'] = 'Role';
 $string['juryrolepresident'] = 'Chair';
-$string['juryroledirector'] = 'Thesis director (jury member)';
+$string['juryroledirector'] = 'Thesis director (non-voting)';
 $string['juryrolemember'] = 'Jury member';
 $string['juryroleguest'] = 'Guest member';
 $string['juryname'] = 'Name';
@@ -250,7 +250,7 @@ $string['juryinstitution'] = 'Institution';
 $string['juryemail'] = 'Email';
 $string['juryaddmembers'] = 'Add rows';
 $string['juryonepresident'] = 'The jury must have exactly one chair.';
-$string['juryminmembers'] = 'The jury must have at least {$a} voting members (chair included, guests excluded).';
+$string['juryminmembers'] = 'The jury must have at least {$a} voting members (chair included, thesis director and guests excluded).';
 $string['juryinvalidemail'] = 'Invalid email address for {$a}.';
 $string['juryjuror'] = 'Teacher from the directory';
 $string['juryjuror_help'] = 'Teacher chosen from the jury directory kept by the registrar. For an external member (another '
@@ -530,6 +530,33 @@ Open the file: {$a->url}';
 
 // Tasks and privacy.
 $string['taskreminders'] = 'Reminders for pending thesis files';
+$string['taskdigest'] = 'Registrar weekly digest';
+$string['emailkeydigest'] = 'Registrar weekly digest';
+$string['emaildigestsubject'] = 'Theses: weekly digest ({$a->activity})';
+$string['emaildigestbody'] = 'Hello,
+
+Here is the weekly digest for {$a->activity}.
+
+Files waiting for the registrar:
+{$a->todo}
+
+Signatures pending for more than a week:
+{$a->signatures}
+
+Defences in the next seven days:
+{$a->defenses}
+
+Jury or room conflicts (next fifteen days):
+{$a->conflicts}
+
+Dashboard: {$a->url}';
+$string['digestnone'] = 'none';
+$string['digestconflicts'] = 'jury conflicts: {$a->jury}, room conflicts: {$a->rooms}';
+$string['settingsdigest'] = 'Weekly digest';
+$string['settingsweeklydigest'] = 'Weekly digest';
+$string['settingsweeklydigestlabel'] = 'Send a digest to the registrar every Monday';
+$string['settingsweeklydigest_help'] = 'Every Monday morning, a single email to the registrar (service address or registrar members): files waiting for them, signatures pending for more than a week, defences in the next seven days and jury or room conflicts in the next fifteen days. Nothing is sent when there is nothing to report.';
+$string['calendardefense'] = 'Thesis defence: {$a}';
 $string['staffactions'] = 'Actions on thesis files';
 $string['privacy:metadata:these_dossier'] = 'Thesis file of a student: subject, defence and workflow status.';
 $string['privacy:metadata:these_dossier:userid'] = 'Student who owns the file.';
@@ -549,6 +576,12 @@ $string['privacy:metadata:these_jury:fullname'] = 'Jury member name.';
 $string['privacy:metadata:these_jury:email'] = 'Jury member email address.';
 $string['privacy:metadata:these_jury:institution'] = 'Jury member institution.';
 $string['privacy:metadata:these_jury:jurystatus'] = 'Status (rank) of the jury member.';
+$string['privacy:metadata:these_a6'] = "A student's A6 validation, entered by the registrar and shared by all activities.";
+$string['privacy:metadata:these_a6:userid'] = "Student.";
+$string['privacy:metadata:these_a6:a6date'] = "A6 validation date (0 if not validated).";
+$string['privacy:metadata:these_a6:a6school'] = "School where the A6 was validated.";
+$string['privacy:metadata:these_a6:usermodified'] = "Registrar account that entered it.";
+$string['privacy:metadata:these_a6:timemodified'] = "Date entered.";
 $string['privacy:metadata:these_juror'] = 'Directory of teachers who may supervise a thesis or sit on a jury, kept by the registrar (not linked to a Moodle account).';
 $string['privacy:metadata:these_juror:title'] = 'Title of the teacher (Dr or Pr).';
 $string['privacy:metadata:these_juror:lastname'] = 'Last name of the teacher.';
@@ -787,6 +820,26 @@ $string['schoolother'] = 'Other institution';
 $string['ba6date'] = 'Final year (A6) validated on';
 $string['ba6notyet'] = 'I have not yet validated my final year (A6)';
 $string['a6required'] = 'Enter the A6 validation date, or tick the box if it is not validated yet.';
+$string['a6validation'] = 'A6 validation';
+$string['a6notvalidated'] = 'not validated';
+$string['a6bydeve'] = 'Entered by the registrar.';
+$string['a6bydevestatus'] = '{$a} (entered by the registrar)';
+$string['loga6recorded'] = 'A6 validation recorded';
+$string['bulka6'] = 'Record the A6 validation';
+$string['bulka6params'] = 'A6 validation (for that action; empty date: not validated):';
+$string['a6import'] = 'Import A6 validations';
+$string['a6dryrunresult'] = 'Dry run: {$a->ok} student(s) to record, {$a->errors} row(s) with errors.';
+$string['a6result'] = 'Import complete: {$a->ok} validation(s) recorded, {$a->errors} row(s) with errors.';
+$string['a6import_desc'] = "An Excel (.xlsx), OpenDocument (.ods) or CSV file, one row per student, with a header row: column \"etudiant\" (username, email address or student number), column \"date\" (A6 validation date, dd/mm/yyyy, or \"non\" if not validated) and, optionally, column \"ecole\" (Lyon, Alfort, Nantes, Toulouse, Rouen). The A6 validation belongs to the student, not to their thesis file: any student enrolled in the course may be listed, with or without a thesis file, and it applies to all their files. The dry run checks the file without saving anything.";
+$string['a6file'] = 'Validations file';
+$string['a6file_help'] = 'Excel (.xlsx), OpenDocument (.ods) or CSV (semicolon or comma separated). Recognised headers: etudiant, date, ecole.';
+$string['a6importformat'] = 'Unrecognised file format: Excel (.xlsx), OpenDocument (.ods) or CSV.';
+$string['a6importunreadable'] = 'The file cannot be read.';
+$string['a6notenrolled'] = "The student is not enrolled in the course of this activity.";
+$string['a6baddate'] = 'Unreadable date: "{$a}" (dd/mm/yyyy, or "non").';
+$string['a6badschool'] = 'Unknown school: "{$a}".';
+$string['a6wouldrecord'] = 'A6 validated on {$a} (dry run)';
+$string['a6recordedon'] = 'A6 validated on {$a}';
 $string['bnbvolumes'] = 'Number of volumes';
 $string['bnbpages'] = 'Total number of pages';
 $string['bnbrefs'] = 'Number of references';
@@ -1016,6 +1069,18 @@ $string['doctplconvocation'] = 'Defence notice';
 $string['doctpljurysheet'] = 'Jury sheet';
 $string['doctplminutes'] = 'Defence minutes';
 $string['doctplplanning'] = 'Defence schedule';
+$string['doctplteachinglist'] = 'Teaching staff list';
+$string['teachinglist'] = 'Teaching staff list (PDF)';
+$string['teachinglist_help'] = 'Active teachers of the jury directory whose institution is the one in the workflow settings, grouped by status, up to date on the day of download: the page is to be included in the thesis manuscript.';
+$string['teachinglistdefense'] = 'Up-to-date teaching staff list to include in your manuscript:';
+$string['teachinggrouppr'] = 'Professors';
+$string['teachinggrouppremerite'] = 'Emeritus professors';
+$string['teachinggroupprstag'] = 'Probationary professors';
+$string['teachinggroupmcfhdr'] = 'Associate professors (HDR)';
+$string['teachinggroupmcf'] = 'Associate professors';
+$string['teachinggroupmcfemerite'] = 'Emeritus associate professors';
+$string['teachinggroupmcfstag'] = 'Probationary associate professors';
+$string['teachinggroupir'] = 'Research engineers';
 
 // Settings transfer.
 $string['transfersettings'] = 'Settings transfer';

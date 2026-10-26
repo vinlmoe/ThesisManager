@@ -140,6 +140,8 @@ class dossiers {
         foreach ($update as $field => $value) {
             $dossier->$field = $value;
         }
+        // Soutenance au calendrier : date arrêtée, déplacée, ajournée ou dossier abandonné.
+        calendar::sync($dossier);
         return $dossier;
     }
 

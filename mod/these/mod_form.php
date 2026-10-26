@@ -65,7 +65,7 @@ class mod_these_mod_form extends moodleform_mod {
         $mform->addElement('header', 'workflowheader', get_string('workflowsettings', 'mod_these'));
         $mform->addElement('text', 'minjury', get_string('minjury', 'mod_these'), ['size' => '4']);
         $mform->setType('minjury', PARAM_INT);
-        $mform->setDefault('minjury', 3);
+        $mform->setDefault('minjury', 2);
         $mform->addHelpButton('minjury', 'minjury', 'mod_these');
         foreach (['deveemail', 'libraryemail', 'universityemail'] as $field) {
             $mform->addElement('text', $field, get_string($field, 'mod_these'), ['size' => '64']);

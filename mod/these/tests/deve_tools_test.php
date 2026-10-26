@@ -34,6 +34,9 @@ require_once(__DIR__ . '/these_testcase.php');
  * @covers     \mod_these\local\scopesettings::checklist
  * @covers     \mod_these\local\scopesettings::library_agents
  * @covers     \mod_these\local\rights
+ * @covers     \mod_these\local\calendar
+ * @covers     \mod_these\local\notifications::digest_content
+ * @covers     \mod_these\local\notifications::send_weekly_digests
  */
 final class deve_tools_test extends these_testcase {
     /**
@@ -93,7 +96,7 @@ final class deve_tools_test extends these_testcase {
      */
     public function test_bulk(): void {
         $this->setup_activity();
-        $this->assertSame(['remind', 'generate', 'notifyjury'], array_keys(\mod_these\local\bulk::actions()));
+        $this->assertSame(['remind', 'generate', 'notifyjury', 'a6'], array_keys(\mod_these\local\bulk::actions()));
         $validated = $this->generator->create_dossier($this->these, $this->student->id, [
             'status' => THESE_STATUS_DEFENSE_VALIDATED,
         ]);
@@ -180,5 +183,74 @@ final class deve_tools_test extends these_testcase {
         $this->setUser($editor);
         $this->expectException(\required_capability_exception::class);
         these_require_service($this->context, 'deve');
+    }
+
+    /**
+     * Calendrier : un événement de cours quand la DEVE arrête la date, déplacé avec la soutenance,
+     * supprimé à l'abandon ; le titre d'une thèse confidentielle n'y figure pas.
+     */
+    public function test_calendar_events(): void {
+        global $DB;
+        $this->setup_activity();
+        $time = make_timestamp(2026, 11, 4, 14);
+        $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
+            'status' => THESE_STATUS_DEFENSE_APPROVED, 'defensedate' => $time, 'defenselocation' => 'Salle du conseil',
+            'title' => 'Sujet secret', 'confidential' => 1,
+        ]);
+        $events = function () use ($dossier) {
+            global $DB;
+            return array_values($DB->get_records('event', ['modulename' => 'these', 'uuid' => 'these-dossier-' . $dossier->id]));
+        };
+        $this->assertSame([], $events());
+
+        $dossier = these_set_status($dossier, THESE_STATUS_DEFENSE_VALIDATED, $this->deve->id, 'validated');
+        $event = $events()[0];
+        $this->assertSame($time, (int) $event->timestart);
+        $this->assertSame(HOURSECS, (int) $event->timeduration);
+        $this->assertSame((int) $this->course->id, (int) $event->courseid);
+        $this->assertStringContainsString(fullname($this->student), $event->name);
+        $this->assertStringContainsString('Salle du conseil', $event->description);
+        $this->assertStringNotContainsString('Sujet secret', $event->description);
+
+        $dossier = these_set_status(
+            $dossier,
+            THESE_STATUS_DEFENSE_VALIDATED,
+            $this->deve->id,
+            'edited',
+            '',
+            ['defensedate' => $time + DAYSECS]
+        );
+        $this->assertCount(1, $events());
+        $this->assertSame($time + DAYSECS, (int) $events()[0]->timestart);
+
+        these_set_status($dossier, THESE_STATUS_CANCELLED, $this->deve->id, 'cancelled');
+        $this->assertSame([], $events());
+        // La synchronisation quotidienne ne le recrée pas.
+        \mod_these\local\calendar::sync_all();
+        $this->assertSame([], $events());
+    }
+
+    /**
+     * Récapitulatif hebdomadaire : dossiers qui attendent la DEVE et soutenances de la semaine, envoyé
+     * à la DEVE ; rien quand il est désactivé.
+     */
+    public function test_weekly_digest(): void {
+        $this->setup_activity();
+        $now = time();
+        $this->generator->create_dossier($this->these, $this->student->id, ['status' => THESE_STATUS_SUBJECT_APPROVED]);
+        $other = $this->getDataGenerator()->create_and_enrol($this->course)->id;
+        $this->generator->create_dossier($this->these, $other, [
+            'status' => THESE_STATUS_DEFENSE_VALIDATED, 'defensedate' => $now + 2 * DAYSECS, 'defenselocation' => 'Salle 12',
+        ]);
+        $content = \mod_these\local\notifications::digest_content($this->these, $now);
+        $this->assertCount(1, $content['todo']);
+        $this->assertCount(1, $content['defenses']);
+        $this->assertStringContainsString('Salle 12', $content['defenses'][0]);
+
+        $sink = $this->redirectEmails();
+        $this->assertSame(1, \mod_these\local\notifications::send_weekly_digests($now));
+        $this->assertContains($this->deve->email, array_column($sink->get_messages(), 'to'));
+        \mod_these\local\scopesettings::set(these_settings_scope($this->these), ['weeklydigest' => 0]);
+        $this->assertSame(0, \mod_these\local\notifications::send_weekly_digests($now));
     }
 }

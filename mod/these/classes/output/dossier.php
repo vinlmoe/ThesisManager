@@ -268,6 +268,7 @@ class dossier implements \renderable, \templatable {
             'registration' => (new detail_section(get_string('registration', 'mod_these'), [
                 get_string('devenumber', 'mod_these') => self::text($dossier->devenumber),
                 get_string('libraryref', 'mod_these') => self::text($dossier->libraryref),
+                get_string('a6validation', 'mod_these') => self::text(\mod_these\local\a6::label($dossier)),
             ]))->export_for_template($output),
             'defense' => false,
             'corrections' => false,

@@ -56,6 +56,7 @@ $mform = new \mod_these\form\dossier_edit_form($PAGE->url, [
     'minjury' => $these->minjury,
     'rooms' => these_defense_rooms($these),
     'jurycount' => count($jury),
+    'jury' => array_values($jury),
     'jurorids' => array_map('intval', array_column($jury, 'jurorid')),
     'juryconflicts' => these_render_jury_conflicts($dossier),
     'roomconflicts' => these_render_room_conflicts($dossier),
@@ -63,6 +64,12 @@ $mform = new \mod_these\form\dossier_edit_form($PAGE->url, [
 $formdata = (object) array_merge((array) $dossier, these_jury_form_data($jury));
 $formdata->id = $cm->id;
 $formdata->dossierid = $dossier->id;
+// Jury présenté en lecture : la saisie ne s'ouvre que pour le modifier.
+$formdata->juryedit = empty($jury) ? 1 : 0;
+$a6 = \mod_these\local\a6::get($dossier);
+$formdata->aga6notyet = (int) ($a6['notyet'] || !$a6['date']);
+$formdata->aga6date = $a6['date'];
+$formdata->aga6school = $a6['school'];
 $mform->set_data($formdata);
 
 if ($mform->is_cancelled()) {
@@ -75,6 +82,13 @@ if ($mform->is_cancelled()) {
     }
     $fields['directorid'] = (int) $data->directorid;
     $fields['defensedate'] = (int) ($data->defensedate ?? 0);
+
+    // Validation de l'A6 : enregistrée (et inscrite à l'historique) seulement si elle change.
+    $a6date = !empty($data->aga6notyet) ? 0 : (int) ($data->aga6date ?? 0);
+    $a6school = (string) ($data->aga6school ?? '');
+    if ($a6date !== $a6['date'] || $a6school !== $a6['school']) {
+        $dossier = \mod_these\local\a6::set($dossier, $a6date, $a6school, $USER->id);
+    }
 
     $newjury = these_extract_submitted_jury($data, true);
     $signature = function ($member) {

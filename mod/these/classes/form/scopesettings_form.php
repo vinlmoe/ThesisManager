@@ -83,6 +83,15 @@ class scopesettings_form extends \moodleform {
         $mform->setType('defenserooms', PARAM_TEXT);
         $mform->addHelpButton('defenserooms', 'settingsdefenserooms', 'mod_these');
 
+        $mform->addElement('header', 'digestheader', get_string('settingsdigest', 'mod_these'));
+        $mform->addElement(
+            'advcheckbox',
+            'weeklydigest',
+            get_string('settingsweeklydigest', 'mod_these'),
+            get_string('settingsweeklydigestlabel', 'mod_these')
+        );
+        $mform->addHelpButton('weeklydigest', 'settingsweeklydigest', 'mod_these');
+
         $mform->addElement('header', 'documentsheader', get_string('settingsdocuments', 'mod_these'));
         $mform->setExpanded('documentsheader');
         foreach (array_keys(scopesettings::text_defaults()) as $name) {

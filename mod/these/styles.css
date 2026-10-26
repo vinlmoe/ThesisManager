@@ -67,3 +67,14 @@
 .these-signatures td:first-child {
     width: 18rem;
 }
+
+/* Jury présenté en lecture dans un formulaire : le tableau défile dans sa colonne sur téléphone au
+   lieu d'élargir la page. */
+#fitem_id_jurysummary .felement,
+#fitem_id_jurysummary .form-control-static {
+    min-width: 0;
+    max-width: 100%;
+}
+#fitem_id_jurysummary .form-control-static {
+    flex: 1 1 0;
+}

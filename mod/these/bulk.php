@@ -28,6 +28,8 @@ require_once($CFG->dirroot . '/mod/these/locallib.php');
 $id = required_param('id', PARAM_INT);
 $action = required_param('bulkaction', PARAM_ALPHA);
 $dossierids = optional_param_array('dossierids', [], PARAM_INT);
+$a6date = optional_param('a6date', '', PARAM_RAW_TRIMMED);
+$a6school = optional_param('a6school', '', PARAM_ALPHA);
 
 $cm = get_coursemodule_from_id('these', $id, 0, false, MUST_EXIST);
 $course = get_course($cm->course);
@@ -43,10 +45,20 @@ if (!array_key_exists($action, \mod_these\local\bulk::actions()) || !$dossierids
     redirect($returnurl, get_string('bulknothing', 'mod_these'), null, \core\output\notification::NOTIFY_WARNING);
 }
 
+// Validation de l'A6 : date du sélecteur (aaaa-mm-jj), vide pour « pas encore validée ».
+$params = [];
+if ($action === 'a6') {
+    $params['a6date'] = $a6date === '' ? 0 : \mod_these\local\a6::parse_date($a6date);
+    if ($params['a6date'] === null) {
+        redirect($returnurl, get_string('a6baddate', 'mod_these', s($a6date)), null, \core\output\notification::NOTIFY_WARNING);
+    }
+    $params['a6school'] = array_key_exists($a6school, these_school_options()) ? $a6school : '';
+}
+
 $result = (object) ['done' => 0, 'skipped' => 0];
 foreach (array_unique($dossierids) as $dossierid) {
     $dossier = $DB->get_record('these_dossier', ['id' => $dossierid, 'theseid' => $these->id]);
-    if ($dossier && \mod_these\local\bulk::apply($these, $cm, $context, $dossier, $action, $USER->id)) {
+    if ($dossier && \mod_these\local\bulk::apply($these, $cm, $context, $dossier, $action, $USER->id, $params)) {
         $result->done++;
     } else {
         $result->skipped++;

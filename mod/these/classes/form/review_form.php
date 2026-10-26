@@ -130,7 +130,7 @@ class review_form extends \moodleform {
                     $this->_customdata['jurorids'] ?? [],
                     $this->_customdata['juryconflicts'] ?? ''
                 );
-                $this->jury_readonly(array_values($this->_customdata['jury'] ?? []));
+                these_jury_readonly($mform, array_values($this->_customdata['jury'] ?? []));
                 $mform->addElement('static', 'juryeligiblehelp', '', get_string('juryeligiblehelp', 'mod_these'));
                 if ($mform->elementExists('juryedit')) {
                     $mform->hideIf('juryeligiblehelp', 'juryedit', 'notchecked');
@@ -143,6 +143,8 @@ class review_form extends \moodleform {
                 $mform->addElement('advcheckbox', 'aga6notyet', '', get_string('aga6notyet', 'mod_these'));
                 $mform->addElement('date_selector', 'aga6date', get_string('aga6date', 'mod_these'), ['optional' => true]);
                 $mform->hideIf('aga6date', 'aga6notyet', 'checked');
+                $mform->addElement('select', 'aga6school', get_string('bschool', 'mod_these'), these_school_options());
+                $mform->hideIf('aga6school', 'aga6notyet', 'checked');
                 $mform->addElement('static', 'agauthorized', '', get_string('agauthorized', 'mod_these'));
                 break;
             case 'libraryconformity':
@@ -275,47 +277,5 @@ class review_form extends \moodleform {
             $errors = array_merge($errors, these_signature_errors($data));
         }
         return $errors;
-    }
-
-    /**
-     * Jury proposé présenté en lecture à la DEVE : tableau des membres, et seulement les cases
-     * d'éligibilité à vérifier (membres extérieurs). « Modifier la composition du jury » rouvre la saisie
-     * complète. Sans jury enregistré, la saisie reste ouverte.
-     *
-     * @param array $members Jury enregistré (voir these_get_jury()), dans l'ordre des lignes du formulaire.
-     * @return void
-     */
-    protected function jury_readonly(array $members) {
-        $mform = $this->_form;
-        if (!$members) {
-            return;
-        }
-        $first = 'jurymemberlabel[0]';
-        $summary = $mform->createElement('static', 'jurysummary', '', these_render_jury($members, true, false));
-        $mform->insertElementBefore($summary, $first);
-        $toggle = $mform->createElement('advcheckbox', 'juryedit', '', get_string('juryedit', 'mod_these'));
-        $mform->insertElementBefore($toggle, $first);
-        $mform->hideIf('jurysummary', 'juryedit', 'checked');
-
-        $fields = ['jurymemberlabel', 'juryrole', 'jurorid', 'juryname', 'jurytitle', 'jurystatus', 'juryinstitution',
-            'juryemail'];
-        for ($i = 0; $mform->elementExists("juryrole[$i]"); $i++) {
-            foreach ($fields as $field) {
-                $mform->hideIf("{$field}[$i]", 'juryedit', 'notchecked');
-            }
-            $member = $members[$i] ?? null;
-            if ($member) {
-                // Case d'éligibilité nommée : elle reste seule visible en lecture.
-                $mform->getElement("juryeligible[$i]")->setText(
-                    get_string('juryeligiblecheckof', 'mod_these', s($member->fullname))
-                );
-            }
-            if (!$member || these_jury_eligibility($member) === 'ok') {
-                $mform->hideIf("juryeligible[$i]", 'juryedit', 'notchecked');
-            }
-        }
-        if ($mform->elementExists('juryaddfields')) {
-            $mform->hideIf('juryaddfields', 'juryedit', 'notchecked');
-        }
     }
 }

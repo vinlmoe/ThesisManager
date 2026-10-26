@@ -53,7 +53,7 @@ $string['signatorytitle'] = 'Qualité du signataire';
 $string['defaultlocation'] = 'Lieu de soutenance proposé par défaut';
 $string['workflowsettings'] = 'Circuit et notifications';
 $string['minjury'] = 'Membres votants minimum du jury';
-$string['minjury_help'] = "Nombre minimal de membres votants (président compris, invités exclus) exigé pour la composition du jury, "
+$string['minjury_help'] = "Nombre minimal de membres votants (président compris, directeur de thèse et invités exclus) exigé pour la composition du jury, "
     . "à la proposition de l'étudiant comme à la validation de la DEVE.";
 $string['minjuryinvalid'] = 'Indiquez un nombre supérieur ou égal à 1.';
 $string['deveemail'] = 'Adresse de service de la DEVE';
@@ -195,7 +195,7 @@ $string['defenseprogress'] = 'Avancement du dépôt : {$a->complete} rubrique(s)
 $string['defensesectioncomplete'] = 'Complète';
 $string['defensesectionmissing'] = '{$a} champ(s) à compléter';
 $string['defenseintro'] = "Déposez votre manuscrit et les documents de soutenance, et proposez une date, un lieu et la composition du "
-    . "jury (un président et au moins {\$a} membres votants, président compris). Vous pouvez préparer ce dépôt en plusieurs fois "
+    . "jury (au moins {\$a} membres votants, président compris ; votre directeur siège sans voter). Vous pouvez préparer ce dépôt en plusieurs fois "
     . "(« Enregistrer le brouillon ») ; la soumission l'envoie à votre directeur, qui le validera en y joignant son rapport.";
 $string['defensedocuments'] = 'Documents de soutenance';
 $string['manuscript'] = 'Manuscrit (PDF)';
@@ -238,12 +238,12 @@ $string['roomconflictshort'] = 'Salle occupée : {$a->student}, {$a->time}';
 $string['juryhelpdeve'] = "Une ligne par membre, choisi de préférence dans l'annuaire du jury.";
 $string['juryhelp'] = "Une ligne par membre. Choisissez de préférence l'enseignant dans l'annuaire du jury : son titre, son "
     . "statut, son établissement et son adresse en sont repris. Pour un membre extérieur ou un invité, choisissez « Membre extérieur "
-    . "ou invité » et renseignez la ligne (le statut est demandé pour un membre votant). Seuls les maîtres de conférences HDR, les "
+    . "ou invité » et renseignez la ligne (le statut est demandé pour un membre votant ; le directeur de thèse siège sans voter). Seuls les maîtres de conférences HDR, les "
     . "professeurs et les émérites peuvent présider. La DEVE valide ensuite l'éligibilité de chaque membre ; les membres sont alors "
     . "prévenus par courriel et reçoivent un lien d'accès aux documents du dossier.";
 $string['juryrole'] = 'Rôle';
 $string['juryrolepresident'] = 'Président';
-$string['juryroledirector'] = 'Directeur de thèse (membre du jury)';
+$string['juryroledirector'] = 'Directeur de thèse (non votant)';
 $string['juryrolemember'] = 'Membre du jury';
 $string['juryroleguest'] = 'Membre invité';
 $string['juryname'] = 'Nom';
@@ -252,7 +252,7 @@ $string['juryinstitution'] = 'Établissement';
 $string['juryemail'] = 'Courriel';
 $string['juryaddmembers'] = 'Ajouter des lignes';
 $string['juryonepresident'] = 'Le jury doit comporter un et un seul président.';
-$string['juryminmembers'] = 'Le jury doit comporter au moins {$a} membres votants (président compris, invités exclus).';
+$string['juryminmembers'] = 'Le jury doit comporter au moins {$a} membres votants (président compris, directeur de thèse et invités exclus).';
 $string['juryinvalidemail'] = 'Adresse de courriel invalide pour {$a}.';
 $string['juryjuror'] = "Enseignant de l'annuaire";
 $string['juryjuror_help'] = "Enseignant choisi dans l'annuaire du jury tenu par la DEVE. Pour un membre extérieur (autre "
@@ -535,6 +535,33 @@ Accéder au dossier : {$a->url}';
 
 // Tâches et données personnelles.
 $string['taskreminders'] = 'Relances des dossiers de thèse en attente';
+$string['taskdigest'] = 'Récapitulatif hebdomadaire de la DEVE';
+$string['emailkeydigest'] = 'Récapitulatif hebdomadaire de la DEVE';
+$string['emaildigestsubject'] = 'Thèses : récapitulatif de la semaine ({$a->activity})';
+$string['emaildigestbody'] = 'Bonjour,
+
+Voici le récapitulatif de la semaine pour {$a->activity}.
+
+Dossiers qui attendent la DEVE :
+{$a->todo}
+
+Signatures en attente depuis plus d\'une semaine :
+{$a->signatures}
+
+Soutenances des sept prochains jours :
+{$a->defenses}
+
+Conflits de jury ou de salle (quinze prochains jours) :
+{$a->conflicts}
+
+Tableau de bord : {$a->url}';
+$string['digestnone'] = 'aucun';
+$string['digestconflicts'] = 'conflits de jury : {$a->jury}, de salle : {$a->rooms}';
+$string['settingsdigest'] = 'Récapitulatif hebdomadaire';
+$string['settingsweeklydigest'] = 'Récapitulatif hebdomadaire';
+$string['settingsweeklydigestlabel'] = 'Envoyer chaque lundi un récapitulatif à la DEVE';
+$string['settingsweeklydigest_help'] = "Chaque lundi matin, un seul courriel à la DEVE (adresse de service ou membres de la DEVE) : dossiers qui l'attendent, signatures en attente depuis plus d'une semaine, soutenances des sept prochains jours et conflits de jury ou de salle des quinze prochains jours. Rien n'est envoyé s'il n'y a rien à signaler.";
+$string['calendardefense'] = 'Soutenance de thèse : {$a}';
 $string['staffactions'] = 'Interventions dans les dossiers de thèse';
 $string['privacy:metadata:these_dossier'] = "Dossier de thèse d'un étudiant : sujet, soutenance et état du circuit.";
 $string['privacy:metadata:these_dossier:userid'] = "Étudiant titulaire du dossier.";
@@ -554,6 +581,12 @@ $string['privacy:metadata:these_jury:fullname'] = 'Nom du membre du jury.';
 $string['privacy:metadata:these_jury:email'] = 'Adresse de courriel du membre du jury.';
 $string['privacy:metadata:these_jury:institution'] = 'Établissement du membre du jury.';
 $string['privacy:metadata:these_jury:jurystatus'] = 'Statut (corps) du membre du jury.';
+$string['privacy:metadata:these_a6'] = "Validation de l'A6 d'un étudiant, saisie par la DEVE et commune à toutes les activités.";
+$string['privacy:metadata:these_a6:userid'] = "Étudiant.";
+$string['privacy:metadata:these_a6:a6date'] = "Date de validation de l'A6 (0 si elle n'est pas validée).";
+$string['privacy:metadata:these_a6:a6school'] = "École où l'A6 a été validée.";
+$string['privacy:metadata:these_a6:usermodified'] = "Compte de la DEVE qui l'a saisie.";
+$string['privacy:metadata:these_a6:timemodified'] = "Date de la saisie.";
 $string['privacy:metadata:these_juror'] = "Annuaire des enseignants pouvant diriger une thèse ou siéger au jury, tenu par la DEVE (sans lien avec un compte Moodle).";
 $string['privacy:metadata:these_juror:title'] = "Titre de l'enseignant (Dr ou Pr).";
 $string['privacy:metadata:these_juror:lastname'] = "Nom de l'enseignant.";
@@ -791,6 +824,26 @@ $string['schoolother'] = 'Autre établissement';
 $string['ba6date'] = "Validation de l'année d'approfondissement (A6) le";
 $string['ba6notyet'] = "Je n'ai pas encore validé mon année d'approfondissement (A6)";
 $string['a6required'] = "Indiquez la date de validation de l'A6, ou cochez la case si elle n'est pas encore validée.";
+$string['a6validation'] = "Validation de l'A6";
+$string['a6notvalidated'] = 'non validée';
+$string['a6bydeve'] = 'Saisie par la DEVE.';
+$string['a6bydevestatus'] = '{$a} (saisie par la DEVE)';
+$string['loga6recorded'] = "Validation de l'A6 enregistrée";
+$string['bulka6'] = "Enregistrer la validation de l'A6";
+$string['bulka6params'] = "Validation de l'A6 (pour l'action correspondante ; date vide : non validée) :";
+$string['a6import'] = "Importer les validations de l'A6";
+$string['a6dryrunresult'] = 'Simulation : {$a->ok} étudiant(s) à enregistrer, {$a->errors} ligne(s) en erreur.';
+$string['a6result'] = 'Import terminé : {$a->ok} validation(s) enregistrée(s), {$a->errors} ligne(s) en erreur.';
+$string['a6import_desc'] = "Un fichier Excel (.xlsx), OpenDocument (.ods) ou CSV, une ligne par étudiant, avec une ligne d'en-tête : colonne « etudiant » (identifiant, adresse de courriel ou numéro d'étudiant), colonne « date » (date de validation de l'A6, jj/mm/aaaa, ou « non » si elle n'est pas validée) et, facultative, colonne « ecole » (Lyon, Alfort, Nantes, Toulouse, Rouen). La validation de l'A6 est liée à l'étudiant, pas à son dossier : tout étudiant inscrit au cours peut figurer, qu'il ait déjà un dossier de thèse ou non, et elle vaudra pour tous ses dossiers. La simulation vérifie le fichier sans rien enregistrer.";
+$string['a6file'] = 'Fichier des validations';
+$string['a6file_help'] = "Excel (.xlsx), OpenDocument (.ods) ou CSV (séparateur point-virgule ou virgule). En-têtes reconnues : etudiant, date, ecole.";
+$string['a6importformat'] = 'Format de fichier non reconnu : Excel (.xlsx), OpenDocument (.ods) ou CSV.';
+$string['a6importunreadable'] = 'Le fichier ne peut pas être lu.';
+$string['a6notenrolled'] = "L'étudiant n'est pas inscrit au cours de cette activité.";
+$string['a6baddate'] = 'Date illisible : « {$a} » (jj/mm/aaaa, ou « non »).';
+$string['a6badschool'] = 'École inconnue : « {$a} ».';
+$string['a6wouldrecord'] = 'A6 validée le {$a} (simulation)';
+$string['a6recordedon'] = 'A6 validée le {$a}';
 $string['bnbvolumes'] = 'Nombre de volumes';
 $string['bnbpages'] = 'Nombre total de pages';
 $string['bnbrefs'] = 'Nombre de références bibliographiques';
@@ -1021,6 +1074,18 @@ $string['doctplconvocation'] = 'Convocation à la soutenance';
 $string['doctpljurysheet'] = 'Feuille de jury';
 $string['doctplminutes'] = 'Procès-verbal de soutenance';
 $string['doctplplanning'] = 'Planning des soutenances';
+$string['doctplteachinglist'] = 'Liste du corps enseignant';
+$string['teachinglist'] = 'Liste du corps enseignant (PDF)';
+$string['teachinglist_help'] = "Enseignants actifs de l'annuaire du jury dont l'établissement est celui des paramètres du circuit, groupés par statut, à jour au jour du téléchargement : la page est à inclure dans le manuscrit de la thèse.";
+$string['teachinglistdefense'] = 'Liste à jour du corps enseignant à inclure dans votre manuscrit :';
+$string['teachinggrouppr'] = 'Professeurs';
+$string['teachinggrouppremerite'] = 'Professeurs émérites';
+$string['teachinggroupprstag'] = 'Professeurs stagiaires';
+$string['teachinggroupmcfhdr'] = 'Maîtres de conférences HDR';
+$string['teachinggroupmcf'] = 'Maîtres de conférences';
+$string['teachinggroupmcfemerite'] = 'Maîtres de conférences émérites';
+$string['teachinggroupmcfstag'] = 'Maîtres de conférences stagiaires';
+$string['teachinggroupir'] = 'Ingénieurs de recherche';
 
 // Transfert des paramètres.
 $string['transfersettings'] = 'Transfert des paramètres';

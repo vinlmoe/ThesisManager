@@ -89,5 +89,10 @@ if ($report !== null) {
     echo $PAGE->get_renderer('mod_these')->render(new output\table($head, $rows));
 }
 
+// Validations de l'A6 : import séparé (Excel, OpenDocument ou CSV).
+echo $PAGE->get_renderer('mod_these')->render(new output\link(
+    new moodle_url('/mod/these/a6import.php', ['id' => $cm->id]),
+    get_string('a6import', 'mod_these')
+));
 $mform->display();
 echo $OUTPUT->footer();

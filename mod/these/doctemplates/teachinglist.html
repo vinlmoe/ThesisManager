@@ -1,0 +1,21 @@
+<!--@page margins="30,20,16,20" header="8" footer="9" font="freesans" size="10" lineheight="1.3"-->
+<!--@header-->
+<table cellpadding="0">
+  <tr>
+    <td width="60mm"><img src="{{img.logo}}" height="15mm" /></td>
+    <td width="110mm" align="right" style="font-size:8.5pt;color:#444444;"><br /><br />{{establishment.name}}</td>
+  </tr>
+</table>
+<!--@body-->
+<div style="text-align:center;font-size:15pt;font-weight:bold;">Liste du corps enseignant</div>
+<div style="text-align:center;font-size:9.5pt;color:#444444;">{{establishment.name}} — liste à jour au {{today}}</div>
+<br />
+{{^hasmembers}}<p>Aucun enseignant actif de l’établissement dans l’annuaire.</p>{{/hasmembers}}
+{{#groups}}<div style="font-size:11pt;font-weight:bold;border-bottom:0.5px solid #888888;">{{label}}</div>
+<table cellpadding="1.5">
+{{#members}}  <tr nobr="true"><td width="170mm">{{name}}</td></tr>
+{{/members}}</table>
+<br />
+{{/groups}}
+<!--@footer-->
+<div style="font-size:8pt;text-align:right;color:#444444;">Page {{pagenumber}} / {{pagecount}}</div>
