@@ -35,7 +35,7 @@ $synthesis = $DB->get_record('thesesynthesis', ['id' => $cm->instance], '*', MUS
 
 require_login($course, true, $cm);
 $context = context_module::instance($cm->id);
-require_capability('mod/thesesynthesis:managelinks', $context);
+\mod_these\local\rights::require_management($context, 'mod/thesesynthesis:managelinks');
 
 $baseurl = new moodle_url('/mod/thesesynthesis/administration.php', ['id' => $cm->id]);
 $PAGE->set_url($baseurl);

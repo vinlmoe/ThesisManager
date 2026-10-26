@@ -13,7 +13,7 @@ de version recalés sur la date. Les numéros entre parenthèses des sections de
 développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
 été étiquetée.
 
-## mod_these 0.17.0 (2026102608) et mod_thesesynthesis 0.6.0 (2026102607) — signature sur place de l'étudiant et du directeur, vérification d'identité préalable, grille remplie par l'étudiant, ergonomie, simplifications pour la DEVE
+## mod_these 0.17.0 (2026102609) et mod_thesesynthesis 0.6.0 (2026102609) — signature sur place de l'étudiant et du directeur, vérification d'identité préalable, grille remplie par l'étudiant, ergonomie, simplifications pour la DEVE
 
 - Simplifications pour la DEVE :
   - validation du dossier de soutenance : jury présenté en tableau ; seules
@@ -31,6 +31,12 @@ développement ne correspondent à aucune version installable ; 0.11.2 n'a jamai
   - « Réglages à compléter » en tête des paramètres du circuit (signataires,
     contrat type, images des modèles, salles…), rappelé sur le tableau de
     bord de la DEVE tant qu'il manque quelque chose ;
+  - agents de la bibliothèque : listés dans les paramètres du circuit
+    (identifiants ou adresses), sans rôle à attribuer ; ils ont les droits de
+    la bibliothèque et seulement ceux-là (ni boutons ni pages de la DEVE, ni
+    gestion de l'activité de suivi, même avec un rôle d'enseignant), ne sont
+    pas proposés comme directeurs et reçoivent les courriels de la
+    bibliothèque ;
   - moins de texte : explications des pages de la DEVE repliées sous
     « Aide », descriptions des paramètres du circuit derrière l'icône d'aide,
     aides du jury et des validations de la DEVE ramenées à une ligne.

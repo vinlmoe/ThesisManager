@@ -603,6 +603,9 @@ $string['settingscheckquestions'] = 'Questionnaire préalable au jury';
 $string['settingscheckimages'] = 'Images des modèles des documents';
 $string['settingscheckimagesmissing'] = 'Images des modèles des documents (manquent : {$a})';
 $string['settingsmissingnotice'] = 'Réglages du circuit à compléter : {$a}.';
+$string['settingslibraryagent'] = 'Agents de la bibliothèque';
+$string['settingslibraryagent_help'] = "Identifiants ou adresses de courriel des comptes Moodle des agents de la bibliothèque, séparés par des virgules ou un par ligne. Sans rôle à attribuer, ils ont les droits de la bibliothèque (notice du sujet, conformité du manuscrit, corrections) et seulement ceux-là : ni boutons ni pages de la DEVE, même si leur rôle dans le cours les leur donnerait. Ils reçoivent les courriels adressés à la bibliothèque. Ils doivent pouvoir entrer dans le cours (inscription avec n'importe quel rôle).";
+$string['settingschecklibraryagents'] = 'Agents de la bibliothèque';
 $string['scopesettings'] = 'Paramètres du circuit';
 $string['scopesettings_desc'] = "Rôles des services, agents DEVE signataires, établissement, université, signataires des documents et "
     . "contrat type de diffusion de cette activité. Aucun n'est un réglage du site.";

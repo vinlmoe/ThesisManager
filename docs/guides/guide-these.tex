@@ -97,7 +97,8 @@ salles de soutenance dans les paramètres du circuit ; erreurs et conflits du
 jury en tête de la rubrique Jury. \\
 2.11 & 26 octobre 2026 & Simplifications pour la DEVE : jury présenté en
 lecture à la validation, action directe dans \og À traiter\fg{}, actions
-groupées, conflits de salle, réglages à compléter. \\
+groupées, conflits de salle, réglages à compléter. Agents de la
+bibliothèque listés dans les paramètres du circuit, sans rôle à attribuer. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -262,6 +263,19 @@ capacités du module. Il peut être attribué dans le cours, dans sa catégorie 
 niveau du site} (\chemin{Administration du site > Utilisateurs > Permissions >
 Attribution des rôles système}) : les bibliothécaires accèdent alors à toutes
 les activités de gestion des thèses sans être inscrits aux cours.
+
+\paragraph{Agents de la bibliothèque.} Plus simple, sans rôle à attribuer :
+la DEVE liste les agents de la bibliothèque (identifiants ou adresses de
+courriel, séparés par des virgules ou un par ligne) dans les
+\bouton{Paramètres du circuit} de l'activité de suivi, rubrique \og Agents de
+la bibliothèque\fg{}. Ils ont les droits de la bibliothèque et seulement
+ceux-là : leur tableau de bord ne montre que la file \og À traiter\fg{} de la
+bibliothèque, le planning et l'export ; ni création, ni import, ni menu
+\bouton{Paramètres}, ni pages de la DEVE, même si leur rôle dans le cours
+(enseignant, par exemple) les leur donnerait. Ils ne sont pas proposés comme
+directeurs de thèse et reçoivent les courriels adressés à la bibliothèque. Ils
+doivent seulement pouvoir entrer dans le cours (inscription avec n'importe quel
+rôle).
 
 \begin{astuce}
 Un directeur de thèse ne voit et ne valide que les dossiers qu'il dirige. Seuls
@@ -999,6 +1013,10 @@ La signature enregistrée se supprime en bas de la page \bouton{Mes signatures}.
 
 % ===========================================================================
 \section{Bibliothèque : pas à pas}
+
+Les agents de la bibliothèque (listés dans les paramètres du circuit, ou
+détenteurs du rôle Bibliothèque) arrivent sur le tableau de bord : la file
+\og À traiter\fg{} propose directement le bouton de chaque contrôle attendu.
 
 \begin{procedure}{Enregistrer la notice du sujet (phase 1)}{Bibliothèque}
 \begin{etapes}

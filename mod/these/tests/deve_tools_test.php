@@ -23,7 +23,7 @@ require_once(__DIR__ . '/these_testcase.php');
 
 /**
  * Outils de la DEVE : conflits de salle, action directe de la file « À traiter », actions groupées,
- * réglages du circuit à compléter.
+ * réglages du circuit à compléter ; agents de la bibliothèque.
  *
  * @package    mod_these
  * @copyright  2026 Sébastien Lefebvre
@@ -32,6 +32,8 @@ require_once(__DIR__ . '/these_testcase.php');
  * @covers     \mod_these\local\rendering::primary_action
  * @covers     \mod_these\local\bulk
  * @covers     \mod_these\local\scopesettings::checklist
+ * @covers     \mod_these\local\scopesettings::library_agents
+ * @covers     \mod_these\local\rights
  */
 final class deve_tools_test extends these_testcase {
     /**
@@ -126,7 +128,7 @@ final class deve_tools_test extends these_testcase {
             return !$item['optional'];
         });
         $this->assertNotEmpty($required);
-        $this->assertCount(2, array_filter($checklist, function ($item) {
+        $this->assertCount(3, array_filter($checklist, function ($item) {
             return $item['optional'];
         }));
         $rooms = array_values(array_filter($checklist, function ($item) {
@@ -140,5 +142,43 @@ final class deve_tools_test extends these_testcase {
         $this->assertTrue($complete[get_string('settingscheckrooms', 'mod_these')]);
         $this->assertTrue($complete[get_string('settingscheckinstitution', 'mod_these')]);
         $this->assertFalse($complete[get_string('settingscheckcontract', 'mod_these')]);
+    }
+
+    /**
+     * Agents de la bibliothèque désignés dans les paramètres : droits de la bibliothèque sans rôle,
+     * jamais ceux de la DEVE ni la direction de thèse, destinataires des courriels de la bibliothèque.
+     */
+    public function test_library_agents(): void {
+        $this->setup_activity();
+        $gen = $this->getDataGenerator();
+        $editor = $gen->create_and_enrol($this->course, 'editingteacher', ['username' => 'biblio1']);
+        $teacher = $gen->create_and_enrol($this->course, 'teacher', ['email' => 'biblio2@example.org']);
+        $this->assertTrue(these_get_rights($this->context, null, $editor->id)->deve);
+
+        \mod_these\local\scopesettings::set(these_settings_scope($this->these), ['libraryagent' => "biblio1\nBIBLIO2@example.org"]);
+        $agents = array_keys(\mod_these\local\scopesettings::library_agents($this->context));
+        $this->assertSame([(int) $editor->id, (int) $teacher->id], $agents);
+        foreach ([$editor, $teacher] as $agent) {
+            $rights = these_get_rights($this->context, null, $agent->id);
+            $this->assertFalse($rights->deve);
+            $this->assertTrue($rights->library);
+            $this->assertTrue($rights->viewall);
+        }
+        $this->assertArrayNotHasKey($teacher->id, these_get_potential_directors($this->context));
+        $this->assertArrayHasKey($this->director->id, these_get_potential_directors($this->context));
+        $this->assertFalse(\mod_these\local\rights::can_manage($this->context, 'mod/these:managedeve', $editor->id));
+        $this->assertTrue(\mod_these\local\rights::can_manage($this->context, 'mod/these:managedeve', $this->deve->id));
+
+        $recipients = \mod_these\local\notifications::get_service_recipients($this->these, $this->context, 'library');
+        $library = array_column($recipients, 'id');
+        $this->assertContains($editor->id, $library);
+        $this->assertContains($teacher->id, $library);
+        $deve = array_column(\mod_these\local\notifications::get_service_recipients($this->these, $this->context, 'deve'), 'id');
+        $this->assertNotContains($editor->id, $deve);
+        $this->assertContains($this->deve->id, $deve);
+
+        $this->setUser($editor);
+        $this->expectException(\required_capability_exception::class);
+        these_require_service($this->context, 'deve');
     }
 }

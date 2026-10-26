@@ -42,7 +42,8 @@ class jury {
      */
     public static function get_potential_directors(context $context) {
         $users = get_enrolled_users($context, 'mod/these:direct', 0, 'u.*', 'u.lastname ASC, u.firstname ASC', 0, 0, true);
-        return $users;
+        // Les agents de la bibliothèque ne dirigent pas de thèse.
+        return array_diff_key($users, scopesettings::library_agents($context));
     }
 
     /**
