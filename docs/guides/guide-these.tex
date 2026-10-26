@@ -70,6 +70,8 @@ procès-verbal générés. \\
 refaites sur un Moodle de test, en entier (aucune coupe au milieu d'un élément),
 avec des dossiers amenés à chaque étape par le circuit lui-même ; pages longues
 présentées par rubrique ; captures plus grandes dans la page. \\
+2.5 & 26 octobre 2026 & Annuaire du jury prérempli avec les enseignants non
+éditeurs inscrits au cours. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -1269,6 +1271,15 @@ enseignant retiré (non actif) n'est plus proposé mais reste dans les jurys qui
 l'ont retenu. L'annuaire s'importe aussi d'un fichier CSV (colonnes
 \texttt{title}, \texttt{lastname}, \texttt{firstname}, \texttt{email},
 \texttt{status}, \texttt{institution}).
+
+Le bouton \bouton{Préremplir avec les enseignants du cours} ajoute les
+enseignants non éditeurs (rôle \og Enseignant non éditeur\fg{}) inscrits au
+cours de l'activité qui ne sont pas encore dans l'annuaire (même adresse, ou
+mêmes nom et prénom). La DEVE (enseignant éditeur ou rôle DEVE) et la
+bibliothèque ne sont pas reprises. Une page de confirmation liste les
+enseignants concernés ; ils sont créés avec le titre Dr, le statut maître de
+conférences et l'établissement par défaut, à vérifier ensuite enseignant par
+enseignant. Les enseignants déjà présents ne sont pas modifiés.
 
 \subsection{Suivi des thèses de plusieurs promotions}\label{sec:suivi}
 

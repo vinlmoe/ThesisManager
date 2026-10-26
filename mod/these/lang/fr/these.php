@@ -305,6 +305,12 @@ $string['jurorimportfile_help'] = "Colonnes : title (Dr ou Pr), lastname, firstn
     . "libellé. Un enseignant déjà présent (même adresse, ou mêmes nom et prénom) est mis à jour.";
 $string['jurorimportdone'] = '{$a->created} enseignant(s) ajouté(s), {$a->updated} mis à jour.';
 $string['jurorimportbadline'] = 'Ligne {$a} ignorée : titre, nom, prénom, statut ou adresse incorrect.';
+$string['jurorprefill'] = 'Préremplir avec les enseignants du cours';
+$string['jurorprefillconfirm'] = "Ajouter à l'annuaire {\$a} enseignant(s) non éditeur(s) inscrit(s) au cours ? Ils sont créés avec le titre "
+    . "Dr, le statut maître de conférences et l'établissement par défaut : vérifiez-les ensuite. La DEVE et la bibliothèque ne sont "
+    . "pas reprises, ni les enseignants déjà présents (même adresse, ou mêmes nom et prénom).";
+$string['jurorprefilldone'] = "{\$a} enseignant(s) ajouté(s) à l'annuaire. Vérifiez leur titre et leur statut.";
+$string['jurorprefillnone'] = "Tous les enseignants non éditeurs inscrits au cours sont déjà dans l'annuaire.";
 $string['jurysheet'] = 'Feuille de jury';
 
 // Étapes de validation.

@@ -6,6 +6,9 @@ dépôt et validation du sujet, puis dépôt, validation et soutenance.
 - **Prérequis** : Moodle 4.0 ou supérieur, PHP 7.4+.
 - **Dépendances** : aucune à installer. Les PDF sont produits avec TCPDF (fourni
   par Moodle) et FPDI 2.6 (fourni dans `thirdparty/`, comme pour `mod_stage`).
+- **PHP compilé avec musl** (Alpine) : le module est vérifié sur l'image Docker
+  `erseco/alpine-moodle` et n'utilise pas `GLOB_BRACE`, constante absente de
+  ces PHP ; la CI échoue si elle réapparaît dans `mod/`.
 
 ## 1. Installation
 
@@ -140,7 +143,10 @@ signés.
   professeur (stagiaire, émérite). Tous peuvent diriger ou être membre ; seuls
   les maîtres de conférences HDR, les professeurs et les émérites peuvent
   présider. Import CSV possible (`title, lastname, firstname, email, status,
-  institution`).
+  institution`). Le bouton *Préremplir avec les enseignants du cours* ajoute
+  les enseignants non éditeurs inscrits au cours, absents de l'annuaire (la
+  DEVE et la bibliothèque sont exclues) : titre Dr, statut maître de
+  conférences et établissement par défaut, à vérifier ensuite.
 - **Jury** : chaque ligne choisit un enseignant de l'annuaire (titre, statut,
   établissement et adresse repris) ou décrit un membre extérieur ou un invité.
   Le formulaire refuse un président inéligible et un membre extérieur votant

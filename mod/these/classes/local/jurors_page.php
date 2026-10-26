@@ -62,6 +62,33 @@ class jurors_page {
             exit;
         }
 
+        if ($action === 'prefill') {
+            if (optional_param('confirm', 0, PARAM_BOOL) && confirm_sesskey()) {
+                $count = jurors::prefill_from_course($PAGE->context);
+                redirect(
+                    $baseurl,
+                    get_string('jurorprefilldone', 'mod_these', $count),
+                    null,
+                    \core\output\notification::NOTIFY_SUCCESS
+                );
+            }
+            $missing = jurors::course_teachers_missing($PAGE->context);
+            if (!$missing) {
+                redirect($baseurl, get_string('jurorprefillnone', 'mod_these'), null, \core\output\notification::NOTIFY_INFO);
+            }
+            echo $OUTPUT->header();
+            echo $OUTPUT->heading(get_string('jurorprefill', 'mod_these'));
+            echo $navigation;
+            echo $OUTPUT->confirm(
+                get_string('jurorprefillconfirm', 'mod_these', count($missing))
+                    . $PAGE->get_renderer('mod_these')->render(new output\bullet_list(array_map('fullname', $missing))),
+                new moodle_url($baseurl, ['action' => 'prefill', 'confirm' => 1, 'sesskey' => sesskey()]),
+                $baseurl
+            );
+            echo $OUTPUT->footer();
+            exit;
+        }
+
         if ($action === 'edit') {
             $form = new juror_form(new moodle_url($baseurl, ['action' => 'edit', 'jurorid' => $jurorid]));
             if ($form->is_cancelled()) {
@@ -103,6 +130,11 @@ class jurors_page {
         echo $renderer->render(new output\single_button_block(
             new moodle_url($baseurl, ['action' => 'edit']),
             get_string('juroradd', 'mod_these'),
+            'get'
+        ));
+        echo $renderer->render(new output\single_button_block(
+            new moodle_url($baseurl, ['action' => 'prefill']),
+            get_string('jurorprefill', 'mod_these'),
             'get'
         ));
 

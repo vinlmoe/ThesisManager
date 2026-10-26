@@ -128,6 +128,83 @@ class jurors {
     }
 
     /**
+     * Enseignant de l'annuaire, actif ou retiré, ayant cette adresse ou, à défaut, ces nom et prénom.
+     *
+     * @param string|null $email
+     * @param string $lastname
+     * @param string $firstname
+     * @return \stdClass|null
+     */
+    public static function find_existing($email, $lastname, $firstname) {
+        global $DB;
+        $email = trim((string) $email);
+        $existing = $email !== '' ? $DB->get_record('these_juror', ['email' => $email], 'id', IGNORE_MULTIPLE) : null;
+        if (!$existing) {
+            $existing = $DB->get_record_select(
+                'these_juror',
+                'LOWER(lastname) = LOWER(:lastname) AND LOWER(firstname) = LOWER(:firstname)',
+                ['lastname' => trim($lastname), 'firstname' => trim($firstname)],
+                'id',
+                IGNORE_MULTIPLE
+            );
+        }
+        return $existing ?: null;
+    }
+
+    /**
+     * Enseignants inscrits au cours pouvant diriger une thèse (enseignants non éditeurs), absents de
+     * l'annuaire. La DEVE (capacité ou rôle de service, en pratique l'enseignant éditeur) et la
+     * bibliothèque en sont exclues.
+     *
+     * @param \context $context Contexte de l'activité (Gestion ou Suivi des thèses) ou du cours.
+     * @return array id => utilisateur, triés par nom.
+     */
+    public static function course_teachers_missing(\context $context) {
+        $coursecontext = $context->get_course_context();
+        $users = get_enrolled_users($coursecontext, 'mod/these:direct', 0, 'u.*', 'u.lastname ASC, u.firstname ASC', 0, 0, true);
+        $missing = [];
+        foreach ($users as $user) {
+            if (
+                has_capability('mod/these:managedeve', $coursecontext, $user)
+                    || has_capability('mod/these:managelibrary', $coursecontext, $user)
+                    || these_user_has_service_role($coursecontext, $user->id, 'deve')
+                    || these_user_has_service_role($coursecontext, $user->id, 'library')
+                    || self::find_existing($user->email, $user->lastname, $user->firstname)
+            ) {
+                continue;
+            }
+            $missing[$user->id] = $user;
+        }
+        return $missing;
+    }
+
+    /**
+     * Préremplit l'annuaire avec les enseignants du cours qui n'y sont pas (voir
+     * course_teachers_missing()) : titre Dr, statut maître de conférences et établissement par
+     * défaut, à vérifier par la DEVE. Les enseignants déjà présents ne sont pas modifiés.
+     *
+     * @param \context $context
+     * @return int Nombre d'enseignants ajoutés.
+     */
+    public static function prefill_from_course(\context $context) {
+        $institution = (string) get_config('mod_these', 'institution');
+        $count = 0;
+        foreach (self::course_teachers_missing($context) as $user) {
+            self::save((object) [
+                'title' => 'Dr',
+                'lastname' => $user->lastname,
+                'firstname' => $user->firstname,
+                'email' => $user->email,
+                'status' => 'mcf',
+                'institution' => $institution,
+                'active' => 1,
+            ]);
+            $count++;
+        }
+        return $count;
+    }
+
+    /**
      * « Pr NOM Prénom ».
      *
      * @param \stdClass $juror
@@ -273,16 +350,7 @@ class jurors {
                 $result->errors[] = get_string('jurorimportbadline', 'mod_these', $lineno);
                 continue;
             }
-            $existing = $email !== '' ? $DB->get_record('these_juror', ['email' => $email], 'id', IGNORE_MULTIPLE) : null;
-            if (!$existing) {
-                $existing = $DB->get_record_select(
-                    'these_juror',
-                    'LOWER(lastname) = LOWER(:lastname) AND LOWER(firstname) = LOWER(:firstname)',
-                    ['lastname' => trim($row['lastname']), 'firstname' => trim($row['firstname'])],
-                    'id',
-                    IGNORE_MULTIPLE
-                );
-            }
+            $existing = self::find_existing($email, $row['lastname'], $row['firstname']);
             self::save((object) [
                 'id' => $existing->id ?? 0,
                 'title' => $title,
