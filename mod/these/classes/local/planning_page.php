@@ -117,7 +117,7 @@ class planning_page {
                 'devenumber' => get_string('devenumber', 'mod_these'),
             ];
             \core\dataformat::download_data($filename, $dataformat, $columns, $defenses, function ($defense) use ($columns) {
-                return array_intersect_key(these_defense_row($defense), $columns);
+                return rendering::spreadsheet_safe(array_intersect_key(these_defense_row($defense), $columns));
             });
             die();
         }

@@ -43,8 +43,10 @@ if ((int) $dossier->status < THESE_STATUS_DEFENSE_VALIDATED) {
     throw new moodle_exception('invalidparameter', 'debug');
 }
 $result = these_notify_jury($these, $cm, $dossier, true);
-$message = get_string('juryaccessresent', 'mod_these', $result->sent)
-    . ($result->missing ? ' ' . get_string('jurynotifiedmissing', 'mod_these', implode(', ', $result->missing)) : '');
+$message = get_string('juryaccessresent', 'mod_these', $result->sent);
+if ($result->missing) {
+    $message .= ' ' . get_string('jurynotifiedmissing', 'mod_these', implode(', ', array_map('s', $result->missing)));
+}
 redirect(
     new moodle_url('/mod/these/dossier.php', ['id' => $cm->id, 'dossierid' => $dossier->id]),
     $message,

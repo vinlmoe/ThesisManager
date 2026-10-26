@@ -42,30 +42,36 @@ class import {
     }
 
     /**
-     * Retrouve un utilisateur par identifiant de connexion, adresse de courriel ou numéro
-     * d'identification, dans cet ordre.
+     * Retrouve un utilisateur, parmi des candidats donnés, par identifiant de connexion, adresse de
+     * courriel ou numéro d'identification, dans cet ordre. L'import ne résout jamais une adresse ou un
+     * numéro hors des participants du cours : il ne doit ni créer un dossier pour un utilisateur non
+     * inscrit, ni permettre de retrouver le nom de n'importe quel compte du site.
      *
      * @param string $value
+     * @param stdClass[] $candidates Utilisateurs admis (étudiants pouvant déposer, ou directeurs).
      * @return stdClass|null
      */
-    public static function find_user($value) {
-        global $CFG, $DB;
-
+    public static function find_user($value, array $candidates) {
         $value = trim($value);
         if ($value === '') {
             return null;
         }
-        $user = $DB->get_record('user', ['username' => core_text::strtolower($value), 'mnethostid' => $CFG->mnet_localhost_id,
-            'deleted' => 0]);
-        if (!$user) {
-            $users = $DB->get_records_select('user', 'LOWER(email) = LOWER(?) AND deleted = 0', [$value], 'id', '*', 0, 2);
-            $user = count($users) === 1 ? reset($users) : null;
+        $lower = core_text::strtolower($value);
+        foreach ($candidates as $user) {
+            if (core_text::strtolower((string) $user->username) === $lower) {
+                return $user;
+            }
         }
-        if (!$user) {
-            $users = $DB->get_records('user', ['idnumber' => $value, 'deleted' => 0], 'id', '*', 0, 2);
-            $user = count($users) === 1 ? reset($users) : null;
+        foreach (['email' => $lower, 'idnumber' => $value] as $field => $expected) {
+            $matches = array_filter($candidates, function ($user) use ($field, $expected) {
+                $actual = (string) $user->$field;
+                return $actual !== '' && ($field === 'email' ? core_text::strtolower($actual) : $actual) === $expected;
+            });
+            if (count($matches) === 1) {
+                return reset($matches);
+            }
         }
-        return $user ?: null;
+        return null;
     }
 
     /**
@@ -103,6 +109,11 @@ class import {
             }
         }
 
+        $cm = get_coursemodule_from_instance('these', $these->id, 0, false, MUST_EXIST);
+        $context = \context_module::instance($cm->id);
+        $students = get_enrolled_users($context, 'mod/these:submit', 0, 'u.*', null, 0, 0, true);
+        $directors = these_get_potential_directors($context);
+
         $report = [];
         $seen = [];
         $numbers = [];
@@ -119,8 +130,8 @@ class import {
             $values += array_fill_keys(these_import_columns(), '');
             $result = ['line' => $line, 'student' => $values['student'], 'ok' => false, 'message' => ''];
 
-            $student = these_find_user($values['student']);
-            $director = $values['director'] !== '' ? these_find_user($values['director']) : null;
+            $student = self::find_user($values['student'], $students);
+            $director = $values['director'] !== '' ? self::find_user($values['director'], $directors) : null;
             if (!$student) {
                 $result['message'] = get_string('importusernotfound', 'mod_these', s($values['student']));
             } else if (
