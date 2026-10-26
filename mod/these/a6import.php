@@ -79,7 +79,7 @@ if ($report !== null) {
         return $row['ok'];
     }));
     echo $OUTPUT->notification(
-        get_string(!empty($data->dryrun) ? 'importdryrunresult' : 'importresult', 'mod_these', (object) [
+        get_string(!empty($data->dryrun) ? 'a6dryrunresult' : 'a6result', 'mod_these', (object) [
             'ok' => $ok,
             'errors' => count($report) - $ok,
         ]),

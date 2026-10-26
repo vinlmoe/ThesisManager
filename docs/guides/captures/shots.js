@@ -637,7 +637,14 @@ const steps = {
     const p = await open(await as('sbonnet'), these('a6import.php'));
     const csv = sample('validations-a6.csv');
     fs.writeFileSync(csv, 'etudiant;date;ecole\nlucas;01/07/2025;Lyon\nromain;03/07/2025;Lyon\nsarah;non;\ninconnu;01/07/2025;\n');
-    await upload(p, 'a6file', csv);
+    // Sélecteur d'un seul fichier (filepicker) : bouton « Choisir un fichier ».
+    await p.locator('#fitem_id_a6file .fp-btn-choose').first().click();
+    await p.locator('.fp-repo-name', { hasText: 'Upload a file' }).first().click();
+    const input = p.locator('input[name="repo_upload_file"]').first();
+    await input.waitFor({ state: 'attached', timeout: 15000 });
+    await input.setInputFiles(csv);
+    await p.locator('.fp-upload-btn:visible').first().click();
+    await p.locator('#fitem_id_a6file .filepicker-filename a').first().waitFor({ timeout: 15000 });
     await Promise.all([p.waitForNavigation(), p.click('#id_submitbutton')]);
     await grow(p);
     await upto(p, '108_import_a6');
@@ -648,7 +655,7 @@ const steps = {
   },
   async '107_calendrier'() {
     const p = await open(await as('camille'), url('/calendar/view.php?view=upcoming'));
-    await region(p, '107_calendrier', '[data-region="event-item"]', '[data-region="event-item"]');
+    await region(p, '107_calendrier', '#region-main div.event');
   },
   async '106_liste_corps_enseignant'() {
     const p = await as('sbonnet');
