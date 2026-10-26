@@ -239,7 +239,14 @@ $advance = function (stdClass $student, array $spec, int $target) use (
                 'bsummaryfr' => $spec['summary'], 'bsummaryen' => 'Summary of the study.',
                 'bdiffusion' => 1, 'bembargo' => !empty($spec['embargo']) ? 1 : 0,
                 'bembargoreason' => $spec['embargo'] ?? '',
+                'ethicsnumber' => '',
             ]);
+            // Grille de conformité remplie par l'étudiant : tous les éléments cochés.
+            foreach (these_get_grid_items(these_settings_scope($these)) as $items) {
+                foreach (array_keys($items) as $item) {
+                    $data->{'grid_' . $item} = 1;
+                }
+            }
             these_save_defense($these, $cm, $d, $data, true, $student->id, $sig($student));
         },
         THESE_STATUS_DEFENSE_APPROVED => function ($d) use ($these, $cm, $director, $sig, $reload) {

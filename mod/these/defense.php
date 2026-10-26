@@ -77,6 +77,10 @@ foreach (['manuscript', 'defensedocs'] as $filearea) {
 $formdata->proposeddate = $dossier->proposeddate ?: null;
 $formdata->titleen = $dossier->titleen;
 $formdata->conclusions = $dossier->conclusions;
+$formdata->ethicsnumber = $dossier->ethicsnumber;
+foreach (these_get_grid($dossier) as $item => $checked) {
+    $formdata->{'grid_' . $item} = $checked;
+}
 // Données de l'étudiant : celles déjà enregistrées, à défaut son profil et sa fiche de sujet.
 $bordereau = these_get_bordereau($dossier) + [
     'birthname' => core_text::strtoupper($USER->lastname),

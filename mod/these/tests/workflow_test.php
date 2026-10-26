@@ -353,4 +353,37 @@ final class workflow_test extends these_testcase {
         $dossier = $this->reload($dossier->id);
         $this->assertEquals(THESE_STATUS_DEFENSE_SUBMITTED, $dossier->status);
     }
+
+    /**
+     * Grille de conformité : remplie et attestée par l'étudiant au dépôt de la soutenance, elle est
+     * enregistrée au dossier et préremplit ensuite la validation du directeur.
+     */
+    public function test_student_fills_conformity_grid(): void {
+        $this->setup_activity();
+        $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
+            'status' => THESE_STATUS_ACTIVE, 'directorid' => $this->director->id,
+        ]);
+        $data = $this->defense_data();
+        $data->ethicsnumber = '2526';
+        $keys = [];
+        foreach (these_get_grid_items(these_settings_scope($this->these)) as $items) {
+            foreach (array_keys($items) as $key) {
+                $keys[] = $key;
+                $data->{'grid_' . $key} = 1;
+            }
+        }
+        $data->{'grid_' . $keys[0]} = 0;
+        these_save_defense($this->these, $this->cm, $dossier, $data, false, $this->student->id);
+
+        $dossier = $this->reload($dossier->id);
+        $this->assertSame('2526', $dossier->ethicsnumber);
+        $grid = these_get_grid($dossier);
+        $this->assertSame(count($keys), count($grid));
+        $this->assertSame(0, $grid[$keys[0]]);
+        $this->assertSame(1, $grid[$keys[1]]);
+
+        // Un enregistrement sans grille (formulaire d'une autre étape) ne l'efface pas.
+        these_save_defense($this->these, $this->cm, $dossier, $this->defense_data(), false, $this->student->id);
+        $this->assertSame($grid, these_get_grid($this->reload($dossier->id)));
+    }
 }

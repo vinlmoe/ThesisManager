@@ -818,6 +818,12 @@ $string['griditemadd'] = 'Ajouter {no} élément(s)';
 $string['griditemssaved'] = 'La grille de conformité est enregistrée.';
 $string['griditemsreset'] = "Rétablir la grille d'origine";
 $string['gridrequired'] = 'Élément à valider.';
+$string['gridstudenthelp'] = "Cochez chaque point que respecte votre manuscrit. Votre directeur vérifiera cette grille, la "
+    . "complétera au besoin et la signera en validant votre soutenance.";
+$string['gridstudentconfirm'] = "J'atteste que mon manuscrit respecte les points cochés de la grille de conformité";
+$string['gridstudentconfirmrequired'] = "Attestez la grille de conformité avant de soumettre le dossier.";
+$string['gridprefilledbystudent'] = "Grille préremplie et attestée par l'étudiant à son dépôt : vérifiez chaque point avant "
+    . "de signer.";
 $string['gridquestion'] = 'La question scientifique est clairement posée et identifiée.';
 $string['gridanswer'] = 'La réponse bibliographique ou expérimentale est satisfaisante.';
 $string['gridbiblio'] = 'La bibliographie est complète, pertinente et actuelle.';

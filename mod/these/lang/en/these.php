@@ -810,6 +810,12 @@ $string['griditemconditional'] = 'Depending on the thesis (optional)';
 $string['griditemadd'] = 'Add {no} item(s)';
 $string['griditemssaved'] = 'The conformity grid has been saved.';
 $string['griditemsreset'] = 'Restore the original grid';
+$string['gridstudenthelp'] = 'Tick each point your manuscript complies with. Your supervisor will check this list, complete '
+    . 'it if needed and sign it when validating your defence.';
+$string['gridstudentconfirm'] = 'I certify that my manuscript complies with the ticked points of the compliance checklist';
+$string['gridstudentconfirmrequired'] = 'Certify the compliance checklist before submitting the file.';
+$string['gridprefilledbystudent'] = 'Checklist prefilled and certified by the student when submitting: check each point before '
+    . 'signing.';
 $string['gridrequired'] = 'Item to validate.';
 $string['gridquestion'] = 'The scientific question is clearly stated and identified.';
 $string['gridanswer'] = 'The bibliographic or experimental answer is satisfactory.';

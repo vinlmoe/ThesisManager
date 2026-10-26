@@ -85,6 +85,7 @@ $mform = new review_form($PAGE->url, [
     'returnto' => $step['returnto'],
     'theseid' => $these->id,
     'scope' => these_settings_scope($these),
+    'gridprefilled' => !empty(these_get_grid($dossier)),
     'minjury' => $these->minjury,
     'jurycount' => count($jury),
     'jurorids' => array_map('intval', array_column($jury, 'jurorid')),

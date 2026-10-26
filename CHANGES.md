@@ -13,7 +13,14 @@ de version recalés sur la date. Les numéros entre parenthèses des sections de
 développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
 été étiquetée.
 
-## mod_these 0.17.0 (2026102605) — signature sur place de l'étudiant et du directeur, vérification d'identité préalable
+## mod_these 0.17.0 (2026102606) — signature sur place de l'étudiant et du directeur, vérification d'identité préalable, grille remplie par l'étudiant
+
+- Grille de conformité remplie par l'étudiant : au dépôt de la soutenance, il
+  renseigne le numéro d'avis du comité d'éthique, coche les éléments de la
+  grille (ceux qui ne sont pas « selon la thèse » sont obligatoires) et atteste
+  qu'elle correspond à son manuscrit. Le directeur la reçoit préremplie
+  (« Grille préremplie et attestée par l'étudiant »), la vérifie, la corrige au besoin et
+  la signe à sa validation. Un brouillon enregistré conserve la grille.
 
 - Signature sur place ouverte à l'étudiant et au directeur (suivi des
   signatures, « Signatures à recueillir ») pour les documents dont la signature

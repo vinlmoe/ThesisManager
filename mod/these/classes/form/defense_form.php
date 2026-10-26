@@ -126,6 +126,27 @@ class defense_form extends \moodleform {
         }
         $mform->addHelpButton('bkeywordgroup', 'bkeywords', 'mod_these');
 
+        // Grille de conformité : remplie et attestée par l'étudiant, puis vérifiée et signée par le
+        // directeur à la validation (formulaire prérempli).
+        $mform->addElement('header', 'gridheader', get_string('docgrid', 'mod_these'));
+        $mform->addElement('static', 'gridhelp', '', get_string('gridstudenthelp', 'mod_these'));
+        $mform->addElement('text', 'ethicsnumber', get_string('ethicsnumber', 'mod_these'), ['size' => 20]);
+        $mform->setType('ethicsnumber', PARAM_TEXT);
+        foreach (these_get_grid_items(these_settings_scope($this->_customdata['these'])) as $section => $items) {
+            $mform->addElement(
+                'static',
+                'gridsection' . $section,
+                '',
+                \html_writer::tag('strong', get_string('gridsection' . $section, 'mod_these'))
+            );
+            foreach ($items as $key => $item) {
+                $label = format_string($item->label) . ($item->conditional
+                    ? ' ' . \html_writer::span(get_string('gridconditional', 'mod_these'), 'text-muted') : '');
+                $mform->addElement('advcheckbox', 'grid_' . $key, '', $label);
+            }
+        }
+        $mform->addElement('advcheckbox', 'gridconfirm', '', get_string('gridstudentconfirm', 'mod_these'));
+
         // Conclusions, signées ensuite par le directeur, le président du jury et les autorités.
         $mform->addElement('header', 'conclusionsheader', get_string('docconclusions', 'mod_these'));
         $mform->addElement('textarea', 'conclusions', get_string('conclusionstext', 'mod_these'), [
@@ -201,6 +222,17 @@ class defense_form extends \moodleform {
         }
         if (trim((string) $data['defenselocation']) === '') {
             $errors['defenselocation'] = get_string('required');
+        }
+        // Grille de conformité : éléments obligatoires cochés et attestation de l'étudiant.
+        foreach (these_get_grid_items(these_settings_scope($this->_customdata['these'])) as $items) {
+            foreach ($items as $key => $item) {
+                if (!$item->conditional && empty($data['grid_' . $key])) {
+                    $errors['grid_' . $key] = get_string('gridrequired', 'mod_these');
+                }
+            }
+        }
+        if (empty($data['gridconfirm'])) {
+            $errors['gridconfirm'] = get_string('gridstudentconfirmrequired', 'mod_these');
         }
         $juryerror = these_validate_jury(these_extract_submitted_jury($data), $this->_customdata['minjury']);
         if ($juryerror !== null) {

@@ -246,6 +246,15 @@ const steps = {
     await check(p, '#id_signatureconsent');
     await upto(p, '84_changement_sujet', form);
   },
+  async '101_etudiant_grille_conformite'() {
+    const p = await open(await as('lucas'), these('defense.php', { dossierid: ids.lucas }));
+    await only(p, ['Grille de conformité de la thèse']);
+    const grid = p.locator(`${form} input[type=checkbox][name^="grid"]`);
+    for (let i = 0; i < await grid.count(); i++) {
+      await grid.nth(i).check();
+    }
+    await region(p, '101_etudiant_grille_conformite', fieldset('Grille de conformité de la thèse'));
+  },
   async '52_questionnaire_etudiant'() {
     const p = await open(await as('lucas'), these('questionnaire.php', { dossierid: ids.lucas }));
     const select = p.locator(`${form} select`).first();
@@ -331,10 +340,6 @@ const steps = {
   },
   async '70_directeur_valide_soutenance'() {
     const p = await open(await as('hdurand'), these('review.php', { dossierid: ids.chloe }));
-    const grid = p.locator(`${form} input[type=checkbox][name^="grid"]`);
-    for (let i = 0; i < await grid.count(); i++) {
-      await grid.nth(i).check();
-    }
     const title = p.locator('#id_directortitle');
     if (await title.count()) {
       await title.fill('Maître de conférences HDR');

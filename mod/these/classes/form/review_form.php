@@ -75,6 +75,12 @@ class review_form extends \moodleform {
                 // Grille de conformité du manuscrit.
                 $mform->addElement('header', 'gridheader', get_string('docgrid', 'mod_these'));
                 $mform->setExpanded('gridheader');
+                if (!empty($this->_customdata['gridprefilled'])) {
+                    $mform->addElement('static', 'gridprefilled', '', \html_writer::span(
+                        get_string('gridprefilledbystudent', 'mod_these'),
+                        'alert alert-info d-block'
+                    ));
+                }
                 $mform->addElement('text', 'ethicsnumber', get_string('ethicsnumber', 'mod_these'), ['size' => 20]);
                 $mform->setType('ethicsnumber', PARAM_TEXT);
                 // Éléments de la grille de l'activité (modifiables par la DEVE) : la grille signée
