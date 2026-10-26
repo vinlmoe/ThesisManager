@@ -60,5 +60,73 @@ function xmldb_these_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2026102504, 'these');
     }
 
+    if ($oldversion < 2026102602) {
+        // Plus aucun réglage du site : rôles des services, agents DEVE signataires, établissement,
+        // signataires des documents et contrat type deviennent des paramètres de chaque activité
+        // « Suivi des thèses » et de chaque activité « Gestion des thèses » (utilisés quand aucune
+        // activité de suivi ne la suit). Les valeurs du site y sont recopiées, puis supprimées.
+        $dbman = $DB->get_manager();
+        $table = new xmldb_table('these_setting');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('theseid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('synthesisid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('name', XMLDB_TYPE_CHAR, '50', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('value', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_index('owner_name', XMLDB_INDEX_UNIQUE, ['theseid', 'synthesisid', 'name']);
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        $names = ['deverole', 'libraryrole', 'deveagent', 'institution', 'university', 'hetopurl', 'devename', 'devetitle',
+            'dgtitle', 'dgname', 'dgemail', 'visaplace', 'ccemname', 'ccememail', 'ucbltitle', 'ucblname', 'ucblemail'];
+        $config = (array) get_config('mod_these');
+        $values = array_intersect_key($config, array_flip($names));
+        $owners = [];
+        foreach ($DB->get_records('these', null, '', 'id') as $these) {
+            $cm = get_coursemodule_from_instance('these', $these->id, 0, false, IGNORE_MISSING);
+            if ($cm) {
+                $owners[] = ['theseid' => (int) $these->id, 'synthesisid' => 0, 'component' => 'mod_these',
+                    'contextid' => context_module::instance($cm->id)->id];
+            }
+        }
+        if ($dbman->table_exists('thesesynthesis')) {
+            foreach ($DB->get_records('thesesynthesis', null, '', 'id') as $synthesis) {
+                $cm = get_coursemodule_from_instance('thesesynthesis', $synthesis->id, 0, false, IGNORE_MISSING);
+                if ($cm) {
+                    $owners[] = ['theseid' => 0, 'synthesisid' => (int) $synthesis->id, 'component' => 'mod_thesesynthesis',
+                        'contextid' => context_module::instance($cm->id)->id];
+                }
+            }
+        }
+        $fs = get_file_storage();
+        $contracts = $fs->get_area_files(context_system::instance()->id, 'mod_these', 'contracttemplate', 0, 'id', false);
+        $contract = reset($contracts);
+        foreach ($owners as $owner) {
+            $conditions = ['theseid' => $owner['theseid'], 'synthesisid' => $owner['synthesisid']];
+            foreach ($values as $name => $value) {
+                if (!$DB->record_exists('these_setting', $conditions + ['name' => $name])) {
+                    $DB->insert_record('these_setting', (object) ($conditions + ['name' => $name, 'value' => (string) $value]));
+                }
+            }
+            if ($contract && !$fs->get_area_files($owner['contextid'], $owner['component'], 'contracttemplate', 0, 'id', false)) {
+                $fs->create_file_from_storedfile([
+                    'contextid' => $owner['contextid'],
+                    'component' => $owner['component'],
+                    'filearea' => 'contracttemplate',
+                    'itemid' => 0,
+                    'filepath' => '/',
+                ], $contract);
+            }
+        }
+        foreach ($names as $name) {
+            unset_config($name, 'mod_these');
+        }
+        unset_config('contracttemplate', 'mod_these');
+        $fs->delete_area_files(context_system::instance()->id, 'mod_these', 'contracttemplate');
+
+        upgrade_mod_savepoint(true, 2026102602, 'these');
+    }
+
     return true;
 }

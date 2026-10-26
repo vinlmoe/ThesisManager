@@ -314,10 +314,11 @@ function these_render_document_pdf(stdClass $these, context $context, stdClass $
 /**
  * Voir \mod_these\local\doctemplates::contract_template_problem().
  *
+ * @param stdClass $these
  * @return string|null 'contracttemplatemissing', 'contracttemplateunreadable' ou null.
  */
-function these_contract_template_problem() {
-    return \mod_these\local\doctemplates::contract_template_problem();
+function these_contract_template_problem(stdClass $these) {
+    return \mod_these\local\doctemplates::contract_template_problem($these);
 }
 
 /**
@@ -379,10 +380,11 @@ function these_doctemplate_variables(array $data, $prefix = '') {
 /**
  * Voir \mod_these\local\doctemplates::get_contract_template().
  *
+ * @param stdClass $these
  * @return string|null Contenu du PDF.
  */
-function these_get_contract_template() {
-    return \mod_these\local\doctemplates::get_contract_template();
+function these_get_contract_template(stdClass $these) {
+    return \mod_these\local\doctemplates::get_contract_template($these);
 }
 
 /**

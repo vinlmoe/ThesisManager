@@ -74,7 +74,8 @@ présentées par rubrique ; captures plus grandes dans la page. \\
 éditeurs inscrits au cours. \\
 2.6 & 26 octobre 2026 & Modèles des documents sans valeur propre à un
 établissement ; images des modèles à déposer par la DEVE ; capture de
-l'annuaire du jury avec le bouton de préremplissage. \\
+l'annuaire du jury avec le bouton de préremplissage ; plus aucun réglage du
+site : paramètres du circuit dans l'activité de suivi. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -225,17 +226,19 @@ Bibliothèque & \og Bibliothèque (thèses)\fg{} (créé par le module) & \textt
 Comme dans StageCompagnon, la DEVE est reconnue au rôle standard \og
 Enseignant\fg{}. La bibliothèque, qui n'a pas d'équivalent, dispose d'un
 \textbf{rôle interne au module}, \og Bibliothèque (thèses)\fg{}, créé à
-l'installation. Les deux correspondances se règlent dans
-\chemin{Administration du site > Plugins > Modules d'activité > Gestion des
-thèses} :
+l'installation. Les deux correspondances se règlent dans les
+\bouton{Paramètres du circuit} de l'activité \og Suivi des thèses\fg{}
+(section~\ref{sec:parametres}) :
 
 \begin{description}
   \item[Rôle DEVE] par défaut \og Enseignant\fg{} ;
   \item[Rôle Bibliothèque] par défaut \og Bibliothèque (thèses)\fg{}.
 \end{description}
 
-Un rôle choisi ici donne les droits du service même sans les capacités du
-module. Il peut être attribué dans le cours, dans sa catégorie ou \textbf{au
+Choisir le rôle DEVE revient à en donner les droits : seul un utilisateur qui
+peut modifier les permissions des rôles dans l'activité (gestionnaire) change
+ces deux rôles. Un rôle choisi ici donne les droits du service même sans les
+capacités du module. Il peut être attribué dans le cours, dans sa catégorie ou \textbf{au
 niveau du site} (\chemin{Administration du site > Utilisateurs > Permissions >
 Attribution des rôles système}) : les bibliothécaires accèdent alors à toutes
 les activités de gestion des thèses sans être inscrits aux cours.
@@ -247,9 +250,17 @@ apparaissent dans la liste des directeurs proposée à l'étudiant : tous les
 directeurs potentiels doivent donc être inscrits au cours.
 \end{astuce}
 
-\subsection{Réglages du site : documents et signataires}
+\subsection{Paramètres du circuit : documents et signataires}\label{sec:parametres}
 
-Dans la même page d'administration :
+Le module n'a \textbf{aucun réglage du site}. Rôles des services, agents
+signataires, signataires et textes des documents, contrat type : tout se règle
+dans l'activité \og Suivi des thèses\fg{}, bouton \bouton{Paramètres du
+circuit}, et vaut pour toutes les promotions qu'elle suit (comme les modèles des
+documents). Une activité \og Gestion des thèses\fg{} qu'aucune activité de suivi
+ne suit a ses propres paramètres, sous le même bouton ; suivie, elle renvoie à
+l'activité de suivi.
+
+\capture[0.85\linewidth]{24_parametres_circuit}{Paramètres du circuit, dans l'activité de suivi.}
 
 \begin{description}
   \item[Contrat type de diffusion électronique] le PDF officiel
@@ -268,8 +279,10 @@ Dans la même page d'administration :
   \item[Signataires] direction générale, président du CCEM, présidence de
         l'université : nom et adresse. Avec une adresse, le signataire reçoit un
         lien de signature ; sans adresse, la DEVE recueille sa signature sur place.
-  \item[Textes] établissement, lien HeTOP, lieu du visa, nom et qualité de la
-        direction des études (fiche d'agréments).
+  \item[Textes] établissement, université (avec son article : \og
+        l'Université \ldots\fg{}), lien HeTOP, lieu du visa, intitulés de la
+        direction générale et de la présidence de l'université, nom et qualité
+        de la direction des études (fiche d'agréments).
 \end{description}
 
 \subsection{Organisation recommandée}
@@ -813,8 +826,8 @@ décisions du jury.}
 % ===========================================================================
 \section{Agents DEVE signataires : pas à pas}\label{sec:agent}
 
-Les agents habilités à signer pour la DEVE (désignés dans \chemin{Administration
-du site > Plugins > Modules d'activité > Gestion des thèses}, réglage
+Les agents habilités à signer pour la DEVE (désignés dans les
+\bouton{Paramètres du circuit} de l'activité \og Suivi des thèses\fg{}, champ
 \bouton{Agents DEVE signataires}) signent le visa du dépôt de sujet, l'agrément
 administratif et la partie \og direction générale représentée par la DEVE\fg{}
 de la fiche d'agréments, une fois que l'équipe a tout vérifié.
@@ -946,7 +959,7 @@ l'empreinte SHA-256 du contenu signé ; un emplacement non signé reste vierge.
 
 Le contrat de diffusion électronique suit le modèle des conventions de stage :
 une page de données et de choix de l'auteur, puis le contrat officiel déposé
-dans les réglages du site, puis une page de signatures. L'attestation de
+dans les paramètres du circuit, puis une page de signatures. L'attestation de
 conformité de la bibliothèque, les convocations, la feuille de jury et le
 procès-verbal reprennent la même présentation.
 
@@ -1024,9 +1037,9 @@ suivantes, et la page indique pour chacune si elle est déposée ou à déposer
 
 Une image PNG à fond transparent, d'environ 300~points par pouce, s'imprime
 nettement. Les modèles d'origine ne contiennent aucun nom d'établissement ou de
-personne : ils reprennent les réglages du site (établissement, université,
-intitulés et noms des signataires) et, pour l'activité, la ville et l'adresse de
-la DEVE.
+personne : ils reprennent les paramètres du circuit (établissement,
+université, intitulés et noms des signataires) et, pour l'activité, la ville et
+l'adresse de la DEVE.
 
 \capture[0.85\linewidth]{43_modeles_documents}{Liste des modèles des documents, dans l'activité de suivi qui les partage.}
 
@@ -1426,8 +1439,9 @@ Le module ne fait pas de sauvegarde de lui-même. Activer les
 \textbf{sauvegardes automatisées de cours} de Moodle \emph{avec les données
 utilisateur}, et sauvegarder régulièrement le serveur (base de données et
 dossier \texttt{moodledata}) : l'annuaire du jury, les signatures enregistrées
-des utilisateurs, le contrat type et les réglages du site ne sont pas dans la
-sauvegarde d'une activité et ne sont protégés que par celle du serveur. Le
+des utilisateurs ne sont pas dans la
+sauvegarde d'une activité (les paramètres du circuit et le contrat type sont
+sauvegardés avec l'activité de suivi ou l'activité qui les porte) et ne sont protégés que par celle du serveur. Le
 transfert des paramètres (section~\ref{sec:transfert}) exporte la
 configuration d'une activité, jamais les dossiers.
 \end{attention}

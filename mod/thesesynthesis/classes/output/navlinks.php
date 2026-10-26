@@ -65,6 +65,7 @@ class navlinks implements \renderable, \templatable {
             $links[get_string('doctemplates', 'mod_these')] = new moodle_url('/mod/thesesynthesis/doctemplates.php', $id);
             $links[get_string('griditems', 'mod_these')] = new moodle_url('/mod/thesesynthesis/griditems.php', $id);
             $links[get_string('questions', 'mod_these')] = new moodle_url('/mod/thesesynthesis/questions.php', $id);
+            $links[get_string('scopesettings', 'mod_these')] = new moodle_url('/mod/thesesynthesis/parameters.php', $id);
         }
         if (has_capability('mod/thesesynthesis:managejurors', $this->context)) {
             $links[get_string('jurors', 'mod_these')] = new moodle_url('/mod/thesesynthesis/jurors.php', $id);

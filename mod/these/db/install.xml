@@ -256,6 +256,23 @@
         <INDEX NAME="owner_doctype" UNIQUE="true" FIELDS="theseid, synthesisid, doctype"/>
       </INDEXES>
     </TABLE>
+    <TABLE NAME="these_setting" COMMENT="Paramètre (rôles des services, signataires, textes des documents) d'une portée : activité Suivi des thèses ou activité Gestion des thèses qu'aucune ne suit">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="theseid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
+            COMMENT="Activité Gestion des thèses propriétaire, 0 pour un paramètre d'une activité Suivi des thèses"/>
+        <FIELD NAME="synthesisid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
+            COMMENT="Activité Suivi des thèses propriétaire (paramètre partagé par les activités qu'elle suit), 0 sinon"/>
+        <FIELD NAME="name" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="value" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="owner_name" UNIQUE="true" FIELDS="theseid, synthesisid, name"/>
+      </INDEXES>
+    </TABLE>
     <TABLE NAME="these_griditem" COMMENT="Élément de la grille de conformité d'une instance, modifiable par la DEVE">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>

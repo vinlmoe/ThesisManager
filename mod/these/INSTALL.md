@@ -31,8 +31,12 @@ l'installer.
 | Bibliothèque | Rôle dédié « Bibliothèque » | `mod/these:managelibrary`, `mod/these:viewall` |
 | Administration | Manager | Tous les droits |
 
-Les rôles des services se choisissent dans *Administration du site > Plugins >
-Modules d'activité > Gestion des thèses* :
+Le module n'a **aucun réglage du site**. Les rôles des services, comme tous les
+paramètres du circuit (voir 3 bis), se choisissent dans l'activité *Suivi des
+thèses*, bouton *Paramètres du circuit* ; une activité *Gestion des thèses*
+qu'aucune activité de suivi ne suit a les siens, sous le même bouton. Seul un
+utilisateur qui peut modifier les permissions des rôles dans l'activité
+(gestionnaire) change ces deux rôles :
 
 - **Rôle DEVE** (« Enseignant » par défaut, comme pour `mod_stage`) ;
 - **Rôle Bibliothèque** : le module crée à l'installation le rôle « Bibliothèque
@@ -72,10 +76,14 @@ l'étudiant comme directeurs.
 
 ## 3 bis. Documents officiels et signatures électroniques
 
-Réglages du site, rubrique *Documents* : **modèle PDF du contrat de diffusion**
-(E04 en vigueur), établissement, lien HeTOP, lieu du visa, direction des études
+*Paramètres du circuit* de l'activité *Suivi des thèses* (ou de l'activité
+*Gestion des thèses* qu'aucune activité de suivi ne suit) : **agents DEVE
+signataires**, **modèle PDF du contrat de diffusion** (E04 en vigueur),
+établissement, université, lien HeTOP, lieu du visa, direction des études
 (fiche d'agréments), puis nom, qualité et courriel des signataires extérieurs
-(direction générale, président de la CCEM, université).
+(direction générale, président de la CCEM, université). À la mise à jour vers
+0.15.0, les anciens réglages du site sont recopiés dans chaque activité puis
+supprimés.
 
 Les formulaires E01 (sujet), E02 (agréments), E03 (fiche signalétique), le
 bordereau ABES, le rapport, la grille de conformité et les conclusions sont
@@ -98,7 +106,7 @@ modifié peut être ramené à son origine (`doctemplates/<document>.html`).
 
 Les modèles d'origine ne contiennent aucune valeur propre à un établissement :
 nom de l'établissement et de l'université, intitulés et noms des signataires
-viennent des réglages du site (*Établissement*, *Université*, *Direction
+viennent des paramètres du circuit (*Établissement*, *Université*, *Direction
 générale*, *CCEM*, *Présidence de l'université*...), la ville et l'adresse de
 la DEVE de l'activité. Le module ne fournit aucun logo : la DEVE dépose, dans
 *Images des modèles*, `logo.png` (établissement), `ministere.png` (bloc-marque
@@ -213,8 +221,8 @@ signés.
   rapport conservés) ; le PV d'ajournement est archivé, les documents générés et
   les signatures de la soutenance sont supprimés, les accès du jury révoqués ;
   l'étudiant dépose un nouveau dossier de soutenance.
-- **Agent DEVE signataire** (réglage du site *Agent DEVE signataire* :
-  identifiant ou adresse du compte) : l'équipe DEVE valide sans signer ; l'agent
+- **Agents DEVE signataires** (paramètres du circuit, *Agents DEVE
+  signataires* : identifiants ou adresses des comptes) : l'équipe DEVE valide sans signer ; l'agent
   reçoit un courriel et signe le visa du sujet et l'agrément administratif depuis
   *Mes signatures* (`/mod/these/mysignatures.php`). Sans agent, la personne qui
   valide signe.

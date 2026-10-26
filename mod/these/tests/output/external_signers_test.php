@@ -44,8 +44,10 @@ final class external_signers_test extends output_testcase {
             json_encode(['diffusion' => 'internet', 'embargo' => 0]),
             ['id' => $dossier->id]
         );
-        set_config('dgname', 'Directrice & co', 'mod_these');
-        set_config('dgemail', 'dg@example.org', 'mod_these');
+        \mod_these\local\scopesettings::set(
+            these_local_scope($this->these),
+            ['dgname' => 'Directrice & co', 'dgemail' => 'dg@example.org']
+        );
         return $this->reload($dossier->id);
     }
 

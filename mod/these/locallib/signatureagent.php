@@ -69,19 +69,11 @@ function these_agent_slots() {
 /**
  * Voir \mod_these\local\signatureagent::deve_agents().
  *
+ * @param stdClass $these
  * @return stdClass[]
  */
-function these_deve_agents() {
-    return \mod_these\local\signatureagent::deve_agents();
-}
-
-/**
- * Voir \mod_these\local\signatureagent::deve_agent().
- *
- * @return stdClass|null
- */
-function these_deve_agent() {
-    return \mod_these\local\signatureagent::deve_agent();
+function these_deve_agents(stdClass $these) {
+    return \mod_these\local\signatureagent::deve_agents($these);
 }
 
 /**
@@ -89,10 +81,11 @@ function these_deve_agent() {
  *
  * @param string $slot
  * @param int $userid
+ * @param stdClass $these
  * @return bool
  */
-function these_signs_slot_at_validation($slot, $userid) {
-    return \mod_these\local\signatureagent::signs_slot_at_validation($slot, $userid);
+function these_signs_slot_at_validation($slot, $userid, stdClass $these) {
+    return \mod_these\local\signatureagent::signs_slot_at_validation($slot, $userid, $these);
 }
 
 /**

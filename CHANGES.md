@@ -13,16 +13,33 @@ de version recalés sur la date. Les numéros entre parenthèses des sections de
 développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
 été étiquetée.
 
-## mod_these 0.15.0 (2026102601) — modèles des documents sans valeur propre à un établissement
+## mod_these 0.15.0 (2026102602) et mod_thesesynthesis 0.5.0 (2026102600) — plus aucun réglage du site, modèles des documents sans valeur propre à un établissement
+
+- Plus aucun réglage du site (page d'administration du module supprimée). Rôles
+  DEVE et Bibliothèque, agents DEVE signataires, établissement, université,
+  signataires (direction générale, CCEM, présidence de l'université), lien
+  HeTOP, lieu du visa, direction des études et contrat type de diffusion sont
+  des **paramètres du circuit** : bouton « Paramètres du circuit » de l'activité
+  « Suivi des thèses », valables pour toutes les promotions qu'elle suit ; une
+  activité « Gestion des thèses » qu'aucune activité de suivi ne suit a les
+  siens, sous le même bouton. Nouvelle table `these_setting` ; le contrat type
+  est rangé dans la zone `contracttemplate` de l'activité. Les deux rôles ne
+  sont modifiables que par qui peut modifier les permissions des rôles dans
+  l'activité (gestionnaire) : choisir le rôle DEVE en donne les droits.
+- Mise à jour (`db/upgrade.php`, 2026102602) : les anciens réglages du site et
+  le contrat type sont recopiés dans chaque activité « Suivi des thèses » et
+  « Gestion des thèses », puis supprimés du site.
+- Sauvegarde et restauration : les paramètres du circuit et le contrat type
+  suivent l'activité qui les porte.
 
 - Modèles d'origine des documents PDF : plus aucun nom d'établissement, de
   personne ou d'adresse écrit en dur (VetAgro Sup, Université Claude Bernard
   Lyon 1, Marcy-l'Étoile, adresse de la DEVE, centre CICV, Vetagrotice), ni
   référence de formulaire (ENS-INI-P308-…). Ces valeurs viennent des réglages
-  du site (Établissement, nouvelle Université, intitulés de la direction
+  du circuit (Établissement, nouvelle Université, intitulés de la direction
   générale et de la présidence), de la ville et de l'adresse DEVE de
-  l'activité. Les réglages du site n'ont plus de valeur par défaut nominative ;
-  sur un site déjà installé, les valeurs enregistrées sont conservées.
+  l'activité. Ils n'ont plus de valeur par défaut nominative ; sur un site
+  déjà installé, les valeurs enregistrées sont reprises.
 - Images : le module n'en fournit plus aucune. Les modèles d'origine appellent
   `logo`, `ministere`, `universite`, `bibliotheque` et `abes`, à déposer par la
   DEVE dans *Images des modèles* ; la page indique celles qui manquent, et une

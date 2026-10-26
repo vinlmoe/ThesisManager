@@ -569,7 +569,7 @@ class dossiers {
             these_refresh_signatures($context, $dossier);
             $agentdoctypes = [];
             foreach ($step['sign'] as $slot => $doctypes) {
-                if (!these_signs_slot_at_validation($slot, $userid)) {
+                if (!these_signs_slot_at_validation($slot, $userid, $these)) {
                     // Emplacement de l'agent DEVE : il signe ensuite, depuis « Mes signatures ».
                     $agentdoctypes = array_merge($agentdoctypes, $doctypes);
                     continue;

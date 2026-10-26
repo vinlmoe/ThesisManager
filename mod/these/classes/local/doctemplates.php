@@ -19,7 +19,6 @@ namespace mod_these\local;
 use coding_exception;
 use context;
 use context_module;
-use context_system;
 use core_text;
 use stdClass;
 
@@ -368,7 +367,7 @@ class doctemplates {
         $b = these_get_bordereau($d);
         $agreementdata = these_get_agreement($d);
         $griddata = these_get_grid($d);
-        $config = (array) get_config('mod_these');
+        $config = scopesettings::get_all($src['scope'] ?? these_settings_scope($these));
 
         $day = function ($time) {
             return (int) $time ? userdate((int) $time, '%d/%m/%Y') : '';
@@ -889,8 +888,8 @@ class doctemplates {
         }
 
         // Contrat de diffusion, comme les conventions de mod_stage : page de données et de choix,
-        // contrat type officiel déposé dans les réglages du site, page de signatures.
-        $template = these_get_contract_template();
+        // contrat type officiel déposé dans les paramètres, page de signatures.
+        $template = these_get_contract_template($these);
         if ($template !== null) {
             try {
                 return these_merge_pdfs([
@@ -913,13 +912,14 @@ class doctemplates {
     }
 
     /**
-     * Problème du contrat type de diffusion déposé dans les réglages du site, qui empêche de produire
-     * le contrat complet : sans lui, le contrat n'est pas scellé et la DEVE en est avertie.
+     * Problème du contrat type de diffusion déposé dans les paramètres de l'activité, qui empêche de
+     * produire le contrat complet : sans lui, le contrat n'est pas scellé et la DEVE en est avertie.
      *
+     * @param stdClass $these
      * @return string|null 'contracttemplatemissing', 'contracttemplateunreadable' ou null.
      */
-    public static function contract_template_problem() {
-        $template = these_get_contract_template();
+    public static function contract_template_problem(stdClass $these) {
+        $template = these_get_contract_template($these);
         if ($template === null) {
             return 'contracttemplatemissing';
         }
@@ -1103,15 +1103,14 @@ class doctemplates {
     }
 
     /**
-     * Contrat type de diffusion électronique (PDF officiel), déposé dans les réglages du site.
+     * Contrat type de diffusion électronique (PDF officiel), déposé dans les paramètres de l'activité
+     * « Suivi des thèses » qui suit l'activité, sinon de l'activité elle-même.
      *
+     * @param stdClass $these
      * @return string|null Contenu du PDF.
      */
-    public static function get_contract_template() {
-        $fs = get_file_storage();
-        $files = $fs->get_area_files(context_system::instance()->id, 'mod_these', 'contracttemplate', 0, 'id', false);
-        $file = reset($files);
-        return $file ? $file->get_content() : null;
+    public static function get_contract_template(stdClass $these) {
+        return scopesettings::contract_template(these_settings_scope($these));
     }
 
     /**

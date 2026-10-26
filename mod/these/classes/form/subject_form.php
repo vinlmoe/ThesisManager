@@ -47,6 +47,8 @@ class subject_form extends \moodleform {
      * Defines the form fields.
      */
     public function definition() {
+        global $PAGE;
+
         $mform = $this->_form;
 
         $mform->addElement('hidden', 'id');
@@ -83,7 +85,7 @@ class subject_form extends \moodleform {
         $mform->addElement('text', 'keywords', get_string('subjectkeywords', 'mod_these'), ['size' => 80]);
         $mform->setType('keywords', PARAM_TEXT);
         $mform->addHelpButton('keywords', 'subjectkeywords', 'mod_these');
-        $hetop = (string) get_config('mod_these', 'hetopurl');
+        $hetop = (string) \mod_these\local\scopesettings::for_context($PAGE->context)['hetopurl'];
         if ($hetop !== '') {
             $mform->addElement('static', 'hetop', '', \html_writer::link(
                 $hetop,

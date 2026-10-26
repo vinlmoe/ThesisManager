@@ -99,6 +99,7 @@ function thesesynthesis_delete_instance($id) {
     }
     $DB->delete_records('these_question', ['synthesisid' => $id]);
     $DB->delete_records('these_doctemplate', ['synthesisid' => $id]);
+    $DB->delete_records('these_setting', ['synthesisid' => $id]);
     $DB->delete_records('these_griditem', ['synthesisid' => $id]);
     $DB->delete_records('thesesynthesis_link', ['synthesisid' => $id]);
     $DB->delete_records('thesesynthesis', ['id' => $id]);

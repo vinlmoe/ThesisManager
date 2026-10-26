@@ -53,6 +53,8 @@ class backup_these_activity_structure_step extends backup_activity_structure_ste
 
         $doctemplates = new backup_nested_element('doctemplates');
         $doctemplate = new backup_nested_element('doctemplate', ['id'], ['doctype', 'content', 'timemodified']);
+        $settings = new backup_nested_element('settings');
+        $setting = new backup_nested_element('setting', ['id'], ['name', 'value']);
 
         $griditems = new backup_nested_element('griditems');
         $griditem = new backup_nested_element('griditem', ['id'], [
@@ -109,6 +111,8 @@ class backup_these_activity_structure_step extends backup_activity_structure_ste
         $emailtemplates->add_child($emailtemplate);
         $these->add_child($doctemplates);
         $doctemplates->add_child($doctemplate);
+        $these->add_child($settings);
+        $settings->add_child($setting);
         $these->add_child($griditems);
         $griditems->add_child($griditem);
         $these->add_child($questions);
@@ -129,6 +133,7 @@ class backup_these_activity_structure_step extends backup_activity_structure_ste
         $these->set_source_table('these', ['id' => backup::VAR_ACTIVITYID]);
         $emailtemplate->set_source_table('these_email_template', ['theseid' => backup::VAR_PARENTID], 'id ASC');
         $doctemplate->set_source_table('these_doctemplate', ['theseid' => backup::VAR_PARENTID], 'id ASC');
+        $setting->set_source_table('these_setting', ['theseid' => backup::VAR_PARENTID], 'id ASC');
         $griditem->set_source_table('these_griditem', ['theseid' => backup::VAR_PARENTID], 'sortorder ASC, id ASC');
         $question->set_source_table('these_question', ['theseid' => backup::VAR_PARENTID], 'sortorder ASC, id ASC');
 
@@ -153,6 +158,7 @@ class backup_these_activity_structure_step extends backup_activity_structure_ste
 
         $these->annotate_files('mod_these', 'intro', null);
         $these->annotate_files('mod_these', 'docimages', null);
+        $these->annotate_files('mod_these', 'contracttemplate', null);
         foreach (THESE_FILEAREAS as $filearea) {
             $dossier->annotate_files('mod_these', $filearea, 'id');
         }

@@ -565,13 +565,19 @@ $string['privacy:metadata:jury:student'] = "Nom de l'étudiant.";
 $string['privacy:metadata:jury:title'] = 'Titre de la thèse.';
 $string['privacy:metadata:jury:defensedate'] = 'Date et lieu de la soutenance.';
 
-// Rôles des services (réglages du site).
+// Paramètres du circuit (activité « Suivi des thèses », sinon l'activité elle-même ; aucun réglage du site).
+$string['scopesettings'] = 'Paramètres du circuit';
+$string['scopesettings_desc'] = "Rôles des services, agents DEVE signataires, établissement, université, signataires des documents et "
+    . "contrat type de diffusion de cette activité. Aucun n'est un réglage du site.";
+$string['scopesettingsshared_desc'] = "Rôles des services, agents DEVE signataires, établissement, université, signataires des documents "
+    . "et contrat type de diffusion communs à toutes les activités « Gestion des thèses » suivies. Aucun n'est un réglage du site.";
 $string['settingsroles'] = 'Rôles des services';
 $string['settingsroles_desc'] = "Comme la DEVE est reconnue au rôle « Enseignant », la bibliothèque est reconnue au rôle choisi ici. "
     . "Le rôle peut être attribué dans le cours, dans sa catégorie ou au niveau du site (il donne alors accès à toutes les activités "
     . "de gestion des thèses sans inscription). Les capacités du module restent également prises en compte.";
 $string['deverole'] = 'Rôle DEVE';
-$string['deverole_desc'] = 'Rôle dont les détenteurs agissent comme DEVE dans les activités de gestion des thèses.';
+$string['deverole_desc'] = "Rôle dont les détenteurs agissent comme DEVE dans les activités de gestion des thèses. Modifiable par qui "
+    . "peut modifier les permissions des rôles dans l'activité (gestionnaire).";
 $string['libraryrole'] = 'Rôle Bibliothèque';
 $string['libraryrole_desc'] = "Rôle dont les détenteurs agissent comme bibliothèque. Par défaut, le rôle interne « Bibliothèque "
     . "(thèses) » créé à l'installation du module.";
@@ -579,7 +585,7 @@ $string['libraryrolename'] = 'Bibliothèque (thèses)';
 $string['libraryroledescription'] = "Rôle interne du module Gestion des thèses : enregistrement des sujets au référentiel documentaire et "
     . "attestation de conformité des manuscrits. À attribuer au niveau du site, d'une catégorie ou d'un cours.";
 
-// Documents (réglages du site).
+// Documents (paramètres du circuit).
 $string['settingsdocuments'] = 'Documents et signataires';
 $string['settingsdocuments_desc'] = "En-tête et signataires des documents de l'établissement produits par le module. Les signataires "
     . "sans compte Moodle (direction générale, CCEM, présidence de l'université) reçoivent par courriel un lien de signature si leur "
@@ -761,8 +767,8 @@ $string['conclusionstoolong'] = 'Les conclusions comptent {$a->length} caractèr
 $string['conclusionsonepage'] = "Les conclusions ne tiennent pas sur une page avec les signatures : raccourcissez-les ou réduisez le nombre de paragraphes.";
 $string['contracthelp'] = "Choix de l'auteur pour le contrat de diffusion électronique de la thèse (articles 2 et 4). Une thèse "
     . "confidentielle (case cochée au dépôt du sujet) l'est jusqu'à la date indiquée.";
-$string['contracttemplatemissing'] = 'Le contrat type de diffusion n\'a pas été déposé dans les réglages du module : le contrat produit ne contient que les pages du module et ne sera pas scellé tant qu\'il manque.';
-$string['contracttemplateunreadable'] = 'Le contrat type de diffusion déposé dans les réglages du module n\'a pas pu être lu (format PDF non pris en charge) : le contrat produit ne contient que les pages du module et ne sera pas scellé. Déposez le contrat type enregistré dans un format PDF plus ancien (PDF 1.4).';
+$string['contracttemplatemissing'] = 'Le contrat type de diffusion n\'a pas été déposé dans les paramètres du circuit : le contrat produit ne contient que les pages du module et ne sera pas scellé tant qu\'il manque.';
+$string['contracttemplateunreadable'] = 'Le contrat type de diffusion déposé dans les paramètres du circuit n\'a pas pu être lu (format PDF non pris en charge) : le contrat produit ne contient que les pages du module et ne sera pas scellé. Déposez le contrat type enregistré dans un format PDF plus ancien (PDF 1.4).';
 $string['bconfidentialuntil'] = "Confidentialité jusqu'au";
 $string['bconfidentialuntil_help'] = 'Ne concerne que les thèses déclarées confidentielles au dépôt du sujet.';
 $string['bembargo'] = 'Je demande un embargo de diffusion de {$a} ans à compter de la soutenance';

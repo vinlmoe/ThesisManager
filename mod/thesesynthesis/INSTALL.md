@@ -29,6 +29,10 @@ php admin/cli/upgrade.php
 5. **Modèles des documents**, **Grille de conformité**, **Questionnaire
    préalable au jury** : définis ici, ils s'appliquent à toutes les promotions
    suivies (les pages correspondantes des activités suivies renvoient ici).
+   **Paramètres du circuit** de même : rôles DEVE et Bibliothèque, agents DEVE
+   signataires, établissement, université, signataires des documents et
+   contrat type de diffusion. Le module n'a aucun réglage du site ; les deux
+   rôles ne sont modifiables que par un gestionnaire.
 6. **Annuaire du jury** : y saisir (ou importer en CSV) les enseignants pouvant
    diriger une thèse ou siéger au jury, avec leur titre et leur statut.
 
@@ -72,5 +76,5 @@ droits à la source.
 | `mod/thesesynthesis:addinstance` | — | ✅ | ✅ |
 | `mod/thesesynthesis:managelinks` — choisir les promotions suivies | — | ✅ | ✅ |
 | `mod/thesesynthesis:managejurors` — tenir l'annuaire du jury | — | ✅ | ✅ |
-| `mod/thesesynthesis:managesettings` — modèles, grille, questionnaire partagés | — | ✅ | ✅ |
+| `mod/thesesynthesis:managesettings` — modèles, grille, questionnaire, paramètres du circuit partagés | — | ✅ | ✅ |
 | `mod/thesesynthesis:search` — rechercher des thèses | ✅ | ✅ | ✅ |

@@ -30,10 +30,11 @@
  * Voir \mod_these\local\rights::get_service_roleid().
  *
  * @param string $actor 'deve' ou 'library'.
+ * @param context $context Contexte de l'activité.
  * @return int Identifiant du rôle, 0 si aucun n'est choisi.
  */
-function these_get_service_roleid($actor) {
-    return \mod_these\local\rights::get_service_roleid($actor);
+function these_get_service_roleid($actor, context $context) {
+    return \mod_these\local\rights::get_service_roleid($actor, $context);
 }
 
 /**

@@ -40,14 +40,14 @@ final class signature_agent_test extends these_testcase {
     public function test_agent_signs_after_team(): void {
         $this->setup_activity();
         $agent = $this->getDataGenerator()->create_user(['username' => 'agentdeve', 'email' => 'agent@example.org']);
-        set_config('deveagent', 'agentdeve', 'mod_these');
+        \mod_these\local\scopesettings::set(these_local_scope($this->these), ['deveagent' => 'agentdeve']);
         $sink = $this->redirectEmails();
         $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
             'status' => THESE_STATUS_SUBJECT_APPROVED, 'directorid' => $this->director->id,
         ]);
-        $this->assertFalse(these_signs_slot_at_validation('deve', $this->deve->id));
-        $this->assertTrue(these_signs_slot_at_validation('deve', $agent->id));
-        $this->assertTrue(these_signs_slot_at_validation('director', $this->deve->id));
+        $this->assertFalse(these_signs_slot_at_validation('deve', $this->deve->id, $this->these));
+        $this->assertTrue(these_signs_slot_at_validation('deve', $agent->id, $this->these));
+        $this->assertTrue(these_signs_slot_at_validation('director', $this->deve->id, $this->these));
 
         $signature = (object) ['name' => 'Équipe DEVE', 'png' => these_sample_signature_image()];
         these_validate_step($this->these, $this->cm, $dossier, $this->deve->id, [], '', $signature);
@@ -74,7 +74,7 @@ final class signature_agent_test extends these_testcase {
         $this->assertCount(0, these_get_user_pending_signatures($agent));
 
         // Sans agent : la DEVE qui valide signe elle-même.
-        set_config('deveagent', '', 'mod_these');
+        \mod_these\local\scopesettings::set(these_local_scope($this->these), ['deveagent' => '']);
         $other = $this->generator->create_dossier($this->these, $this->getDataGenerator()->create_user()->id, [
             'status' => THESE_STATUS_SUBJECT_APPROVED, 'directorid' => $this->director->id,
         ]);
@@ -92,11 +92,12 @@ final class signature_agent_test extends these_testcase {
         $gen = $this->getDataGenerator();
         $first = $gen->create_user(['username' => 'agent1', 'email' => 'agent1@example.org']);
         $second = $gen->create_user(['username' => 'agent2', 'email' => 'agent2@example.org']);
-        set_config('deveagent', "agent1,\nAgent2@example.org ; inconnu", 'mod_these');
-        $this->assertSame([(int) $first->id, (int) $second->id], array_map('intval', array_keys(these_deve_agents())));
-        $this->assertTrue(these_signs_slot_at_validation('deve', $first->id));
-        $this->assertTrue(these_signs_slot_at_validation('dgrep', $second->id));
-        $this->assertFalse(these_signs_slot_at_validation('deve', $this->deve->id));
+        $agents = "agent1,\nAgent2@example.org ; inconnu";
+        \mod_these\local\scopesettings::set(these_local_scope($this->these), ['deveagent' => $agents]);
+        $this->assertSame([(int) $first->id, (int) $second->id], array_map('intval', array_keys(these_deve_agents($this->these))));
+        $this->assertTrue(these_signs_slot_at_validation('deve', $first->id, $this->these));
+        $this->assertTrue(these_signs_slot_at_validation('dgrep', $second->id, $this->these));
+        $this->assertFalse(these_signs_slot_at_validation('deve', $this->deve->id, $this->these));
 
         $sink = $this->redirectEmails();
         $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
@@ -135,7 +136,7 @@ final class signature_agent_test extends these_testcase {
             'status' => THESE_STATUS_SUBJECT_APPROVED, 'directorid' => $this->director->id,
         ]);
         these_validate_step($this->these, $this->cm, $other, $this->deve->id, [], '', $signature);
-        set_config('deveagent', 'agent2', 'mod_these');
+        \mod_these\local\scopesettings::set(these_local_scope($this->these), ['deveagent' => 'agent2']);
         $this->assertCount(0, these_get_user_pending_signatures($first));
         $this->assertCount(1, these_get_user_pending_signatures($second));
     }

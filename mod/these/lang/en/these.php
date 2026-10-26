@@ -559,13 +559,19 @@ $string['privacy:metadata:jury:student'] = 'Student name.';
 $string['privacy:metadata:jury:title'] = 'Thesis title.';
 $string['privacy:metadata:jury:defensedate'] = 'Defence date and location.';
 
-// Service roles (site settings).
+// Workflow settings ("Thesis follow-up" activity, otherwise the activity itself; no site setting).
+$string['scopesettings'] = 'Workflow settings';
+$string['scopesettings_desc'] = 'Service roles, registrar signing agents, institution, university, document signatories and standard '
+    . 'distribution contract of this activity. None of them is a site setting.';
+$string['scopesettingsshared_desc'] = 'Service roles, registrar signing agents, institution, university, document signatories and '
+    . 'standard distribution contract shared by all the followed thesis activities. None of them is a site setting.';
 $string['settingsroles'] = 'Service roles';
 $string['settingsroles_desc'] = 'Just as the registrar is recognised by the "Teacher" role, the library is recognised by the role chosen '
     . 'here. The role can be assigned in the course, its category or at site level (it then gives access to all thesis activities '
     . 'without enrolment). The module capabilities are also taken into account.';
 $string['deverole'] = 'Registrar role';
-$string['deverole_desc'] = 'Role whose holders act as the registrar in thesis activities.';
+$string['deverole_desc'] = 'Role whose holders act as the registrar in thesis activities. Can be changed by those who may override '
+    . 'role permissions in the activity (manager).';
 $string['libraryrole'] = 'Library role';
 $string['libraryrole_desc'] = 'Role whose holders act as the library. By default, the internal "Library (theses)" role created when '
     . 'the module is installed.';
@@ -573,7 +579,7 @@ $string['libraryrolename'] = 'Library (theses)';
 $string['libraryroledescription'] = 'Internal role of the thesis management module: recording subjects in the library catalogue and '
     . 'certifying manuscripts. Assign it at site, category or course level.';
 
-// Documents (site settings).
+// Documents (workflow settings).
 $string['settingsdocuments'] = 'Documents and signatories';
 $string['settingsdocuments_desc'] = 'Header and signatories of the institution documents produced by the module. Signatories without '
     . 'a Moodle account (general management, CCEM, university presidency) receive a signing link by email if their address is set; '
@@ -756,8 +762,8 @@ $string['conclusionstoolong'] = 'The conclusions have {$a->length} characters fo
 $string['conclusionsonepage'] = 'The conclusions do not fit on one page with the signatures: shorten them or use fewer paragraphs.';
 $string['contracthelp'] = 'Author choices for the electronic distribution contract (articles 2 and 4). A confidential thesis (box '
     . 'ticked with the subject) stays confidential until the date given.';
-$string['contracttemplatemissing'] = 'The standard distribution contract has not been uploaded in the module settings: the contract only contains the module\'s pages and will not be sealed until it is provided.';
-$string['contracttemplateunreadable'] = 'The standard distribution contract uploaded in the module settings could not be read (unsupported PDF format): the contract only contains the module\'s pages and will not be sealed. Upload the contract saved in an older PDF format (PDF 1.4).';
+$string['contracttemplatemissing'] = 'The standard distribution contract has not been uploaded in the workflow settings: the contract only contains the module\'s pages and will not be sealed until it is provided.';
+$string['contracttemplateunreadable'] = 'The standard distribution contract uploaded in the workflow settings could not be read (unsupported PDF format): the contract only contains the module\'s pages and will not be sealed. Upload the contract saved in an older PDF format (PDF 1.4).';
 $string['bconfidentialuntil'] = 'Confidential until';
 $string['bconfidentialuntil_help'] = 'Only for theses declared confidential with the subject.';
 $string['bembargo'] = 'I request a {$a}-year distribution embargo from the defence date';

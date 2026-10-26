@@ -107,7 +107,7 @@ final class integrity_test extends these_testcase {
             'status' => THESE_STATUS_DEFENSE_SUBMITTED, 'directorid' => $this->director->id,
             'bordereau' => json_encode(['birthname' => 'MARTIN', 'diffusion' => 'restricted']),
         ]);
-        $this->assertSame('contracttemplatemissing', these_contract_template_problem());
+        $this->assertSame('contracttemplatemissing', these_contract_template_problem($this->these));
         $png = these_sample_signature_image();
         foreach (these_document_slots($dossier, 'contract') as $slot) {
             these_sign_document($this->context, $dossier, 'contract', $slot, 0, 'Signataire', $png);
@@ -116,10 +116,10 @@ final class integrity_test extends these_testcase {
         $this->assertNull(these_get_sealed_document($this->context, $dossier->id, 'contract'));
 
         get_file_storage()->create_file_from_string([
-            'contextid' => \context_system::instance()->id, 'component' => 'mod_these', 'filearea' => 'contracttemplate',
+            'contextid' => $this->context->id, 'component' => 'mod_these', 'filearea' => 'contracttemplate',
             'itemid' => 0, 'filepath' => '/', 'filename' => 'contrat.pdf',
         ], 'Ceci n\'est pas un PDF');
-        $this->assertSame('contracttemplateunreadable', these_contract_template_problem());
+        $this->assertSame('contracttemplateunreadable', these_contract_template_problem($this->these));
         these_signed_document_pdf($this->these, $this->context, $dossier, 'contract');
         $this->assertDebuggingCalled();
         $this->assertNull(these_get_sealed_document($this->context, $dossier->id, 'contract'));

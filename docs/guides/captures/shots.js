@@ -562,6 +562,10 @@ const steps = {
     const p = await open(await as('sbonnet'), synthesis('doctemplates.php'));
     await upto(p, '43_modeles_documents');
   },
+  async '24_parametres_circuit'() {
+    const p = await open(await as('sbonnet'), synthesis('parameters.php'));
+    await upto(p, '24_parametres_circuit', form);
+  },
   async '44_modele_edition'() {
     const p = await open(await as('sbonnet'), synthesis('doctemplates.php', { type: 'subject' }));
     await upto(p, '44_modele_edition', form);

@@ -169,6 +169,7 @@ function these_delete_instance($id) {
     these_delete_dossiers($DB->get_fieldset_select('these_dossier', 'id', 'theseid = ?', [$id]));
     $DB->delete_records('these_email_template', ['theseid' => $id]);
     $DB->delete_records('these_doctemplate', ['theseid' => $id]);
+    $DB->delete_records('these_setting', ['theseid' => $id]);
     $DB->delete_records('these_griditem', ['theseid' => $id]);
     $DB->delete_records('these_question', ['theseid' => $id]);
     $DB->delete_records('these', ['id' => $id]);

@@ -90,7 +90,8 @@ class external_signers implements \renderable, \templatable {
                 $actions,
             ];
         }
-        $agents = these_deve_agents();
+        global $DB;
+        $agents = these_deve_agents($DB->get_record('these', ['id' => $dossier->theseid], '*', MUST_EXIST));
         if ($agents) {
             $pending = [];
             foreach (these_agent_slots() as $slot) {

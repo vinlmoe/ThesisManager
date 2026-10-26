@@ -177,9 +177,9 @@ final class rights_test extends these_testcase {
         $this->setUser($this->student);
         $this->assertFalse(these_require_view($this->context)->deve);
 
-        // Un utilisateur titulaire du seul rôle DEVE choisi dans les réglages, sans la capacité.
+        // Un utilisateur titulaire du seul rôle DEVE choisi dans les paramètres, sans la capacité.
         $role = $this->getDataGenerator()->create_role(['shortname' => 'devecustom']);
-        set_config('deverole', $role, 'mod_these');
+        \mod_these\local\scopesettings::set(these_local_scope($this->these), ['deverole' => $role]);
         $deve = $this->getDataGenerator()->create_user();
         role_assign($role, $deve->id, \context_course::instance($this->course->id));
         $this->setUser($deve);

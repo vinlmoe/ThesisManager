@@ -43,6 +43,7 @@ class restore_thesesynthesis_activity_structure_step extends restore_activity_st
         $paths[] = new restore_path_element('thesesynthesis', '/activity/thesesynthesis');
         $paths[] = new restore_path_element('thesesynthesis_link', '/activity/thesesynthesis/links/link');
         $paths[] = new restore_path_element('these_doctemplate', '/activity/thesesynthesis/doctemplates/doctemplate');
+        $paths[] = new restore_path_element('these_setting', '/activity/thesesynthesis/settings/setting');
         $paths[] = new restore_path_element('these_griditem', '/activity/thesesynthesis/griditems/griditem');
         $paths[] = new restore_path_element('these_question', '/activity/thesesynthesis/questions/question');
 
@@ -112,6 +113,15 @@ class restore_thesesynthesis_activity_structure_step extends restore_activity_st
     }
 
     /**
+     * Restaure un paramètre du circuit.
+     *
+     * @param array $data
+     */
+    protected function process_these_setting($data) {
+        $this->restore_shared('these_setting', $data);
+    }
+
+    /**
      * Restaure un élément de la grille de conformité.
      *
      * @param array $data
@@ -130,11 +140,12 @@ class restore_thesesynthesis_activity_structure_step extends restore_activity_st
     }
 
     /**
-     * Rattache les fichiers de la description et les images des modèles.
+     * Rattache les fichiers de la description, les images des modèles et le contrat type.
      */
     protected function after_execute() {
         $this->add_related_files('mod_thesesynthesis', 'intro', null);
         $this->add_related_files('mod_thesesynthesis', 'docimages', null);
+        $this->add_related_files('mod_thesesynthesis', 'contracttemplate', null);
     }
 
     /**
