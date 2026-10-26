@@ -276,3 +276,14 @@ function these_room_conflicts(stdClass $dossier, $location = null) {
 function these_render_room_conflicts(stdClass $dossier) {
     return \mod_these\local\jury::render_room_conflicts($dossier);
 }
+
+/**
+ * Voir \mod_these\local\jury::jury_readonly().
+ *
+ * @param MoodleQuickForm $mform
+ * @param array $members
+ * @return void
+ */
+function these_jury_readonly(MoodleQuickForm $mform, array $members) {
+    \mod_these\local\jury::jury_readonly($mform, $members);
+}

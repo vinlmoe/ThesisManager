@@ -56,6 +56,7 @@ $mform = new \mod_these\form\dossier_edit_form($PAGE->url, [
     'minjury' => $these->minjury,
     'rooms' => these_defense_rooms($these),
     'jurycount' => count($jury),
+    'jury' => array_values($jury),
     'jurorids' => array_map('intval', array_column($jury, 'jurorid')),
     'juryconflicts' => these_render_jury_conflicts($dossier),
     'roomconflicts' => these_render_room_conflicts($dossier),
@@ -63,6 +64,8 @@ $mform = new \mod_these\form\dossier_edit_form($PAGE->url, [
 $formdata = (object) array_merge((array) $dossier, these_jury_form_data($jury));
 $formdata->id = $cm->id;
 $formdata->dossierid = $dossier->id;
+// Jury présenté en lecture : la saisie ne s'ouvre que pour le modifier.
+$formdata->juryedit = empty($jury) ? 1 : 0;
 $mform->set_data($formdata);
 
 if ($mform->is_cancelled()) {

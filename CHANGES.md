@@ -13,7 +13,27 @@ de version recalés sur la date. Les numéros entre parenthèses des sections de
 développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
 été étiquetée.
 
-## mod_these 0.18.0 (2026102700) — directeur non votant, liste du corps enseignant
+## mod_these 0.18.0 (2026102701) — directeur non votant, liste du corps enseignant, aides pour la DEVE
+
+- Relance automatique des signatures : la tâche quotidienne redemande les
+  signatures en attente depuis plus que le délai de relance de l'activité
+  (nouveau lien aux signataires sans compte qui ont une adresse, rappel aux
+  agents DEVE) ; le délai repart à zéro à chaque relance.
+- Récapitulatif hebdomadaire de la DEVE (tâche du lundi, 7 h 30) : dossiers
+  qui l'attendent, signatures en attente depuis plus d'une semaine,
+  soutenances des sept prochains jours, conflits de jury ou de salle des
+  quinze prochains jours ; courriel personnalisable « Récapitulatif
+  hebdomadaire de la DEVE », désactivable dans les paramètres du circuit
+  (`weeklydigest`). Rien n'est envoyé sans rien à signaler.
+- Calendrier Moodle : un événement de cours par soutenance dont la date est
+  arrêtée (étudiant, date, durée, salle, jury ; titre sauf thèse
+  confidentielle), déplacé avec la soutenance, supprimé à l'abandon ou à
+  l'ajournement (`\mod_these\local\calendar`, synchronisé à chaque
+  changement du dossier et chaque jour).
+- « Modifier un dossier » allégé : sujet et enregistrements repliés, jury en
+  lecture comme à la validation (31 champs visibles ramenés à 8).
+- Téléphone : le tableau du jury présenté en lecture défile dans sa colonne
+  au lieu d'élargir la page de 300 pixels.
 
 - Jury : le directeur de thèse siège sans voter (rôle « Directeur de thèse
   (non votant) »). Il faut au moins deux membres votants, président compris :

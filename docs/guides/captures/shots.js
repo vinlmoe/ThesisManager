@@ -637,6 +637,10 @@ const steps = {
     const p = await open(await as('sbonnet'), these('notifications.php'));
     await upto(p, '19_courriels');
   },
+  async '107_calendrier'() {
+    const p = await open(await as('camille'), url('/calendar/view.php?view=upcoming'));
+    await region(p, '107_calendrier', '[data-region="event-item"]', '[data-region="event-item"]');
+  },
   async '106_liste_corps_enseignant'() {
     const p = await as('sbonnet');
     const png = await pdfPage(p, url('/mod/these/teachinglist.php?cmid=' + CM), 'teachinglist', 'teachinglist.pdf');

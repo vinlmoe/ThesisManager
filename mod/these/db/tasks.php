@@ -35,4 +35,14 @@ $tasks = [
         'month' => '*',
         'dayofweek' => '*',
     ],
+    [
+        // Le lundi matin : récapitulatif de la semaine pour la DEVE.
+        'classname' => 'mod_these\task\send_digest',
+        'blocking' => 0,
+        'minute' => '30',
+        'hour' => '7',
+        'day' => '*',
+        'month' => '*',
+        'dayofweek' => '1',
+    ],
 ];

@@ -530,6 +530,33 @@ Open the file: {$a->url}';
 
 // Tasks and privacy.
 $string['taskreminders'] = 'Reminders for pending thesis files';
+$string['taskdigest'] = 'Registrar weekly digest';
+$string['emailkeydigest'] = 'Registrar weekly digest';
+$string['emaildigestsubject'] = 'Theses: weekly digest ({$a->activity})';
+$string['emaildigestbody'] = 'Hello,
+
+Here is the weekly digest for {$a->activity}.
+
+Files waiting for the registrar:
+{$a->todo}
+
+Signatures pending for more than a week:
+{$a->signatures}
+
+Defences in the next seven days:
+{$a->defenses}
+
+Jury or room conflicts (next fifteen days):
+{$a->conflicts}
+
+Dashboard: {$a->url}';
+$string['digestnone'] = 'none';
+$string['digestconflicts'] = 'jury conflicts: {$a->jury}, room conflicts: {$a->rooms}';
+$string['settingsdigest'] = 'Weekly digest';
+$string['settingsweeklydigest'] = 'Weekly digest';
+$string['settingsweeklydigestlabel'] = 'Send a digest to the registrar every Monday';
+$string['settingsweeklydigest_help'] = 'Every Monday morning, a single email to the registrar (service address or registrar members): files waiting for them, signatures pending for more than a week, defences in the next seven days and jury or room conflicts in the next fifteen days. Nothing is sent when there is nothing to report.';
+$string['calendardefense'] = 'Thesis defence: {$a}';
 $string['staffactions'] = 'Actions on thesis files';
 $string['privacy:metadata:these_dossier'] = 'Thesis file of a student: subject, defence and workflow status.';
 $string['privacy:metadata:these_dossier:userid'] = 'Student who owns the file.';

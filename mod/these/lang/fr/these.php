@@ -535,6 +535,33 @@ Accéder au dossier : {$a->url}';
 
 // Tâches et données personnelles.
 $string['taskreminders'] = 'Relances des dossiers de thèse en attente';
+$string['taskdigest'] = 'Récapitulatif hebdomadaire de la DEVE';
+$string['emailkeydigest'] = 'Récapitulatif hebdomadaire de la DEVE';
+$string['emaildigestsubject'] = 'Thèses : récapitulatif de la semaine ({$a->activity})';
+$string['emaildigestbody'] = 'Bonjour,
+
+Voici le récapitulatif de la semaine pour {$a->activity}.
+
+Dossiers qui attendent la DEVE :
+{$a->todo}
+
+Signatures en attente depuis plus d\'une semaine :
+{$a->signatures}
+
+Soutenances des sept prochains jours :
+{$a->defenses}
+
+Conflits de jury ou de salle (quinze prochains jours) :
+{$a->conflicts}
+
+Tableau de bord : {$a->url}';
+$string['digestnone'] = 'aucun';
+$string['digestconflicts'] = 'conflits de jury : {$a->jury}, de salle : {$a->rooms}';
+$string['settingsdigest'] = 'Récapitulatif hebdomadaire';
+$string['settingsweeklydigest'] = 'Récapitulatif hebdomadaire';
+$string['settingsweeklydigestlabel'] = 'Envoyer chaque lundi un récapitulatif à la DEVE';
+$string['settingsweeklydigest_help'] = "Chaque lundi matin, un seul courriel à la DEVE (adresse de service ou membres de la DEVE) : dossiers qui l'attendent, signatures en attente depuis plus d'une semaine, soutenances des sept prochains jours et conflits de jury ou de salle des quinze prochains jours. Rien n'est envoyé s'il n'y a rien à signaler.";
+$string['calendardefense'] = 'Soutenance de thèse : {$a}';
 $string['staffactions'] = 'Interventions dans les dossiers de thèse';
 $string['privacy:metadata:these_dossier'] = "Dossier de thèse d'un étudiant : sujet, soutenance et état du circuit.";
 $string['privacy:metadata:these_dossier:userid'] = "Étudiant titulaire du dossier.";

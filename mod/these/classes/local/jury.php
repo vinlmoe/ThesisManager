@@ -414,6 +414,48 @@ class jury {
     }
 
     /**
+     * Jury proposé présenté en lecture à la DEVE : tableau des membres, et seulement les cases
+     * d'éligibilité à vérifier (membres extérieurs). « Modifier la composition du jury » rouvre la saisie
+     * complète. Sans jury enregistré, la saisie reste ouverte.
+     *
+     * @param MoodleQuickForm $mform Formulaire où these_add_jury_fields() a déjà ajouté la saisie.
+     * @param array $members Jury enregistré (voir these_get_jury()), dans l'ordre des lignes du formulaire.
+     * @return void
+     */
+    public static function jury_readonly(MoodleQuickForm $mform, array $members) {
+        if (!$members) {
+            return;
+        }
+        $first = 'jurymemberlabel[0]';
+        $summary = $mform->createElement('static', 'jurysummary', '', these_render_jury($members, true, false));
+        $mform->insertElementBefore($summary, $first);
+        $toggle = $mform->createElement('advcheckbox', 'juryedit', '', get_string('juryedit', 'mod_these'));
+        $mform->insertElementBefore($toggle, $first);
+        $mform->hideIf('jurysummary', 'juryedit', 'checked');
+
+        $fields = ['jurymemberlabel', 'juryrole', 'jurorid', 'juryname', 'jurytitle', 'jurystatus', 'juryinstitution',
+            'juryemail'];
+        for ($i = 0; $mform->elementExists("juryrole[$i]"); $i++) {
+            foreach ($fields as $field) {
+                $mform->hideIf("{$field}[$i]", 'juryedit', 'notchecked');
+            }
+            $member = $members[$i] ?? null;
+            if ($member) {
+                // Case d'éligibilité nommée : elle reste seule visible en lecture.
+                $mform->getElement("juryeligible[$i]")->setText(
+                    get_string('juryeligiblecheckof', 'mod_these', s($member->fullname))
+                );
+            }
+            if (!$member || these_jury_eligibility($member) === 'ok') {
+                $mform->hideIf("juryeligible[$i]", 'juryedit', 'notchecked');
+            }
+        }
+        if ($mform->elementExists('juryaddfields')) {
+            $mform->hideIf('juryaddfields', 'juryedit', 'notchecked');
+        }
+    }
+
+    /**
      * Valeurs de formulaire correspondant à un jury enregistré (voir these_add_jury_fields()).
      *
      * @param array $members

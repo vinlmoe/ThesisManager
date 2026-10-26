@@ -100,7 +100,9 @@ lecture à la validation, action directe dans \og À traiter\fg{}, actions
 groupées, conflits de salle, réglages à compléter. Agents de la
 bibliothèque listés dans les paramètres du circuit, sans rôle à attribuer. \\
 2.12 & 27 octobre 2026 & Directeur de thèse non votant, au moins deux membres
-votants président compris ; liste du corps enseignant en PDF. \\
+votants président compris ; liste du corps enseignant en PDF ; relance
+automatique des signatures ; récapitulatif hebdomadaire de la DEVE ;
+soutenances au calendrier Moodle ; modification d'un dossier allégée. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -771,6 +773,16 @@ dossier et sous le lieu dans sa modification et sa validation. La durée d'une s
 (une heure par défaut) se règle dans les \bouton{Paramètres du circuit},
 rubrique \og Soutenances\fg{}.
 
+\paragraph{Calendrier Moodle.} Dès que la DEVE arrête la date (dossier
+validé), la soutenance devient un événement du calendrier du cours : étudiant,
+date, durée, salle et jury, et titre de la thèse sauf si elle est
+confidentielle. Les participants du cours le voient dans leur calendrier et
+peuvent l'exporter (Outlook, agenda du téléphone). L'événement suit le dossier
+: il est déplacé avec la soutenance et supprimé à l'abandon ou à
+l'ajournement.
+
+\capture[0.85\linewidth]{107_calendrier}{Soutenance dans le calendrier Moodle de l'étudiant.}
+
 \capture[0.85\linewidth]{86_planning_semaine}{Planning des soutenances de la semaine : date arrêtée ou proposée, jury et lieu, semaines à venir.}
 
 \begin{procedure}{Retrouver une soutenance et éditer le planning du mois}{DEVE, bibliothèque, directeurs}
@@ -956,7 +968,9 @@ décisions du jury.}
 \begin{description}
   \item[Modifier le dossier] corriger le sujet, changer de directeur, rectifier
         un numéro, reporter la soutenance, modifier le jury, sans changer le
-        statut.
+        statut. La page s'ouvre sur la soutenance ; le sujet et les
+        enregistrements sont repliés, et le jury est présenté en tableau
+        (\bouton{Modifier la composition du jury} ouvre sa saisie).
   \item[Abandonner / rouvrir] l'abandon, motivé, conserve le dossier tel quel ;
         la réouverture lui rend le statut atteint.
   \item[Créer un dossier] pour un étudiant inscrit qui n'en a pas encore.
@@ -1586,6 +1600,9 @@ Convocation & à l'étudiant et aux membres du jury, avec la convocation PDF \\
 Transmission à l'université & à l'adresse de l'université, avec l'archive des documents \\
 Dossier clôturé & à l'étudiant et au directeur \\
 Relance & à l'acteur attendu, après le délai de relance \\
+Demande de signature & au signataire invité ou aux agents DEVE, puis de nouveau
+  après le délai de relance tant que la signature manque \\
+Récapitulatif hebdomadaire & à la DEVE, le lundi matin \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -1609,6 +1626,21 @@ dossier attend à la même étape depuis le délai de relance de l'activité
 (14 jours par défaut), puis de nouveau à chaque délai écoulé. Les brouillons et
 les dossiers actifs ne sont jamais relancés ; un délai de 0 désactive les
 relances.
+
+La même tâche relance les \textbf{signatures en attente} depuis plus que ce
+délai : chaque signataire sans compte qui a une adresse (direction générale,
+CCEM, université, président du jury, directeur extérieur) reçoit un nouveau
+lien, et les agents DEVE désignés un nouveau rappel ; le délai repart à zéro à
+chaque relance. Il n'y a donc plus à relancer à la main depuis le suivi des
+signatures (le bouton reste disponible pour une relance immédiate).
+
+Le \textbf{récapitulatif hebdomadaire}, le lundi à 7 h 30, regroupe en un seul
+courriel à la DEVE (adresse de service, sinon chaque membre) les dossiers qui
+l'attendent, les signatures en attente depuis plus d'une semaine, les
+soutenances des sept prochains jours et les conflits de jury ou de salle des
+quinze prochains jours. Rien n'est envoyé quand il n'y a rien à signaler ; il se
+désactive dans les \bouton{Paramètres du circuit}, rubrique
+\og Récapitulatif hebdomadaire\fg{}.
 
 % ===========================================================================
 \section{Données personnelles et sauvegarde}
