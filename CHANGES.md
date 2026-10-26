@@ -13,6 +13,25 @@ de version recalés sur la date. Les numéros entre parenthèses des sections de
 développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
 été étiquetée.
 
+## mod_these 0.17.0 (2026102604) — signature sur place de l'étudiant et du directeur, vérification d'identité préalable
+
+- Signature sur place ouverte à l'étudiant et au directeur (suivi des
+  signatures, « Signatures à recueillir ») pour les documents dont la signature
+  a commencé ; la signature est enregistrée sous leur compte.
+- Vérification d'identité préalable : la DEVE coche « Je certifie avoir vérifié
+  l'identité du signataire », puis la page de signature s'ouvre. La
+  vérification est inscrite à l'historique à son nom (« Identité du signataire
+  vérifiée par la DEVE »), conservée avec la signature et imprimée sous elle.
+- Page de signature : les informations du document (qualité du signataire,
+  étudiant, titre, n° DEVE, soutenance, documents à consulter) sont affichées
+  au-dessus de la signature.
+- Scan signé : le nom du signataire n'est plus demandé. Chaque signataire coché
+  porte le nom connu du module (étudiant, directeur, signataires des paramètres,
+  président du jury), sinon le libellé de l'emplacement ; une signature par
+  délégation de la direction générale porte « Direction générale (par
+  délégation) ». Le nom des fichiers reprend les emplacements signés.
+- Sans changement de schéma.
+
 ## mod_these 0.16.0 (2026102603) — signataires des scans, délégation, vérification d'identité
 
 - Scan d'un document signé hors module : la DEVE coche les signataires dont la

@@ -63,6 +63,26 @@ function these_external_slots() {
 }
 
 /**
+ * Voir \mod_these\local\signatures::inperson_slots().
+ *
+ * @return string[]
+ */
+function these_inperson_slots() {
+    return \mod_these\local\signatures::inperson_slots();
+}
+
+/**
+ * Voir \mod_these\local\signatures::inperson_signer().
+ *
+ * @param stdClass $dossier
+ * @param string $slot
+ * @return array ['userid' => int, 'name' => string, 'email' => string]
+ */
+function these_inperson_signer(stdClass $dossier, $slot) {
+    return \mod_these\local\signatures::inperson_signer($dossier, $slot);
+}
+
+/**
  * Voir \mod_these\local\signatures::document_label().
  *
  * @param string $doctype

@@ -394,10 +394,14 @@ const steps = {
     await upto(p, '40_suivi_signatures');
   },
   async '41_signature_sur_place'() {
+    // Vérification de l'identité, puis page de signature (document à signer en tête).
     const p = await open(await as('sbonnet'), these('sign.php', { dossierid: ids.camille, slot: 'ccem' }));
+    await check(p, '#id_identityverified');
+    await upto(p, '41_verification_identite');
+    await Promise.all([p.waitForNavigation(), p.click('#id_submitbutton')]);
+    await grow(p);
     await draw(p);
     await check(p, '#id_signatureconsent');
-    await check(p, '#id_identityverified');
     await upto(p, '41_signature_sur_place');
   },
   async '83_dossier_complet'() {
@@ -519,7 +523,6 @@ const steps = {
     await p.selectOption('#id_doctype', 'contract');
     await p.waitForTimeout(500);
     await check(p, '#id_sign_contract_ucbl');
-    await p.fill('#id_signer', "Pr Frédéric Fleury, président de l'université");
     await p.selectOption('#id_signeddate_day', '22');
     await p.selectOption('#id_signeddate_month', '10');
     await p.selectOption('#id_signeddate_year', '2026');

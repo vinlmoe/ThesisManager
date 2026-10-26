@@ -21,8 +21,9 @@
  * Deux accès :
  * - par le lien à jeton reçu par courriel (voir these_request_signature()), sans authentification
  *   Moodle : le jeton, tiré au hasard et effacé dès la signature, fait foi ;
- * - sur place, par la DEVE connectée (id, dossierid, slot), pour un signataire sans adresse ou qui
- *   signe en sa présence.
+ * - sur place, par la DEVE connectée (id, dossierid, slot), pour un signataire présent : signataire
+ *   sans compte, étudiant ou directeur. La DEVE certifie d'abord avoir vérifié l'identité du
+ *   signataire (étape inscrite à l'historique, à son nom), puis la page de signature s'ouvre.
  *
  * Dans les deux cas, le signataire consulte chaque document en PDF avant de signer, et sa
  * signature est apposée sur tous les documents qui l'attendent dans le dossier.
@@ -76,7 +77,7 @@ if ($token !== '') {
     $context = context_module::instance($cm->id);
     these_require_service($context, 'deve');
     $dossier = $DB->get_record('these_dossier', ['id' => $dossierid, 'theseid' => $these->id], '*', MUST_EXIST);
-    if (!in_array($slot, these_external_slots(), true)) {
+    if (!in_array($slot, these_inperson_slots(), true)) {
         throw new moodle_exception('invalidparameter', 'debug');
     }
     $pageparams = ['id' => $cm->id, 'dossierid' => $dossier->id, 'slot' => $slot];
@@ -113,8 +114,9 @@ $PAGE->set_pagelayout($inperson ? 'incourse' : 'embedded');
 $PAGE->set_title(get_string('signpagetitle', 'mod_these'));
 $PAGE->set_heading(format_string($these->name));
 
-$signer = these_external_signers($dossier)[$slot];
+$signer = these_inperson_signer($dossier, $slot);
 $dossierurl = new moodle_url('/mod/these/dossier.php', ['id' => $cm->id, 'dossierid' => $dossier->id]);
+$signaturesurl = new moodle_url('/mod/these/signatures.php', ['id' => $cm->id, 'dossierid' => $dossier->id]);
 $renderer = $PAGE->get_renderer('mod_these');
 $links = array_map(function ($doctype) use ($pageparams) {
     return [parts::link(
@@ -124,6 +126,51 @@ $links = array_map(function ($doctype) use ($pageparams) {
         '_blank'
     )];
 }, $doctypes);
+$student = $DB->get_record('user', ['id' => $dossier->userid]);
+
+// Informations du document à signer, affichées au-dessus de la signature (et de la vérification d'identité).
+$info = new output\detail_section(get_string('documentstosign', 'mod_these'), [
+    get_string('signinfoslot', 'mod_these') => [parts::text(these_slot_label($slot)
+        . ($signer['name'] !== '' ? ' — ' . $signer['name'] : ''))],
+    get_string('signinfostudent', 'mod_these') => [parts::text($student ? fullname($student) : '-')],
+    get_string('signinfotitle', 'mod_these') => [parts::text(format_string($dossier->title, true, ['escape' => false]))],
+    get_string('signinfonumber', 'mod_these') => trim((string) $dossier->devenumber) !== ''
+        ? [parts::text($dossier->devenumber)] : null,
+    get_string('signinfodefense', 'mod_these') => !empty($dossier->defensedate)
+        ? [parts::text(userdate($dossier->defensedate, get_string('strftimedaydatetime', 'langconfig')))] : null,
+    get_string('signinfodocuments', 'mod_these') => $links
+        ? [parts::html($renderer->render(new output\bullet_list($links)))] : null,
+]);
+
+// Sur place : la DEVE certifie d'abord avoir vérifié l'identité du signataire ; la vérification,
+// inscrite à l'historique à son nom, vaut pour cette page de signature (session).
+$verifiedkey = 'these_identity_' . $dossier->id . '_' . $slot;
+if ($inperson && $doctypes && empty($SESSION->$verifiedkey)) {
+    $identityform = new \mod_these\form\identity_form($PAGE->url);
+    $identityform->set_data($pageparams);
+    if ($identityform->is_cancelled()) {
+        redirect($signaturesurl);
+    }
+    if ($identityform->get_data()) {
+        $SESSION->$verifiedkey = $USER->id;
+        these_log(
+            $dossier->id,
+            $USER->id,
+            'identityverified',
+            $dossier->status,
+            $dossier->status,
+            these_slot_label($slot) . ($signer['name'] !== '' ? ' — ' . $signer['name'] : '') . ' — '
+                . get_string('signidentityverifiedby', 'mod_these', fullname($USER))
+        );
+        redirect($PAGE->url);
+    }
+    echo $OUTPUT->header();
+    echo $OUTPUT->heading(get_string('signpagetitle', 'mod_these'));
+    echo $renderer->render($info);
+    $identityform->display();
+    echo $OUTPUT->footer();
+    exit;
+}
 
 // Signataire connecté avec le compte de l'adresse invitée (membre du jury ayant un compte Moodle,
 // par exemple) : il peut reprendre ou enregistrer sa signature. Jamais pour une signature sur place.
@@ -131,11 +178,9 @@ $signeremail = core_text::strtolower(trim((string) ($token !== '' ? $pending[0]-
 $allowsaved = !$inperson && $signeremail !== '' && isloggedin() && !isguestuser()
     && core_text::strtolower(trim((string) $USER->email)) === $signeremail;
 $mform = new \mod_these\form\sign_form($PAGE->url, [
-    'documents' => $links ? $renderer->render(new output\bullet_list($links)) : '-',
     'signername' => $signer['name'] !== '' ? $signer['name'] : ($allowsaved ? fullname($USER) : ''),
     'allowsaved' => $allowsaved,
     'delegation' => $slot === 'dg',
-    'inperson' => $inperson,
 ]);
 $mform->set_data($pageparams);
 
@@ -144,11 +189,12 @@ if ($doctypes && ($data = $mform->get_data())) {
         unset($data->usesavedsignature, $data->savesignature);
     }
     $signature = these_signature_from_form($data);
-    // Sur place : identité vérifiée par la DEVE connectée, dont le compte est conservé avec la signature.
+    // Sur place : identité vérifiée par la DEVE, dont le compte est conservé avec la signature ; un
+    // étudiant ou un directeur signe en son nom de compte.
     $options = [
         'method' => $inperson ? 'inperson' : 'online',
         'delegated' => $slot === 'dg' && !empty($data->delegated),
-        'verifiedby' => $inperson ? $USER->id : 0,
+        'verifiedby' => $inperson ? (int) $SESSION->$verifiedkey : 0,
     ];
     foreach ($doctypes as $doctype) {
         these_sign_document(
@@ -156,7 +202,7 @@ if ($doctypes && ($data = $mform->get_data())) {
             $dossier,
             $doctype,
             $slot,
-            $allowsaved ? $USER->id : 0,
+            $allowsaved ? $USER->id : ($inperson ? $signer['userid'] : 0),
             $signature->name,
             $signature->png,
             $signer['email'] !== '' ? $signer['email'] : $pending[0]->signeremail ?? '',
@@ -164,6 +210,7 @@ if ($doctypes && ($data = $mform->get_data())) {
         );
     }
     if ($inperson) {
+        unset($SESSION->$verifiedkey);
         these_log(
             $dossier->id,
             $USER->id,
@@ -173,27 +220,18 @@ if ($doctypes && ($data = $mform->get_data())) {
             these_slot_label($slot) . ' — ' . $data->signername . ' — '
                 . get_string('signidentityverifiedby', 'mod_these', fullname($USER))
         );
-        redirect($dossierurl, get_string('signaturesrecorded', 'mod_these'), null, \core\output\notification::NOTIFY_SUCCESS);
+        redirect($signaturesurl, get_string('signaturesrecorded', 'mod_these'), null, \core\output\notification::NOTIFY_SUCCESS);
     }
     redirect($PAGE->url, get_string('signaturesrecorded', 'mod_these'), null, \core\output\notification::NOTIFY_SUCCESS);
 }
 
-$student = $DB->get_record('user', ['id' => $dossier->userid]);
-
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('signpagetitle', 'mod_these'));
-echo $OUTPUT->box(
-    $renderer->render(new output\message(get_string('signpageintro', 'mod_these', (object) [
-        'slot' => these_slot_label($slot),
-        'student' => $student ? fullname($student) : '',
-        'title' => format_string($dossier->title, true, ['escape' => false]),
-    ]), '', 'p')),
-    'generalbox mb-3'
-);
+echo $renderer->render($info);
 if (!$doctypes) {
     echo $OUTPUT->notification(get_string('signnothingpending', 'mod_these'), 'success');
     if ($inperson) {
-        echo $renderer->render(new output\link($dossierurl, get_string('back')));
+        echo $renderer->render(new output\link($signaturesurl, get_string('back')));
     }
 } else {
     $mform->display();

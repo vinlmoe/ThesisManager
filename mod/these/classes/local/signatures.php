@@ -95,6 +95,36 @@ class signatures {
     }
 
     /**
+     * Emplacements que la DEVE peut faire signer sur place, après avoir vérifié l'identité du
+     * signataire : l'étudiant, le directeur et les signataires sans compte. Les emplacements de la
+     * DEVE, de ses agents et de la bibliothèque sont signés par eux-mêmes.
+     *
+     * @return string[]
+     */
+    public static function inperson_slots() {
+        return array_merge(['student', 'director'], self::external_slots());
+    }
+
+    /**
+     * Signataire attendu sur place à un emplacement : compte et nom de l'étudiant ou du directeur,
+     * nom et adresse des signataires sans compte (voir external_signers()).
+     *
+     * @param stdClass $dossier
+     * @param string $slot
+     * @return array ['userid' => int, 'name' => string, 'email' => string]
+     */
+    public static function inperson_signer(stdClass $dossier, $slot) {
+        global $DB;
+
+        $userid = (int) (['student' => $dossier->userid, 'director' => $dossier->directorid][$slot] ?? 0);
+        if ($userid && ($user = $DB->get_record('user', ['id' => $userid]))) {
+            return ['userid' => $userid, 'name' => fullname($user), 'email' => (string) $user->email];
+        }
+        $signer = these_external_signers($dossier)[$slot] ?? ['name' => '', 'email' => ''];
+        return ['userid' => 0] + $signer;
+    }
+
+    /**
      * Libellé d'un document.
      *
      * @param string $doctype

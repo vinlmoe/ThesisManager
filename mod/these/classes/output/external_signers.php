@@ -20,8 +20,9 @@ use moodle_url;
 use stdClass;
 
 /**
- * Signataires sans compte d'un dossier (président du jury, direction...) et agent responsable de la
- * DEVE : documents qu'ils doivent encore signer, relance par courriel, signature sur place.
+ * Signatures à recueillir d'un dossier : signataires sans compte (président du jury, direction...),
+ * étudiant et directeur, et agents de la DEVE. Documents qu'ils doivent encore signer, relance par
+ * courriel (signataires sans compte, agents), signature sur place après vérification d'identité.
  *
  * @package   mod_these
  * @copyright 2026 Sébastien Lefebvre
@@ -60,17 +61,27 @@ class external_signers implements \renderable, \templatable {
             return $this->rows;
         }
         $dossier = $this->dossier;
-        $signers = these_external_signers($dossier);
         $this->rows = [];
-        foreach (these_external_slots() as $slot) {
-            $pending = array_filter(these_pending_documents_for_slot($dossier, $slot), function ($doctype) use ($dossier) {
-                return these_document_available($dossier, $doctype);
-            });
+        // Étudiant et directeur : signature sur place seulement, pour les documents dont la signature a
+        // commencé (une signature déjà apposée ou demandée) ; signataires sans compte : lien ou sur place.
+        $started = array_unique(array_column(these_get_signatures($dossier->id), 'doctype'));
+        foreach (these_inperson_slots() as $slot) {
+            $signer = these_inperson_signer($dossier, $slot);
+            $internal = in_array($slot, ['student', 'director'], true);
+            if ($internal && !$signer['userid']) {
+                continue;
+            }
+            $pending = array_filter(
+                these_pending_documents_for_slot($dossier, $slot),
+                function ($doctype) use ($dossier, $internal, $started) {
+                    return these_document_available($dossier, $doctype) && (!$internal || in_array($doctype, $started, true));
+                }
+            );
             if (!$pending) {
                 continue;
             }
             $actions = [];
-            if ($signers[$slot]['email'] !== '') {
+            if (in_array($slot, these_external_slots(), true) && $signer['email'] !== '') {
                 $actions[] = parts::link(
                     new moodle_url($this->pageurl, ['resend' => $slot, 'sesskey' => sesskey()]),
                     get_string('resendsignature', 'mod_these'),
@@ -83,8 +94,8 @@ class external_signers implements \renderable, \templatable {
                 'btn btn-sm btn-primary'
             );
             $this->rows[] = [
-                [parts::text(these_slot_label($slot) . ($signers[$slot]['name'] !== '' ? ' — ' . $signers[$slot]['name'] : ''))],
-                [$signers[$slot]['email'] !== '' ? parts::text($signers[$slot]['email'])
+                [parts::text(these_slot_label($slot) . ($signer['name'] !== '' ? ' — ' . $signer['name'] : ''))],
+                [$signer['email'] !== '' ? parts::text($signer['email'])
                     : parts::span(get_string('noemail', 'mod_these'), 'text-muted')],
                 [parts::text(implode(', ', array_map('these_document_label', $pending)))],
                 $actions,

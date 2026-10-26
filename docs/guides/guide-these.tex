@@ -79,6 +79,9 @@ site : paramètres du circuit dans l'activité de suivi. \\
 2.7 & 26 octobre 2026 & Scan signé : signataires cochés au dépôt, PDF et suivi
 mis à jour ; signature de la direction générale par délégation ; signature sur
 place avec vérification d'identité par la DEVE, conservée et imprimée. \\
+2.8 & 26 octobre 2026 & Signature sur place de l'étudiant et du directeur ;
+vérification d'identité avant l'ouverture de la page de signature ; document à
+signer présenté en tête ; scan sans saisie du nom du signataire. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -712,12 +715,16 @@ de signature.}
         document et chaque emplacement y figurent avec leur état.
   \item Pour un signataire qui n'a pas reçu son lien, cliquez sur
         \bouton{Envoyer le lien} (signataires invités et agents DEVE).
-  \item Pour un signataire présent ou sans adresse, cliquez sur
-        \bouton{Signer sur place} : il consulte les documents et trace sa
-        signature ; vous cochez \bouton{Je certifie avoir vérifié l'identité du
-        signataire} (pièce d'identité), puis vous validez. Votre compte est
-        conservé avec la signature, inscrit à l'historique et imprimé sous la
-        signature (\og identité vérifiée par la DEVE (Prénom Nom)\fg{}).
+  \item Pour un signataire présent (signataire sans compte, mais aussi
+        étudiant ou directeur), cliquez sur \bouton{Signer sur place}. Vérifiez
+        d'abord son identité (pièce d'identité), cochez \bouton{Je certifie
+        avoir vérifié l'identité du signataire} puis \bouton{Ouvrir la page de
+        signature} : la vérification est inscrite à l'historique à votre nom.
+        La page présente en tête le document à signer (qualité du signataire,
+        étudiant, titre, n° DEVE, soutenance, liens vers les PDF) ; le
+        signataire les consulte, trace sa signature et valide. Votre compte est
+        conservé avec la signature et imprimé dessous (\og identité vérifiée par
+        la DEVE (Prénom Nom)\fg{}).
   \item Pour la direction générale, la personne qui signe \textbf{par
         délégation} saisit son propre nom et coche \bouton{Signature par
         délégation de la direction générale} : \og (par délégation)\fg{}
@@ -1192,10 +1199,11 @@ thèses\fg{}.
 
 La page \bouton{Suivi des signatures} du dossier (DEVE) montre l'état de chaque
 emplacement, permet de \bouton{Envoyer le lien} ou de \bouton{signer sur place}
-pour un signataire présent ou sans adresse. Une signature sur place n'est
-enregistrée qu'une fois cochée la case qui certifie que l'identité du signataire
-a été vérifiée : le compte DEVE concerné est conservé avec la signature et
-inscrit à l'historique. La direction générale peut signer par délégation (case
+pour un signataire présent ou sans adresse. L'étudiant et le directeur y
+figurent aussi, pour la signature sur place, dès que la signature d'un document
+a commencé. La page de signature sur place ne s'ouvre qu'une fois cochée la case
+qui certifie que l'identité du signataire a été vérifiée : le compte DEVE
+concerné est inscrit à l'historique et conservé avec la signature. La direction générale peut signer par délégation (case
 \bouton{Signature par délégation de la direction générale}, avec le nom de la
 personne qui signe). Le suivi précise pour chaque signature la manière de signer
 (\og sur place, identité vérifiée par la DEVE\fg{}, \og à la main, scan joint au
@@ -1203,7 +1211,9 @@ dossier\fg{}) et la délégation.
 
 \capture{40_suivi_signatures}{Suivi des signatures d'un dossier.}
 
-\capture[0.8\linewidth]{41_signature_sur_place}{Signature sur place du président du jury.}
+\capture[0.8\linewidth]{41_verification_identite}{Signature sur place : vérification de l'identité du signataire avant d'ouvrir la page de signature.}
+
+\capture[0.8\linewidth]{41_signature_sur_place}{Signature sur place du président du CCEM : le document à signer est présenté en tête.}
 
 \subsection{Scans des documents signés hors module}\label{sec:scans}
 
@@ -1216,15 +1226,16 @@ ayant signé à la main à la date portée sur le document, ce qui met à jour l
 du document (\og Signé à la main par \ldots{} le \ldots, scan joint au dossier
 par la DEVE\fg{}) et le suivi des signatures ; le document est scellé une fois
 toutes ses signatures réunies. Pour la direction générale, une case précise la
-signature par délégation (le nom saisi au dépôt est alors celui de la personne
-qui a signé). Sans case cochée, le scan est seulement conservé.
+signature par délégation (la signature porte alors \og Direction générale (par
+délégation)\fg{}). Le nom du signataire n'est pas demandé : chacun porte le nom
+connu du module (étudiant, directeur, signataires des paramètres, président du
+jury). Sans case cochée, le scan est seulement conservé.
 
 \begin{procedure}{Joindre le scan d'un document signé hors module}{Équipe DEVE}
 \begin{etapes}
   \item Ouvrez le dossier (statut \statut{Dossier validé par la DEVE} ou plus avancé,
         non abandonné) et cliquez sur \bouton{Ajouter un scan signé}.
-  \item Choisissez le \textbf{document signé}, saisissez le nom du
-        \textbf{signataire} et la date de la signature.
+  \item Choisissez le \textbf{document signé} et la date de la signature.
   \item Cochez les \textbf{signataires du scan} (seuls ceux du document
         choisi sont proposés) et, le cas échéant, la signature par délégation de
         la direction générale.
