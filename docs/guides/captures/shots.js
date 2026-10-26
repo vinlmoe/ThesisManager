@@ -397,6 +397,7 @@ const steps = {
     const p = await open(await as('sbonnet'), these('sign.php', { dossierid: ids.camille, slot: 'ccem' }));
     await draw(p);
     await check(p, '#id_signatureconsent');
+    await check(p, '#id_identityverified');
     await upto(p, '41_signature_sur_place');
   },
   async '83_dossier_complet'() {
@@ -516,6 +517,8 @@ const steps = {
   async '98_deve_scan_depot'() {
     const p = await open(await as('sbonnet'), these('scan.php', { dossierid: ids.theo }));
     await p.selectOption('#id_doctype', 'contract');
+    await p.waitForTimeout(500);
+    await check(p, '#id_sign_contract_ucbl');
     await p.fill('#id_signer', "Pr Frédéric Fleury, président de l'université");
     await p.selectOption('#id_signeddate_day', '22');
     await p.selectOption('#id_signeddate_month', '10');

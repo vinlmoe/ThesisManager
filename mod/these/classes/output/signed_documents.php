@@ -64,10 +64,20 @@ class signed_documents implements \renderable, \templatable {
     protected function state(?stdClass $signature): array {
         $dateformat = get_string('strftimedatetimeshort', 'langconfig');
         if ($signature && $signature->timesigned) {
-            return parts::badge(get_string('signedby', 'mod_these', (object) [
+            // Délégation et manière de signer (sur place, scan) précisées après le nom et la date.
+            // Un scan porte la date écrite sur le document, sans heure.
+            $format = ($signature->method ?? '') === 'scan' ? get_string('strftimedate', 'langconfig') : $dateformat;
+            $label = get_string('signedby', 'mod_these', (object) [
                 'name' => $signature->signername,
-                'date' => userdate($signature->timesigned, $dateformat),
-            ]), 'badge badge-success');
+                'date' => userdate($signature->timesigned, $format),
+            ]);
+            if (!empty($signature->delegated)) {
+                $label .= ' (' . get_string('signeddelegated', 'mod_these') . ')';
+            }
+            if (in_array($signature->method ?? '', ['inperson', 'scan'], true)) {
+                $label .= ' — ' . get_string('signedmethod' . $signature->method, 'mod_these');
+            }
+            return parts::badge($label, 'badge badge-success');
         }
         if ($signature && $signature->requesttime) {
             return parts::badge(

@@ -280,6 +280,7 @@ class restore_these_activity_structure_step extends restore_activity_structure_s
             return;
         }
         $data->userid = $this->map_user($data->userid);
+        $data->verifiedby = $this->map_user($data->verifiedby ?? 0);
         $data->token = null;
         $newid = $DB->insert_record('these_signature', $data);
         $this->set_mapping('these_signature', $oldid, $newid, true);

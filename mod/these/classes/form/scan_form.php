@@ -23,7 +23,11 @@ require_once($CFG->dirroot . '/mod/these/locallib.php');
 
 /**
  * Dépôt par la DEVE du scan d'un document signé hors du module : document, signataire, date de la
- * signature, fichiers scannés, commentaire.
+ * signature, signataires couverts par le scan, fichiers scannés, commentaire.
+ *
+ * customdata : slots, doctype => [emplacement => libellé] des signatures encore attendues ; une case
+ * par emplacement, affichée pour son document seulement. Cocher un emplacement l'inscrit comme signé
+ * à la main (PDF du document et suivi des signatures mis à jour).
  *
  * @package   mod_these
  * @copyright 2026 Sébastien Lefebvre
@@ -50,6 +54,26 @@ class scan_form extends \moodleform {
 
         $mform->addElement('date_selector', 'signeddate', get_string('scansigneddate', 'mod_these'));
         $mform->addRule('signeddate', null, 'required', null, 'client');
+
+        // Signataires couverts par le scan, parmi les signatures encore attendues du document choisi.
+        $mform->addElement(
+            'static',
+            'scanslotsdesc',
+            get_string('scanslots', 'mod_these'),
+            get_string('scanslots_desc', 'mod_these')
+        );
+        foreach ($this->_customdata['slots'] ?? [] as $doctype => $slots) {
+            foreach ($slots as $slot => $label) {
+                $name = 'sign_' . $doctype . '_' . $slot;
+                $mform->addElement('advcheckbox', $name, '', $label);
+                $mform->hideIf($name, 'doctype', 'neq', $doctype);
+                if ($slot === 'dg') {
+                    $mform->addElement('advcheckbox', $name . '_delegated', '', get_string('signdelegated', 'mod_these'));
+                    $mform->hideIf($name . '_delegated', 'doctype', 'neq', $doctype);
+                    $mform->disabledIf($name . '_delegated', $name, 'notchecked');
+                }
+            }
+        }
 
         $mform->addElement(
             'filemanager',

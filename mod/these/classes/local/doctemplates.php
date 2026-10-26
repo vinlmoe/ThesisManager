@@ -287,11 +287,15 @@ class doctemplates {
         if ($doctype !== null) {
             foreach (these_get_signatures($dossier->id) as $signature) {
                 if ($signature->doctype === $doctype && !empty($signature->timesigned)) {
+                    $verifier = !empty($signature->verifiedby) ? $DB->get_record('user', ['id' => $signature->verifiedby]) : null;
                     $signatures[$signature->slot] = [
                         'name' => $signature->signername,
                         'time' => (int) $signature->timesigned,
                         'hash' => substr((string) $signature->contenthash, 0, 12),
                         'image' => these_get_signature_image($context->id, $signature->id),
+                        'method' => (string) ($signature->method ?? 'online'),
+                        'delegated' => !empty($signature->delegated),
+                        'verifier' => $verifier ? fullname($verifier) : '',
                     ];
                 }
             }
@@ -611,11 +615,7 @@ class doctemplates {
             $signed[$slot] = (bool) $signature;
             $sigdate[$slot] = $signature ? $day($signature['time']) : '';
             $signer[$slot] = $signature ? (string) $signature['name'] : '';
-            $sigcaption[$slot] = $signature ? get_string('pdfsignedby', 'mod_these', (object) [
-                'name' => $signature['name'],
-                'date' => userdate($signature['time'], get_string('strftimedatetimeshort', 'langconfig')),
-                'hash' => $signature['hash'],
-            ]) : '';
+            $sigcaption[$slot] = $signature ? these_signature_caption($signature) : '';
             $sigsrc[$slot] = $signature && !empty($signature['image']) ? '@' . base64_encode($signature['image']) : '';
             $sig[$slot] = $signature ? ($sigsrc[$slot] !== '' ? '<img src="' . $sigsrc[$slot] . '" height="12mm" /><br />' : '')
                 . '<span style="font-size:6pt;color:#555555;letter-spacing:0;">'
@@ -735,6 +735,28 @@ class doctemplates {
             'signed' => $signed,
             'img' => these_doctemplate_images($src['scope'] ?? null),
         ];
+    }
+
+    /**
+     * Mention imprimée sous une signature : manière de signer (en ligne, sur place avec identité
+     * vérifiée par la DEVE, à la main avec scan joint au dossier), délégation, date et empreinte.
+     *
+     * @param array $signature {name, time, hash, method?, delegated?, verifier?}
+     * @return string
+     */
+    public static function signature_caption(array $signature) {
+        $method = in_array($signature['method'] ?? '', ['inperson', 'scan'], true) ? $signature['method'] : 'online';
+        $name = $signature['name'];
+        if (!empty($signature['delegated'])) {
+            $name = get_string('pdfdelegated', 'mod_these', $name);
+        }
+        $format = $method === 'scan' ? get_string('strftimedate', 'langconfig') : get_string('strftimedatetimeshort', 'langconfig');
+        return get_string($method === 'online' ? 'pdfsignedby' : 'pdfsignedby' . $method, 'mod_these', (object) [
+            'name' => $name,
+            'date' => userdate($signature['time'], $format),
+            'hash' => $signature['hash'],
+            'verifier' => ($signature['verifier'] ?? '') !== '' ? $signature['verifier'] : '-',
+        ]);
     }
 
     /**

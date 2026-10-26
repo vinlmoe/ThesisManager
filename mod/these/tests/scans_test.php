@@ -116,6 +116,90 @@ final class scans_test extends these_testcase {
     }
 
     /**
+     * Les signataires cochés au dépôt sont inscrits comme ayant signé à la main, à la date du
+     * document, par délégation pour la direction générale si demandé, enregistrés par la DEVE : le
+     * suivi et la mention imprimée sur le PDF en tiennent compte. Un emplacement déjà signé ou
+     * étranger au document est ignoré.
+     */
+    public function test_add_with_signatories(): void {
+        global $DB;
+        $this->setup_activity();
+        $this->setUser($this->deve);
+        \mod_these\local\scopesettings::set(these_local_scope($this->these), ['dgname' => 'Pr Directrice']);
+        $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
+            'status' => THESE_STATUS_SCHEDULED, 'directorid' => $this->director->id,
+            'bordereau' => json_encode(['birthname' => 'MARTIN', 'diffusion' => 'restricted']),
+        ]);
+        $pending = scans::pending_slots($dossier);
+        $this->assertSame(['student', 'director', 'dg', 'ucbl'], array_keys($pending['contract']));
+        $this->assertSame(['president', 'dg', 'ccem'], array_keys($pending['signaletique']));
+
+        $date = make_timestamp(2026, 10, 22, 12);
+        $draftitemid = $this->draft($this->deve->id, 'contrat.pdf', '%PDF-1.4 contrat');
+        scans::add(
+            $this->context,
+            $dossier,
+            $this->deve->id,
+            'contract',
+            'M. Délégué',
+            $date,
+            $draftitemid,
+            '',
+            ['dg' => true, 'ucbl' => false, 'ccem' => false]
+        );
+
+        $signatures = these_get_signatures($dossier->id);
+        $dg = $signatures['contract:dg'];
+        // Par délégation : le nom saisi, celui de la personne qui a signé.
+        $this->assertSame('M. Délégué', $dg->signername);
+        $this->assertEquals($date, $dg->timesigned);
+        $this->assertSame('scan', $dg->method);
+        $this->assertEquals(1, $dg->delegated);
+        $this->assertEquals($this->deve->id, $dg->verifiedby);
+        $this->assertSame('M. Délégué', $signatures['contract:ucbl']->signername);
+        $this->assertEquals(0, $signatures['contract:ucbl']->delegated);
+        $this->assertArrayNotHasKey('contract:ccem', $signatures);
+        $this->assertArrayNotHasKey('contract:student', $signatures);
+        $this->assertSame(['student', 'director'], array_keys(scans::pending_slots($dossier)['contract']));
+
+        // Mention du PDF : à la main, par délégation, scan enregistré par la DEVE.
+        $data = these_document_context($this->these, $this->context, $dossier, 'contract');
+        $this->assertStringContainsString(get_string('pdfdelegated', 'mod_these', 'M. Délégué'), $data['sigcaption']['dg']);
+        $this->assertStringContainsString(fullname($this->deve), $data['sigcaption']['dg']);
+        $this->assertSame('', $data['sigsrc']['dg']);
+        $this->assertTrue($data['signed']['dg']);
+        $this->assertSame(1, $DB->count_records('these_log', ['dossierid' => $dossier->id, 'logaction' => 'signedscan']));
+    }
+
+    /**
+     * Signature sur place enregistrée par la DEVE : manière de signer et compte qui a vérifié
+     * l'identité conservés avec la signature et imprimés sur le document.
+     */
+    public function test_in_person_signature(): void {
+        $this->setup_activity();
+        $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
+            'status' => THESE_STATUS_SCHEDULED, 'directorid' => $this->director->id,
+            'bordereau' => json_encode(['birthname' => 'MARTIN', 'diffusion' => 'restricted']),
+        ]);
+        $signature = these_sign_document(
+            $this->context,
+            $dossier,
+            'signaletique',
+            'dg',
+            0,
+            'M. Adjoint',
+            these_sample_signature_image(),
+            '',
+            ['method' => 'inperson', 'delegated' => true, 'verifiedby' => $this->deve->id]
+        );
+        $this->assertSame('inperson', $signature->method);
+        $this->assertEquals($this->deve->id, $signature->verifiedby);
+        $caption = these_document_context($this->these, $this->context, $dossier, 'signaletique')['sigcaption']['dg'];
+        $this->assertStringContainsString(get_string('pdfdelegated', 'mod_these', 'M. Adjoint'), $caption);
+        $this->assertStringContainsString(fullname($this->deve), $caption);
+    }
+
+    /**
      * Un second dépôt du même fichier le joint de nouveau, sous un autre nom ; un brouillon vide ne
      * joint rien et n'inscrit rien.
      */

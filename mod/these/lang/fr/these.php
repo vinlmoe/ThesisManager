@@ -880,6 +880,22 @@ Ce lien vous est personnel et n\'est valable que pour une signature.';
 
 // Libellés des documents PDF.
 $string['pdfsignedby'] = 'Signé électroniquement par {$a->name} le {$a->date} — empreinte {$a->hash}';
+$string['pdfsignedbyinperson'] = 'Signé sur place par {$a->name} le {$a->date}, identité vérifiée par la DEVE ({$a->verifier}) — empreinte {$a->hash}';
+$string['pdfsignedbyscan'] = 'Signé à la main par {$a->name} le {$a->date}, scan joint au dossier par la DEVE ({$a->verifier}) — empreinte {$a->hash}';
+$string['pdfdelegated'] = '{$a} (par délégation)';
+$string['signeddelegated'] = 'par délégation';
+$string['signedmethodinperson'] = 'sur place, identité vérifiée par la DEVE';
+$string['signedmethodscan'] = 'à la main, scan joint au dossier';
+$string['signdelegated'] = 'Signature par délégation de la direction générale';
+$string['signdelegated_help'] = "À cocher quand la personne qui signe le fait par délégation de la directrice ou du directeur général : "
+    . "la mention « par délégation » accompagne son nom sur le document.";
+$string['signidentityverified'] = "Je certifie avoir vérifié l'identité du signataire (pièce d'identité)";
+$string['signidentityrequired'] = "Vérifiez l'identité du signataire avant d'enregistrer sa signature.";
+$string['signidentityverifiedby'] = 'identité vérifiée par {$a}';
+$string['scanslots'] = 'Signataires du scan';
+$string['scansignaturesrecorded'] = '{$a} signature(s) inscrite(s) comme signée(s) à la main.';
+$string['scanslots_desc'] = "Cochez les signatures portées sur le document scanné : elles sont inscrites comme signées à la main à la "
+    . "date ci-dessus, le PDF du document et le suivi des signatures sont mis à jour.";
 $string['pdfreportfavorable'] = "Avis favorable à la soutenance de la thèse et à l'obtention du titre de Docteur vétérinaire.";
 $string['privacy:metadata:these_dossier:bordereau'] = "Données personnelles saisies avec la soutenance (état civil, adresse, courriel personnel, cursus, choix de diffusion).";
 $string['privacy:metadata:these_dossier:conclusions'] = 'Conclusions de la thèse.';

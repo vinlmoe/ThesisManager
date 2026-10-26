@@ -128,5 +128,24 @@ function xmldb_these_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2026102602, 'these');
     }
 
+    if ($oldversion < 2026102603) {
+        // Manière dont chaque signature a été donnée (en ligne, sur place auprès de la DEVE, à la main
+        // avec scan joint au dossier), délégation de la direction générale et compte DEVE qui a
+        // vérifié l'identité du signataire ou enregistré le scan.
+        $dbman = $DB->get_manager();
+        $table = new xmldb_table('these_signature');
+        $fields = [
+            new xmldb_field('method', XMLDB_TYPE_CHAR, '10', null, XMLDB_NOTNULL, null, 'online', 'ipaddress'),
+            new xmldb_field('delegated', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'method'),
+            new xmldb_field('verifiedby', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'delegated'),
+        ];
+        foreach ($fields as $field) {
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+        }
+        upgrade_mod_savepoint(true, 2026102603, 'these');
+    }
+
     return true;
 }

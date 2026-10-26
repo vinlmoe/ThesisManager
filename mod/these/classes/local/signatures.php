@@ -548,20 +548,39 @@ class signatures {
      * Appose une signature sur un document : l'emplacement est créé ou complété, l'image enregistrée
      * et l'empreinte du contenu signé conservée. Le jeton d'une invitation éventuelle est effacé.
      *
+     * Options :
+     * - method : 'online' (lien ou compte du signataire, par défaut), 'inperson' (sur place auprès de
+     *   la DEVE, identité vérifiée), 'scan' (signature à la main, scan joint au dossier, sans image) ;
+     * - delegated : signature par délégation (direction générale) ;
+     * - verifiedby : compte DEVE qui a vérifié l'identité du signataire ou enregistré le scan ;
+     * - time : date de la signature (scan : date portée sur le document), maintenant par défaut.
+     *
      * @param context $context Contexte du module.
      * @param stdClass $dossier
      * @param string $doctype
      * @param string $slot
      * @param int $userid Signataire (0 sans compte).
      * @param string $name Nom du signataire tel qu'il apparaît sur le document.
-     * @param string $png Image de la signature.
+     * @param string $png Image de la signature ('' pour un scan).
      * @param string $email
+     * @param array $options Voir ci-dessus.
      * @return stdClass La signature.
      */
-    public static function sign_document(context $context, stdClass $dossier, $doctype, $slot, $userid, $name, $png, $email = '') {
+    public static function sign_document(
+        context $context,
+        stdClass $dossier,
+        $doctype,
+        $slot,
+        $userid,
+        $name,
+        $png,
+        $email = '',
+        array $options = []
+    ) {
         global $DB;
 
-        $now = time();
+        $now = (int) ($options['time'] ?? 0) ?: time();
+        $method = in_array($options['method'] ?? '', ['inperson', 'scan'], true) ? $options['method'] : 'online';
         $signature = $DB->get_record('these_signature', ['dossierid' => $dossier->id, 'doctype' => $doctype, 'slot' => $slot]);
         $record = (object) [
             'dossierid' => $dossier->id,
@@ -575,6 +594,9 @@ class signatures {
             'contenthash' => these_document_hash($dossier, $doctype, $slot),
             'templatehash' => these_document_template_hash($dossier, $doctype),
             'ipaddress' => getremoteaddr(),
+            'method' => $method,
+            'delegated' => empty($options['delegated']) ? 0 : 1,
+            'verifiedby' => (int) ($options['verifiedby'] ?? 0),
         ];
         if ($signature) {
             $record->id = $signature->id;
@@ -587,23 +609,33 @@ class signatures {
 
         $fs = get_file_storage();
         $fs->delete_area_files($context->id, 'mod_these', 'signature', $record->id);
-        $fs->create_file_from_string([
-            'contextid' => $context->id,
-            'component' => 'mod_these',
-            'filearea' => 'signature',
-            'itemid' => $record->id,
-            'filepath' => '/',
-            'filename' => 'signature.png',
-            'userid' => $userid ?: null,
-        ], $png);
+        if ((string) $png !== '') {
+            $fs->create_file_from_string([
+                'contextid' => $context->id,
+                'component' => 'mod_these',
+                'filearea' => 'signature',
+                'itemid' => $record->id,
+                'filepath' => '/',
+                'filename' => 'signature.png',
+                'userid' => $userid ?: null,
+            ], $png);
+        }
 
+        // Historique : au nom du compte DEVE qui a vérifié l'identité ou enregistré le scan, s'il y en a un.
+        $remark = these_document_label($doctype) . ' — ' . these_slot_label($slot) . ' — ' . trim($name);
+        if ($record->delegated) {
+            $remark .= ' (' . get_string('signeddelegated', 'mod_these') . ')';
+        }
+        if ($method !== 'online') {
+            $remark .= ' — ' . get_string('signedmethod' . $method, 'mod_these');
+        }
         these_log(
             $dossier->id,
-            $userid,
+            $record->verifiedby ?: $userid,
             'signed',
             $dossier->status,
             $dossier->status,
-            these_document_label($doctype) . ' — ' . these_slot_label($slot) . ' — ' . trim($name)
+            $remark
         );
         these_seal_document($context, $dossier, $doctype);
         return $DB->get_record('these_signature', ['id' => $record->id]);

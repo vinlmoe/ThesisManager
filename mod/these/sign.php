@@ -134,6 +134,8 @@ $mform = new \mod_these\form\sign_form($PAGE->url, [
     'documents' => $links ? $renderer->render(new output\bullet_list($links)) : '-',
     'signername' => $signer['name'] !== '' ? $signer['name'] : ($allowsaved ? fullname($USER) : ''),
     'allowsaved' => $allowsaved,
+    'delegation' => $slot === 'dg',
+    'inperson' => $inperson,
 ]);
 $mform->set_data($pageparams);
 
@@ -142,6 +144,12 @@ if ($doctypes && ($data = $mform->get_data())) {
         unset($data->usesavedsignature, $data->savesignature);
     }
     $signature = these_signature_from_form($data);
+    // Sur place : identité vérifiée par la DEVE connectée, dont le compte est conservé avec la signature.
+    $options = [
+        'method' => $inperson ? 'inperson' : 'online',
+        'delegated' => $slot === 'dg' && !empty($data->delegated),
+        'verifiedby' => $inperson ? $USER->id : 0,
+    ];
     foreach ($doctypes as $doctype) {
         these_sign_document(
             $context,
@@ -151,7 +159,8 @@ if ($doctypes && ($data = $mform->get_data())) {
             $allowsaved ? $USER->id : 0,
             $signature->name,
             $signature->png,
-            $signer['email'] !== '' ? $signer['email'] : $pending[0]->signeremail ?? ''
+            $signer['email'] !== '' ? $signer['email'] : $pending[0]->signeremail ?? '',
+            $options
         );
     }
     if ($inperson) {
@@ -161,7 +170,8 @@ if ($doctypes && ($data = $mform->get_data())) {
             'signedinperson',
             $dossier->status,
             $dossier->status,
-            these_slot_label($slot) . ' — ' . $data->signername
+            these_slot_label($slot) . ' — ' . $data->signername . ' — '
+                . get_string('signidentityverifiedby', 'mod_these', fullname($USER))
         );
         redirect($dossierurl, get_string('signaturesrecorded', 'mod_these'), null, \core\output\notification::NOTIFY_SUCCESS);
     }
