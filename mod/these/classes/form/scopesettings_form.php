@@ -43,18 +43,18 @@ class scopesettings_form extends \moodleform {
         $mform->setType('id', PARAM_INT);
 
         $mform->addElement('header', 'rolesheader', get_string('settingsroles', 'mod_these'));
-        $mform->addElement('static', 'rolesdesc', '', get_string('settingsroles_desc', 'mod_these'));
+        // Explications derrière les boutons d'aide : la page reste courte.
         foreach (['deverole', 'libraryrole'] as $name) {
             $mform->addElement('select', $name, get_string($name, 'mod_these'), $this->_customdata['roles']);
             $mform->setType($name, PARAM_INT);
-            $mform->addElement('static', $name . 'desc', '', get_string($name . '_desc', 'mod_these'));
+            $mform->addHelpButton($name, $name, 'mod_these');
         }
 
         $mform->addElement('header', 'agentheader', get_string('settingsdeveagent', 'mod_these'));
         $mform->setExpanded('agentheader');
         $mform->addElement('textarea', 'deveagent', get_string('settingsdeveagent', 'mod_these'), ['rows' => 3, 'cols' => 60]);
         $mform->setType('deveagent', PARAM_TEXT);
-        $mform->addElement('static', 'deveagentdesc', '', get_string('settingsdeveagent_desc', 'mod_these'));
+        $mform->addHelpButton('deveagent', 'settingsdeveagent', 'mod_these');
 
         $mform->addElement('header', 'defenseheader', get_string('settingsdefenses', 'mod_these'));
         $mform->setExpanded('defenseheader');
@@ -62,7 +62,7 @@ class scopesettings_form extends \moodleform {
         $mform->setType('defenseduration', PARAM_INT);
         $mform->addRule('defenseduration', null, 'required', null, 'client');
         $mform->addRule('defenseduration', null, 'numeric', null, 'client');
-        $mform->addElement('static', 'defensedurationdesc', '', get_string('settingsdefenseduration_desc', 'mod_these'));
+        $mform->addHelpButton('defenseduration', 'settingsdefenseduration', 'mod_these');
         $mform->addElement(
             'textarea',
             'defenserooms',
@@ -70,17 +70,15 @@ class scopesettings_form extends \moodleform {
             ['rows' => 5, 'cols' => 60]
         );
         $mform->setType('defenserooms', PARAM_TEXT);
-        $mform->addElement('static', 'defenseroomsdesc', '', get_string('settingsdefenserooms_desc', 'mod_these'));
+        $mform->addHelpButton('defenserooms', 'settingsdefenserooms', 'mod_these');
 
         $mform->addElement('header', 'documentsheader', get_string('settingsdocuments', 'mod_these'));
         $mform->setExpanded('documentsheader');
-        $mform->addElement('static', 'documentsdesc', '', get_string('settingsdocuments_desc', 'mod_these'));
         foreach (array_keys(scopesettings::text_defaults()) as $name) {
             $mform->addElement('text', $name, get_string('settings' . $name, 'mod_these'), ['size' => 60]);
             $mform->setType($name, in_array($name, scopesettings::EMAILS, true) ? PARAM_EMAIL : PARAM_TEXT);
-            $desc = get_string('settings' . $name . '_desc', 'mod_these');
-            if ($desc !== '') {
-                $mform->addElement('static', $name . 'desc', '', $desc);
+            if (get_string_manager()->string_exists('settings' . $name . '_help', 'mod_these')) {
+                $mform->addHelpButton($name, 'settings' . $name, 'mod_these');
             }
         }
         $mform->addElement(
@@ -90,7 +88,7 @@ class scopesettings_form extends \moodleform {
             null,
             $this->_customdata['fileoptions']
         );
-        $mform->addElement('static', 'contracttemplatedesc', '', get_string('settingscontracttemplate_desc', 'mod_these'));
+        $mform->addHelpButton('contracttemplate', 'settingscontracttemplate', 'mod_these');
 
         $this->add_action_buttons(false, get_string('savechanges'));
     }

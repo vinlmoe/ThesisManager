@@ -90,9 +90,11 @@ $mform = new review_form($PAGE->url, [
     'minjury' => $these->minjury,
     'rooms' => these_defense_rooms($these),
     'jurycount' => count($jury),
+    'jury' => array_values($jury),
     'jurorids' => array_map('intval', array_column($jury, 'jurorid')),
     // Conflits de jury : en tête de la rubrique du jury quand le formulaire la contient, sinon de la page.
     'juryconflicts' => $juryconflicts,
+    'roomconflicts' => $rights->viewall ? these_render_room_conflicts($dossier) : '',
     'signs' => implode(', ', $signs),
     'signername' => fullname($USER),
     'externaldirector' => !empty($dossier->externaldirector),
@@ -120,6 +122,8 @@ switch ($step['key']) {
         $formdata->defensedate = $dossier->defensedate ?: $dossier->proposeddate;
         $formdata->defenselocation = $dossier->defenselocation;
         $formdata = (object) array_merge((array) $formdata, these_jury_form_data($jury));
+        // Jury présenté en lecture : la saisie ne s'ouvre que pour le modifier.
+        $formdata->juryedit = empty($jury) ? 1 : 0;
         // Agrément administratif : à défaut, ce que l'étudiant a déclaré dans sa fiche signalétique.
         $agreement = these_get_agreement($dossier);
         $declared = these_get_bordereau($dossier);

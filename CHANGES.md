@@ -13,7 +13,27 @@ de version recalés sur la date. Les numéros entre parenthèses des sections de
 développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
 été étiquetée.
 
-## mod_these 0.17.0 (2026102607) et mod_thesesynthesis 0.6.0 (2026102607) — signature sur place de l'étudiant et du directeur, vérification d'identité préalable, grille remplie par l'étudiant, ergonomie
+## mod_these 0.17.0 (2026102608) et mod_thesesynthesis 0.6.0 (2026102607) — signature sur place de l'étudiant et du directeur, vérification d'identité préalable, grille remplie par l'étudiant, ergonomie, simplifications pour la DEVE
+
+- Simplifications pour la DEVE :
+  - validation du dossier de soutenance : jury présenté en tableau ; seules
+    les cases d'éligibilité à vérifier (membres extérieurs votants) restent,
+    au nom du membre ; « Modifier la composition du jury » rouvre la saisie
+    complète. Date et lieu proposés repris, salles proposées ;
+  - « À traiter » : chaque dossier propose directement l'action attendue
+    (validation de l'étape, documents, procès-verbal), à côté d'« Ouvrir » ;
+  - actions groupées sur les dossiers cochés du tableau de bord : relancer
+    les signataires, générer les documents de soutenance, prévenir les
+    membres du jury pas encore prévenus (`bulk.php`, `\mod_these\local\bulk`) ;
+  - conflits de salle : une autre soutenance dans la même salle sur un
+    créneau qui chevauche est signalée (planning, dossier, modification,
+    validation) ;
+  - « Réglages à compléter » en tête des paramètres du circuit (signataires,
+    contrat type, images des modèles, salles…), rappelé sur le tableau de
+    bord de la DEVE tant qu'il manque quelque chose ;
+  - moins de texte : explications des pages de la DEVE repliées sous
+    « Aide », descriptions des paramètres du circuit derrière l'icône d'aide,
+    aides du jury et des validations de la DEVE ramenées à une ligne.
 
 - Dépôt de la soutenance (audit, amélioration 3) : encadré « Avancement du
   dépôt » en tête du formulaire, rubrique par rubrique, avec le nombre de

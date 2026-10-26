@@ -130,21 +130,18 @@ class jury {
     }
 
     /**
-     * Membres du jury d'un dossier déjà engagés dans un autre jury sur le même créneau, toutes
-     * promotions confondues : les deux soutenances (date arrêtée, ou à défaut date proposée) se
-     * chevauchent, chacune durant la durée fixée dans les paramètres du circuit de son activité. Les
-     * dossiers abandonnés sont ignorés.
+     * Autres soutenances qui chevauchent celle d'un dossier (date arrêtée, ou à défaut date proposée),
+     * toutes promotions confondues, chacune durant la durée fixée dans les paramètres du circuit de son
+     * activité. Les dossiers abandonnés sont ignorés.
      *
      * @param stdClass $dossier
-     * @param array|null $members Membres à vérifier (par défaut, le jury enregistré du dossier).
-     * @return stdClass[] {member (nom), time, student (nom), activity (nom de l'activité)}
+     * @return stdClass[] Dossiers, par date.
      */
-    public static function jury_conflicts(stdClass $dossier, ?array $members = null) {
+    public static function overlapping_dossiers(stdClass $dossier) {
         global $DB;
 
         $time = (int) ($dossier->defensedate ?: $dossier->proposeddate);
-        $members = $members ?? these_get_jury($dossier->id);
-        if (!$time || !$members) {
+        if (!$time) {
             return [];
         }
         // Candidats : soutenances commençant au plus une journée avant et avant la fin de celle-ci ; le
@@ -160,12 +157,95 @@ class jury {
             $params,
             'defensedate ASC, proposeddate ASC, id ASC'
         );
+        return array_values(array_filter($others, function ($other) use ($time) {
+            return (int) ($other->defensedate ?: $other->proposeddate) + self::defense_duration($other) > $time;
+        }));
+    }
+
+    /**
+     * Lieu ramené à une forme comparable : casse, espaces.
+     *
+     * @param string|null $location
+     * @return string
+     */
+    public static function normalise_location($location) {
+        return \core_text::strtolower(trim(preg_replace('/\s+/u', ' ', (string) $location)));
+    }
+
+    /**
+     * Autres soutenances prévues dans la même salle sur un créneau qui chevauche celle d'un dossier
+     * (voir overlapping_dossiers()). Les soutenances sans lieu sont ignorées.
+     *
+     * @param stdClass $dossier
+     * @param string|null $location Lieu à vérifier (par défaut, celui du dossier).
+     * @return stdClass[] {location, time, student (nom), activity (nom de l'activité)}
+     */
+    public static function room_conflicts(stdClass $dossier, $location = null) {
+        global $DB;
+
+        $room = self::normalise_location($location ?? $dossier->defenselocation);
+        if ($room === '') {
+            return [];
+        }
         $conflicts = [];
-        foreach ($others as $other) {
-            $othertime = (int) ($other->defensedate ?: $other->proposeddate);
-            if ($othertime + self::defense_duration($other) <= $time) {
+        foreach (self::overlapping_dossiers($dossier) as $other) {
+            if (self::normalise_location($other->defenselocation) !== $room) {
                 continue;
             }
+            $student = $DB->get_record('user', ['id' => $other->userid]);
+            $conflicts[] = (object) [
+                'location' => trim((string) $other->defenselocation),
+                'time' => (int) ($other->defensedate ?: $other->proposeddate),
+                'student' => $student ? fullname($student) : '-',
+                'activity' => (string) $DB->get_field('these', 'name', ['id' => $other->theseid]),
+            ];
+        }
+        return $conflicts;
+    }
+
+    /**
+     * Avertissement des conflits de salle d'un dossier (voir room_conflicts()), pour le personnel.
+     *
+     * @param stdClass $dossier
+     * @return string HTML, vide sans conflit.
+     */
+    public static function render_room_conflicts(stdClass $dossier) {
+        global $OUTPUT, $PAGE;
+
+        $lines = array_map(function ($conflict) {
+            return get_string('roomconflict', 'mod_these', (object) [
+                'location' => $conflict->location,
+                'date' => userdate($conflict->time, get_string('strftimedaydatetime', 'langconfig')),
+                'student' => $conflict->student,
+                'activity' => format_string($conflict->activity),
+            ]);
+        }, self::room_conflicts($dossier));
+        if (!$lines) {
+            return '';
+        }
+        $list = $PAGE->get_renderer('mod_these')->render(new \mod_these\output\bullet_list($lines));
+        return $OUTPUT->notification(get_string('roomconflicts', 'mod_these') . $list, 'warning');
+    }
+
+    /**
+     * Membres du jury d'un dossier déjà engagés dans un autre jury sur le même créneau, toutes
+     * promotions confondues : les deux soutenances (date arrêtée, ou à défaut date proposée) se
+     * chevauchent, chacune durant la durée fixée dans les paramètres du circuit de son activité. Les
+     * dossiers abandonnés sont ignorés.
+     *
+     * @param stdClass $dossier
+     * @param array|null $members Membres à vérifier (par défaut, le jury enregistré du dossier).
+     * @return stdClass[] {member (nom), time, student (nom), activity (nom de l'activité)}
+     */
+    public static function jury_conflicts(stdClass $dossier, ?array $members = null) {
+        global $DB;
+
+        $members = $members ?? these_get_jury($dossier->id);
+        if (!$members) {
+            return [];
+        }
+        $conflicts = [];
+        foreach (self::overlapping_dossiers($dossier) as $other) {
             $otherjury = these_get_jury($other->id);
             foreach ($members as $member) {
                 foreach ($otherjury as $othermember) {
@@ -288,8 +368,9 @@ class jury {
         if ($warning !== '') {
             $mform->addElement('static', 'juryconflicts', '', $warning);
         }
-        // Les erreurs de composition du jury s'affichent ici, en tête de la rubrique.
-        $mform->addElement('static', 'juryhelp', '', get_string('juryhelp', 'mod_these'));
+        // Les erreurs de composition du jury s'affichent ici, en tête de la rubrique. La DEVE, qui
+        // connaît les règles, n'a qu'un rappel d'une ligne.
+        $mform->addElement('static', 'juryhelp', '', get_string($eligibility ? 'juryhelpdeve' : 'juryhelp', 'mod_these'));
 
         $jurors = [0 => get_string('juryexternal', 'mod_these')] + \mod_these\local\jurors::options(false, $keep);
         $repeat = [];

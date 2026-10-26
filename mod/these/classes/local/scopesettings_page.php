@@ -78,8 +78,44 @@ class scopesettings_page {
         echo $OUTPUT->heading(get_string('scopesettings', 'mod_these'));
         echo $navigation;
         $intro = get_string($scope->shared ? 'scopesettingsshared_desc' : 'scopesettings_desc', 'mod_these');
-        echo $renderer->render(new output\message($intro, 'mb-3'));
+        echo $renderer->render(output\message::help($intro));
+        echo $renderer->render(self::checklist_message($scope));
         $form->display();
         echo $OUTPUT->footer();
+    }
+
+    /**
+     * Encadré « Réglages à compléter » (voir scopesettings::checklist()) : nombre d'éléments manquants,
+     * puis chaque élément, complet ou à compléter, avec le lien vers la page où le régler.
+     *
+     * @param stdClass $scope
+     * @return output\message
+     */
+    public static function checklist_message(stdClass $scope) {
+        global $PAGE;
+
+        $checklist = scopesettings::checklist($scope);
+        $missing = count(array_filter($checklist, function ($item) {
+            return !$item['complete'] && !$item['optional'];
+        }));
+        $items = array_map(function ($item) {
+            $parts = [$item['url'] ? output\parts::link($item['url'], $item['label'], '') : output\parts::text($item['label'])];
+            $parts[] = output\parts::text(' ');
+            if ($item['complete']) {
+                $parts[] = output\parts::badge(get_string('settingscheckdone', 'mod_these'), 'badge badge-success');
+            } else if ($item['optional']) {
+                $parts[] = output\parts::badge(get_string('settingscheckoptional', 'mod_these'), 'badge badge-secondary');
+            } else {
+                $parts[] = output\parts::badge(get_string('settingschecktodo', 'mod_these'), 'badge badge-warning');
+            }
+            return $parts;
+        }, $checklist);
+        $heading = $missing
+            ? get_string('settingschecktitle', 'mod_these', $missing)
+            : get_string('settingscheckcomplete', 'mod_these');
+        return new output\message([
+            output\parts::strong($heading),
+            output\parts::html($PAGE->get_renderer('mod_these')->render(new output\bullet_list($items))),
+        ], 'alert ' . ($missing ? 'alert-warning' : 'alert-success') . ' these-settings-checklist');
     }
 }

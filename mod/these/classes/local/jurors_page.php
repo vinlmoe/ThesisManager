@@ -121,7 +121,7 @@ class jurors_page {
         echo $OUTPUT->header();
         echo $OUTPUT->heading(get_string('jurors', 'mod_these'));
         echo $navigation;
-        echo $renderer->render(new output\message(get_string('jurors_desc', 'mod_these'), 'mb-3'));
+        echo $renderer->render(output\message::help(get_string('jurors_desc', 'mod_these')));
         if ($result) {
             echo $OUTPUT->notification(get_string('jurorimportdone', 'mod_these', $result), 'success');
             if ($result->errors) {

@@ -91,7 +91,7 @@ echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('transfersettings', 'mod_these'));
 echo these_render_navlinks($cm, $context);
 $renderer = $PAGE->get_renderer('mod_these');
-echo $renderer->render(new output\message(get_string('transfersettings_desc', 'mod_these'), 'mb-3'));
+echo $renderer->render(output\message::help(get_string('transfersettings_desc', 'mod_these')));
 
 if ($result) {
     $lines = [];

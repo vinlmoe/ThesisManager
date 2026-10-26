@@ -109,9 +109,10 @@ class scopesettings {
      *
      * @param \MoodleQuickForm $mform
      * @param string[] $rooms Voir rooms().
+     * @param string $warning Avertissement affiché sous le champ (HTML, voir jury::render_room_conflicts()).
      * @return void
      */
-    public static function add_location_field(\MoodleQuickForm $mform, array $rooms) {
+    public static function add_location_field(\MoodleQuickForm $mform, array $rooms, $warning = '') {
         $attributes = ['size' => 64];
         if ($rooms) {
             $attributes['list'] = 'these-defense-rooms';
@@ -129,6 +130,9 @@ class scopesettings {
                 \html_writer::tag('datalist', $options, ['id' => 'these-defense-rooms'])
                     . get_string('defenseroomshelp', 'mod_these', implode(' ; ', array_map('s', $rooms)))
             );
+        }
+        if ($warning !== '') {
+            $mform->addElement('static', 'roomconflicts', '', $warning);
         }
     }
 
@@ -274,6 +278,60 @@ class scopesettings {
      */
     public static function reset_cache() {
         self::cache()->purge();
+    }
+
+    /**
+     * Réglages d'une portée à compléter avant de faire tourner le circuit : textes et signataires
+     * des documents, contrat type, images des modèles, salles de soutenance, questionnaire. Les
+     * agents DEVE signataires sont facultatifs.
+     *
+     * @param stdClass $scope
+     * @return array[] label, complete (bool), optional (bool), url (moodle_url de la page où le régler, ou null : cette page)
+     */
+    public static function checklist(stdClass $scope) {
+        $values = self::get_all($scope);
+        $page = function ($script) use ($scope) {
+            if (!$scope->cmid) {
+                return null;
+            }
+            return new \moodle_url('/mod/' . substr($scope->component, 4) . '/' . $script, ['id' => $scope->cmid]);
+        };
+        $filled = function (array $names) use ($values) {
+            foreach ($names as $name) {
+                if (trim((string) $values[$name]) === '') {
+                    return false;
+                }
+            }
+            return true;
+        };
+        $images = doctemplates::doctemplate_images($scope);
+        $missingimages = array_diff(doctemplates::doctemplate_image_slots(), array_keys($images));
+        $items = [
+            ['settingscheckinstitution', $filled(['institution', 'university']), false, null],
+            ['settingscheckdg', $filled(['dgtitle', 'dgname']), false, null],
+            ['settingscheckccem', $filled(['ccemname']), false, null],
+            ['settingscheckucbl', $filled(['ucbltitle', 'ucblname']), false, null],
+            ['settingscheckdeve', $filled(['devename']), false, null],
+            ['settingscheckcontract', self::contract_template($scope) !== null, false, null],
+            ['settingscheckrooms', (bool) self::rooms($values), false, null],
+            ['settingscheckagents', $filled(['deveagent']), true, null],
+            ['settingscheckquestions', (bool) these_get_questions($scope), true, $page('questions.php')],
+        ];
+        $list = [];
+        foreach ($items as [$key, $complete, $optional, $url]) {
+            $list[] = ['label' => get_string($key, 'mod_these'), 'complete' => $complete, 'optional' => $optional, 'url' => $url];
+        }
+        $list[] = [
+            'label' => $missingimages
+                ? get_string('settingscheckimagesmissing', 'mod_these', implode(', ', array_map(function ($slot) {
+                    return $slot . '.png';
+                }, $missingimages)))
+                : get_string('settingscheckimages', 'mod_these'),
+            'complete' => !$missingimages,
+            'optional' => false,
+            'url' => $page('doctemplates.php'),
+        ];
+        return $list;
     }
 
     /**

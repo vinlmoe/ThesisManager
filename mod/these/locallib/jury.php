@@ -255,3 +255,24 @@ function these_defense_rooms(stdClass $these) {
         (string) ($these->defaultlocation ?? '')
     );
 }
+
+/**
+ * Voir \mod_these\local\jury::room_conflicts().
+ *
+ * @param stdClass $dossier
+ * @param string|null $location
+ * @return stdClass[]
+ */
+function these_room_conflicts(stdClass $dossier, $location = null) {
+    return \mod_these\local\jury::room_conflicts($dossier, $location);
+}
+
+/**
+ * Voir \mod_these\local\jury::render_room_conflicts().
+ *
+ * @param stdClass $dossier
+ * @return string HTML
+ */
+function these_render_room_conflicts(stdClass $dossier) {
+    return \mod_these\local\jury::render_room_conflicts($dossier);
+}

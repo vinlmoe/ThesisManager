@@ -89,7 +89,7 @@ class griditems_page {
         echo $OUTPUT->heading(get_string('griditems', 'mod_these'));
         echo $navigation;
         $intro = get_string($scope->shared ? 'griditemsshared_desc' : 'griditems_desc', 'mod_these');
-        echo $renderer->render(new output\message($intro, 'mb-3'));
+        echo $renderer->render(output\message::help($intro));
         $preview = new output\link($previewurl, get_string('doctplpreview', 'mod_these'), 'btn btn-secondary', '_blank', 'mb-3');
         echo $renderer->render($preview);
         $mform->display();

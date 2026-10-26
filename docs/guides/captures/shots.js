@@ -380,6 +380,15 @@ const steps = {
     const p = await open(await as('sbonnet'), these('dashboard.php'));
     await uptoSection(p, '18_tableau_de_bord_deve', 'À traiter');
   },
+  async '105_actions_groupees'() {
+    const p = await open(await as('sbonnet'), these('dashboard.php'));
+    const boxes = p.locator('.these-bulk-form input[name="dossierids[]"]');
+    const n = await boxes.count();
+    await boxes.nth(n - 1).check();
+    await boxes.nth(n - 2).check();
+    await p.selectOption('.these-bulk-form select[name=bulkaction]', 'remind');
+    await region(p, '105_actions_groupees', `.these-bulk-form tbody tr:nth-child(${n - 2})`, '.these-bulk-form .form-inline');
+  },
   async '103_menu_parametres'() {
     const p = await open(await as('sbonnet'), these('dashboard.php'));
     await p.click('.these-navlinks .dropdown-toggle');

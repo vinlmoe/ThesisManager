@@ -82,7 +82,7 @@ echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('documents', 'mod_these'));
 echo $renderer->render(new output\link($dossierurl, get_string('back')));
 echo $OUTPUT->box(get_string('dossierof', 'mod_these', $student ? fullname($student) : '-'), 'generalbox mb-3');
-echo $OUTPUT->box(get_string('documentsintro', 'mod_these'), 'generalbox mb-3');
+echo $renderer->render(output\message::help(get_string('documentsintro', 'mod_these')));
 
 $datetimeformat = get_string('strftimedatetimeshort', 'langconfig');
 $files = new output\file_links($context, 'generated', $dossier->id, 'mb-3');

@@ -67,7 +67,11 @@ class dossier_edit_form extends \moodleform {
             get_string('defensedate', 'mod_these'),
             ['optional' => true]
         );
-        \mod_these\local\scopesettings::add_location_field($mform, $this->_customdata['rooms'] ?? []);
+        \mod_these\local\scopesettings::add_location_field(
+            $mform,
+            $this->_customdata['rooms'] ?? [],
+            $this->_customdata['roomconflicts'] ?? ''
+        );
 
         these_add_jury_fields(
             $this,

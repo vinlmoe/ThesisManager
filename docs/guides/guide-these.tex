@@ -95,6 +95,9 @@ non préremplie ; frise réduite à l'étape en cours sur téléphone ; menu
 \og Paramètres\fg{} de la DEVE, un seul lien vers l'activité de suivi ;
 salles de soutenance dans les paramètres du circuit ; erreurs et conflits du
 jury en tête de la rubrique Jury. \\
+2.11 & 26 octobre 2026 & Simplifications pour la DEVE : jury présenté en
+lecture à la validation, action directe dans \og À traiter\fg{}, actions
+groupées, conflits de salle, réglages à compléter. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -276,6 +279,13 @@ circuit}, et vaut pour toutes les promotions qu'elle suit (comme les modèles de
 documents). Une activité \og Gestion des thèses\fg{} qu'aucune activité de suivi
 ne suit a ses propres paramètres, sous le même bouton ; suivie, elle renvoie à
 l'activité de suivi.
+
+En tête de la page, l'encadré \og Réglages à compléter\fg{} liste ce qui
+manque encore pour faire tourner le circuit : établissement et université,
+signataires (direction générale, CCEM, présidence de l'université, direction
+des études), contrat type, salles de soutenance et images des modèles (avec le
+lien vers la page des modèles et le nom des images manquantes). Les agents DEVE
+signataires et le questionnaire sont facultatifs.
 
 \capture[0.85\linewidth]{24_parametres_circuit}{Paramètres du circuit, dans l'activité de suivi.}
 
@@ -667,9 +677,43 @@ activité de suivi ne suit, paramètres du circuit, modèles des documents
 (section~\ref{sec:modeles}), grille et questionnaire. Quand une activité
 \og Suivi des thèses\fg{} porte ces paramètres, un seul lien y mène.
 
+Pour garder les pages courtes, les explications destinées à la DEVE sont
+repliées sous \bouton{Aide} en tête des pages (paramètres, modèles, grille,
+questionnaire, annuaire, transfert, modification d'un dossier, documents,
+export), et celles des champs des paramètres du circuit derrière l'icône
+d'aide \og ?\fg{}.
+
 \capture[0.6\linewidth]{103_menu_parametres}{Barre de navigation de la DEVE : pages de travail et menu \bouton{Paramètres} (activité suivie).}
 
+Dans \og À traiter\fg{}, chaque dossier propose directement l'action qui vous
+attend (\bouton{Enregistrer le sujet (DEVE)}, \bouton{Valider le dossier de
+soutenance (DEVE)}, \bouton{Documents de soutenance}, \bouton{Déposer le
+procès-verbal}\ldots), à côté de \bouton{Ouvrir} qui mène au dossier. Le
+directeur et la bibliothèque ont de même le bouton de leur validation. Tant
+que des réglages du circuit manquent (signataires, contrat type, images des
+modèles, salles\ldots), un encadré orange le rappelle en tête du tableau de
+bord, avec le lien vers les \bouton{Paramètres du circuit}.
+
 \capture{18_tableau_de_bord_deve}{Tableau de bord de la DEVE : la rubrique \og À traiter\fg{}, suivie du décompte par statut et de la liste de tous les dossiers.}
+
+\begin{procedure}{Agir sur plusieurs dossiers à la fois}{Équipe DEVE}
+\begin{etapes}
+  \item Dans la liste de tous les dossiers (filtrée au besoin par statut),
+        cochez les dossiers concernés.
+  \item Sous la liste, choisissez l'action : \bouton{Relancer les
+        signataires} (agents DEVE et signataires sans compte dont une
+        signature est attendue), \bouton{Générer les documents de soutenance}
+        (manuscrit conforme ou soutenance programmée) ou \bouton{Prévenir les
+        membres du jury pas encore prévenus} (dossier validé, jusqu'à la
+        soutenance).
+  \item Cliquez sur \bouton{Appliquer}.
+\end{etapes}
+\ensuite{un message indique le nombre de dossiers traités et ignorés : une
+action ne porte que sur les dossiers dont l'étape s'y prête, ou qui ont
+quelque chose en attente.}
+\end{procedure}
+
+\capture[0.85\linewidth]{105_actions_groupees}{Actions groupées sous la liste des dossiers.}
 
 \begin{astuce}
 Quand des \textbf{agents DEVE signataires} sont désignés dans les réglages du
@@ -699,7 +743,13 @@ DEVE. Une erreur de composition (pas de président, trop peu de membres
 votants, éligibilité non vérifiée) s'affiche de même en tête de la rubrique
 \og Jury\fg{}, et non plus sur la ligne du premier membre. Les dossiers
 abandonnés ne comptent pas. L'avertissement ne bloque rien : à la DEVE de
-déplacer la soutenance ou de remplacer le membre. La durée d'une soutenance
+déplacer la soutenance ou de remplacer le membre.
+
+\paragraph{Conflits de salle.} De même, une autre soutenance prévue dans la
+même salle (lieu identique, casse et espaces ignorés) sur un créneau qui
+chevauche celui-ci est signalée : badge rouge \og Salle occupée\fg{} sous le
+lieu dans le planning, avertissement au-dessus de la soutenance dans le
+dossier et sous le lieu dans sa modification et sa validation. La durée d'une soutenance
 (une heure par défaut) se règle dans les \bouton{Paramètres du circuit},
 rubrique \og Soutenances\fg{}.
 
@@ -756,10 +806,15 @@ le dépôt de sujet. Le numéro d'enregistrement n'est pas encore attribué.}
         directeur, les réponses au questionnaire.
   \item Contrôlez le \textbf{numéro d'enregistrement DEVE} proposé (le
         suivant de l'année, modifiable mais unique).
-  \item Arrêtez la date, l'heure et le lieu.
-  \item Vérifiez le jury et cochez \bouton{Éligibilité vérifiée (DEVE)} pour chaque
-        membre votant (déjà cochée pour les enseignants de l'annuaire dont le
-        statut convient).
+  \item Arrêtez la date, l'heure et le lieu : la date et le lieu proposés par
+        l'étudiant sont repris, les salles des paramètres proposées. Un conflit
+        de salle s'affiche sous le lieu.
+  \item Vérifiez le jury, présenté en tableau. Seuls les membres dont
+        l'éligibilité est à vérifier (membres extérieurs votants) ont leur case
+        \bouton{Éligibilité de \ldots{} vérifiée (DEVE)} ; elle est déjà validée
+        pour les enseignants de l'annuaire dont le statut convient. Pour changer
+        un membre, cochez \bouton{Modifier la composition du jury} : la saisie
+        complète s'ouvre.
   \item Complétez l'agrément administratif (DEFV, mobilité, A6).
   \item Cliquez sur \bouton{Valider le dossier}.
 \end{etapes}
@@ -771,7 +826,7 @@ de signature.}
 
 \capture[0.85\linewidth]{71_deve_valide_soutenance}{Validation du dossier de soutenance : numéro, date, jury et éligibilité.}
 
-\capture[0.85\linewidth]{46_jury_eligibilite}{Éligibilité des membres du jury, vérifiée par la DEVE.}
+\capture[0.85\linewidth]{46_jury_eligibilite}{Jury présenté en lecture à la validation : seules les éligibilités à vérifier restent à cocher.}
 
 \begin{procedure}{Suivre et recueillir les signatures}{Équipe DEVE}
 \begin{etapes}

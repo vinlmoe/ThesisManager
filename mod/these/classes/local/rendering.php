@@ -293,6 +293,32 @@ class rendering {
     }
 
     /**
+     * Action qui attend l'utilisateur sur un dossier, pour l'ouvrir directement depuis la file « À
+     * traiter » : la validation de l'étape en cours, ou pour la DEVE les documents puis le
+     * procès-verbal.
+     *
+     * @param stdClass $cm
+     * @param stdClass $dossier
+     * @param stdClass $rights Voir these_get_rights().
+     * @return array|null [libellé, moodle_url], ou null sans action attendue.
+     */
+    public static function primary_action(stdClass $cm, stdClass $dossier, stdClass $rights) {
+        $params = ['id' => $cm->id, 'dossierid' => $dossier->id];
+        $status = (int) $dossier->status;
+        $steps = these_review_steps();
+        if (isset($steps[$status]) && !empty($rights->{$steps[$status]['actor']})) {
+            return [get_string('review' . $steps[$status]['key'], 'mod_these'), new moodle_url('/mod/these/review.php', $params)];
+        }
+        if ($rights->deve && $status === THESE_STATUS_CONFORM) {
+            return [get_string('documents', 'mod_these'), new moodle_url('/mod/these/documents.php', $params)];
+        }
+        if ($rights->deve && $status === THESE_STATUS_SCHEDULED) {
+            return [get_string('depositminutes', 'mod_these'), new moodle_url('/mod/these/minutes.php', $params)];
+        }
+        return null;
+    }
+
+    /**
      * Rend un dossier complet : progression, renvoi en cours, actions, sujet, enregistrements,
      * soutenance, documents et historique. Utilisé par la page de l'étudiant et par dossier.php.
      *
@@ -388,11 +414,12 @@ class rendering {
      *
      * @param array $dossiers Voir these_get_dossiers().
      * @param stdClass $cm
+     * @param array $options Voir output\dossier_table.
      * @return string HTML
      */
-    public static function render_dossier_table(array $dossiers, stdClass $cm) {
+    public static function render_dossier_table(array $dossiers, stdClass $cm, array $options = []) {
         global $PAGE;
 
-        return $PAGE->get_renderer('mod_these')->render(new output\dossier_table($dossiers, $cm));
+        return $PAGE->get_renderer('mod_these')->render(new output\dossier_table($dossiers, $cm, $options));
     }
 }
