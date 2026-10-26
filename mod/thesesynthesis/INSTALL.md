@@ -31,8 +31,8 @@ php admin/cli/upgrade.php
    suivies (les pages correspondantes des activités suivies renvoient ici).
    **Paramètres du circuit** de même : rôles DEVE et Bibliothèque, agents DEVE
    signataires, établissement, université, signataires des documents et
-   contrat type de diffusion. Le module n'a aucun réglage du site ; les deux
-   rôles ne sont modifiables que par un gestionnaire.
+   contrat type de diffusion. Le module n'a aucun réglage du site : la DEVE,
+   responsable de l'activité, règle tout, rôles compris.
 6. **Annuaire du jury** : y saisir (ou importer en CSV) les enseignants pouvant
    diriger une thèse ou siéger au jury, avec leur titre et leur statut.
 

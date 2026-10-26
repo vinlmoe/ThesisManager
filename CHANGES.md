@@ -23,9 +23,8 @@ développement ne correspondent à aucune version installable ; 0.11.2 n'a jamai
   « Suivi des thèses », valables pour toutes les promotions qu'elle suit ; une
   activité « Gestion des thèses » qu'aucune activité de suivi ne suit a les
   siens, sous le même bouton. Nouvelle table `these_setting` ; le contrat type
-  est rangé dans la zone `contracttemplate` de l'activité. Les deux rôles ne
-  sont modifiables que par qui peut modifier les permissions des rôles dans
-  l'activité (gestionnaire) : choisir le rôle DEVE en donne les droits.
+  est rangé dans la zone `contracttemplate` de l'activité. La DEVE,
+  responsable de l'activité, règle tout, rôles des services compris.
 - Mise à jour (`db/upgrade.php`, 2026102602) : les anciens réglages du site et
   le contrat type sont recopiés dans chaque activité « Suivi des thèses » et
   « Gestion des thèses », puis supprimés du site.

@@ -26,7 +26,7 @@ use mod_these\local\scopesettings;
  * Paramètres du circuit d'une portée (voir \mod_these\local\scopesettings) : rôles des services,
  * agents DEVE signataires, établissement, université, signataires des documents et contrat type.
  *
- * customdata : roles (id => nom), canroles (bool : modification des rôles permise), fileoptions.
+ * customdata : roles (id => nom), fileoptions.
  *
  * @package   mod_these
  * @copyright 2026 Sébastien Lefebvre
@@ -48,11 +48,6 @@ class scopesettings_form extends \moodleform {
             $mform->addElement('select', $name, get_string($name, 'mod_these'), $this->_customdata['roles']);
             $mform->setType($name, PARAM_INT);
             $mform->addElement('static', $name . 'desc', '', get_string($name . '_desc', 'mod_these'));
-            if (empty($this->_customdata['canroles'])) {
-                // Choisir le rôle DEVE revient à donner les droits de la DEVE : réservé à qui peut
-                // modifier les permissions des rôles dans l'activité.
-                $mform->hardFreeze($name);
-            }
         }
 
         $mform->addElement('header', 'agentheader', get_string('settingsdeveagent', 'mod_these'));

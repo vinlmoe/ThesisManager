@@ -24,7 +24,8 @@ use stdClass;
 /**
  * Page des paramètres du circuit d'une portée, commune à l'activité « Suivi des thèses » et à une
  * activité « Gestion des thèses » qu'aucune activité de suivi ne suit. Chaque page vérifie ses
- * propres droits et prépare $PAGE avant d'appeler output().
+ * propres droits et prépare $PAGE avant d'appeler output(). La DEVE, responsable de l'activité, y
+ * règle tout, rôles des services compris.
  *
  * @package   mod_these
  * @copyright 2026 Sébastien Lefebvre
@@ -47,8 +48,7 @@ class scopesettings_page {
             $roles[$role->id] = $role->localname;
         }
         $fileoptions = ['subdirs' => 0, 'maxfiles' => 1, 'accepted_types' => ['.pdf']];
-        $canroles = has_capability('moodle/role:override', $PAGE->context);
-        $form = new scopesettings_form($baseurl, ['roles' => $roles, 'canroles' => $canroles, 'fileoptions' => $fileoptions]);
+        $form = new scopesettings_form($baseurl, ['roles' => $roles, 'fileoptions' => $fileoptions]);
 
         $draftitemid = file_get_submitted_draft_itemid('contracttemplate');
         file_prepare_draft_area($draftitemid, $scope->contextid, $scope->component, 'contracttemplate', 0, $fileoptions);
@@ -57,9 +57,6 @@ class scopesettings_page {
         if ($data = $form->get_data()) {
             $values = [];
             foreach (array_keys(scopesettings::defaults()) as $name) {
-                if (in_array($name, ['deverole', 'libraryrole'], true) && !$canroles) {
-                    continue;
-                }
                 if (isset($data->$name)) {
                     $values[$name] = $data->$name;
                 }

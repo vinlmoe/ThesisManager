@@ -576,8 +576,7 @@ $string['settingsroles_desc'] = "Comme la DEVE est reconnue au rôle « Enseigna
     . "Le rôle peut être attribué dans le cours, dans sa catégorie ou au niveau du site (il donne alors accès à toutes les activités "
     . "de gestion des thèses sans inscription). Les capacités du module restent également prises en compte.";
 $string['deverole'] = 'Rôle DEVE';
-$string['deverole_desc'] = "Rôle dont les détenteurs agissent comme DEVE dans les activités de gestion des thèses. Modifiable par qui "
-    . "peut modifier les permissions des rôles dans l'activité (gestionnaire).";
+$string['deverole_desc'] = 'Rôle dont les détenteurs agissent comme DEVE dans les activités de gestion des thèses.';
 $string['libraryrole'] = 'Rôle Bibliothèque';
 $string['libraryrole_desc'] = "Rôle dont les détenteurs agissent comme bibliothèque. Par défaut, le rôle interne « Bibliothèque "
     . "(thèses) » créé à l'installation du module.";

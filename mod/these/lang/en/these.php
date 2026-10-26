@@ -570,8 +570,7 @@ $string['settingsroles_desc'] = 'Just as the registrar is recognised by the "Tea
     . 'here. The role can be assigned in the course, its category or at site level (it then gives access to all thesis activities '
     . 'without enrolment). The module capabilities are also taken into account.';
 $string['deverole'] = 'Registrar role';
-$string['deverole_desc'] = 'Role whose holders act as the registrar in thesis activities. Can be changed by those who may override '
-    . 'role permissions in the activity (manager).';
+$string['deverole_desc'] = 'Role whose holders act as the registrar in thesis activities.';
 $string['libraryrole'] = 'Library role';
 $string['libraryrole_desc'] = 'Role whose holders act as the library. By default, the internal "Library (theses)" role created when '
     . 'the module is installed.';

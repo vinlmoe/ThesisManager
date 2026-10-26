@@ -34,9 +34,8 @@ l'installer.
 Le module n'a **aucun réglage du site**. Les rôles des services, comme tous les
 paramètres du circuit (voir 3 bis), se choisissent dans l'activité *Suivi des
 thèses*, bouton *Paramètres du circuit* ; une activité *Gestion des thèses*
-qu'aucune activité de suivi ne suit a les siens, sous le même bouton. Seul un
-utilisateur qui peut modifier les permissions des rôles dans l'activité
-(gestionnaire) change ces deux rôles :
+qu'aucune activité de suivi ne suit a les siens, sous le même bouton. La DEVE,
+responsable de l'activité, les règle elle-même :
 
 - **Rôle DEVE** (« Enseignant » par défaut, comme pour `mod_stage`) ;
 - **Rôle Bibliothèque** : le module crée à l'installation le rôle « Bibliothèque
