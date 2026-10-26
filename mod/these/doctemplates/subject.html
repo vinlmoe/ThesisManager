@@ -1,21 +1,18 @@
 <!--@page margins="5,12,5,13" font="freesans" size="10" lineheight="1.2"-->
 <!--@body-->
 <table cellpadding="0">
-  <tr><td align="right" style="font-size:8pt;">ENS-INI-P308-E01 V9</td></tr>
-</table>
-<table cellpadding="0">
   <tr>
     <td width="2mm"></td>
-    <td width="60mm"><img src="{{img.marianne}}" height="27mm" /></td>
+    <td width="60mm"><img src="{{img.ministere}}" height="27mm" /></td>
     <td width="56mm"></td>
-    <td width="67mm"><img src="{{img.vetagrosup}}" height="23mm" /></td>
+    <td width="67mm"><img src="{{img.logo}}" height="23mm" /></td>
   </tr>
 </table>
 <div style="text-align:center;font-size:15pt;font-weight:bold;line-height:1.5;">DEPOT DE SUJET DE THESE</div>
 <table cellpadding="0">
   <tr>
     <td width="3mm"></td>
-    <td width="130mm" style="font-size:9.5pt;"><span style="font-size:12pt;">@</span> <i>à envoyer à <b><u><span style="color:#0000ee;">elodie.leogier@vetagro-sup.fr</span></u></b> en PDF avec saisie informatique</i></td>
+    <td width="130mm" style="font-size:9.5pt;">{{#establishment.deveemail}}<span style="font-size:12pt;">@</span> <i>à envoyer à <b><u><span style="color:#0000ee;">{{establishment.deveemail}}</span></u></b> en PDF avec saisie informatique</i>{{/establishment.deveemail}}</td>
     <td width="52mm" style="font-size:9.5pt;"><b><i>DEVE, le :</i></b> {{sigdate.deve}}</td>
   </tr>
 </table>
@@ -76,28 +73,27 @@
       <table cellpadding="0">
         <tr>
           <td width="62%" height="9mm" align="center">{{#signed.thesisdirector}}<img src="{{sigsrc.thesisdirector}}" height="9mm" />{{/signed.thesisdirector}}</td>
-          <td width="33%" align="right" style="color:#808080;"><br /><i>Signature</i></td>
+          <td width="33%"></td>
         </tr>
       </table>
       <table cellpadding="0"><tr><td width="100%" align="center" style="font-size:5.5pt;color:#555555;">{{sigcaption.thesisdirector}}</td></tr></table>
     </td>
     <td width="78mm" align="center" style="border-right:0.8pt solid #000000;border-bottom:0.8pt solid #000000;">
-      <br /><i>Visa de la Directrice de VetAgro Sup<br />Par délégation, la DEVE</i><br /><br />{{{sig.deve}}}
+      <br /><i>Visa de la Directrice de {{settings.institution}}<br />Par délégation, la DEVE</i><br /><br />{{{sig.deve}}}
     </td>
   </tr>
   <tr>
     <td width="106.5mm" height="46.4mm" style="border-left:0.8pt solid #000000;border-right:0.8pt solid #000000;border-bottom:0.8pt solid #000000;line-height:1.85;">
-      <b><u><span style="font-size:8.5pt;">&nbsp;Si le Directeur de thèse est extérieur à VetAgro Sup, précisez son :</span></u></b><br />
+      <b><u><span style="font-size:8.5pt;">&nbsp;Si le Directeur de thèse est extérieur à {{settings.institution}}, précisez son :</span></u></b><br />
       <i>&nbsp;Titre NOM Prénom :</i> {{extdirector.name}}<br />
       <i>&nbsp;Grade :</i> {{extdirector.grade}}<br />
       <i>&nbsp;Etablissement :</i> {{extdirector.institution}}<br />
       <i>&nbsp;Adresse mail :</i> {{extdirector.email}}<br />
-      <span style="line-height:2.6;">&nbsp;<b>Membre de VetAgro Sup <span style="font-size:6.5pt;">(=Enseignant-Chercheur VETAGROSUP)</span></b></span><br />
+      <span style="line-height:2.6;">&nbsp;<b>Membre de {{settings.institution}} <span style="font-size:6.5pt;">(= Enseignant-Chercheur de {{settings.institution}})</span></b></span><br />
       <i>&nbsp;Titre, Nom, prénom :</i> {{#extdirector.present}}{{director.fullname}}{{/extdirector.present}}
     </td>
     <td width="78mm" align="center" style="border-right:0.8pt solid #000000;border-bottom:0.8pt solid #000000;">
       <br /><br /><br /><br /><br /><br /><br />{{#extdirector.present}}{{{sig.director}}}{{/extdirector.present}}{{^extdirector.present}}<br /><br /><br />{{/extdirector.present}}
-      <br /><span style="color:#808080;"><i>Signature</i></span>
     </td>
   </tr>
 </table>
@@ -111,19 +107,19 @@
       <table cellpadding="0">
         <tr>
           <td width="38mm" align="right">L’étudiant s’engage à :&nbsp;</td>
-          <td width="145mm">{{{box.commitguide}}} avoir pris connaissance du Guide des Thèses disponible en ligne sur Vetagrotice<br />{{{box.commitduplicate}}} avoir vérifié que son sujet n'a pas fait l'objet d'une thèse de doctorat vétérinaire dans<br />&nbsp;&nbsp;&nbsp;&nbsp;l'une des 4 écoles ou n'est pas celui d'une thèse en cours de rédaction</td>
+          <td width="145mm">{{{box.commitguide}}} avoir pris connaissance du Guide des Thèses disponible en ligne<br />{{{box.commitduplicate}}} avoir vérifié que son sujet n'a pas fait l'objet d'une thèse de doctorat vétérinaire dans<br />&nbsp;&nbsp;&nbsp;&nbsp;l'une des 4 écoles ou n'est pas celui d'une thèse en cours de rédaction</td>
         </tr>
         <tr>
           <td width="38mm" align="right">Si nécessaire :&nbsp;</td>
-          <td width="145mm">{{{box.commitethics}}} soumettre le protocole au Comité d’Ethique de VetAgro avant le début des travaux</td>
+          <td width="145mm">{{{box.commitethics}}} soumettre le protocole au Comité d’Ethique de {{settings.institution}} avant le début des travaux</td>
         </tr>
       </table>
       <br />
-      <table cellpadding="0"><tr><td width="1%"></td><td width="98%" style="font-size:8.5pt;text-align:justify;"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Pour information, un centre d’investigation de recherche clinique vétérinaire (CICV) existe à VetAgro Sup et peut vous proposer un accompagnement (soutien méthodologique, réglementaire et logistique) pour la recherche clinique réalisée au CHUV (ex : recherche interventionnelle ou rétrospectives sur données du CHUV). Contact = <u><span style="color:#0000ee;">cicv@vetagro-sup.fr</span></u> »<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Pour les thèses d’exercices dans le domaine des sciences humaines et sociales, il est indispensable que l’encadrement de la thèse fasse intervenir un spécialiste du domaine à la fois dans l’élaboration du projet et l’écriture du manuscrit. Cette personne participera au jury comme membre.</i></td></tr></table>
+      <table cellpadding="0"><tr><td width="1%"></td><td width="98%" style="font-size:8.5pt;text-align:justify;"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Pour les thèses d’exercices dans le domaine des sciences humaines et sociales, il est indispensable que l’encadrement de la thèse fasse intervenir un spécialiste du domaine à la fois dans l’élaboration du projet et l’écriture du manuscrit. Cette personne participera au jury comme membre.</i></td></tr></table>
       <table cellpadding="0" style="font-size:8.5pt;">
         <tr>
-          <td width="55%" height="14mm"><br /><br /><br />&nbsp;Marcy l’Etoile, le {{sigdate.student}}</td>
-          <td width="45%" align="center">{{{sig.student}}}<br /><span style="color:#808080;font-size:9pt;"><i>Signature</i></span></td>
+          <td width="55%" height="14mm"><br /><br /><br />&nbsp;{{establishment.city}}, le {{sigdate.student}}</td>
+          <td width="45%" align="center">{{{sig.student}}}</td>
         </tr>
       </table>
       <br /><span style="font-size:8pt;color:#808080;">&nbsp;<i>Le formulaire ne doit faire qu’une seule page</i></span>

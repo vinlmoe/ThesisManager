@@ -294,7 +294,7 @@ class planning {
      * @return array
      */
     public static function sample_planning_context(?stdClass $scope = null, ?stdClass $activity = null) {
-        $establishment = $activity ?? (object) ['establishmentname' => 'VetAgro Sup', 'establishmentcity' => "Marcy-l'Étoile"];
+        $establishment = $activity ?? (object) ['establishmentname' => 'École vétérinaire', 'establishmentcity' => 'Ville'];
         $start = these_planning_month_start(time());
         $sample = function ($day, $hour, $student, $title, $director, $president, $jury, $location, $confirmed) use ($start) {
             $time = $start + ($day - 1) * DAYSECS + $hour * HOURSECS;
@@ -316,7 +316,7 @@ class planning {
             'Pr Anne Durand',
             'Pr Jean DUPONT',
             'Dr Claire BERNARD, Pr Anne DURAND (Directeur de thèse)',
-            'Amphithéâtre Bourgelat',
+            'Amphithéâtre A',
             true
         );
         $second = $sample(

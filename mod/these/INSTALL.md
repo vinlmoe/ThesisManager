@@ -94,9 +94,16 @@ sauvegardés et restaurés avec elle. Un modèle est du HTML (interprété par T
 (`{{student.lastname}}`, `{{{sig.director}}}`, `{{#jury}}…{{/jury}}`) ; la page
 de modification liste toutes les variables, propose un aperçu PDF avec des
 données fictives et refuse un modèle qui ne produit pas de document. Un modèle
-modifié peut être ramené à son origine (`doctemplates/<document>.html`). Les
-logos fournis (`doctemplates/images/`) se remplacent en déposant, dans la même
-page, une image du même nom (*Images des modèles*).
+modifié peut être ramené à son origine (`doctemplates/<document>.html`).
+
+Les modèles d'origine ne contiennent aucune valeur propre à un établissement :
+nom de l'établissement et de l'université, intitulés et noms des signataires
+viennent des réglages du site (*Établissement*, *Université*, *Direction
+générale*, *CCEM*, *Présidence de l'université*...), la ville et l'adresse de
+la DEVE de l'activité. Le module ne fournit aucun logo : la DEVE dépose, dans
+*Images des modèles*, `logo.png` (établissement), `ministere.png` (bloc-marque
+Marianne), `universite.png`, `bibliotheque.png` et `abes.png` ; la page indique
+celles qui manquent, et une image absente est omise du document.
 
 Chaque signature (tracé, nom, date, empreinte SHA-256 du contenu signé et de sa
 mise en forme) est annulée si le contenu signé change, ou si le modèle du

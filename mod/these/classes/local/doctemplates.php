@@ -232,6 +232,16 @@ class doctemplates {
     }
 
     /**
+     * Images appelées par les modèles d'origine, à déposer par la DEVE sous ces noms de fichier
+     * (logo.png...). Leur rôle est décrit par les chaînes doctplimageslot{nom}.
+     *
+     * @return string[]
+     */
+    public static function doctemplate_image_slots() {
+        return ['logo', 'ministere', 'universite', 'bibliotheque', 'abes'];
+    }
+
+    /**
      * Nom sous lequel une image est appelée dans les modèles ({{img.nom}}).
      *
      * @param string $filename
@@ -242,35 +252,15 @@ class doctemplates {
     }
 
     /**
-     * Fichiers image fournis avec le module (doctemplates/images/), par extension puis par nom.
+     * Images utilisables dans les modèles : celles déposées par la DEVE dans la portée. Le module n'en
+     * fournit aucune ; les modèles d'origine appellent logo, ministere, universite, bibliotheque et
+     * abes (voir doctemplate_image_slots()), et une image absente est omise du document.
      *
-     * Un appel à glob() par extension : l'expansion d'accolades n'existe pas dans les PHP compilés
-     * avec musl (Alpine).
-     *
-     * @return string[] chemins complets
-     */
-    public static function doctemplate_image_files() {
-        global $CFG;
-
-        $paths = [];
-        foreach (['png', 'jpg', 'jpeg'] as $extension) {
-            $paths = array_merge($paths, glob($CFG->dirroot . '/mod/these/doctemplates/images/*.' . $extension) ?: []);
-        }
-        return $paths;
-    }
-
-    /**
-     * Images utilisables dans les modèles : celles fournies avec le module (doctemplates/images/),
-     * remplacées ou complétées par celles déposées par la DEVE dans la portée.
-     *
-     * @param stdClass|null $scope null : images du module seules.
+     * @param stdClass|null $scope null : aucune image.
      * @return array nom => source pour TCPDF ('@' suivi du contenu en base64)
      */
     public static function doctemplate_images(?stdClass $scope) {
         $images = [];
-        foreach (self::doctemplate_image_files() as $path) {
-            $images[these_doctemplate_image_name($path)] = '@' . base64_encode(file_get_contents($path));
-        }
         if ($scope && $scope->contextid) {
             $fs = get_file_storage();
             foreach ($fs->get_area_files($scope->contextid, $scope->component, 'docimages', 0, 'filename', false) as $file) {
@@ -686,6 +676,8 @@ class doctemplates {
             'today' => userdate(time(), '%d/%m/%Y'),
             'settings' => [
                 'institution' => (string) ($config['institution'] ?? ''),
+                'institutionupper' => $up($config['institution'] ?? ''),
+                'university' => (string) ($config['university'] ?? ''),
                 'visaplace' => (string) ($config['visaplace'] ?? ''),
                 'hetopurl' => (string) ($config['hetopurl'] ?? ''),
                 'devename' => (string) ($config['devename'] ?? ''),
@@ -702,6 +694,7 @@ class doctemplates {
                 'city' => (string) $these->establishmentcity,
                 'signatoryname' => (string) $these->signatoryname,
                 'signatorytitle' => (string) $these->signatorytitle,
+                'deveemail' => (string) ($these->deveemail ?? ''),
             ],
             'student' => $student,
             'director' => $director,
@@ -982,9 +975,9 @@ class doctemplates {
     public static function sample_document_context(?stdClass $scope = null, ?stdClass $activity = null) {
         $now = time();
         $these = $activity ?? (object) [
-            'establishmentname' => 'VetAgro Sup', 'establishmentaddress' => "1 avenue Bourgelat\n69280 Marcy-l'Étoile",
-            'establishmentcity' => "Marcy-l'Étoile", 'signatoryname' => 'Hélène AGUESSE',
-            'signatorytitle' => 'Directrice des Études et de la Vie Étudiante',
+            'establishmentname' => 'École vétérinaire', 'establishmentaddress' => "1 rue de l'École\n00000 Ville",
+            'establishmentcity' => 'Ville', 'signatoryname' => 'Prénom NOM',
+            'signatorytitle' => 'Directrice des Études et de la Vie Étudiante', 'deveemail' => 'deve@example.org',
         ];
         $bordereau = [
             'birthname' => 'Martin', 'firstnames' => 'Camille', 'usagename' => '', 'publicationname' => '',
@@ -1019,16 +1012,16 @@ class doctemplates {
             'agreement' => json_encode(['defvdate' => make_timestamp(2023, 7, 3), 'mobility' => 1,
                 'a6date' => make_timestamp(2025, 7, 1), 'a6notyet' => 0, 'directorfunction' => 'Professeur']),
             'devenumber' => '2026-042', 'libraryref' => 'THV-2026-042', 'proposeddate' => $now + 30 * DAYSECS,
-            'defensedate' => $now + 30 * DAYSECS, 'defenselocation' => 'Amphithéâtre Bourgelat', 'defenseresult' => 0,
+            'defensedate' => $now + 30 * DAYSECS, 'defenselocation' => 'Amphithéâtre A', 'defenseresult' => 0,
             'mention' => '',
         ];
         $jury = [];
         foreach (
             [
-            ['president', 'Pr', 'Jean DUPONT', 'Université Claude Bernard Lyon 1'],
-            ['member', 'Dr', 'Claire BERNARD', 'VetAgro Sup Campus vétérinaire de Lyon'],
-            ['member', 'Dr', 'Paul LEROY', 'VetAgro Sup Campus vétérinaire de Lyon'],
-            ['director', 'Pr', 'Anne DURAND', 'VetAgro Sup Campus vétérinaire de Lyon'],
+            ['president', 'Pr', 'Jean DUPONT', 'Université'],
+            ['member', 'Dr', 'Claire BERNARD', 'École vétérinaire'],
+            ['member', 'Dr', 'Paul LEROY', 'École vétérinaire'],
+            ['director', 'Pr', 'Anne DURAND', 'École vétérinaire'],
             ['guest', 'Dr', 'Luc PETIT', 'Clinique vétérinaire des Monts'],
             ] as $i => [$role, $title, $name, $institution]
         ) {

@@ -13,6 +13,35 @@ de version recalés sur la date. Les numéros entre parenthèses des sections de
 développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
 été étiquetée.
 
+## mod_these 0.15.0 (2026102601) — modèles des documents sans valeur propre à un établissement
+
+- Modèles d'origine des documents PDF : plus aucun nom d'établissement, de
+  personne ou d'adresse écrit en dur (VetAgro Sup, Université Claude Bernard
+  Lyon 1, Marcy-l'Étoile, adresse de la DEVE, centre CICV, Vetagrotice), ni
+  référence de formulaire (ENS-INI-P308-…). Ces valeurs viennent des réglages
+  du site (Établissement, nouvelle Université, intitulés de la direction
+  générale et de la présidence), de la ville et de l'adresse DEVE de
+  l'activité. Les réglages du site n'ont plus de valeur par défaut nominative ;
+  sur un site déjà installé, les valeurs enregistrées sont conservées.
+- Images : le module n'en fournit plus aucune. Les modèles d'origine appellent
+  `logo`, `ministere`, `universite`, `bibliotheque` et `abes`, à déposer par la
+  DEVE dans *Images des modèles* ; la page indique celles qui manquent, et une
+  image absente est omise du document. Les anciennes images correspondent à :
+  `vetagrosup` → `logo`, `marianne` → `ministere`, `lyon1` → `universite`,
+  `bulyon1` → `bibliotheque`. Un modèle modifié qui appelle encore un ancien
+  nom ne l'affiche plus.
+- Mention « Signature » retirée là où la signature électronique est apposée
+  (dépôt du sujet, grille de conformité, rapport du directeur) ; « Signature
+  de l'Auteur » devient « L'Auteur » sur le contrat de diffusion. La feuille de
+  jury et le procès-verbal, signés à la main, gardent la leur.
+- À la mise à jour : les modèles d'origine changent, donc les signatures déjà
+  apposées sur un document **pas encore entièrement signé** qui utilise un
+  modèle d'origine sont annulées (contrôle du modèle signé) et doivent être
+  données de nouveau. Les documents scellés ne sont pas touchés.
+- Guide : images des modèles, captures de l'annuaire du jury (bouton de
+  préremplissage), de la page des modèles et des documents PDF refaites.
+- Sans changement de schéma.
+
 ## mod_these 0.14.0 (2026102600) — annuaire prérempli, compatibilité musl
 
 - Annuaire du jury : bouton « Préremplir avec les enseignants du cours ». Il

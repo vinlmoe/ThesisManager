@@ -71,18 +71,19 @@ if ($ADMIN->fulltree) {
         ['maxfiles' => 1, 'accepted_types' => ['.pdf']]
     ));
     $texts = [
-        'institution' => 'VetAgro Sup',
+        'institution' => '',
+        'university' => '',
         'hetopurl' => 'https://www.hetop.eu/hetop/',
-        'devename' => 'Hélène AGUESSE',
+        'devename' => '',
         'devetitle' => 'Directrice des Etudes et de la Vie Etudiante',
-        'dgtitle' => 'La Directrice générale de VetAgro Sup',
-        'dgname' => 'Mme Mireille Bossy',
+        'dgtitle' => '',
+        'dgname' => '',
         'dgemail' => '',
-        'visaplace' => 'Lyon',
-        'ccemname' => 'Pr Philippe PAPAREL',
+        'visaplace' => '',
+        'ccemname' => '',
         'ccememail' => '',
-        'ucbltitle' => 'Le Président Université Claude Bernard Lyon 1',
-        'ucblname' => 'M. Bruno Lina',
+        'ucbltitle' => '',
+        'ucblname' => '',
         'ucblemail' => '',
     ];
     // Agents DEVE signataires : l'un d'eux signe le visa du sujet et l'agrément administratif une fois

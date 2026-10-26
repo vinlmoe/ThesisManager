@@ -54,6 +54,10 @@ these_setup_default_roles();
 // Réglages du site : signataires, deux agents DEVE.
 foreach ([
     'deveagent' => "agarnier, proux",
+    // Les modèles d'origine ne contiennent aucune valeur propre à l'établissement : tout vient des réglages.
+    'institution' => 'VetAgro Sup', 'university' => "l'Université Claude Bernard Lyon 1", 'visaplace' => 'Lyon',
+    'devename' => 'Anne GARNIER', 'dgtitle' => 'La Directrice générale de VetAgro Sup',
+    'ucbltitle' => "Le Président de l'Université Claude Bernard Lyon 1",
     'dgname' => 'Pr Emmanuelle Soubeyran', 'dgemail' => 'dg@example.org',
     'ccemname' => 'Pr Jean-Luc Cadoré', 'ccememail' => 'ccem@example.org',
     'ucblname' => 'M. Bruno Lina', 'ucblemail' => 'presidence@example.org',
@@ -75,6 +79,7 @@ $these = $gen->create_module('these', [
     'minjury' => 3,
     'reminderdays' => 14,
     'universityemail' => 'theses@univ-lyon1.example.org',
+    'deveemail' => 'deve@example.org',
 ]);
 $cm = get_coursemodule_from_instance('these', $these->id);
 $these = $DB->get_record('these', ['id' => $these->id]);

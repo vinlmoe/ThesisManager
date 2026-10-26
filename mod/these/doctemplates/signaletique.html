@@ -3,14 +3,14 @@
 <table cellpadding="0">
   <tr>
     <td width="120mm" style="font-size:8pt;color:#808080;"><i>&nbsp;Ce document doit tenir sur une seule page</i></td>
-    <td width="57mm" align="right" style="font-size:8pt;"><br /><br />ENS-INI-P308-E03 V8</td>
+    <td width="57mm"></td>
   </tr>
 </table>
 <table cellpadding="0">
   <tr>
-    <td width="107mm"><br /><br /><img src="{{img.marianne}}" height="25mm" /></td>
-    <td width="32mm"><br /><br /><img src="{{img.lyon1}}" height="33mm" /></td>
-    <td width="46mm"><br /><br /><br /><br /><br /><img src="{{img.vetagrosup}}" height="19mm" /></td>
+    <td width="107mm"><br /><br /><img src="{{img.ministere}}" height="25mm" /></td>
+    <td width="32mm"><br /><br /><img src="{{img.universite}}" height="33mm" /></td>
+    <td width="46mm"><br /><br /><br /><br /><br /><img src="{{img.logo}}" height="19mm" /></td>
   </tr>
 </table>
 <div style="text-align:right;font-size:9.5pt;font-weight:bold;">Thèse d’Exercice Vétérinaire&nbsp;&nbsp;</div>
@@ -28,7 +28,7 @@
         </tr>
       </table>
       <table cellpadding="0" style="line-height:1.1;">
-        <tr><td width="182mm"><b>Email personnel*</b> (≠ VetAgro Sup) <b>:</b> {{student.personalemail}}<br /><b>*</b> <i><span style="font-size:6.5pt;">j’accepte que mon email soit utilisé par VetAgro Sup dans le cadre des accréditations et qu’il soit diffusé à des partenaires institutionnels</span></i></td></tr>
+        <tr><td width="182mm"><b>Email personnel*</b> (≠ {{settings.institution}}) <b>:</b> {{student.personalemail}}<br /><b>*</b> <i><span style="font-size:6.5pt;">j’accepte que mon email soit utilisé par {{settings.institution}} dans le cadre des accréditations et qu’il soit diffusé à des partenaires institutionnels</span></i></td></tr>
       </table>
       <table cellpadding="0" style="line-height:2.2;">
         <tr>
@@ -110,10 +110,10 @@
           <td width="38mm"><b>Membre</b></td>
           <td width="5mm"><b>:</b></td>
           <td width="62mm">{{jurylocal.name}}</td>
-          <td width="77mm"><b>VetAgro Sup Campus vétérinaire de Lyon</b></td>
+          <td width="77mm"><b>{{establishment.name}}</b></td>
         </tr>
       </table>
-      <table cellpadding="0"><tr><td width="182mm" style="font-size:6.5pt;line-height:1;"><i>Si le Directeur n’est pas de VetAgro Sup – Examinateur = Enseignant-Chercheur VETAGRO SUP</i></td></tr></table>
+      <table cellpadding="0"><tr><td width="182mm" style="font-size:6.5pt;line-height:1;"><i>Si le Directeur n’est pas de {{settings.institution}} – Examinateur = Enseignant-Chercheur de {{settings.institution}}</i></td></tr></table>
       <table cellpadding="0" style="line-height:1.75;">
         <tr>
           <td width="38mm"><b>Membre</b></td>
@@ -175,10 +175,10 @@
 <table cellpadding="0">
   <tr>
     <td width="108mm"><br /><br /><b>Le Président du Jury</b><br />{{{sig.president}}}</td>
-    <td width="76mm"><br /><br /><b>La Directrice générale<br />VetAgro Sup</b><br />{{{sig.dg}}}</td>
+    <td width="76mm"><br /><br /><b>{{settings.dgtitle}}</b><br />{{{sig.dg}}}</td>
   </tr>
   <tr>
-    <td width="108mm"><br /><br /><b>Pour le président de l’Université Lyon 1 et par délégation<br />Le président du CCEM<br />{{settings.ccemname}}</b></td>
+    <td width="108mm"><br /><br /><b>Pour le président de {{settings.university}} et par délégation<br />Le président du CCEM<br />{{settings.ccemname}}</b></td>
     <td width="76mm"><br />{{{sig.ccem}}}</td>
   </tr>
 </table>

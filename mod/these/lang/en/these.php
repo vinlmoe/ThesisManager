@@ -580,8 +580,17 @@ $string['settingsdocuments_desc'] = 'Header and signatories of the institution d
     . 'otherwise the registrar collects their signature in person.';
 $string['doctplimages'] = 'Template images';
 $string['doctplimages_help'] = 'Images (PNG or JPEG) usable in the document templates as {{img.name}}, name being the file name in '
-    . 'lower case, without extension or special characters. An image with the same name as one provided with the module '
-    . '(marianne, vetagrosup, lyon1, bulyon1, abes) replaces it in the documents of this activity.';
+    . 'lower case, without extension or special characters. The module provides none: the default templates use logo, ministere, '
+    . 'universite, bibliotheque and abes, and an image not uploaded is simply left out.';
+$string['doctplimageslots'] = 'Images used by the default templates (PNG with a transparent background recommended, about 300 dpi):';
+$string['doctplimageslot'] = '{$a->file}: {$a->role} — {$a->state}';
+$string['doctplimageslotlogo'] = 'logo of the institution, at the top of every document and of the schedule';
+$string['doctplimageslotministere'] = 'Marianne brand block of the supervising ministry, at the top of the official documents';
+$string['doctplimageslotuniversite'] = 'logo of the university awarding the degree (agreement form, record sheet)';
+$string['doctplimageslotbibliotheque'] = 'logo of the university library (distribution agreement)';
+$string['doctplimageslotabes'] = 'ABES logo (thesis form)';
+$string['doctplimagepresent'] = 'uploaded';
+$string['doctplimagemissing'] = 'to upload';
 $string['settingsdevename'] = 'Head of studies: name';
 $string['settingsdevename_desc'] = 'Name of the head of studies and student life (agreement form).';
 $string['settingsdevetitle'] = 'Head of studies: title';
@@ -591,10 +600,13 @@ $string['settingscontracttemplate_desc'] = 'The official contract (ENS-INI-P308-
     . 'author\'s data and choices, and after it a signature page.';
 $string['settingsinstitution'] = 'Institution';
 $string['settingsinstitution_desc'] = 'Short name used in the documents.';
+$string['settingsuniversity'] = 'University';
+$string['settingsuniversity_desc'] = 'University awarding the degree, with its French article (« l\'Université … »): « Pour le président de '
+    . '… et par délégation », university libraries of the distribution agreement.';
 $string['settingshetopurl'] = 'HeTOP link';
 $string['settingshetopurl_desc'] = 'Reference terminology for subject keywords.';
 $string['settingsdgtitle'] = 'General management (title)';
-$string['settingsdgtitle_desc'] = '';
+$string['settingsdgtitle_desc'] = 'Full title printed above their signature, in French, for example « La Directrice générale de … ».';
 $string['settingsdgname'] = 'General management (name)';
 $string['settingsdgname_desc'] = '';
 $string['settingsdgemail'] = 'General management (email)';
@@ -606,7 +618,7 @@ $string['settingsccemname_desc'] = '';
 $string['settingsccememail'] = 'CCEM (email)';
 $string['settingsccememail_desc'] = 'Address receiving signing links; empty: signature collected in person by the registrar.';
 $string['settingsucbltitle'] = 'University presidency (title)';
-$string['settingsucbltitle_desc'] = '';
+$string['settingsucbltitle_desc'] = 'Full title printed above their signature (distribution agreement), in French, for example « Le Président de l\'Université … ».';
 $string['settingsucblname'] = 'University presidency (name)';
 $string['settingsucblname_desc'] = '';
 $string['settingsucblemail'] = 'University presidency (email)';

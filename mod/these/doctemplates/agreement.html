@@ -1,14 +1,11 @@
 <!--@page margins="8,20,8,20" font="freesans" size="9" lineheight="1.25"-->
 <!--@body-->
 <table cellpadding="0">
-  <tr><td align="right" style="font-family:helvetica;font-size:8pt;">ENS-INI-P308-E02 V8&nbsp;&nbsp;</td></tr>
-</table>
-<table cellpadding="0">
   <tr>
     <td width="1mm"></td>
-    <td width="76mm"><img src="{{img.marianne}}" height="25mm" /></td>
-    <td width="45mm"><img src="{{img.lyon1}}" height="29mm" /></td>
-    <td width="48mm"><br /><img src="{{img.vetagrosup}}" height="22mm" /></td>
+    <td width="76mm"><img src="{{img.ministere}}" height="25mm" /></td>
+    <td width="45mm"><img src="{{img.universite}}" height="29mm" /></td>
+    <td width="48mm"><br /><img src="{{img.logo}}" height="22mm" /></td>
   </tr>
 </table>
 <div style="text-align:right;font-size:10pt;font-weight:bold;">Thèse d’exercice vétérinaire</div>
@@ -57,8 +54,8 @@
     </td>
     <td width="85mm" style="border-right:0.5pt solid #000000;">
       <table cellpadding="0"><tr><td width="3%"></td><td width="95%">
-        <div style="text-align:center;"><i>Si le Directeur de thèse, n’est pas de VetAgro Sup,</i><br /><b><u>Membre</u></b><br /><b><u>(= Enseignant-Chercheur VETAGRO SUP)</u></b></div>
-        <br />Je soussigné(e), <b>{{#extdirector.present}}{{director.fullname}}{{/extdirector.present}}{{^extdirector.present}}……………{{/extdirector.present}}</b>, Enseignant Chercheur de VetAgro Sup, déclare que j’ai corrigé la thèse de l’étudiant ci-dessous, j’en atteste la forme par la grille de conformité du manuscrit communiqué à la DEVE.
+        <div style="text-align:center;"><i>Si le Directeur de thèse, n’est pas de {{settings.institution}},</i><br /><b><u>Membre</u></b><br /><b><u>(= Enseignant-Chercheur de {{settings.institution}})</u></b></div>
+        <br />Je soussigné(e), <b>{{#extdirector.present}}{{director.fullname}}{{/extdirector.present}}{{^extdirector.present}}……………{{/extdirector.present}}</b>, Enseignant Chercheur de {{settings.institution}}, déclare que j’ai corrigé la thèse de l’étudiant ci-dessous, j’en atteste la forme par la grille de conformité du manuscrit communiqué à la DEVE.
         <br /><br />
         <table cellpadding="0"><tr>
           <td width="50%">Membre<br /><b>{{#extdirector.present}}{{director.fullname}}{{/extdirector.present}}</b></td>
@@ -79,8 +76,8 @@
   <tr>
     <td width="85mm" height="44mm" style="border-left:0.5pt solid #000000;border-right:0.5pt solid #000000;border-bottom:0.5pt solid #000000;">
       <table cellpadding="0"><tr><td width="3%"></td><td width="95%">
-        <br />La Directrice Générale de VetAgro Sup<br />ou son représentant<br /><b>{{settings.devename}}, DEVE</b>
-        <br /><br /><br /><br />Pour le président de l’Université Lyon 1 et par délégation<br />Le président du CCEM<br /><b>{{settings.ccemname}}</b>
+        <br />{{settings.dgtitle}}<br />ou son représentant<br /><b>{{settings.devename}}, DEVE</b>
+        <br /><br /><br /><br />Pour le président de {{settings.university}} et par délégation<br />Le président du CCEM<br /><b>{{settings.ccemname}}</b>
       </td><td width="2%"></td></tr></table>
     </td>
     <td width="85mm" style="border-right:0.5pt solid #000000;border-bottom:0.5pt solid #000000;">

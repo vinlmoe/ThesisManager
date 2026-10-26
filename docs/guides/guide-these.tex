@@ -72,6 +72,9 @@ avec des dossiers amenés à chaque étape par le circuit lui-même ; pages long
 présentées par rubrique ; captures plus grandes dans la page. \\
 2.5 & 26 octobre 2026 & Annuaire du jury prérempli avec les enseignants non
 éditeurs inscrits au cours. \\
+2.6 & 26 octobre 2026 & Modèles des documents sans valeur propre à un
+établissement ; images des modèles à déposer par la DEVE ; capture de
+l'annuaire du jury avec le bouton de préremplissage. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -998,11 +1001,32 @@ indique ceux dont le modèle a été modifié et propose pour chacun
 \bouton{Modifier}, \bouton{Aperçu PDF} et, s'il a été modifié,
 \bouton{Rétablir l'origine}.
 
-Sous la liste, \bouton{Images des modèles} reçoit des images supplémentaires,
-appelées dans les modèles par \var{img.nom} (nom du fichier en minuscules, sans
-extension), ou remplaçant celles fournies avec le module sous le même nom :
-\texttt{marianne}, \texttt{vetagrosup}, \texttt{lyon1}, \texttt{bulyon1},
-\texttt{abes}.
+Sous la liste, \bouton{Images des modèles} reçoit les images appelées dans les
+modèles par \var{img.nom} (nom du fichier en minuscules, sans extension). Le
+module n'en fournit aucune ; les modèles d'origine appellent les cinq images
+suivantes, et la page indique pour chacune si elle est déposée ou à déposer
+(une image absente est simplement omise du document) :
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}l X@{}}
+\toprule
+\textbf{Fichier} & \textbf{Image et documents} \\
+\midrule
+\texttt{logo.png} & Logo de l'établissement : en tête de tous les documents et du planning. \\
+\texttt{ministere.png} & Bloc-marque Marianne du ministère de tutelle : en tête des documents officiels. \\
+\texttt{universite.png} & Logo de l'université qui délivre le diplôme : fiche d'agréments, fiche signalétique. \\
+\texttt{bibliotheque.png} & Logo de la bibliothèque universitaire : contrat de diffusion. \\
+\texttt{abes.png} & Logo de l'ABES : bordereau de thèse. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Une image PNG à fond transparent, d'environ 300~points par pouce, s'imprime
+nettement. Les modèles d'origine ne contiennent aucun nom d'établissement ou de
+personne : ils reprennent les réglages du site (établissement, université,
+intitulés et noms des signataires) et, pour l'activité, la ville et l'adresse de
+la DEVE.
 
 \capture[0.85\linewidth]{43_modeles_documents}{Liste des modèles des documents, dans l'activité de suivi qui les partage.}
 
