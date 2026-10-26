@@ -216,4 +216,37 @@ final class jury_directory_test extends these_testcase {
         $this->assertEquals(0, $jury[0]->jurorid);
         $this->assertSame('pr', $jury[0]->jurystatus);
     }
+
+    /**
+     * Préremplissage : seuls les enseignants non éditeurs inscrits au cours et absents de l'annuaire
+     * sont ajoutés ; ni la DEVE (enseignant éditeur), ni la bibliothèque, ni les étudiants.
+     */
+    public function test_prefill_from_course(): void {
+        $this->resetAfterTest();
+        $this->setup_activity();
+        set_config('institution', 'VetAgro Sup', 'mod_these');
+        $known = $this->getDataGenerator()->create_and_enrol($this->course, 'teacher', ['email' => 'connu@example.org']);
+        $this->juror('Connu', 'pr');
+
+        $missing = jurors::course_teachers_missing($this->context);
+        $this->assertSame([(int) $this->director->id], array_map('intval', array_keys($missing)));
+        $this->assertArrayNotHasKey($known->id, $missing);
+
+        $this->assertSame(1, jurors::prefill_from_course($this->context));
+        $juror = jurors::find_by_email($this->director->email);
+        $this->assertNotNull($juror);
+        $this->assertSame($this->director->lastname, $juror->lastname);
+        $this->assertSame('Dr', $juror->title);
+        $this->assertSame('mcf', $juror->status);
+        $this->assertSame('VetAgro Sup', $juror->institution);
+        $this->assertEquals(1, $juror->active);
+        $this->assertNull(jurors::find_by_email($this->deve->email));
+        $this->assertNull(jurors::find_by_email($this->librarian->email));
+        $this->assertNull(jurors::find_by_email($this->student->email));
+        $this->assertSame('pr', jurors::find_by_email('connu@example.org')->status);
+
+        // Une seconde fois : rien à ajouter.
+        $this->assertSame([], jurors::course_teachers_missing($this->context));
+        $this->assertSame(0, jurors::prefill_from_course($this->context));
+    }
 }

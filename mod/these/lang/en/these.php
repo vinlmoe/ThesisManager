@@ -300,6 +300,12 @@ $string['jurorimportfile_help'] = 'Columns: title (Dr or Pr), lastname, firstnam
     . 'already present (same address, or same names) is updated.';
 $string['jurorimportdone'] = '{$a->created} teacher(s) added, {$a->updated} updated.';
 $string['jurorimportbadline'] = 'Line {$a} ignored: wrong title, names, status or address.';
+$string['jurorprefill'] = 'Prefill with the course teachers';
+$string['jurorprefillconfirm'] = 'Add {$a} non-editing teacher(s) enrolled in the course to the directory? They are created with the '
+    . 'title Dr, the associate professor status and the default institution: check them afterwards. The registrar and the library are '
+    . 'not included, nor teachers already present (same address, or same names).';
+$string['jurorprefilldone'] = '{$a} teacher(s) added to the directory. Check their title and status.';
+$string['jurorprefillnone'] = 'All non-editing teachers enrolled in the course are already in the directory.';
 $string['jurysheet'] = 'Jury sheet';
 
 // Review steps.

@@ -13,14 +13,24 @@ de version recalés sur la date. Les numéros entre parenthèses des sections de
 développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
 été étiquetée.
 
-## Non publié
+## mod_these 0.14.0 (2026102600) — annuaire prérempli, compatibilité musl
 
+- Annuaire du jury : bouton « Préremplir avec les enseignants du cours ». Il
+  ajoute les enseignants non éditeurs inscrits au cours de l'activité
+  (capacité `mod/these:direct`) qui ne sont pas encore dans l'annuaire (même
+  adresse, ou mêmes nom et prénom). La DEVE (enseignant éditeur, capacité ou
+  rôle DEVE) et la bibliothèque sont exclues. Une page de confirmation liste les
+  enseignants ajoutés ; ils sont créés avec le titre Dr, le statut maître de
+  conférences et l'établissement par défaut, à vérifier par la DEVE. Les
+  enseignants déjà présents ne sont pas modifiés. Disponible aussi depuis
+  l'activité « Suivi des thèses ».
 - Compatibilité avec les PHP compilés avec musl (Alpine) : suppression de
   `GLOB_BRACE`. Les images des modèles de documents (`doctemplates/images/`)
   sont lues par un appel à `glob()` par extension. Le module s'arrêtait sur
   « Undefined constant "mod_these\local\GLOB_BRACE" » sur ces installations
   (image Docker `erseco/alpine-moodle`). La CI échoue si `GLOB_BRACE`
-  réapparaît. Sans changement de schéma ni de version.
+  réapparaît.
+- Sans changement de schéma.
 
 ## mod_these 0.13.0 (2026102504) — scans signés, agents DEVE signataires
 

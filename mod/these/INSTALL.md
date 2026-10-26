@@ -143,7 +143,10 @@ signés.
   professeur (stagiaire, émérite). Tous peuvent diriger ou être membre ; seuls
   les maîtres de conférences HDR, les professeurs et les émérites peuvent
   présider. Import CSV possible (`title, lastname, firstname, email, status,
-  institution`).
+  institution`). Le bouton *Préremplir avec les enseignants du cours* ajoute
+  les enseignants non éditeurs inscrits au cours, absents de l'annuaire (la
+  DEVE et la bibliothèque sont exclues) : titre Dr, statut maître de
+  conférences et établissement par défaut, à vérifier ensuite.
 - **Jury** : chaque ligne choisit un enseignant de l'annuaire (titre, statut,
   établissement et adresse repris) ou décrit un membre extérieur ou un invité.
   Le formulaire refuse un président inéligible et un membre extérieur votant
