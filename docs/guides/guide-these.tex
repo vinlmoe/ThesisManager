@@ -4,9 +4,9 @@
 
 % Version du guide : à mettre à jour à chaque modification, avec une ligne dans l'historique.
 \newcommand{\titreguide}{Guide de la gestion des thèses}
-\newcommand{\versionguide}{2.4}
-\newcommand{\dateguide}{25 octobre 2026}
-\newcommand{\versionthese}{0.13.0}
+\newcommand{\versionguide}{2.12}
+\newcommand{\dateguide}{26 octobre 2026}
+\newcommand{\versionthese}{0.18.0}
 
 \usepackage{guide-commun}
 \usepackage{tikz}
@@ -99,11 +99,13 @@ jury en tête de la rubrique Jury. \\
 lecture à la validation, action directe dans \og À traiter\fg{}, actions
 groupées, conflits de salle, réglages à compléter. Agents de la
 bibliothèque listés dans les paramètres du circuit, sans rôle à attribuer. \\
-2.12 & 27 octobre 2026 & Directeur de thèse non votant, au moins deux membres
+2.12 & 26 octobre 2026 & Directeur de thèse non votant, au moins deux membres
 votants président compris ; liste du corps enseignant en PDF ; relance
 automatique des signatures ; récapitulatif hebdomadaire de la DEVE ;
 soutenances au calendrier Moodle ; modification d'un dossier allégée ;
-validation de l'A6 saisie par la DEVE (dossier, lot, import Excel). \\
+validation de l'A6 saisie par la DEVE et liée à l'étudiant (dossier, lot,
+import Excel) ; partie DEVE réorganisée (circuit, A6, actions groupées,
+planning) ; version du guide et du module mises à jour en page de garde. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -235,7 +237,7 @@ Copier le dossier \texttt{mod/these} dans \texttt{<moodle>/mod/these}, puis
 lancer la mise à jour (\texttt{php admin/cli/upgrade.php}) ou se connecter en
 administrateur. Le module requiert Moodle~4.0 ou supérieur.
 
-\subsection{Rôles}
+\subsection{Rôles}\label{sec:roles}
 
 \begin{center}
 \small
@@ -328,9 +330,14 @@ signataires et le questionnaire sont facultatifs.
   \item[Soutenances] durée d'une soutenance, en minutes (60 par défaut), pour
         détecter les conflits de jury ; \textbf{salles de soutenance}, une par
         ligne, proposées à la saisie du lieu (dépôt de l'étudiant, validation et
-        modification par la DEVE), la première par défaut. Elles remplacent le
-        \og lieu de soutenance proposé par défaut\fg{} des réglages de
-        l'activité, encore utilisé tant qu'aucune salle n'est saisie.
+        modification par la DEVE), la première par défaut. Elles remplacent
+        l'ancien \og lieu de soutenance proposé par défaut\fg{} des réglages
+        de l'activité, repris tant qu'aucune salle n'est saisie.
+  \item[Agents de la bibliothèque] identifiants ou adresses des comptes des
+        agents de la bibliothèque, sans rôle à attribuer
+        (section~\ref{sec:roles}).
+  \item[Récapitulatif hebdomadaire] courriel du lundi à la DEVE
+        (section~\ref{sec:relances}), activé par défaut.
   \item[Textes] établissement, université (avec son article : \og
         l'Université \ldots\fg{}), lien HeTOP, lieu du visa, intitulés de la
         direction générale et de la présidence de l'université, nom et qualité
@@ -352,7 +359,6 @@ les dossiers que si l'option correspondante est explicitement cochée.
 \begin{description}
   \item[Établissement] nom, adresse, ville (\og Fait à\fg{}), signataire et sa
         qualité : imprimés sur les documents générés.
-  \item[Lieu de soutenance par défaut] proposé à l'étudiant.
   \item[Membres votants minimum du jury] président compris, directeur de
         thèse et invités exclus (2 par défaut).
   \item[Adresses de service DEVE et bibliothèque] si elles sont renseignées,
@@ -718,135 +724,19 @@ bord, avec le lien vers les \bouton{Paramètres du circuit}.
 
 \capture{18_tableau_de_bord_deve}{Tableau de bord de la DEVE : la rubrique \og À traiter\fg{}, suivie du décompte par statut et de la liste de tous les dossiers.}
 
-\begin{procedure}{Agir sur plusieurs dossiers à la fois}{Équipe DEVE}
-\begin{etapes}
-  \item Dans la liste de tous les dossiers (filtrée au besoin par statut),
-        cochez les dossiers concernés.
-  \item Sous la liste, choisissez l'action : \bouton{Relancer les
-        signataires} (agents DEVE et signataires sans compte dont une
-        signature est attendue), \bouton{Générer les documents de soutenance}
-        (manuscrit conforme ou soutenance programmée) ou \bouton{Prévenir les
-        membres du jury pas encore prévenus} (dossier validé, jusqu'à la
-        soutenance) ou \bouton{Enregistrer la validation de l'A6} : indiquez
-        alors, sur la ligne en dessous, la date (vide : non validée) et
-        l'école.
-  \item Cliquez sur \bouton{Appliquer}.
-\end{etapes}
-\ensuite{un message indique le nombre de dossiers traités et ignorés : une
-action ne porte que sur les dossiers dont l'étape s'y prête, ou qui ont
-quelque chose en attente.}
-\end{procedure}
-
-\capture[0.85\linewidth]{105_actions_groupees}{Actions groupées sous la liste des dossiers.}
-
-\begin{procedure}{Enregistrer les validations de l'A6}{Équipe DEVE}
-La validation de l'A6 est saisie \textbf{par la DEVE}, plus par l'étudiant. Elle
-est liée à \textbf{l'étudiant}, pas à son dossier de thèse : elle peut être
-enregistrée avant que le dossier existe, et vaut pour tous ses dossiers. Elle
-figure dans le dossier (rubrique \og Enregistrements\fg{}), dans l'agrément
-administratif et dans la fiche signalétique. Trois façons de la saisir :
-\begin{etapes}
-  \item \textbf{Un dossier} : \bouton{Modifier le dossier}, rubrique
-        \og Enregistrements\fg{}, ou la validation du dossier de soutenance
-        (agrément administratif) : date, ou \og A6 pas encore validée\fg{}, et
-        école.
-  \item \textbf{Plusieurs dossiers à la même date} : cochez-les au tableau de
-        bord, choisissez \bouton{Enregistrer la validation de l'A6}, la date
-        et l'école, puis \bouton{Appliquer}.
-  \item \textbf{Par fichier} : \bouton{Importer les validations de l'A6}
-        (sous la liste du tableau de bord, ou depuis l'import des dossiers).
-        Déposez un fichier Excel (.xlsx), OpenDocument (.ods) ou CSV, avec une
-        ligne d'en-tête et une ligne par étudiant : \texttt{etudiant}
-        (identifiant, adresse de courriel ou numéro d'étudiant),
-        \texttt{date} (jj/mm/aaaa, ou \og non\fg{}) et, facultative,
-        \texttt{ecole} (Lyon, Alfort, Nantes, Toulouse, Rouen). Tout étudiant
-        inscrit au cours peut figurer, avec ou sans dossier. Lancez d'abord
-        la simulation, qui vérifie chaque ligne sans rien enregistrer.
-\end{etapes}
-\ensuite{chaque saisie est inscrite à l'historique des dossiers de l'étudiant
-(\og Validation de l'A6 enregistrée\fg{}). Pour les dossiers où l'étudiant
-l'avait déclarée avant cette version, sa déclaration est reprise tant que la
-DEVE ne l'a pas saisie.}
-\end{procedure}
-
-\capture[0.85\linewidth]{108_import_a6}{Import des validations de l'A6 : simulation et rapport ligne par ligne.}
-
 \begin{astuce}
-Quand des \textbf{agents DEVE signataires} sont désignés dans les réglages du
-site (section~\ref{sec:agent}), l'équipe de la DEVE remplit et vérifie, puis
+Quand des \textbf{agents DEVE signataires} sont désignés dans les paramètres du
+circuit (section~\ref{sec:agent}), l'équipe de la DEVE remplit et vérifie, puis
 \emph{valide sans signer} : chaque agent reçoit un courriel, et l'un d'eux signe
 ensuite le visa du sujet et l'agrément administratif depuis \bouton{Mes
 signatures}. Sans agent
 désigné, la personne qui valide signe elle-même.
 \end{astuce}
 
-\subsection{Planning des soutenances}\label{sec:planning}
+\subsection{Le circuit pas à pas}\label{sec:circuitdeve}
 
-Le bouton \bouton{Planning des soutenances} présente les soutenances de la
-semaine, jour par jour : heure, étudiant, titre, directeur, jury (président en
-tête), lieu, et l'état de la date (\og date proposée\fg{} par l'étudiant au
-dépôt, \og date arrêtée\fg{} une fois le dossier validé par la DEVE). Le nom
-de l'étudiant ouvre son dossier. Une thèse figure au planning dès le dépôt du
-dossier de soutenance ; un dossier abandonné ou une thèse ajournée en sort.
-
-\paragraph{Conflits de jury.} Un membre du jury (même enseignant de
-l'annuaire, même adresse ou, à défaut, même nom) qui siège déjà dans un autre
-jury sur le même créneau, c'est-à-dire une soutenance (ou une date proposée)
-qui chevauche celle-ci, toutes promotions confondues, est signalé : badge
-rouge \og Conflit\fg{} sous le jury dans le planning, avertissement au-dessus
-du jury dans le dossier, dans sa modification et dans sa validation par la
-DEVE. Une erreur de composition (pas de président, trop peu de membres
-votants, éligibilité non vérifiée) s'affiche de même en tête de la rubrique
-\og Jury\fg{}, et non plus sur la ligne du premier membre. Les dossiers
-abandonnés ne comptent pas. L'avertissement ne bloque rien : à la DEVE de
-déplacer la soutenance ou de remplacer le membre.
-
-\paragraph{Conflits de salle.} De même, une autre soutenance prévue dans la
-même salle (lieu identique, casse et espaces ignorés) sur un créneau qui
-chevauche celui-ci est signalée : badge rouge \og Salle occupée\fg{} sous le
-lieu dans le planning, avertissement au-dessus de la soutenance dans le
-dossier et sous le lieu dans sa modification et sa validation. La durée d'une soutenance
-(une heure par défaut) se règle dans les \bouton{Paramètres du circuit},
-rubrique \og Soutenances\fg{}.
-
-\paragraph{Calendrier Moodle.} Dès que la DEVE arrête la date (dossier
-validé), la soutenance devient un événement du calendrier du cours : étudiant,
-date, durée, salle et jury, et titre de la thèse sauf si elle est
-confidentielle. Les participants du cours le voient dans leur calendrier et
-peuvent l'exporter (Outlook, agenda du téléphone). L'événement suit le dossier
-: il est déplacé avec la soutenance et supprimé à l'abandon ou à
-l'ajournement.
-
-\capture[0.85\linewidth]{107_calendrier}{Soutenance dans le calendrier Moodle de l'étudiant.}
-
-\capture[0.85\linewidth]{86_planning_semaine}{Planning des soutenances de la semaine : date arrêtée ou proposée, jury et lieu, semaines à venir.}
-
-\begin{procedure}{Retrouver une soutenance et éditer le planning du mois}{DEVE, bibliothèque, directeurs}
-\begin{etapes}
-  \item Ouvrez \bouton{Planning des soutenances} : la semaine en cours
-        s'affiche, avec la liste des semaines à venir qui ont des soutenances.
-  \item Passez d'une semaine à l'autre (\bouton{Semaine précédente},
-        \bouton{Semaine suivante}, \bouton{Cette semaine}), ou choisissez une
-        date dans \bouton{Aller au}.
-  \item Basculez sur \bouton{Par mois} pour voir tout un mois, puis
-        \bouton{Imprimer le planning mensuel (PDF)} : un tableau en paysage,
-        regroupé par jour, prêt à afficher ou à diffuser.
-  \item Le menu \bouton{Télécharger le planning de la période} produit le
-        même planning en tableur (CSV, Excel, ODS\ldots).
-\end{etapes}
-\end{procedure}
-
-\capture[0.85\linewidth]{87_planning_mois}{Planning du mois, avec l'impression et le téléchargement.}
-
-\capture{88_planning_pdf}{Planning mensuel imprimé (PDF en paysage).}
-
-La DEVE, la bibliothèque et les personnels qui consultent tous les dossiers
-voient toutes les soutenances ; un directeur, celles des thèses qu'il dirige.
-Une thèse confidentielle y figure comme les autres, son titre remplacé par
-\og Thèse confidentielle\fg{} pour qui ne doit pas en connaître le sujet. La mise en forme du planning imprimé est un modèle de
-document comme les autres (\og Planning des soutenances\fg{},
-section~\ref{sec:modeles}) : la DEVE peut en changer l'en-tête, les colonnes ou
-le logo.
+Dans l'ordre du circuit, les étapes qui reviennent à la DEVE ; chacune s'ouvre
+aussi directement depuis \og À traiter\fg{}.
 
 \begin{procedure}{Enregistrer le sujet (phase 1)}{Équipe DEVE}
 \begin{etapes}
@@ -998,6 +888,131 @@ décisions du jury.}
 \end{procedure}
 
 \capture[0.85\linewidth]{78_dossier_clos}{Dossier clos après validation des corrections.}
+
+\subsection{Validation de l'A6}\label{sec:a6}
+
+\begin{procedure}{Enregistrer les validations de l'A6}{Équipe DEVE}
+La validation de l'A6 est saisie \textbf{par la DEVE}, plus par l'étudiant. Elle
+est liée à \textbf{l'étudiant}, pas à son dossier de thèse : elle peut être
+enregistrée avant que le dossier existe, et vaut pour tous ses dossiers. Elle
+figure dans le dossier (rubrique \og Enregistrements\fg{}), dans l'agrément
+administratif et dans la fiche signalétique. Trois façons de la saisir :
+\begin{etapes}
+  \item \textbf{Un dossier} : \bouton{Modifier le dossier}, rubrique
+        \og Enregistrements\fg{}, ou la validation du dossier de soutenance
+        (agrément administratif) : date, ou \og A6 pas encore validée\fg{}, et
+        école.
+  \item \textbf{Plusieurs dossiers à la même date} : cochez-les au tableau de
+        bord, choisissez \bouton{Enregistrer la validation de l'A6}, la date
+        et l'école, puis \bouton{Appliquer}.
+  \item \textbf{Par fichier} : \bouton{Importer les validations de l'A6}
+        (sous la liste du tableau de bord, ou depuis l'import des dossiers).
+        Déposez un fichier Excel (.xlsx), OpenDocument (.ods) ou CSV, avec une
+        ligne d'en-tête et une ligne par étudiant : \texttt{etudiant}
+        (identifiant, adresse de courriel ou numéro d'étudiant),
+        \texttt{date} (jj/mm/aaaa, ou \og non\fg{}) et, facultative,
+        \texttt{ecole} (Lyon, Alfort, Nantes, Toulouse, Rouen). Tout étudiant
+        inscrit au cours peut figurer, avec ou sans dossier. Lancez d'abord
+        la simulation, qui vérifie chaque ligne sans rien enregistrer.
+\end{etapes}
+\ensuite{chaque saisie est inscrite à l'historique des dossiers de l'étudiant
+(\og Validation de l'A6 enregistrée\fg{}). Pour les dossiers où l'étudiant
+l'avait déclarée avant cette version, sa déclaration est reprise tant que la
+DEVE ne l'a pas saisie.}
+\end{procedure}
+
+\capture[0.85\linewidth]{108_import_a6}{Import des validations de l'A6 : simulation et rapport ligne par ligne.}
+
+\subsection{Actions groupées}\label{sec:lot}
+
+\begin{procedure}{Agir sur plusieurs dossiers à la fois}{Équipe DEVE}
+\begin{etapes}
+  \item Dans la liste de tous les dossiers (filtrée au besoin par statut),
+        cochez les dossiers concernés.
+  \item Sous la liste, choisissez l'action : \bouton{Relancer les
+        signataires} (agents DEVE et signataires sans compte dont une
+        signature est attendue), \bouton{Générer les documents de soutenance}
+        (manuscrit conforme ou soutenance programmée) ou \bouton{Prévenir les
+        membres du jury pas encore prévenus} (dossier validé, jusqu'à la
+        soutenance) ou \bouton{Enregistrer la validation de l'A6} : indiquez
+        alors, sur la ligne en dessous, la date (vide : non validée) et
+        l'école.
+  \item Cliquez sur \bouton{Appliquer}.
+\end{etapes}
+\ensuite{un message indique le nombre de dossiers traités et ignorés : une
+action ne porte que sur les dossiers dont l'étape s'y prête, ou qui ont
+quelque chose en attente.}
+\end{procedure}
+
+\capture[0.85\linewidth]{105_actions_groupees}{Actions groupées sous la liste des dossiers.}
+
+\subsection{Planning des soutenances}\label{sec:planning}
+
+Le bouton \bouton{Planning des soutenances} présente les soutenances de la
+semaine, jour par jour : heure, étudiant, titre, directeur, jury (président en
+tête), lieu, et l'état de la date (\og date proposée\fg{} par l'étudiant au
+dépôt, \og date arrêtée\fg{} une fois le dossier validé par la DEVE). Le nom
+de l'étudiant ouvre son dossier. Une thèse figure au planning dès le dépôt du
+dossier de soutenance ; un dossier abandonné ou une thèse ajournée en sort.
+
+\paragraph{Conflits de jury.} Un membre du jury (même enseignant de
+l'annuaire, même adresse ou, à défaut, même nom) qui siège déjà dans un autre
+jury sur le même créneau, c'est-à-dire une soutenance (ou une date proposée)
+qui chevauche celle-ci, toutes promotions confondues, est signalé : badge
+rouge \og Conflit\fg{} sous le jury dans le planning, avertissement au-dessus
+du jury dans le dossier, dans sa modification et dans sa validation par la
+DEVE. Une erreur de composition (pas de président, trop peu de membres
+votants, éligibilité non vérifiée) s'affiche de même en tête de la rubrique
+\og Jury\fg{}, et non plus sur la ligne du premier membre. Les dossiers
+abandonnés ne comptent pas. L'avertissement ne bloque rien : à la DEVE de
+déplacer la soutenance ou de remplacer le membre.
+
+\paragraph{Conflits de salle.} De même, une autre soutenance prévue dans la
+même salle (lieu identique, casse et espaces ignorés) sur un créneau qui
+chevauche celui-ci est signalée : badge rouge \og Salle occupée\fg{} sous le
+lieu dans le planning, avertissement au-dessus de la soutenance dans le
+dossier et sous le lieu dans sa modification et sa validation. La durée d'une soutenance
+(une heure par défaut) se règle dans les \bouton{Paramètres du circuit},
+rubrique \og Soutenances\fg{}.
+
+\paragraph{Calendrier Moodle.} Dès que la DEVE arrête la date (dossier
+validé), la soutenance devient un événement du calendrier du cours : étudiant,
+date, durée, salle et jury, et titre de la thèse sauf si elle est
+confidentielle. Les participants du cours le voient dans leur calendrier et
+peuvent l'exporter (Outlook, agenda du téléphone). L'événement suit le dossier
+: il est déplacé avec la soutenance et supprimé à l'abandon ou à
+l'ajournement.
+
+\capture[0.85\linewidth]{107_calendrier}{Soutenance dans le calendrier Moodle de l'étudiant.}
+
+\capture[0.85\linewidth]{86_planning_semaine}{Planning des soutenances de la semaine : date arrêtée ou proposée, jury et lieu, semaines à venir.}
+
+\begin{procedure}{Retrouver une soutenance et éditer le planning du mois}{DEVE, bibliothèque, directeurs}
+\begin{etapes}
+  \item Ouvrez \bouton{Planning des soutenances} : la semaine en cours
+        s'affiche, avec la liste des semaines à venir qui ont des soutenances.
+  \item Passez d'une semaine à l'autre (\bouton{Semaine précédente},
+        \bouton{Semaine suivante}, \bouton{Cette semaine}), ou choisissez une
+        date dans \bouton{Aller au}.
+  \item Basculez sur \bouton{Par mois} pour voir tout un mois, puis
+        \bouton{Imprimer le planning mensuel (PDF)} : un tableau en paysage,
+        regroupé par jour, prêt à afficher ou à diffuser.
+  \item Le menu \bouton{Télécharger le planning de la période} produit le
+        même planning en tableur (CSV, Excel, ODS\ldots).
+\end{etapes}
+\end{procedure}
+
+\capture[0.85\linewidth]{87_planning_mois}{Planning du mois, avec l'impression et le téléchargement.}
+
+\capture{88_planning_pdf}{Planning mensuel imprimé (PDF en paysage).}
+
+La DEVE, la bibliothèque et les personnels qui consultent tous les dossiers
+voient toutes les soutenances ; un directeur, celles des thèses qu'il dirige.
+Une thèse confidentielle y figure comme les autres, son titre remplacé par
+\og Thèse confidentielle\fg{} pour qui ne doit pas en connaître le sujet. La mise en forme du planning imprimé est un modèle de
+document comme les autres (\og Planning des soutenances\fg{},
+section~\ref{sec:modeles}) : la DEVE peut en changer l'en-tête, les colonnes ou
+le logo.
 
 \subsection{Autres actions}
 
@@ -1184,7 +1199,7 @@ Grille de conformité & Étudiant, vérifiée par le directeur & Directeur \\
 Fiche d'agréments (E02) & DEVE (administratif), directeur (scientifique) &
 DEVE, directeur (ou membre si directeur extérieur), direction générale
 représentée par la DEVE, CCEM \\
-Fiche signalétique (E03) & Étudiant & Président du jury, direction générale,
+Fiche signalétique (E03) & Étudiant (validation de l'A6 : DEVE) & Président du jury, direction générale,
 CCEM \\
 Contrat de diffusion (E04) & Étudiant (choix des articles 2 et 4) & Auteur,
 visa du directeur, direction générale, présidence de l'université \\
@@ -1682,8 +1697,8 @@ désactive dans les \bouton{Paramètres du circuit}, rubrique
 \section{Données personnelles et sauvegarde}
 
 Le module implémente l'API de confidentialité de Moodle : l'étudiant peut
-exporter son dossier (sans le rapport du directeur) et en demander
-l'effacement ; un membre du personnel supprimé est dissocié des dossiers qu'il a
+exporter son dossier (sans le rapport du directeur) et sa validation de l'A6,
+et en demander l'effacement ; un membre du personnel supprimé est dissocié des dossiers qu'il a
 traités, sans que ceux-ci disparaissent. La sauvegarde et la restauration de
 cours recopient le paramétrage (réglages, courriels, modèles et images, grille,
 questionnaire) et, si les données utilisateur sont incluses, les dossiers, leur
@@ -1695,7 +1710,8 @@ invitations.
 Le module ne fait pas de sauvegarde de lui-même. Activer les
 \textbf{sauvegardes automatisées de cours} de Moodle \emph{avec les données
 utilisateur}, et sauvegarder régulièrement le serveur (base de données et
-dossier \texttt{moodledata}) : l'annuaire du jury, les signatures enregistrées
+dossier \texttt{moodledata}) : l'annuaire du jury, les validations de l'A6 (liées
+aux étudiants, communes à toutes les activités) et les signatures enregistrées
 des utilisateurs ne sont pas dans la
 sauvegarde d'une activité (les paramètres du circuit et le contrat type sont
 sauvegardés avec l'activité de suivi ou l'activité qui les porte) et ne sont protégés que par celle du serveur. Le
