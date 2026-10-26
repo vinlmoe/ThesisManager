@@ -78,6 +78,31 @@ final class import_test extends these_testcase {
     }
 
     /**
+     * L'import ne résout les utilisateurs que parmi les participants du cours : un compte du site non
+     * inscrit n'est pas trouvé (ni nommé dans le compte rendu), et un participant sans le droit de
+     * diriger n'est pas accepté comme directeur.
+     */
+    public function test_only_course_participants(): void {
+        global $DB;
+        $this->setup_activity();
+        $outsider = $this->getDataGenerator()->create_user(['username' => 'exterieur', 'email' => 'exterieur@example.org',
+            'idnumber' => 'EXT-1', 'firstname' => 'Extérieur', 'lastname' => 'AuSite']);
+        $csv = "student;title;director\n"
+            . "exterieur;Sujet;\n"
+            . "exterieur@example.org;Sujet;\n"
+            . "EXT-1;Sujet;\n"
+            . "{$this->student->username};Sujet;{$this->librarian->email}\n"
+            . "{$this->student->username};Sujet;{$outsider->username}\n";
+        $report = these_import_dossiers($this->these, $csv, 'semicolon', 'UTF-8', false, $this->deve->id);
+        $this->assertEquals([false, false, false, false, false], array_column($report, 'ok'));
+        foreach ($report as $row) {
+            $this->assertStringContainsString(get_string('importusernotfound', 'mod_these', ''), $row['message']);
+            $this->assertStringNotContainsString('AuSite', $row['message']);
+        }
+        $this->assertEquals(0, $DB->count_records('these_dossier', ['theseid' => $this->these->id]));
+    }
+
+    /**
      * Une colonne obligatoire manquante bloque tout l'import.
      */
     public function test_missing_column(): void {

@@ -196,7 +196,7 @@ class documents {
                 'location' => $data['location'],
             ];
 
-            $send = function ($recipient, $name, $filename) use ($these, $files, $basevars, $result) {
+            $send = function ($recipient, $name, $filename) use ($these, $dossier, $files, $basevars, $result) {
                 $attachment = '';
                 if (isset($files[$filename])) {
                     $attachment = $files[$filename]->copy_content_to_temp('mod_these');
@@ -207,7 +207,8 @@ class documents {
                     [$recipient],
                     array_merge($basevars, ['name' => $name]),
                     $attachment ?: '',
-                    $attachment ? $filename : ''
+                    $attachment ? $filename : '',
+                    $dossier
                 );
                 $sent ? $result->sent++ : $result->failed++;
             };
@@ -241,7 +242,8 @@ class documents {
                     [these_make_external_user($universityemail)],
                     array_merge($basevars, ['devenumber' => (string) $dossier->devenumber]),
                     $zippath,
-                    $zipname
+                    $zipname,
+                    $dossier
                 );
                 $sent ? $result->sent++ : $result->failed++;
             }

@@ -13,8 +13,25 @@ de version recalés sur la date. Les numéros entre parenthèses des sections de
 développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
 été étiquetée.
 
-## mod_these 0.13.0 (2026102505) — scans signés, agents DEVE signataires
+## mod_these 0.13.0 (2026102506) — scans signés, agents DEVE signataires
 
+- Correctifs de sécurité mineurs : la capacité `mod/these:managedeve` déclare
+  le risque XSS (modèles de documents et courriels en HTML brut) ; les balises
+  `<tcpdf>` sont retirées des modèles avant le rendu ; les noms des membres du
+  jury sont échappés dans les messages de confirmation ; l'import CSV ne
+  retrouve les étudiants et directeurs que parmi les participants du cours
+  (plus de résolution d'adresses ou de numéros sur tout le site) ; dans les
+  exports tableur, une cellule commençant comme une formule (`=`, `+`, `-`,
+  `@`) est précédée d'une apostrophe.
+- Thèse confidentielle, courriels : les convocations, l'archive transmise à
+  l'université, les demandes de signature et la désignation du jury passent
+  désormais par le masquage du titre, comme les autres envois. Les
+  destinataires sans compte qui connaissent le sujet sont nommément les
+  boîtes de la DEVE, de la bibliothèque et de l'université, les membres du
+  jury et les signataires invités du dossier ; toute autre adresse reçoit
+  « Thèse confidentielle ». Les balises `{{...}}` d'un courriel personnalisé
+  sont remplacées en une seule passe : un commentaire contenant `{{title}}`
+  ne révèle plus le titre.
 - Membres du jury et signataires invités ayant un compte Moodle : ils sont
   reconnus à leur compte, rattaché à leur adresse quand le jury est enregistré
   (puis à la désignation) ou quand la signature est demandée, et non plus à

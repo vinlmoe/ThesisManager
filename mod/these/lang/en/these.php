@@ -393,11 +393,12 @@ $string['import'] = 'Import';
 $string['importhelp'] = 'Import of subjects already registered outside the module: each row creates an active file. Recognised '
     . 'columns (header row): <code>student</code> and <code>title</code> (required), <code>titleen</code>, <code>summary</code>, '
     . '<code>keywords</code>, <code>director</code>, <code>codirector</code>, <code>devenumber</code>, <code>libraryref</code>. '
-    . 'Student and director are identified by username, email address or ID number.';
+    . 'Student and director are identified by username, email address or ID number, among the course participants '
+    . '(students allowed to submit a subject, teachers allowed to direct).';
 $string['csvfile'] = 'CSV file';
 $string['importdryrun'] = 'Dry run (create nothing)';
 $string['importline'] = 'Line';
-$string['importusernotfound'] = 'User not found: {$a}';
+$string['importusernotfound'] = 'User not found among the course participants: {$a}';
 $string['importdossierexists'] = 'This student already has a file.';
 $string['importtitlemissing'] = 'Missing title.';
 $string['importcreated'] = 'File created';
