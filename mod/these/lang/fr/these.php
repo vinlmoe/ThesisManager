@@ -284,7 +284,7 @@ $string['juryaccessnodocuments'] = "Aucun document n'est encore disponible.";
 
 // Annuaire du jury.
 $string['jurors'] = 'Annuaire du jury';
-$string['juryconflicts'] = 'Membre du jury déjà engagé dans un autre jury sur ce créneau (moins de deux heures d\'écart) :';
+$string['juryconflicts'] = 'Membre du jury déjà engagé dans un autre jury sur ce créneau (soutenances qui se chevauchent) :';
 $string['juryconflict'] = '{$a->member} siège au jury de la soutenance de {$a->student} le {$a->date} ({$a->activity}).';
 $string['juryconflictshort'] = 'Conflit : {$a->member} déjà au jury de {$a->student} à {$a->time}';
 $string['jurors_desc'] = "Enseignants pouvant diriger une thèse ou siéger au jury, communs à toutes les activités et à toutes les "
@@ -588,6 +588,11 @@ $string['libraryroledescription'] = "Rôle interne du module Gestion des thèses
     . "attestation de conformité des manuscrits. À attribuer au niveau du site, d'une catégorie ou d'un cours.";
 
 // Documents (paramètres du circuit).
+$string['settingsdefenses'] = 'Soutenances';
+$string['settingsdefenseduration'] = "Durée d'une soutenance (minutes)";
+$string['settingsdefenseduration_desc'] = "Sert à détecter les conflits de jury : un membre qui siège dans deux soutenances qui se chevauchent "
+    . "est signalé dans le planning et sur le dossier. 60 minutes par défaut.";
+$string['settingsdefensedurationinvalid'] = 'Indiquez une durée d\'au moins une minute.';
 $string['settingsdocuments'] = 'Documents et signataires';
 $string['settingsdocuments_desc'] = "En-tête et signataires des documents de l'établissement produits par le module. Les signataires "
     . "sans compte Moodle (direction générale, CCEM, présidence de l'université) reçoivent par courriel un lien de signature si leur "

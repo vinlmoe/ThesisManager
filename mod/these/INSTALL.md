@@ -251,8 +251,9 @@ soutenances, directeur pour les siennes) présente les soutenances de la semaine
 ou du mois, jour par jour, avec la date proposée ou arrêtée, le jury et le lieu.
 Une thèse y figure dès le dépôt du dossier de soutenance ; un dossier abandonné
 ou une thèse ajournée en sort. Un membre du jury déjà engagé dans un autre jury
-sur le même créneau (moins de deux heures d'écart, toutes promotions
-confondues) est signalé par un badge « Conflit », et la DEVE en est avertie en
+sur le même créneau (soutenances qui se chevauchent, durée d'une soutenance dans
+les paramètres du circuit, 60 minutes par défaut, toutes promotions confondues)
+est signalé par un badge « Conflit », et la DEVE en est avertie en
 tête du dossier, de sa modification et de sa validation. On passe d'une période à l'autre, on va à une
 date, et la vue semaine liste les semaines à venir qui ont des soutenances. Le
 planning de la période s'imprime (PDF en paysage, modèle de document

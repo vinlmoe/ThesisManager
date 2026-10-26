@@ -252,8 +252,8 @@ final class jury_directory_test extends these_testcase {
 
     /**
      * Conflit de jury : un membre (même enseignant de l'annuaire, même adresse ou même nom) qui siège
-     * dans une autre soutenance à moins de deux heures d'écart est signalé ; pas au-delà, ni pour un
-     * dossier abandonné.
+     * dans une autre soutenance qui chevauche celle-ci (durée des paramètres du circuit, une heure par
+     * défaut) est signalé ; pas au-delà, ni pour un dossier abandonné.
      */
     public function test_jury_conflicts(): void {
         global $DB;
@@ -272,17 +272,24 @@ final class jury_directory_test extends these_testcase {
         $first = $make($time, ['juryrole' => [0 => 'president', 1 => 'member'], 'jurorid' => [0 => $pr],
             'juryname' => [1 => 'Claire Externe'], 'juryemail' => [1 => 'claire@example.org'], 'jurytitle' => [1 => 'Dr'],
             'juryinstitution' => [1 => 'Ailleurs'], 'jurystatus' => [1 => 'mcf']]);
-        $second = $make($time + HOURSECS, ['juryrole' => [0 => 'president'], 'jurorid' => [0 => $pr]]);
+        $second = $make($time + 30 * MINSECS, ['juryrole' => [0 => 'president'], 'jurorid' => [0 => $pr]]);
         $third = $make($time + 3 * HOURSECS, ['juryrole' => [0 => 'president'], 'jurorid' => [0 => $pr]]);
 
         $conflicts = these_jury_conflicts($first);
         $this->assertCount(1, $conflicts);
         $this->assertSame('Pr Jean MARTIN', $conflicts[0]->member);
-        $this->assertEquals($time + HOURSECS, $conflicts[0]->time);
+        $this->assertEquals($time + 30 * MINSECS, $conflicts[0]->time);
         $this->assertCount(1, these_jury_conflicts($second));
         $this->assertSame([], these_jury_conflicts($third));
         $this->assertStringContainsString('Pr Jean MARTIN', these_render_jury_conflicts($first));
         $this->assertSame('', these_render_jury_conflicts($third));
+
+        // Soutenances de quatre heures : la troisième chevauche les deux autres.
+        \mod_these\local\scopesettings::set(these_local_scope($this->these), ['defenseduration' => 240]);
+        $this->assertCount(2, these_jury_conflicts($third));
+        \mod_these\local\scopesettings::set(these_local_scope($this->these), ['defenseduration' => 0]);
+        $this->assertSame(60, \mod_these\local\scopesettings::for_these($this->these)['defenseduration']);
+        $this->assertSame([], these_jury_conflicts($third));
 
         // Même adresse, hors annuaire.
         $other = (object) ['jurorid' => 0, 'fullname' => 'C. Externe', 'email' => 'Claire@example.org', 'jurytitle' => ''];

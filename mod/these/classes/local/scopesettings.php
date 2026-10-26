@@ -20,7 +20,7 @@ use context;
 use stdClass;
 
 /**
- * Paramètres du circuit : rôles des services, agents DEVE signataires, établissement, université,
+ * Paramètres du circuit : rôles des services, agents DEVE signataires, durée d'une soutenance, établissement, université,
  * signataires et contrat type de diffusion. Aucun n'est un réglage du site : comme les modèles des
  * documents, ils appartiennent à une portée (voir these_settings_scope()), l'activité « Suivi des
  * thèses » qui suit l'activité, sinon l'activité « Gestion des thèses » elle-même (table
@@ -79,6 +79,7 @@ class scopesettings {
             'deverole' => (int) $DB->get_field('role', 'id', ['shortname' => 'editingteacher']),
             'libraryrole' => (int) $DB->get_field('role', 'id', ['shortname' => 'theselibrary']),
             'deveagent' => '',
+            'defenseduration' => 60,
         ] + self::text_defaults();
     }
 
@@ -192,6 +193,9 @@ class scopesettings {
                 continue;
             }
             $value = is_int($defaults[$name]) ? (string) (int) $value : trim((string) $value);
+            if ($name === 'defenseduration' && (int) $value < 1) {
+                $value = (string) $defaults[$name];
+            }
             $conditions = self::conditions($scope) + ['name' => $name];
             if ($id = $DB->get_field('these_setting', 'id', $conditions)) {
                 $DB->set_field('these_setting', 'value', $value, ['id' => $id]);

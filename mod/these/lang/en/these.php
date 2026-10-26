@@ -280,7 +280,7 @@ $string['juryaccessnodocuments'] = 'No document is available yet.';
 
 // Jury directory.
 $string['jurors'] = 'Jury directory';
-$string['juryconflicts'] = 'Jury member already sitting on another jury in this slot (less than two hours apart):';
+$string['juryconflicts'] = 'Jury member already sitting on another jury in this slot (overlapping defences):';
 $string['juryconflict'] = '{$a->member} sits on the jury of the defence of {$a->student} on {$a->date} ({$a->activity}).';
 $string['juryconflictshort'] = 'Conflict: {$a->member} already on the jury of {$a->student} at {$a->time}';
 $string['jurors_desc'] = 'Teachers who may supervise a thesis or sit on a jury, shared by all activities and all cohorts. Jury forms '
@@ -582,6 +582,11 @@ $string['libraryroledescription'] = 'Internal role of the thesis management modu
     . 'certifying manuscripts. Assign it at site, category or course level.';
 
 // Documents (workflow settings).
+$string['settingsdefenses'] = 'Defences';
+$string['settingsdefenseduration'] = 'Duration of a defence (minutes)';
+$string['settingsdefenseduration_desc'] = 'Used to detect jury conflicts: a member sitting on two overlapping defences is flagged in '
+    . 'the schedule and on the file. 60 minutes by default.';
+$string['settingsdefensedurationinvalid'] = 'Enter a duration of at least one minute.';
 $string['settingsdocuments'] = 'Documents and signatories';
 $string['settingsdocuments_desc'] = 'Header and signatories of the institution documents produced by the module. Signatories without '
     . 'a Moodle account (general management, CCEM, university presidency) receive a signing link by email if their address is set; '

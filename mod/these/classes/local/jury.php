@@ -34,9 +34,6 @@ use stdClass;
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class jury {
-    /** @var int Créneau d'une soutenance : deux soutenances à moins de deux heures d'écart se chevauchent. */
-    const SLOT = 2 * HOURSECS;
-
     /**
      * Utilisateurs inscrits pouvant être choisis comme directeur de thèse.
      *
@@ -123,8 +120,19 @@ class jury {
     }
 
     /**
-     * Membres du jury d'un dossier déjà engagés dans un autre jury sur le même créneau (soutenance,
-     * ou à défaut date proposée, à moins de self::SLOT d'écart), toutes promotions confondues. Les
+     * Durée d'une soutenance d'un dossier, en secondes : paramètre du circuit de son activité.
+     *
+     * @param stdClass $dossier
+     * @return int
+     */
+    public static function defense_duration(stdClass $dossier) {
+        return max(1, (int) scopesettings::for_dossier($dossier)['defenseduration']) * MINSECS;
+    }
+
+    /**
+     * Membres du jury d'un dossier déjà engagés dans un autre jury sur le même créneau, toutes
+     * promotions confondues : les deux soutenances (date arrêtée, ou à défaut date proposée) se
+     * chevauchent, chacune durant la durée fixée dans les paramètres du circuit de son activité. Les
      * dossiers abandonnés sont ignorés.
      *
      * @param stdClass $dossier
@@ -139,8 +147,11 @@ class jury {
         if (!$time || !$members) {
             return [];
         }
-        $params = ['id' => (int) $dossier->id, 'cancelled' => THESE_STATUS_CANCELLED, 'from1' => $time - self::SLOT + 1,
-            'to1' => $time + self::SLOT - 1, 'from2' => $time - self::SLOT + 1, 'to2' => $time + self::SLOT - 1];
+        // Candidats : soutenances commençant au plus une journée avant et avant la fin de celle-ci ; le
+        // chevauchement est ensuite vérifié avec la durée propre à chacune.
+        $end = $time + self::defense_duration($dossier);
+        $params = ['id' => (int) $dossier->id, 'cancelled' => THESE_STATUS_CANCELLED, 'from1' => $time - DAYSECS,
+            'to1' => $end - 1, 'from2' => $time - DAYSECS, 'to2' => $end - 1];
         $others = $DB->get_records_select(
             'these_dossier',
             'id <> :id AND status <> :cancelled
@@ -151,6 +162,10 @@ class jury {
         );
         $conflicts = [];
         foreach ($others as $other) {
+            $othertime = (int) ($other->defensedate ?: $other->proposeddate);
+            if ($othertime + self::defense_duration($other) <= $time) {
+                continue;
+            }
             $otherjury = these_get_jury($other->id);
             foreach ($members as $member) {
                 foreach ($otherjury as $othermember) {

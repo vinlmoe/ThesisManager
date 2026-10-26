@@ -56,6 +56,14 @@ class scopesettings_form extends \moodleform {
         $mform->setType('deveagent', PARAM_TEXT);
         $mform->addElement('static', 'deveagentdesc', '', get_string('settingsdeveagent_desc', 'mod_these'));
 
+        $mform->addElement('header', 'defenseheader', get_string('settingsdefenses', 'mod_these'));
+        $mform->setExpanded('defenseheader');
+        $mform->addElement('text', 'defenseduration', get_string('settingsdefenseduration', 'mod_these'), ['size' => 5]);
+        $mform->setType('defenseduration', PARAM_INT);
+        $mform->addRule('defenseduration', null, 'required', null, 'client');
+        $mform->addRule('defenseduration', null, 'numeric', null, 'client');
+        $mform->addElement('static', 'defensedurationdesc', '', get_string('settingsdefenseduration_desc', 'mod_these'));
+
         $mform->addElement('header', 'documentsheader', get_string('settingsdocuments', 'mod_these'));
         $mform->setExpanded('documentsheader');
         $mform->addElement('static', 'documentsdesc', '', get_string('settingsdocuments_desc', 'mod_these'));
@@ -77,5 +85,20 @@ class scopesettings_form extends \moodleform {
         $mform->addElement('static', 'contracttemplatedesc', '', get_string('settingscontracttemplate_desc', 'mod_these'));
 
         $this->add_action_buttons(false, get_string('savechanges'));
+    }
+
+    /**
+     * Durée d'une soutenance : au moins une minute.
+     *
+     * @param array $data
+     * @param array $files
+     * @return array
+     */
+    public function validation($data, $files) {
+        $errors = parent::validation($data, $files);
+        if ((int) ($data['defenseduration'] ?? 0) < 1) {
+            $errors['defenseduration'] = get_string('settingsdefensedurationinvalid', 'mod_these');
+        }
+        return $errors;
     }
 }
