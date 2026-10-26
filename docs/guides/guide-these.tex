@@ -76,6 +76,9 @@ présentées par rubrique ; captures plus grandes dans la page. \\
 établissement ; images des modèles à déposer par la DEVE ; capture de
 l'annuaire du jury avec le bouton de préremplissage ; plus aucun réglage du
 site : paramètres du circuit dans l'activité de suivi. \\
+2.7 & 26 octobre 2026 & Scan signé : signataires cochés au dépôt, PDF et suivi
+mis à jour ; signature de la direction générale par délégation ; signature sur
+place avec vérification d'identité par la DEVE, conservée et imprimée. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -710,8 +713,15 @@ de signature.}
   \item Pour un signataire qui n'a pas reçu son lien, cliquez sur
         \bouton{Envoyer le lien} (signataires invités et agents DEVE).
   \item Pour un signataire présent ou sans adresse, cliquez sur
-        \bouton{Signer sur place} : il consulte les documents, trace sa
-        signature, puis vous validez.
+        \bouton{Signer sur place} : il consulte les documents et trace sa
+        signature ; vous cochez \bouton{Je certifie avoir vérifié l'identité du
+        signataire} (pièce d'identité), puis vous validez. Votre compte est
+        conservé avec la signature, inscrit à l'historique et imprimé sous la
+        signature (\og identité vérifiée par la DEVE (Prénom Nom)\fg{}).
+  \item Pour la direction générale, la personne qui signe \textbf{par
+        délégation} saisit son propre nom et coche \bouton{Signature par
+        délégation de la direction générale} : \og (par délégation)\fg{}
+        accompagne son nom sur le document et dans le suivi.
 \end{etapes}
 \end{procedure}
 
@@ -1182,7 +1192,14 @@ thèses\fg{}.
 
 La page \bouton{Suivi des signatures} du dossier (DEVE) montre l'état de chaque
 emplacement, permet de \bouton{Envoyer le lien} ou de \bouton{signer sur place}
-pour un signataire présent ou sans adresse.
+pour un signataire présent ou sans adresse. Une signature sur place n'est
+enregistrée qu'une fois cochée la case qui certifie que l'identité du signataire
+a été vérifiée : le compte DEVE concerné est conservé avec la signature et
+inscrit à l'historique. La direction générale peut signer par délégation (case
+\bouton{Signature par délégation de la direction générale}, avec le nom de la
+personne qui signe). Le suivi précise pour chaque signature la manière de signer
+(\og sur place, identité vérifiée par la DEVE\fg{}, \og à la main, scan joint au
+dossier\fg{}) et la délégation.
 
 \capture{40_suivi_signatures}{Suivi des signatures d'un dossier.}
 
@@ -1193,8 +1210,14 @@ pour un signataire présent ou sans adresse.
 Un signataire sans compte peut signer à la main un document (contrat de
 diffusion, fiche d'agréments, fiche signalétique, conclusions, dépôt de sujet) :
 la DEVE joint alors le scan de ce document signé au dossier, pour conservation.
-Le scan n'ouvre ni ne modifie aucune signature du module ; il figure avec les
-autres documents du dossier.
+Au dépôt, elle \textbf{coche les signataires} dont la signature figure sur le
+scan, parmi les signatures encore attendues du document : ils sont inscrits comme
+ayant signé à la main à la date portée sur le document, ce qui met à jour le PDF
+du document (\og Signé à la main par \ldots{} le \ldots, scan joint au dossier
+par la DEVE\fg{}) et le suivi des signatures ; le document est scellé une fois
+toutes ses signatures réunies. Pour la direction générale, une case précise la
+signature par délégation (le nom saisi au dépôt est alors celui de la personne
+qui a signé). Sans case cochée, le scan est seulement conservé.
 
 \begin{procedure}{Joindre le scan d'un document signé hors module}{Équipe DEVE}
 \begin{etapes}
@@ -1202,6 +1225,9 @@ autres documents du dossier.
         non abandonné) et cliquez sur \bouton{Ajouter un scan signé}.
   \item Choisissez le \textbf{document signé}, saisissez le nom du
         \textbf{signataire} et la date de la signature.
+  \item Cochez les \textbf{signataires du scan} (seuls ceux du document
+        choisi sont proposés) et, le cas échéant, la signature par délégation de
+        la direction générale.
   \item Déposez le ou les fichiers scannés (PDF ou images, 10 fichiers au plus).
   \item Au besoin, précisez un commentaire, puis cliquez sur
         \bouton{Enregistrer le scan}.

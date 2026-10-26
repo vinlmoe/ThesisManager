@@ -212,6 +212,16 @@ function these_build_document_context(array $src) {
 define('THESE_CONCLUSIONS_MAX', 2200);
 
 /**
+ * Voir \mod_these\local\doctemplates::signature_caption().
+ *
+ * @param array $signature
+ * @return string
+ */
+function these_signature_caption(array $signature) {
+    return \mod_these\local\doctemplates::signature_caption($signature);
+}
+
+/**
  * Voir \mod_these\local\doctemplates::conclusions_context().
  *
  * @param string $text

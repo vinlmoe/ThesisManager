@@ -22,8 +22,10 @@ use stdClass;
 /**
  * Scans des documents signés hors du module (signataires sans compte, signature sur papier).
  *
- * Le scan est joint au dossier pour conservation : il n'ouvre ni ne modifie aucune signature du
- * module. Chaque dépôt est inscrit à l'historique avec l'empreinte SHA-256 de chaque fichier.
+ * Le scan est joint au dossier pour conservation, et chaque dépôt est inscrit à l'historique avec
+ * l'empreinte SHA-256 de chaque fichier. Les signataires que la DEVE coche comme couverts par le scan
+ * sont inscrits comme ayant signé à la main à la date portée sur le document (méthode « scan ») : le
+ * PDF du document et le suivi des signatures en tiennent compte.
  *
  * @package   mod_these
  * @copyright 2026 Sébastien Lefebvre
@@ -58,6 +60,55 @@ class scans {
     }
 
     /**
+     * Signatures encore attendues, par document proposé au dépôt d'un scan : emplacements non signés
+     * des documents dont les données sont saisies.
+     *
+     * @param stdClass $dossier
+     * @return array doctype => [emplacement => libellé]
+     */
+    public static function pending_slots(stdClass $dossier) {
+        $pending = [];
+        foreach (self::DOCTYPES as $doctype) {
+            if (!these_document_available($dossier, $doctype)) {
+                continue;
+            }
+            foreach (these_document_slots($dossier, $doctype) as $slot) {
+                if (in_array($doctype, these_pending_documents_for_slot($dossier, $slot, [$doctype]), true)) {
+                    $pending[$doctype][$slot] = these_slot_label($slot);
+                }
+            }
+        }
+        return $pending;
+    }
+
+    /**
+     * Nom imprimé pour un signataire couvert par un scan. Le nom saisi au dépôt quand un seul
+     * signataire est coché ou que la signature est donnée par délégation (c'est celui de la personne
+     * qui a signé) ; sinon celui que le module connaît pour l'emplacement (étudiant, directeur,
+     * signataires des paramètres, président du jury), à défaut le nom saisi.
+     *
+     * @param stdClass $dossier
+     * @param string $slot
+     * @param string $typed Nom saisi au dépôt.
+     * @param bool $usetyped Seul signataire coché, ou signature par délégation.
+     * @return string
+     */
+    public static function slot_signer_name(stdClass $dossier, $slot, $typed, $usetyped = false) {
+        global $DB;
+
+        $fallback = trim($typed);
+        if ($usetyped && $fallback !== '') {
+            return $fallback;
+        }
+        $userid = ['student' => $dossier->userid, 'director' => $dossier->directorid][$slot] ?? 0;
+        if ($userid && ($user = $DB->get_record('user', ['id' => $userid]))) {
+            return fullname($user);
+        }
+        $name = trim((string) (these_external_signers($dossier)[$slot]['name'] ?? ''));
+        return $name !== '' ? $name : $fallback;
+    }
+
+    /**
      * Joint les fichiers du brouillon à la zone du dossier, nommés par date, document et signataire,
      * et inscrit le dépôt à l'historique avec l'empreinte de chaque fichier.
      *
@@ -69,7 +120,8 @@ class scans {
      * @param int $signeddate Date de la signature.
      * @param int $draftitemid Zone de brouillon du gestionnaire de fichiers.
      * @param string $remark Commentaire facultatif.
-     * @return int Nombre de fichiers joints.
+     * @param array $slots Emplacements couverts par le scan : emplacement => signé par délégation.
+     * @return int Nombre de fichiers joints (aucune signature inscrite si aucun fichier).
      */
     public static function add(
         context $context,
@@ -79,7 +131,8 @@ class scans {
         $signer,
         $signeddate,
         $draftitemid,
-        $remark = ''
+        $remark = '',
+        array $slots = []
     ) {
         $fs = get_file_storage();
         $usercontext = \context_user::instance($userid);
@@ -118,6 +171,22 @@ class scans {
             $logremark .= ' ' . $remark;
         }
         dossiers::log($dossier->id, $userid, 'signedscan', $dossier->status, $dossier->status, $logremark);
+
+        // Signataires couverts : signés à la main, à la date du document, enregistrés par la DEVE.
+        $pending = self::pending_slots($dossier)[$doctype] ?? [];
+        foreach ($slots as $slot => $delegated) {
+            if (!isset($pending[$slot])) {
+                continue;
+            }
+            $delegated = $slot === 'dg' && $delegated;
+            $name = self::slot_signer_name($dossier, $slot, $signer, $delegated || count($slots) === 1);
+            these_sign_document($context, $dossier, $doctype, $slot, 0, $name, '', '', [
+                'method' => 'scan',
+                'delegated' => $delegated,
+                'verifiedby' => $userid,
+                'time' => $signeddate,
+            ]);
+        }
         return count($hashes);
     }
 }

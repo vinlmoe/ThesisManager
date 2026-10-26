@@ -27,6 +27,9 @@ require_once($CFG->dirroot . '/mod/these/locallib.php');
  * reçu par courriel ou sur place auprès de la DEVE (sign.php). Un signataire connecté avec le
  * compte de l'adresse invitée peut reprendre sa signature enregistrée.
  *
+ * La direction générale peut signer par délégation (customdata delegation). Sur place (customdata
+ * inperson), la DEVE certifie avoir vérifié l'identité du signataire.
+ *
  * @package   mod_these
  * @copyright 2026 Sébastien Lefebvre
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -50,6 +53,13 @@ class sign_form extends \moodleform {
             get_string('signexternalintro', 'mod_these'),
             !empty($this->_customdata['allowsaved'])
         );
+        if (!empty($this->_customdata['delegation'])) {
+            $mform->addElement('advcheckbox', 'delegated', '', get_string('signdelegated', 'mod_these'));
+            $mform->addHelpButton('delegated', 'signdelegated', 'mod_these');
+        }
+        if (!empty($this->_customdata['inperson'])) {
+            $mform->addElement('advcheckbox', 'identityverified', '', get_string('signidentityverified', 'mod_these'));
+        }
         $this->add_action_buttons(false, get_string('signdocuments', 'mod_these'));
     }
 
@@ -61,6 +71,10 @@ class sign_form extends \moodleform {
      * @return array
      */
     public function validation($data, $files) {
-        return array_merge(parent::validation($data, $files), these_signature_errors($data));
+        $errors = array_merge(parent::validation($data, $files), these_signature_errors($data));
+        if (!empty($this->_customdata['inperson']) && empty($data['identityverified'])) {
+            $errors['identityverified'] = get_string('signidentityrequired', 'mod_these');
+        }
+        return $errors;
     }
 }

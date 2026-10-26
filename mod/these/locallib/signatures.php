@@ -286,12 +286,23 @@ function these_get_signature_image($contextid, $signatureid) {
  * @param string $slot
  * @param int $userid Signataire (0 sans compte).
  * @param string $name Nom du signataire tel qu'il apparaît sur le document.
- * @param string $png Image de la signature.
+ * @param string $png Image de la signature ('' pour un scan).
  * @param string $email
+ * @param array $options method, delegated, verifiedby, time (voir la méthode).
  * @return stdClass La signature.
  */
-function these_sign_document(context $context, stdClass $dossier, $doctype, $slot, $userid, $name, $png, $email = '') {
-    return \mod_these\local\signatures::sign_document($context, $dossier, $doctype, $slot, $userid, $name, $png, $email);
+function these_sign_document(
+    context $context,
+    stdClass $dossier,
+    $doctype,
+    $slot,
+    $userid,
+    $name,
+    $png,
+    $email = '',
+    array $options = []
+) {
+    return \mod_these\local\signatures::sign_document($context, $dossier, $doctype, $slot, $userid, $name, $png, $email, $options);
 }
 
 /**

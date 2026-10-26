@@ -874,6 +874,22 @@ This link is personal and valid for one signature only.';
 
 // PDF labels (the documents are official French forms: labels stay close to the originals).
 $string['pdfsignedby'] = 'Electronically signed by {$a->name} on {$a->date} — fingerprint {$a->hash}';
+$string['pdfsignedbyinperson'] = 'Signed in person by {$a->name} on {$a->date}, identity checked by the registrar ({$a->verifier}) — fingerprint {$a->hash}';
+$string['pdfsignedbyscan'] = 'Signed by hand by {$a->name} on {$a->date}, scan attached to the file by the registrar ({$a->verifier}) — fingerprint {$a->hash}';
+$string['pdfdelegated'] = '{$a} (by delegation)';
+$string['signeddelegated'] = 'by delegation';
+$string['signedmethodinperson'] = 'in person, identity checked by the registrar';
+$string['signedmethodscan'] = 'by hand, scan attached to the file';
+$string['signdelegated'] = 'Signature by delegation of the general management';
+$string['signdelegated_help'] = 'Tick when the person signing does so by delegation of the director general: "by delegation" '
+    . 'appears with their name on the document.';
+$string['signidentityverified'] = 'I certify that I have checked the identity of the signatory (identity document)';
+$string['signidentityrequired'] = 'Check the identity of the signatory before recording their signature.';
+$string['signidentityverifiedby'] = 'identity checked by {$a}';
+$string['scanslots'] = 'Signatories of the scan';
+$string['scansignaturesrecorded'] = '{$a} signature(s) recorded as signed by hand.';
+$string['scanslots_desc'] = 'Tick the signatures on the scanned document: they are recorded as signed by hand on the date above, '
+    . 'and the document PDF and the signature tracking are updated.';
 $string['pdfreportfavorable'] = 'Favourable opinion for the thesis defence and the award of the Doctor of Veterinary Medicine title.';
 $string['privacy:metadata:these_dossier:bordereau'] = 'Personal data entered with the defence (civil status, address, personal email, curriculum, distribution choices).';
 $string['privacy:metadata:these_dossier:conclusions'] = 'Thesis conclusions.';

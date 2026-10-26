@@ -123,7 +123,11 @@ défaut, le dossier affiche un avertissement à la DEVE.
 
 Les signataires extérieurs reçoivent un lien personnel par courriel, valable
 60 jours ; la DEVE suit les signatures (*Suivi des signatures*), relance (un
-nouveau lien remplace le précédent) ou fait signer sur place. Le lien d'accès du
+nouveau lien remplace le précédent) ou fait signer sur place, après avoir coché
+la vérification de l'identité du signataire (son compte est conservé avec la
+signature et imprimé dessous). La direction générale peut signer par
+délégation. Au dépôt du scan d'un document signé à la main, la DEVE coche les
+signataires couverts : PDF et suivi des signatures sont mis à jour. Le lien d'accès du
 jury vaut jusqu'à 60 jours après la soutenance et cesse à la clôture ou à
 l'abandon du dossier ; un membre du jury qui a un compte Moodle à la même adresse
 consulte aussi les documents depuis *Suivi des thèses*, sans lien. Seule

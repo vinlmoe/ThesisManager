@@ -51,7 +51,7 @@ $PAGE->set_title(format_string($these->name) . ' - ' . get_string('addsignedscan
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($context);
 
-$mform = new \mod_these\form\scan_form($PAGE->url);
+$mform = new \mod_these\form\scan_form($PAGE->url, ['slots' => \mod_these\local\scans::pending_slots($dossier)]);
 // Brouillon vide : les scans déjà joints au dossier ne sont pas repris, seuls les nouveaux fichiers le sont.
 $draftitemid = file_get_submitted_draft_itemid('scan');
 $mform->set_data((object) [
@@ -64,6 +64,14 @@ $mform->set_data((object) [
 if ($mform->is_cancelled()) {
     redirect($dossierurl);
 } else if ($data = $mform->get_data()) {
+    // Emplacements cochés pour le document choisi, avec la délégation éventuelle de la direction générale.
+    $slots = [];
+    foreach (array_keys(\mod_these\local\scans::pending_slots($dossier)[$data->doctype] ?? []) as $slot) {
+        $name = 'sign_' . $data->doctype . '_' . $slot;
+        if (!empty($data->$name)) {
+            $slots[$slot] = !empty($data->{$name . '_delegated'});
+        }
+    }
     $count = \mod_these\local\scans::add(
         $context,
         $dossier,
@@ -72,9 +80,14 @@ if ($mform->is_cancelled()) {
         trim($data->signer),
         (int) $data->signeddate,
         $data->scan,
-        trim((string) $data->remark)
+        trim((string) $data->remark),
+        $slots
     );
-    redirect($dossierurl, get_string('scanrecorded', 'mod_these', $count), null, \core\output\notification::NOTIFY_SUCCESS);
+    $message = get_string('scanrecorded', 'mod_these', $count);
+    if ($count && $slots) {
+        $message .= ' ' . get_string('scansignaturesrecorded', 'mod_these', count($slots));
+    }
+    redirect($dossierurl, $message, null, \core\output\notification::NOTIFY_SUCCESS);
 }
 
 $renderer = $PAGE->get_renderer('mod_these');

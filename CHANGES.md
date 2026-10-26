@@ -13,6 +13,26 @@ de version recalés sur la date. Les numéros entre parenthèses des sections de
 développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
 été étiquetée.
 
+## mod_these 0.16.0 (2026102603) — signataires des scans, délégation, vérification d'identité
+
+- Scan d'un document signé hors module : la DEVE coche les signataires dont la
+  signature figure sur le scan, parmi les signatures encore attendues du
+  document choisi. Ils sont inscrits comme ayant signé à la main à la date du
+  document : le PDF porte « Signé à la main par … le …, scan joint au dossier
+  par la DEVE (Prénom Nom) », le suivi des signatures est mis à jour et le
+  document est scellé une fois toutes ses signatures réunies.
+- Direction générale : signature par délégation, par le lien, sur place ou par
+  scan (case « Signature par délégation de la direction générale ») ; « (par
+  délégation) » suit le nom de la personne qui signe, sur le document, dans le
+  suivi et à l'historique.
+- Signature sur place recueillie par la DEVE (suivi des signatures) : case
+  obligatoire certifiant que l'identité du signataire a été vérifiée. Le compte
+  DEVE est conservé avec la signature, inscrit à l'historique et imprimé sous la
+  signature (« identité vérifiée par la DEVE (Prénom Nom) »).
+- Table `these_signature` : champs `method` (online, inperson, scan),
+  `delegated` et `verifiedby` (étape `db/upgrade.php` 2026102603), sauvegardés
+  et restaurés.
+
 ## mod_these 0.15.0 (2026102602) et mod_thesesynthesis 0.5.0 (2026102600) — plus aucun réglage du site, modèles des documents sans valeur propre à un établissement
 
 - Plus aucun réglage du site (page d'administration du module supprimée). Rôles
