@@ -147,5 +147,17 @@ function xmldb_these_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2026102603, 'these');
     }
 
+    if ($oldversion < 2026102700) {
+        // Le directeur de thèse siège au jury sans voter : il faut au moins deux membres votants,
+        // président compris. Les activités restées au minimum d'origine (trois, directeur compris)
+        // passent à deux.
+        $dbman = $DB->get_manager();
+        $table = new xmldb_table('these');
+        $field = new xmldb_field('minjury', XMLDB_TYPE_INTEGER, '3', null, XMLDB_NOTNULL, null, '2', 'defaultlocation');
+        $dbman->change_field_default($table, $field);
+        $DB->set_field('these', 'minjury', 2, ['minjury' => 3]);
+        upgrade_mod_savepoint(true, 2026102700, 'these');
+    }
+
     return true;
 }

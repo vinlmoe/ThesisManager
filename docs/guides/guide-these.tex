@@ -99,6 +99,8 @@ jury en tête de la rubrique Jury. \\
 lecture à la validation, action directe dans \og À traiter\fg{}, actions
 groupées, conflits de salle, réglages à compléter. Agents de la
 bibliothèque listés dans les paramètres du circuit, sans rôle à attribuer. \\
+2.12 & 27 octobre 2026 & Directeur de thèse non votant, au moins deux membres
+votants président compris ; liste du corps enseignant en PDF. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -348,8 +350,8 @@ les dossiers que si l'option correspondante est explicitement cochée.
   \item[Établissement] nom, adresse, ville (\og Fait à\fg{}), signataire et sa
         qualité : imprimés sur les documents générés.
   \item[Lieu de soutenance par défaut] proposé à l'étudiant.
-  \item[Membres votants minimum du jury] président compris, invités exclus
-        (3 par défaut).
+  \item[Membres votants minimum du jury] président compris, directeur de
+        thèse et invités exclus (2 par défaut).
   \item[Adresses de service DEVE et bibliothèque] si elles sont renseignées,
         les notifications vont à ces boîtes ; sinon à chaque utilisateur inscrit
         détenant la capacité correspondante.
@@ -504,8 +506,10 @@ refusé.}
         d'office) et le lieu : les salles des paramètres du circuit sont
         proposées à la saisie, la première par défaut, mais un autre lieu reste
         possible.
-  \item Composez le jury : un président et au moins le nombre de membres
-        votants fixé par l'activité. Choisissez chaque enseignant dans
+  \item Composez le jury : au moins le nombre de membres votants fixé par
+        l'activité (deux par défaut), président compris. Votre directeur siège
+        au jury \textbf{sans voter} : il ne compte pas parmi les membres
+        votants. Choisissez chaque enseignant dans
         l'annuaire ; pour un membre extérieur ou un invité, choisissez
         \og Membre extérieur ou invité\fg{} et saisissez nom, titre, statut,
         établissement et adresse. Votre directeur est proposé d'office.
@@ -1475,6 +1479,17 @@ Professeur émérite, maître de conférences émérite & oui & oui \\
 \end{center}
 
 \capture[0.85\linewidth]{47_annuaire_jury}{Annuaire du jury.}
+
+\paragraph{Liste du corps enseignant.} Le bouton \bouton{Liste du corps
+enseignant (PDF)} de l'annuaire produit une page à inclure dans les thèses :
+les enseignants \textbf{actifs} de l'annuaire dont l'établissement est celui
+des paramètres du circuit (champ \og Établissement\fg{}, casse et espaces
+ignorés), groupés par statut, professeurs d'abord, et datée du jour. Les
+étudiants la téléchargent depuis le dépôt de la soutenance (lien sous le
+manuscrit). Sa mise en page est un modèle de document comme les autres
+(\og Liste du corps enseignant\fg{}, section~\ref{sec:modeles}).
+
+\capture[0.6\linewidth]{106_liste_corps_enseignant}{Liste du corps enseignant, à inclure dans la thèse.}
 
 Les formulaires de jury (étudiant, DEVE) y puisent : choisir un enseignant
 préremplit son titre, son statut, son établissement et son adresse. Un

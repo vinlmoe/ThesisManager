@@ -54,6 +54,12 @@ class defense_form extends \moodleform {
             these_filemanager_options('manuscript')
         );
         $mform->addHelpButton('manuscript', 'manuscript', 'mod_these');
+        if (!empty($this->_customdata['teachinglisturl'])) {
+            // Page à inclure dans le manuscrit (« Présence de la liste à jour du corps enseignant »).
+            $mform->addElement('static', 'teachinglist', '', get_string('teachinglistdefense', 'mod_these') . ' '
+                . \html_writer::link($this->_customdata['teachinglisturl'], get_string('teachinglist', 'mod_these')));
+            $mform->addHelpButton('teachinglist', 'teachinglist', 'mod_these');
+        }
         $mform->addElement(
             'filemanager',
             'defensedocs',

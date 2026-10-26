@@ -366,4 +366,90 @@ class jurors {
         }
         return $result;
     }
+
+    /**
+     * Statuts dans l'ordre de la liste du corps enseignant (professeurs d'abord).
+     *
+     * @return string[]
+     */
+    public static function teaching_list_order() {
+        return ['pr', 'premerite', 'prstag', 'mcfhdr', 'mcf', 'mcfemerite', 'mcfstag', 'ir'];
+    }
+
+    /**
+     * Enseignants actifs de l'annuaire internes à l'établissement : ceux dont l'établissement contient
+     * le nom de l'établissement de la portée (casse et espaces ignorés). Sans nom d'établissement,
+     * tous les enseignants actifs.
+     *
+     * @param string $institution
+     * @return \stdClass[]
+     */
+    public static function internal_members($institution) {
+        $institution = jury::normalise_location($institution);
+        return array_values(array_filter(self::get_all(true), function ($juror) use ($institution) {
+            return $institution === '' || strpos(jury::normalise_location($juror->institution), $institution) !== false;
+        }));
+    }
+
+    /**
+     * Données du modèle « Liste du corps enseignant » : les enseignants actifs internes à
+     * l'établissement (voir internal_members()), groupés par statut, à inclure dans les thèses.
+     *
+     * @param \stdClass|null $scope Portée dont reprendre l'établissement et les images.
+     * @param \stdClass|null $activity Activité dont reprendre l'établissement, à défaut.
+     * @param \stdClass[]|null $members Enseignants à lister (par défaut, ceux de l'annuaire).
+     * @return array today, establishment {name, city}, count, hasmembers, groups {label, members {name, title, fullname}}, img
+     */
+    public static function teaching_list_context(?\stdClass $scope, ?\stdClass $activity = null, ?array $members = null) {
+        $settings = $scope ? scopesettings::get_all($scope) : scopesettings::defaults();
+        $name = trim((string) $settings['institution']) ?: trim((string) ($activity->establishmentname ?? ''));
+        $members = $members ?? self::internal_members($name);
+        $groups = [];
+        foreach (self::teaching_list_order() as $status) {
+            $rows = array_values(array_filter($members, function ($juror) use ($status) {
+                return (string) $juror->status === $status;
+            }));
+            if (!$rows) {
+                continue;
+            }
+            $groups[] = [
+                'label' => get_string('teachinggroup' . $status, 'mod_these'),
+                'members' => array_map(function ($juror) {
+                    return [
+                        'title' => (string) $juror->title,
+                        'fullname' => self::fullname($juror),
+                        'name' => trim($juror->title . ' ' . self::fullname($juror)),
+                    ];
+                }, $rows),
+            ];
+        }
+        return [
+            'today' => userdate(time(), '%d/%m/%Y'),
+            'establishment' => ['name' => $name, 'city' => (string) ($activity->establishmentcity ?? '')],
+            'count' => array_sum(array_map(function ($group) {
+                return count($group['members']);
+            }, $groups)),
+            'hasmembers' => !empty($groups),
+            'groups' => $groups,
+            'img' => these_doctemplate_images($scope),
+        ];
+    }
+
+    /**
+     * Données d'exemple de la liste du corps enseignant, pour l'aperçu et la vérification du modèle.
+     *
+     * @param \stdClass|null $scope
+     * @param \stdClass|null $activity
+     * @return array Voir teaching_list_context().
+     */
+    public static function sample_teaching_list_context(?\stdClass $scope = null, ?\stdClass $activity = null) {
+        $sample = [
+            ['Pr', 'DUPONT', 'Jean', 'pr'], ['Pr', 'MARTIN', 'Claire', 'pr'], ['Dr', 'DURAND', 'Anne', 'mcfhdr'],
+            ['Dr', 'PETIT', 'Luc', 'mcf'], ['Dr', 'BERNARD', 'Marie', 'mcf'], ['Dr', 'ROUX', 'Paul', 'ir'],
+        ];
+        $members = array_map(function ($row) {
+            return (object) ['title' => $row[0], 'lastname' => $row[1], 'firstname' => $row[2], 'status' => $row[3]];
+        }, $sample);
+        return self::teaching_list_context($scope, $activity, $members);
+    }
 }

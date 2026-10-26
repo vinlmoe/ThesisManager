@@ -53,7 +53,7 @@ $string['signatorytitle'] = 'Signatory position';
 $string['defaultlocation'] = 'Default defence location';
 $string['workflowsettings'] = 'Workflow and notifications';
 $string['minjury'] = 'Minimum voting jury members';
-$string['minjury_help'] = 'Minimum number of voting members (chair included, guests excluded) required in the jury, both when the '
+$string['minjury_help'] = 'Minimum number of voting members (chair included, thesis director and guests excluded) required in the jury, both when the '
     . 'student proposes it and when the registrar validates it.';
 $string['minjuryinvalid'] = 'Enter a number greater than or equal to 1.';
 $string['deveemail'] = 'Registrar service address';
@@ -193,8 +193,8 @@ $string['depositdefense'] = 'Submit the defence documents';
 $string['defenseprogress'] = 'Progress: {$a->complete} of {$a->total} sections complete. Sections still to complete are expanded below.';
 $string['defensesectioncomplete'] = 'Complete';
 $string['defensesectionmissing'] = '{$a} field(s) to complete';
-$string['defenseintro'] = 'Upload your manuscript and defence documents and propose a date, a location and the jury (a chair and '
-    . 'at least {$a} voting members, chair included). You can prepare this submission in several steps ("Save draft"); submitting '
+$string['defenseintro'] = 'Upload your manuscript and defence documents and propose a date, a location and the jury (at least '
+    . '{$a} voting members, chair included; your director sits without voting). You can prepare this submission in several steps ("Save draft"); submitting '
     . 'sends it to your director, who will approve it and attach a report.';
 $string['defensedocuments'] = 'Defence documents';
 $string['manuscript'] = 'Manuscript (PDF)';
@@ -237,11 +237,11 @@ $string['roomconflictshort'] = 'Room booked: {$a->student}, {$a->time}';
 $string['juryhelpdeve'] = "One row per member, preferably chosen from the jury directory.";
 $string['juryhelp'] = 'One row per member. Preferably choose the teacher from the jury directory: title, status, institution '
     . 'and address are taken from it. For an external member or a guest, choose "External member or guest" and fill in the row '
-    . '(the status is required for a voting member). Only HDR associate professors, professors and emeriti may chair. The registrar '
+    . '(the status is required for a voting member; the thesis director sits without voting). Only HDR associate professors, professors and emeriti may chair. The registrar '
     . 'then validates the eligibility of each member; members are then notified by email and receive a link to the file documents.';
 $string['juryrole'] = 'Role';
 $string['juryrolepresident'] = 'Chair';
-$string['juryroledirector'] = 'Thesis director (jury member)';
+$string['juryroledirector'] = 'Thesis director (non-voting)';
 $string['juryrolemember'] = 'Jury member';
 $string['juryroleguest'] = 'Guest member';
 $string['juryname'] = 'Name';
@@ -250,7 +250,7 @@ $string['juryinstitution'] = 'Institution';
 $string['juryemail'] = 'Email';
 $string['juryaddmembers'] = 'Add rows';
 $string['juryonepresident'] = 'The jury must have exactly one chair.';
-$string['juryminmembers'] = 'The jury must have at least {$a} voting members (chair included, guests excluded).';
+$string['juryminmembers'] = 'The jury must have at least {$a} voting members (chair included, thesis director and guests excluded).';
 $string['juryinvalidemail'] = 'Invalid email address for {$a}.';
 $string['juryjuror'] = 'Teacher from the directory';
 $string['juryjuror_help'] = 'Teacher chosen from the jury directory kept by the registrar. For an external member (another '
@@ -1016,6 +1016,18 @@ $string['doctplconvocation'] = 'Defence notice';
 $string['doctpljurysheet'] = 'Jury sheet';
 $string['doctplminutes'] = 'Defence minutes';
 $string['doctplplanning'] = 'Defence schedule';
+$string['doctplteachinglist'] = 'Teaching staff list';
+$string['teachinglist'] = 'Teaching staff list (PDF)';
+$string['teachinglist_help'] = 'Active teachers of the jury directory whose institution is the one in the workflow settings, grouped by status, up to date on the day of download: the page is to be included in the thesis manuscript.';
+$string['teachinglistdefense'] = 'Up-to-date teaching staff list to include in your manuscript:';
+$string['teachinggrouppr'] = 'Professors';
+$string['teachinggrouppremerite'] = 'Emeritus professors';
+$string['teachinggroupprstag'] = 'Probationary professors';
+$string['teachinggroupmcfhdr'] = 'Associate professors (HDR)';
+$string['teachinggroupmcf'] = 'Associate professors';
+$string['teachinggroupmcfemerite'] = 'Emeritus associate professors';
+$string['teachinggroupmcfstag'] = 'Probationary associate professors';
+$string['teachinggroupir'] = 'Research engineers';
 
 // Settings transfer.
 $string['transfersettings'] = 'Settings transfer';

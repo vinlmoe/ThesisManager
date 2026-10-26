@@ -54,6 +54,7 @@ class doctemplates {
             'jurysheet' => null,
             'minutes' => null,
             'planning' => null,
+            'teachinglist' => null,
         ];
     }
 
@@ -560,8 +561,9 @@ class doctemplates {
             $jurydirector = ['name' => $thesisdirector['name'], 'fullname' => $thesisdirector['name'],
                 'institution' => $external ? $extdirector['institution'] : (string) ($config['institution'] ?? '')] + $empty;
         }
+        // Membres votants : ni le directeur de thèse ni les invités.
         $voting = array_values(array_filter($jury, function ($item) {
-            return $item['role'] !== 'guest';
+            return !in_array($item['role'], ['director', 'guest'], true);
         }));
 
         // Rapport, grille et conclusions du directeur.
@@ -954,8 +956,8 @@ class doctemplates {
     }
 
     /**
-     * Données d'exemple d'un modèle : celles d'un dossier, ou celles d'un mois de soutenances pour le
-     * planning mensuel.
+     * Données d'exemple d'un modèle : celles d'un dossier, celles d'un mois de soutenances pour le
+     * planning mensuel, ou une liste d'enseignants pour la liste du corps enseignant.
      *
      * @param stdClass|null $scope
      * @param string $type Voir these_doctemplate_types().
@@ -965,6 +967,9 @@ class doctemplates {
     public static function doctemplate_sample_context(?stdClass $scope, $type, ?stdClass $activity = null) {
         if ($type === 'planning') {
             return these_sample_planning_context($scope, $activity);
+        }
+        if ($type === 'teachinglist') {
+            return jurors::sample_teaching_list_context($scope, $activity);
         }
         return these_sample_document_context($scope, $activity);
     }

@@ -67,7 +67,7 @@ abstract class these_testcase extends \advanced_testcase {
             'establishmentcity' => 'Toulouse',
             'signatoryname' => 'La directrice',
             'signatorytitle' => "Directrice de l'école",
-            'minjury' => 3,
+            'minjury' => 2,
             'reminderdays' => 14,
         ], $settings));
         $this->cm = get_coursemodule_from_instance('these', $this->these->id);

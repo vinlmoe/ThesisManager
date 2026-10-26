@@ -13,6 +13,21 @@ de version recalés sur la date. Les numéros entre parenthèses des sections de
 développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
 été étiquetée.
 
+## mod_these 0.18.0 (2026102700) — directeur non votant, liste du corps enseignant
+
+- Jury : le directeur de thèse siège sans voter (rôle « Directeur de thèse
+  (non votant) »). Il faut au moins deux membres votants, président compris :
+  minimum par défaut de l'activité ramené de 3 à 2, et activités restées à 3
+  passées à 2 à la mise à jour. Le directeur n'a pas d'éligibilité à valider
+  et ne signe plus le procès-verbal parmi les membres votants.
+- Liste du corps enseignant en PDF, à inclure dans les thèses : enseignants
+  actifs de l'annuaire dont l'établissement est celui des paramètres du
+  circuit, groupés par statut (professeurs d'abord), à jour au jour du
+  téléchargement. Nouveau modèle de document « Liste du corps enseignant »,
+  modifiable par la DEVE ; téléchargeable depuis l'annuaire du jury et, pour
+  l'étudiant, depuis le dépôt de la soutenance (`teachinglist.php`).
+- Mise à jour 2026102700 : valeur par défaut de `minjury` à 2.
+
 ## mod_these 0.17.0 (2026102609) et mod_thesesynthesis 0.6.0 (2026102609) — signature sur place de l'étudiant et du directeur, vérification d'identité préalable, grille remplie par l'étudiant, ergonomie, simplifications pour la DEVE
 
 - Simplifications pour la DEVE :

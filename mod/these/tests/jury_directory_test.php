@@ -104,24 +104,27 @@ final class jury_directory_test extends these_testcase {
         $this->assertSame('pr', $members[0]->jurystatus);
         $this->assertSame('martin@example.org', $members[0]->email);
         $this->assertSame((int) $pr, $members[0]->jurorid);
-        $this->assertNull(these_validate_jury($members, 3));
+        $this->assertNull(these_validate_jury($members, 2));
         $this->assertSame('ok', these_jury_eligibility($members[0]));
+        // Le directeur siège sans voter : deux membres votants, président compris.
+        $this->assertSame('ok', these_jury_eligibility($members[1]));
+        $this->assertNotNull(these_validate_jury($members, 3));
         $this->assertSame('tocheck', these_jury_eligibility($members[2]));
         $this->assertSame('ok', these_jury_eligibility($members[3]));
 
         // Un maître de conférences ne préside pas.
         $data['jurorid'] = [0 => $mcf, 1 => $pr, 2 => 0, 3 => 0];
-        $this->assertStringContainsString('Jean BERNARD', these_validate_jury(these_extract_submitted_jury($data), 3));
+        $this->assertStringContainsString('Jean BERNARD', these_validate_jury(these_extract_submitted_jury($data), 2));
         // Un membre extérieur votant doit déclarer son statut.
         $data['jurorid'] = [0 => $pr, 1 => $mcf, 2 => 0, 3 => 0];
         $data['jurystatus'][2] = '';
-        $this->assertStringContainsString('Claire Dupont', these_validate_jury(these_extract_submitted_jury($data), 3));
+        $this->assertStringContainsString('Claire Dupont', these_validate_jury(these_extract_submitted_jury($data), 2));
         // Pas deux fois le même enseignant.
         $data['jurystatus'][2] = 'other';
         $data['jurorid'][1] = $pr;
         $this->assertSame(
             get_string('juryduplicate', 'mod_these', 'Jean MARTIN'),
-            these_validate_jury(these_extract_submitted_jury($data), 3)
+            these_validate_jury(these_extract_submitted_jury($data), 2)
         );
 
         // Validation de l'éligibilité par la DEVE : chaque membre votant coché.
@@ -316,5 +319,33 @@ final class jury_directory_test extends these_testcase {
         $this->these->defaultlocation = '';
         \mod_these\local\scopesettings::set(these_settings_scope($this->these), ['defenserooms' => '']);
         $this->assertSame([], these_defense_rooms($this->these));
+    }
+
+    /**
+     * Liste du corps enseignant : enseignants actifs de l'établissement des paramètres, groupés par
+     * statut (professeurs d'abord), rendue en PDF.
+     */
+    public function test_teaching_list(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setup_activity();
+        $scope = these_settings_scope($this->these);
+        \mod_these\local\scopesettings::set($scope, ['institution' => 'École vétérinaire']);
+        $mcf = $this->juror('Bernard', 'mcf', 'Dr');
+        $this->juror('Martin', 'pr');
+        $external = $this->juror('Curie', 'pr');
+        $inactive = $this->juror('Ancien', 'pr');
+        $DB->set_field('these_juror', 'institution', 'École Vétérinaire  de la ville', ['id' => $mcf]);
+        $DB->set_field('these_juror', 'institution', 'Oniris', ['id' => $external]);
+        $DB->set_field('these_juror', 'active', 0, ['id' => $inactive]);
+        $DB->set_field_select('these_juror', 'institution', 'École vétérinaire', 'id NOT IN (?, ?)', [$mcf, $external]);
+
+        $data = jurors::teaching_list_context($scope, $this->these);
+        $this->assertSame('École vétérinaire', $data['establishment']['name']);
+        $this->assertSame(2, $data['count']);
+        $labels = array_column($data['groups'], 'label');
+        $this->assertSame([get_string('teachinggrouppr', 'mod_these'), get_string('teachinggroupmcf', 'mod_these')], $labels);
+        $this->assertSame('Pr Jean MARTIN', $data['groups'][0]['members'][0]['name']);
+        $this->assertStringStartsWith('%PDF', these_render_scope_doctemplate($scope, 'teachinglist', $data));
     }
 }

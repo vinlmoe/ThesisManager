@@ -69,8 +69,8 @@ class mod_these_generator extends testing_module_generator {
     }
 
     /**
-     * Jury valide : un président, le directeur et un membre du jury (trois membres votants), plus un
-     * invité sans adresse de courriel.
+     * Jury valide : un président et un membre du jury (deux membres votants), le directeur, qui siège
+     * sans voter, et un invité sans adresse de courriel.
      *
      * @return array Membres au format de these_save_jury().
      */

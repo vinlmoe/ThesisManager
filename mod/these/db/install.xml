@@ -21,7 +21,7 @@
         <FIELD NAME="signatorytitle" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="defaultlocation" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"
             COMMENT="Lieu de soutenance proposé par défaut à l'étudiant"/>
-        <FIELD NAME="minjury" TYPE="int" LENGTH="3" NOTNULL="true" DEFAULT="3" SEQUENCE="false"
+        <FIELD NAME="minjury" TYPE="int" LENGTH="3" NOTNULL="true" DEFAULT="2" SEQUENCE="false"
             COMMENT="Nombre minimal de membres votants du jury (président compris)"/>
         <FIELD NAME="deveemail" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"
             COMMENT="Boîte de service de la DEVE ; vide : notifier chaque utilisateur DEVE inscrit"/>

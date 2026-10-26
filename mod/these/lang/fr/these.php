@@ -53,7 +53,7 @@ $string['signatorytitle'] = 'Qualité du signataire';
 $string['defaultlocation'] = 'Lieu de soutenance proposé par défaut';
 $string['workflowsettings'] = 'Circuit et notifications';
 $string['minjury'] = 'Membres votants minimum du jury';
-$string['minjury_help'] = "Nombre minimal de membres votants (président compris, invités exclus) exigé pour la composition du jury, "
+$string['minjury_help'] = "Nombre minimal de membres votants (président compris, directeur de thèse et invités exclus) exigé pour la composition du jury, "
     . "à la proposition de l'étudiant comme à la validation de la DEVE.";
 $string['minjuryinvalid'] = 'Indiquez un nombre supérieur ou égal à 1.';
 $string['deveemail'] = 'Adresse de service de la DEVE';
@@ -195,7 +195,7 @@ $string['defenseprogress'] = 'Avancement du dépôt : {$a->complete} rubrique(s)
 $string['defensesectioncomplete'] = 'Complète';
 $string['defensesectionmissing'] = '{$a} champ(s) à compléter';
 $string['defenseintro'] = "Déposez votre manuscrit et les documents de soutenance, et proposez une date, un lieu et la composition du "
-    . "jury (un président et au moins {\$a} membres votants, président compris). Vous pouvez préparer ce dépôt en plusieurs fois "
+    . "jury (au moins {\$a} membres votants, président compris ; votre directeur siège sans voter). Vous pouvez préparer ce dépôt en plusieurs fois "
     . "(« Enregistrer le brouillon ») ; la soumission l'envoie à votre directeur, qui le validera en y joignant son rapport.";
 $string['defensedocuments'] = 'Documents de soutenance';
 $string['manuscript'] = 'Manuscrit (PDF)';
@@ -238,12 +238,12 @@ $string['roomconflictshort'] = 'Salle occupée : {$a->student}, {$a->time}';
 $string['juryhelpdeve'] = "Une ligne par membre, choisi de préférence dans l'annuaire du jury.";
 $string['juryhelp'] = "Une ligne par membre. Choisissez de préférence l'enseignant dans l'annuaire du jury : son titre, son "
     . "statut, son établissement et son adresse en sont repris. Pour un membre extérieur ou un invité, choisissez « Membre extérieur "
-    . "ou invité » et renseignez la ligne (le statut est demandé pour un membre votant). Seuls les maîtres de conférences HDR, les "
+    . "ou invité » et renseignez la ligne (le statut est demandé pour un membre votant ; le directeur de thèse siège sans voter). Seuls les maîtres de conférences HDR, les "
     . "professeurs et les émérites peuvent présider. La DEVE valide ensuite l'éligibilité de chaque membre ; les membres sont alors "
     . "prévenus par courriel et reçoivent un lien d'accès aux documents du dossier.";
 $string['juryrole'] = 'Rôle';
 $string['juryrolepresident'] = 'Président';
-$string['juryroledirector'] = 'Directeur de thèse (membre du jury)';
+$string['juryroledirector'] = 'Directeur de thèse (non votant)';
 $string['juryrolemember'] = 'Membre du jury';
 $string['juryroleguest'] = 'Membre invité';
 $string['juryname'] = 'Nom';
@@ -252,7 +252,7 @@ $string['juryinstitution'] = 'Établissement';
 $string['juryemail'] = 'Courriel';
 $string['juryaddmembers'] = 'Ajouter des lignes';
 $string['juryonepresident'] = 'Le jury doit comporter un et un seul président.';
-$string['juryminmembers'] = 'Le jury doit comporter au moins {$a} membres votants (président compris, invités exclus).';
+$string['juryminmembers'] = 'Le jury doit comporter au moins {$a} membres votants (président compris, directeur de thèse et invités exclus).';
 $string['juryinvalidemail'] = 'Adresse de courriel invalide pour {$a}.';
 $string['juryjuror'] = "Enseignant de l'annuaire";
 $string['juryjuror_help'] = "Enseignant choisi dans l'annuaire du jury tenu par la DEVE. Pour un membre extérieur (autre "
@@ -1021,6 +1021,18 @@ $string['doctplconvocation'] = 'Convocation à la soutenance';
 $string['doctpljurysheet'] = 'Feuille de jury';
 $string['doctplminutes'] = 'Procès-verbal de soutenance';
 $string['doctplplanning'] = 'Planning des soutenances';
+$string['doctplteachinglist'] = 'Liste du corps enseignant';
+$string['teachinglist'] = 'Liste du corps enseignant (PDF)';
+$string['teachinglist_help'] = "Enseignants actifs de l'annuaire du jury dont l'établissement est celui des paramètres du circuit, groupés par statut, à jour au jour du téléchargement : la page est à inclure dans le manuscrit de la thèse.";
+$string['teachinglistdefense'] = 'Liste à jour du corps enseignant à inclure dans votre manuscrit :';
+$string['teachinggrouppr'] = 'Professeurs';
+$string['teachinggrouppremerite'] = 'Professeurs émérites';
+$string['teachinggroupprstag'] = 'Professeurs stagiaires';
+$string['teachinggroupmcfhdr'] = 'Maîtres de conférences HDR';
+$string['teachinggroupmcf'] = 'Maîtres de conférences';
+$string['teachinggroupmcfemerite'] = 'Maîtres de conférences émérites';
+$string['teachinggroupmcfstag'] = 'Maîtres de conférences stagiaires';
+$string['teachinggroupir'] = 'Ingénieurs de recherche';
 
 // Transfert des paramètres.
 $string['transfersettings'] = 'Transfert des paramètres';

@@ -138,6 +138,12 @@ class jurors_page {
             get_string('jurorprefill', 'mod_these'),
             'get'
         ));
+        // Liste du corps enseignant (enseignants actifs internes à l'établissement), en PDF.
+        echo $renderer->render(new output\single_button_block(
+            new moodle_url('/mod/these/teachinglist.php', ['cmid' => $baseurl->get_param('id')]),
+            get_string('teachinglist', 'mod_these'),
+            'get'
+        ));
 
         $list = new output\juror_list(jurors::get_all(), $baseurl);
         if (!$list->is_empty()) {

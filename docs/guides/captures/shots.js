@@ -637,6 +637,12 @@ const steps = {
     const p = await open(await as('sbonnet'), these('notifications.php'));
     await upto(p, '19_courriels');
   },
+  async '106_liste_corps_enseignant'() {
+    const p = await as('sbonnet');
+    const png = await pdfPage(p, url('/mod/these/teachinglist.php?cmid=' + CM), 'teachinglist', 'teachinglist.pdf');
+    fs.copyFileSync(png, path.join(OUT, '106_liste_corps_enseignant.png'));
+    console.log('capture 106_liste_corps_enseignant');
+  },
   async '47_annuaire_jury'() {
     const p = await open(await as('sbonnet'), these('jurors.php'));
     await upto(p, '47_annuaire_jury');

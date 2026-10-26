@@ -35,23 +35,24 @@ require_once(__DIR__ . '/these_testcase.php');
  */
 final class helpers_test extends these_testcase {
     /**
-     * Un et un seul président, un minimum de membres votants, des adresses valides.
+     * Un et un seul président, un minimum de membres votants (directeur et invités exclus), des adresses valides.
      */
     public function test_validate_jury(): void {
         $this->resetAfterTest();
         $jury = $this->getDataGenerator()->get_plugin_generator('mod_these')->default_jury();
-        $this->assertNull(these_validate_jury($jury, 3));
-        $this->assertNotNull(these_validate_jury($jury, 4));
+        // Président et membre votent ; le directeur et l'invité ne votent pas.
+        $this->assertNull(these_validate_jury($jury, 2));
+        $this->assertSame(get_string('juryminmembers', 'mod_these', 3), these_validate_jury($jury, 3));
 
         $nopresident = $jury;
         $nopresident[0] = clone $jury[0];
         $nopresident[0]->juryrole = 'member';
-        $this->assertEquals(get_string('juryonepresident', 'mod_these'), these_validate_jury($nopresident, 3));
+        $this->assertEquals(get_string('juryonepresident', 'mod_these'), these_validate_jury($nopresident, 2));
 
         $bademail = $jury;
         $bademail[2] = clone $jury[2];
         $bademail[2]->email = 'pas-une-adresse';
-        $this->assertStringContainsString('Albert Membre', these_validate_jury($bademail, 3));
+        $this->assertStringContainsString('Albert Membre', these_validate_jury($bademail, 2));
     }
 
     /**
@@ -163,7 +164,7 @@ final class helpers_test extends these_testcase {
         $form = new \mod_these\form\dossier_edit_form(null, [
             'directors' => [0 => ''],
             'theseid' => $this->these->id,
-            'minjury' => 3,
+            'minjury' => 2,
             'jurycount' => count($jury),
         ]);
         $form->set_data(these_jury_form_data($jury));

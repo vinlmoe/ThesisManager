@@ -500,7 +500,7 @@ class jury {
      * @return string 'ok', 'tocheck' (à valider par la DEVE) ou 'ko'
      */
     public static function jury_eligibility(stdClass $member) {
-        if ($member->juryrole === 'guest') {
+        if (!self::is_voting($member)) {
             return 'ok';
         }
         $status = (string) ($member->jurystatus ?? '');
@@ -511,8 +511,18 @@ class jury {
     }
 
     /**
+     * Membre votant du jury : ni le directeur de thèse, qui siège sans voter, ni un invité.
+     *
+     * @param stdClass $member
+     * @return bool
+     */
+    public static function is_voting(stdClass $member) {
+        return !in_array($member->juryrole, ['director', 'guest'], true);
+    }
+
+    /**
      * Vérifie la composition d'un jury : un et un seul président, éligible à la présidence, au moins
-     * $minjury membres votants (les invités ne votent pas), un statut déclaré pour chaque membre
+     * $minjury membres votants (le directeur de thèse et les invités ne votent pas), un statut déclaré pour chaque membre
      * extérieur votant, pas deux fois le même enseignant, et des adresses de courriel valides lorsqu'elles
      * sont données.
      *
@@ -528,7 +538,7 @@ class jury {
             if ($member->juryrole === 'president') {
                 $presidents++;
             }
-            if ($member->juryrole !== 'guest') {
+            if (self::is_voting($member)) {
                 $voting++;
                 if (empty($member->jurorid) && (string) ($member->jurystatus ?? '') === '') {
                     return get_string('jurystatusrequired', 'mod_these', s($member->fullname));
@@ -565,7 +575,7 @@ class jury {
      */
     public static function validate_jury_eligibility(array $members) {
         foreach ($members as $member) {
-            if ($member->juryrole === 'guest') {
+            if (!self::is_voting($member)) {
                 continue;
             }
             if (these_jury_eligibility($member) === 'ko') {
