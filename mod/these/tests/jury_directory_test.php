@@ -224,7 +224,7 @@ final class jury_directory_test extends these_testcase {
     public function test_prefill_from_course(): void {
         $this->resetAfterTest();
         $this->setup_activity();
-        set_config('institution', 'VetAgro Sup', 'mod_these');
+        \mod_these\local\scopesettings::set(these_local_scope($this->these), ['institution' => 'VetAgro Sup']);
         $known = $this->getDataGenerator()->create_and_enrol($this->course, 'teacher', ['email' => 'connu@example.org']);
         $this->juror('Connu', 'pr');
 

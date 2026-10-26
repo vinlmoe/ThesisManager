@@ -1,14 +1,11 @@
 <!--@page margins="58,20,12,20" header="8" font="freesans" size="10" lineheight="1.25"-->
 <!--@header-->
 <table cellpadding="0">
-  <tr><td width="170mm" align="right" style="font-size:8pt;">ENS-INI-P308-E04 V7</td></tr>
-</table>
-<table cellpadding="0">
   <tr>
     <td width="4mm"></td>
-    <td width="30mm"><img src="{{img.marianne}}" height="31mm" /></td>
-    <td width="84mm"><br /><br /><img src="{{img.bulyon1}}" height="26mm" /></td>
-    <td width="52mm"><br /><br /><br /><br /><img src="{{img.vetagrosup}}" height="20mm" /></td>
+    <td width="30mm"><img src="{{img.ministere}}" height="31mm" /></td>
+    <td width="84mm"><br /><br /><img src="{{img.bibliotheque}}" height="26mm" /></td>
+    <td width="52mm"><br /><br /><br /><br /><img src="{{img.logo}}" height="20mm" /></td>
   </tr>
 </table>
 <table cellpadding="0">
@@ -51,9 +48,9 @@ L’Auteur, qui cède aux Établissements, à titre gratuit, les droits indiqué
 <span style="font-size:12pt;">{{{box.internet}}}</span> autorise la diffusion de la Thèse en texte intégral sur internet, à savoir :<br />
 &nbsp;&nbsp;&nbsp;- sur le portail DUMAS (Dépôt Universitaires de Mémoires Après Soutenance) ;<br />
 &nbsp;&nbsp;&nbsp;- dans le catalogue national Sudoc ;<br />
-&nbsp;&nbsp;&nbsp;- dans le catalogue des ressources documentaires de la bibliothèque vétérinaire de VetAgro Sup ;<br />
-&nbsp;&nbsp;&nbsp;- et dans le catalogue des bibliothèques universitaires de l’UCBL.<br /><br />
+&nbsp;&nbsp;&nbsp;- dans le catalogue des ressources documentaires de la bibliothèque de {{settings.institution}} ;<br />
+&nbsp;&nbsp;&nbsp;- et dans le catalogue des bibliothèques universitaires de {{settings.university}}.<br /><br />
 <span style="font-size:12pt;">{{{box.restricted}}}</span> n’autorise pas la diffusion de la Thèse en texte intégral sur internet, mais uniquement :<br />
 &nbsp;&nbsp;&nbsp;- la consultation de la version papier dans les bibliothèques des écoles vétérinaires ;<br />
-&nbsp;&nbsp;&nbsp;- et la diffusion sur l’intranet/extranet de l’UCBL.
+&nbsp;&nbsp;&nbsp;- et la diffusion sur l’intranet/extranet de {{settings.university}}.
 {{#contract.templatemissing}}<br /><br /><span style="color:#a00000;font-size:8.5pt;"><i>Le contrat type n’a pas été déposé dans les réglages du module (ou n’a pas pu être lu) : il doit être joint à ces pages.</i></span>{{/contract.templatemissing}}

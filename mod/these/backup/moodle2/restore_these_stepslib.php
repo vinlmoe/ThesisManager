@@ -41,6 +41,7 @@ class restore_these_activity_structure_step extends restore_activity_structure_s
         $paths[] = new restore_path_element('these', '/activity/these');
         $paths[] = new restore_path_element('these_email_template', '/activity/these/emailtemplates/emailtemplate');
         $paths[] = new restore_path_element('these_doctemplate', '/activity/these/doctemplates/doctemplate');
+        $paths[] = new restore_path_element('these_setting', '/activity/these/settings/setting');
         $paths[] = new restore_path_element('these_griditem', '/activity/these/griditems/griditem');
         $paths[] = new restore_path_element('these_question', '/activity/these/questions/question');
         if ($this->get_setting_value('userinfo')) {
@@ -102,6 +103,21 @@ class restore_these_activity_structure_step extends restore_activity_structure_s
         $data->theseid = $this->get_new_parentid('these');
         $newid = $DB->insert_record('these_doctemplate', $data);
         $this->set_mapping('these_doctemplate', $oldid, $newid);
+    }
+
+    /**
+     * Restaure un paramètre du circuit (voir \mod_these\local\scopesettings).
+     *
+     * @param array $data
+     */
+    protected function process_these_setting($data) {
+        global $DB;
+
+        $data = (object) $data;
+        unset($data->id);
+        $data->theseid = $this->get_new_parentid('these');
+        $data->synthesisid = 0;
+        $DB->insert_record('these_setting', $data);
     }
 
     /**
@@ -275,6 +291,7 @@ class restore_these_activity_structure_step extends restore_activity_structure_s
     protected function after_execute() {
         $this->add_related_files('mod_these', 'intro', null);
         $this->add_related_files('mod_these', 'docimages', null);
+        $this->add_related_files('mod_these', 'contracttemplate', null);
         foreach (THESE_FILEAREAS as $filearea) {
             $this->add_related_files('mod_these', $filearea, 'these_dossier');
         }

@@ -53,6 +53,9 @@ class backup_thesesynthesis_activity_structure_step extends backup_activity_stru
         $doctemplates = new backup_nested_element('doctemplates');
         $doctemplate = new backup_nested_element('doctemplate', ['id'], ['doctype', 'content', 'timemodified']);
 
+        $settings = new backup_nested_element('settings');
+        $setting = new backup_nested_element('setting', ['id'], ['name', 'value']);
+
         $griditems = new backup_nested_element('griditems');
         $griditem = new backup_nested_element('griditem', ['id'], [
             'itemkey', 'section', 'label', 'conditional', 'sortorder', 'timemodified',
@@ -67,6 +70,8 @@ class backup_thesesynthesis_activity_structure_step extends backup_activity_stru
         $links->add_child($link);
         $thesesynthesis->add_child($doctemplates);
         $doctemplates->add_child($doctemplate);
+        $thesesynthesis->add_child($settings);
+        $settings->add_child($setting);
         $thesesynthesis->add_child($griditems);
         $griditems->add_child($griditem);
         $thesesynthesis->add_child($questions);
@@ -75,11 +80,13 @@ class backup_thesesynthesis_activity_structure_step extends backup_activity_stru
         $thesesynthesis->set_source_table('thesesynthesis', ['id' => backup::VAR_ACTIVITYID]);
         $link->set_source_table('thesesynthesis_link', ['synthesisid' => backup::VAR_PARENTID], 'id');
         $doctemplate->set_source_table('these_doctemplate', ['synthesisid' => backup::VAR_PARENTID], 'id ASC');
+        $setting->set_source_table('these_setting', ['synthesisid' => backup::VAR_PARENTID], 'id ASC');
         $griditem->set_source_table('these_griditem', ['synthesisid' => backup::VAR_PARENTID], 'sortorder ASC, id ASC');
         $question->set_source_table('these_question', ['synthesisid' => backup::VAR_PARENTID], 'sortorder ASC, id ASC');
 
         $thesesynthesis->annotate_files('mod_thesesynthesis', 'intro', null);
         $thesesynthesis->annotate_files('mod_thesesynthesis', 'docimages', null);
+        $thesesynthesis->annotate_files('mod_thesesynthesis', 'contracttemplate', null);
 
         return $this->prepare_activity_structure($thesesynthesis);
     }

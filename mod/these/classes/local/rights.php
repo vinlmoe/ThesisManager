@@ -32,14 +32,16 @@ use stdClass;
  */
 class rights {
     /**
-     * Rôle Moodle associé à un service dans les réglages du site (Administration du site > Plugins >
-     * Modules d'activité > Gestion des thèses) : « deverole » ou « libraryrole ».
+     * Rôle Moodle associé à un service dans les paramètres de l'activité (« deverole » ou
+     * « libraryrole », voir \mod_these\local\scopesettings) : ceux de l'activité « Suivi des thèses »
+     * qui la suit, sinon de l'activité elle-même.
      *
      * @param string $actor 'deve' ou 'library'.
+     * @param context $context Contexte de l'activité.
      * @return int Identifiant du rôle, 0 si aucun n'est choisi.
      */
-    public static function get_service_roleid($actor) {
-        return (int) get_config('mod_these', $actor === 'deve' ? 'deverole' : 'libraryrole');
+    public static function get_service_roleid($actor, context $context) {
+        return (int) scopesettings::for_context($context)[$actor === 'deve' ? 'deverole' : 'libraryrole'];
     }
 
     /**
@@ -52,7 +54,7 @@ class rights {
      * @return bool
      */
     public static function user_has_service_role(context $context, $userid, $actor) {
-        $roleid = these_get_service_roleid($actor);
+        $roleid = these_get_service_roleid($actor, $context);
         if (!$roleid || !$userid) {
             return false;
         }
@@ -65,9 +67,8 @@ class rights {
     }
 
     /**
-     * Crée, s'il n'existe pas encore, le rôle interne « Bibliothèque (thèses) », et règle les rôles
-     * des services par défaut (DEVE : rôle « Enseignant » ; bibliothèque : ce rôle interne) tant que
-     * l'administrateur n'en a pas choisi d'autres.
+     * Crée, s'il n'existe pas encore, le rôle interne « Bibliothèque (thèses) », rôle par défaut de la
+     * bibliothèque dans les paramètres des activités (celui de la DEVE étant « Enseignant »).
      *
      * Le rôle peut être attribué au niveau du site ou d'une catégorie : il donne alors accès à toutes
      * les activités de gestion des thèses concernées sans inscription au cours.
@@ -95,12 +96,6 @@ class rights {
                 assign_capability($capability, CAP_ALLOW, $roleid, $systemcontext->id, true);
             }
         }
-        if (get_config('mod_these', 'libraryrole') === false) {
-            set_config('libraryrole', $roleid, 'mod_these');
-        }
-        if (get_config('mod_these', 'deverole') === false) {
-            set_config('deverole', (int) $DB->get_field('role', 'id', ['shortname' => 'editingteacher']), 'mod_these');
-        }
         return $roleid;
     }
 
@@ -108,7 +103,7 @@ class rights {
      * Droits de l'utilisateur sur un dossier (ou sur l'activité, si aucun dossier n'est donné).
      *
      * La DEVE et la bibliothèque sont reconnues soit par leur capacité, soit par le rôle choisi pour
-     * leur service dans les réglages du site (voir these_user_has_service_role()). Un directeur de
+     * leur service dans les paramètres de l'activité (voir these_user_has_service_role()). Un directeur de
      * thèse n'a de droits que sur les dossiers qu'il dirige ; la DEVE et la bibliothèque, sur tous
      * les dossiers de l'activité.
      *

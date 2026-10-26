@@ -51,15 +51,6 @@ set_config('forcetimezone', 'Europe/Paris');
 $gen = new testing_data_generator();
 these_setup_default_roles();
 
-// Réglages du site : signataires, deux agents DEVE.
-foreach ([
-    'deveagent' => "agarnier, proux",
-    'dgname' => 'Pr Emmanuelle Soubeyran', 'dgemail' => 'dg@example.org',
-    'ccemname' => 'Pr Jean-Luc Cadoré', 'ccememail' => 'ccem@example.org',
-    'ucblname' => 'M. Bruno Lina', 'ucblemail' => 'presidence@example.org',
-] as $name => $value) {
-    set_config($name, $value, 'mod_these');
-}
 
 $course = $gen->create_course(['fullname' => 'Thèses vétérinaires', 'shortname' => 'THESES', 'numsections' => 1]);
 $these = $gen->create_module('these', [
@@ -75,6 +66,7 @@ $these = $gen->create_module('these', [
     'minjury' => 3,
     'reminderdays' => 14,
     'universityemail' => 'theses@univ-lyon1.example.org',
+    'deveemail' => 'deve@example.org',
 ]);
 $cm = get_coursemodule_from_instance('these', $these->id);
 $these = $DB->get_record('these', ['id' => $these->id]);
@@ -137,6 +129,18 @@ $synthesis = $gen->create_module('thesesynthesis', ['course' => $suivicourse->id
 $DB->insert_record('thesesynthesis_link', (object) ['synthesisid' => $synthesis->id, 'thesecmid' => $cm->id,
     'timecreated' => $now]);
 $scope = these_settings_scope($these);
+// Paramètres du circuit de l'activité de suivi (aucun réglage du site) : signataires, deux agents
+// DEVE. Les modèles d'origine ne contiennent aucune valeur propre à l'établissement : tout vient d'ici.
+\mod_these\local\scopesettings::reset_cache();
+\mod_these\local\scopesettings::set($scope, [
+    'deveagent' => "agarnier, proux",
+    'institution' => 'VetAgro Sup', 'university' => "l'Université Claude Bernard Lyon 1", 'visaplace' => 'Lyon',
+    'devename' => 'Anne GARNIER', 'dgtitle' => 'La Directrice générale de VetAgro Sup',
+    'ucbltitle' => "Le Président de l'Université Claude Bernard Lyon 1",
+    'dgname' => 'Pr Emmanuelle Soubeyran', 'dgemail' => 'dg@example.org',
+    'ccemname' => 'Pr Jean-Luc Cadoré', 'ccememail' => 'ccem@example.org',
+    'ucblname' => 'M. Bruno Lina', 'ucblemail' => 'presidence@example.org',
+]);
 $questions = [];
 foreach ([
     ['list', 'Espèce étudiée', "Chien\nChat\nCheval\nBovins\nNAC", 1],

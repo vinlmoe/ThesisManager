@@ -246,7 +246,7 @@ class notifications {
         $capability = $actor === 'deve' ? 'mod/these:managedeve' : 'mod/these:managelibrary';
         $users = get_enrolled_users($context, $capability, 0, 'u.*', null, 0, 0, true);
         // Détenteurs du rôle du service, attribué dans le cours, sa catégorie ou au niveau du site.
-        $roleid = these_get_service_roleid($actor);
+        $roleid = these_get_service_roleid($actor, $context);
         if ($roleid) {
             $userids = [];
             foreach ($context->get_parent_context_ids(true) as $contextid) {

@@ -565,7 +565,12 @@ $string['privacy:metadata:jury:student'] = "Nom de l'étudiant.";
 $string['privacy:metadata:jury:title'] = 'Titre de la thèse.';
 $string['privacy:metadata:jury:defensedate'] = 'Date et lieu de la soutenance.';
 
-// Rôles des services (réglages du site).
+// Paramètres du circuit (activité « Suivi des thèses », sinon l'activité elle-même ; aucun réglage du site).
+$string['scopesettings'] = 'Paramètres du circuit';
+$string['scopesettings_desc'] = "Rôles des services, agents DEVE signataires, établissement, université, signataires des documents et "
+    . "contrat type de diffusion de cette activité. Aucun n'est un réglage du site.";
+$string['scopesettingsshared_desc'] = "Rôles des services, agents DEVE signataires, établissement, université, signataires des documents "
+    . "et contrat type de diffusion communs à toutes les activités « Gestion des thèses » suivies. Aucun n'est un réglage du site.";
 $string['settingsroles'] = 'Rôles des services';
 $string['settingsroles_desc'] = "Comme la DEVE est reconnue au rôle « Enseignant », la bibliothèque est reconnue au rôle choisi ici. "
     . "Le rôle peut être attribué dans le cours, dans sa catégorie ou au niveau du site (il donne alors accès à toutes les activités "
@@ -579,15 +584,24 @@ $string['libraryrolename'] = 'Bibliothèque (thèses)';
 $string['libraryroledescription'] = "Rôle interne du module Gestion des thèses : enregistrement des sujets au référentiel documentaire et "
     . "attestation de conformité des manuscrits. À attribuer au niveau du site, d'une catégorie ou d'un cours.";
 
-// Documents (réglages du site).
+// Documents (paramètres du circuit).
 $string['settingsdocuments'] = 'Documents et signataires';
 $string['settingsdocuments_desc'] = "En-tête et signataires des documents de l'établissement produits par le module. Les signataires "
     . "sans compte Moodle (direction générale, CCEM, présidence de l'université) reçoivent par courriel un lien de signature si leur "
     . "adresse est renseignée ; sinon la DEVE recueille leur signature sur place.";
 $string['doctplimages'] = 'Images des modèles';
 $string['doctplimages_help'] = "Images (PNG ou JPEG) utilisables dans les modèles de documents par {{img.nom}}, nom étant le nom du "
-    . "fichier en minuscules, sans extension ni caractère spécial. Une image du même nom qu'une image fournie avec le module "
-    . "(marianne, vetagrosup, lyon1, bulyon1, abes) la remplace dans les documents de cette activité.";
+    . "fichier en minuscules, sans extension ni caractère spécial. Le module n'en fournit aucune : les modèles d'origine appellent "
+    . "logo, ministere, universite, bibliotheque et abes, et une image non déposée est simplement omise.";
+$string['doctplimageslots'] = "Images appelées par les modèles d'origine (PNG à fond transparent conseillé, environ 300 points par pouce) :";
+$string['doctplimageslot'] = '{$a->file} : {$a->role} — {$a->state}';
+$string['doctplimageslotlogo'] = "logo de l'établissement, en tête de tous les documents et du planning";
+$string['doctplimageslotministere'] = 'bloc-marque Marianne du ministère de tutelle, en tête des documents officiels';
+$string['doctplimageslotuniversite'] = "logo de l'université qui délivre le diplôme (fiche d'agréments, fiche signalétique)";
+$string['doctplimageslotbibliotheque'] = 'logo de la bibliothèque universitaire (contrat de diffusion)';
+$string['doctplimageslotabes'] = "logo de l'ABES (bordereau de thèse)";
+$string['doctplimagepresent'] = 'déposée';
+$string['doctplimagemissing'] = 'à déposer';
 $string['settingsdevename'] = 'Direction des études : nom';
 $string['settingsdevename_desc'] = "Nom de la directrice ou du directeur des études et de la vie étudiante (fiche d'agréments).";
 $string['settingsdevetitle'] = 'Direction des études : qualité';
@@ -597,10 +611,13 @@ $string['settingscontracttemplate_desc'] = "Le contrat officiel (ENS-INI-P308-E0
     . "reprenant les données et les choix de l'auteur et suivre d'une page de signatures.";
 $string['settingsinstitution'] = 'Établissement';
 $string['settingsinstitution_desc'] = 'Nom court utilisé dans les documents (« Visa de la Directrice de … », « Membre de … »).';
+$string['settingsuniversity'] = 'Université';
+$string['settingsuniversity_desc'] = "Université qui délivre le diplôme, précédée de son article (« l'Université … ») : « Pour le président "
+    . "de … et par délégation », bibliothèques universitaires du contrat de diffusion.";
 $string['settingshetopurl'] = 'Lien HeTOP';
 $string['settingshetopurl_desc'] = 'Terminologie de référence pour les mots-clés du sujet.';
 $string['settingsdgtitle'] = 'Direction générale (intitulé)';
-$string['settingsdgtitle_desc'] = '';
+$string['settingsdgtitle_desc'] = 'Intitulé complet imprimé au-dessus de sa signature, par exemple « La Directrice générale de … ».';
 $string['settingsdgname'] = 'Direction générale (nom)';
 $string['settingsdgname_desc'] = '';
 $string['settingsdgemail'] = 'Direction générale (courriel)';
@@ -612,7 +629,7 @@ $string['settingsccemname_desc'] = '';
 $string['settingsccememail'] = 'CCEM (courriel)';
 $string['settingsccememail_desc'] = 'Adresse à laquelle envoyer les liens de signature ; vide : signature recueillie sur place par la DEVE.';
 $string['settingsucbltitle'] = 'Présidence de l\'université (intitulé)';
-$string['settingsucbltitle_desc'] = '';
+$string['settingsucbltitle_desc'] = 'Intitulé complet imprimé au-dessus de sa signature (contrat de diffusion), par exemple « Le Président de l\'Université … ».';
 $string['settingsucblname'] = 'Présidence de l\'université (nom)';
 $string['settingsucblname_desc'] = '';
 $string['settingsucblemail'] = 'Présidence de l\'université (courriel)';
@@ -749,8 +766,8 @@ $string['conclusionstoolong'] = 'Les conclusions comptent {$a->length} caractèr
 $string['conclusionsonepage'] = "Les conclusions ne tiennent pas sur une page avec les signatures : raccourcissez-les ou réduisez le nombre de paragraphes.";
 $string['contracthelp'] = "Choix de l'auteur pour le contrat de diffusion électronique de la thèse (articles 2 et 4). Une thèse "
     . "confidentielle (case cochée au dépôt du sujet) l'est jusqu'à la date indiquée.";
-$string['contracttemplatemissing'] = 'Le contrat type de diffusion n\'a pas été déposé dans les réglages du module : le contrat produit ne contient que les pages du module et ne sera pas scellé tant qu\'il manque.';
-$string['contracttemplateunreadable'] = 'Le contrat type de diffusion déposé dans les réglages du module n\'a pas pu être lu (format PDF non pris en charge) : le contrat produit ne contient que les pages du module et ne sera pas scellé. Déposez le contrat type enregistré dans un format PDF plus ancien (PDF 1.4).';
+$string['contracttemplatemissing'] = 'Le contrat type de diffusion n\'a pas été déposé dans les paramètres du circuit : le contrat produit ne contient que les pages du module et ne sera pas scellé tant qu\'il manque.';
+$string['contracttemplateunreadable'] = 'Le contrat type de diffusion déposé dans les paramètres du circuit n\'a pas pu être lu (format PDF non pris en charge) : le contrat produit ne contient que les pages du module et ne sera pas scellé. Déposez le contrat type enregistré dans un format PDF plus ancien (PDF 1.4).';
 $string['bconfidentialuntil'] = "Confidentialité jusqu'au";
 $string['bconfidentialuntil_help'] = 'Ne concerne que les thèses déclarées confidentielles au dépôt du sujet.';
 $string['bembargo'] = 'Je demande un embargo de diffusion de {$a} ans à compter de la soutenance';

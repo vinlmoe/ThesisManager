@@ -93,20 +93,40 @@ final class doctemplate_test extends \advanced_testcase {
     }
 
     /**
-     * Les images déposées dans l'activité remplacent ou complètent celles du module.
+     * Le module ne fournit aucune image : seules comptent celles déposées dans l'activité, sous le nom
+     * appelé par les modèles. Une image absente est omise du document.
      */
     public function test_activity_images(): void {
         $this->resetAfterTest();
         [$these, $context] = $this->activity();
-        $bundled = these_doctemplate_images(these_local_scope($these));
-        $this->assertArrayHasKey('vetagrosup', $bundled);
+        $this->assertSame([], these_doctemplate_images(null));
+        $this->assertSame([], these_doctemplate_images(these_local_scope($these)));
         get_file_storage()->create_file_from_string([
             'contextid' => $context->id, 'component' => 'mod_these', 'filearea' => 'docimages', 'itemid' => 0,
-            'filepath' => '/', 'filename' => 'VetAgroSup.png',
+            'filepath' => '/', 'filename' => 'Logo.png',
         ], these_sample_signature_image());
         $images = these_doctemplate_images(these_local_scope($these));
-        $this->assertSame('@' . base64_encode(these_sample_signature_image()), $images['vetagrosup']);
-        $this->assertSame($bundled['vetagrosup'], these_doctemplate_images(null)['vetagrosup']);
+        $this->assertSame(['logo'], array_keys($images));
+        $this->assertSame('@' . base64_encode(these_sample_signature_image()), $images['logo']);
+        $this->assertContains('logo', \mod_these\local\doctemplates::doctemplate_image_slots());
+
+        $template = '<img src="{{img.logo}}" /><img src="{{img.ministere}}" />';
+        $filled = \mod_these\pdf\html_document::fill($template, ['img' => $images]);
+        $this->assertSame(1, substr_count($filled['body'], '<img'));
+    }
+
+    /**
+     * Les modèles d'origine ne contiennent ni nom d'établissement ou de personne, ni référence de formulaire
+     * propres à une école : ces valeurs viennent des réglages, de l'activité ou des images déposées.
+     */
+    public function test_default_templates_generic(): void {
+        foreach (array_keys(these_doctemplate_types()) as $type) {
+            $template = these_doctemplate_default($type);
+            foreach (['VetAgro', 'VETAGRO', 'Lyon', 'UCBL', 'Marcy', 'ENS-INI', '@vetagro-sup.fr'] as $value) {
+                $this->assertStringNotContainsString($value, $template, $type . ' : ' . $value);
+            }
+            $this->assertDoesNotMatchRegularExpression('/<i>Signature<\/i>/', $template, $type);
+        }
     }
 
     /**

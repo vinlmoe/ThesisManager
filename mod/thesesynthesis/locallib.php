@@ -73,6 +73,8 @@ function thesesynthesis_set_links($synthesisid, array $thesecmids) {
             ]);
         }
     }
+    // Les paramètres du circuit des activités suivies changent de portée.
+    \mod_these\local\scopesettings::reset_cache();
 }
 
 /**

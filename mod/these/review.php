@@ -70,7 +70,7 @@ $jury = these_get_jury($dossier->id);
 $signs = [];
 foreach ($step['sign'] as $slot => $doctypes) {
     // Les emplacements de l'agent DEVE, quand il est désigné, sont signés par lui seul.
-    if (!these_signs_slot_at_validation($slot, $USER->id)) {
+    if (!these_signs_slot_at_validation($slot, $USER->id, $these)) {
         continue;
     }
     foreach ($doctypes as $doctype) {

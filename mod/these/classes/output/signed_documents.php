@@ -79,6 +79,16 @@ class signed_documents implements \renderable, \templatable {
     }
 
     /**
+     * Activité du dossier (contrat type de diffusion de ses paramètres).
+     *
+     * @return stdClass
+     */
+    protected function these(): stdClass {
+        global $DB;
+        return $DB->get_record('these', ['id' => $this->dossier->theseid], '*', MUST_EXIST);
+    }
+
+    /**
      * Données du gabarit mod_these/signed_documents.
      *
      * @param \renderer_base $output
@@ -117,7 +127,7 @@ class signed_documents implements \renderable, \templatable {
         $warning = false;
         if (
             $this->rights->deve && these_document_available($this->dossier, 'contract')
-                && ($problem = these_contract_template_problem()) !== null
+                && ($problem = these_contract_template_problem($this->these())) !== null
         ) {
             $warning = get_string($problem, 'mod_these');
         }

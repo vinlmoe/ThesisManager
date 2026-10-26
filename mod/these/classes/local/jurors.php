@@ -167,8 +167,8 @@ class jurors {
             if (
                 has_capability('mod/these:managedeve', $coursecontext, $user)
                     || has_capability('mod/these:managelibrary', $coursecontext, $user)
-                    || these_user_has_service_role($coursecontext, $user->id, 'deve')
-                    || these_user_has_service_role($coursecontext, $user->id, 'library')
+                    || these_user_has_service_role($context, $user->id, 'deve')
+                    || these_user_has_service_role($context, $user->id, 'library')
                     || self::find_existing($user->email, $user->lastname, $user->firstname)
             ) {
                 continue;
@@ -187,7 +187,7 @@ class jurors {
      * @return int Nombre d'enseignants ajoutés.
      */
     public static function prefill_from_course(\context $context) {
-        $institution = (string) get_config('mod_these', 'institution');
+        $institution = (string) scopesettings::for_context($context)['institution'];
         $count = 0;
         foreach (self::course_teachers_missing($context) as $user) {
             self::save((object) [

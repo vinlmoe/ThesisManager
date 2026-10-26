@@ -662,7 +662,7 @@ class signatures {
 
     /**
      * Empreinte SHA-256 de la mise en forme d'un document : modèles en vigueur, images qu'ils
-     * appellent et, pour le contrat de diffusion, contrat type déposé dans les réglages du site.
+     * appellent et, pour le contrat de diffusion, contrat type déposé dans les paramètres.
      *
      * @param stdClass $dossier
      * @param string $doctype
@@ -688,7 +688,7 @@ class signatures {
             }
         }
         if ($doctype === 'contract') {
-            $parts[] = sha1((string) these_get_contract_template());
+            $parts[] = sha1((string) these_get_contract_template($these));
         }
         return hash('sha256', implode("\n", $parts));
     }
@@ -761,7 +761,8 @@ class signatures {
         }
         if (
             !these_document_fully_signed($dossier, $doctype)
-                || ($doctype === 'contract' && these_contract_template_problem() !== null)
+                || ($doctype === 'contract'
+                    && these_contract_template_problem($DB->get_record('these', ['id' => $dossier->theseid])) !== null)
         ) {
             return null;
         }
@@ -807,24 +808,24 @@ class signatures {
 
     /**
      * Signataires sans compte attendus pour un dossier, avec leur nom et leur adresse : le
-     * directeur extérieur (formulaire de sujet), le président du jury, le directeur général et le
-     * président du CCEM (conclusions), ces deux derniers étant définis dans les réglages du site.
+     * directeur extérieur (formulaire de sujet), le président du jury, le directeur général, le
+     * président du CCEM (conclusions) et la présidence de l'université, ces trois derniers étant
+     * définis dans les paramètres de l'activité (voir \mod_these\local\scopesettings).
      *
      * @param stdClass $dossier
      * @return array slot => ['name' => string, 'email' => string]
      */
     public static function external_signers(stdClass $dossier) {
+        $settings = scopesettings::for_dossier($dossier);
         $signers = [
             'extdirector' => [
                 'name' => trim(($dossier->extdirectorname ?? '')),
                 'email' => trim((string) ($dossier->extdirectoremail ?? '')),
             ],
             'president' => ['name' => '', 'email' => ''],
-            'dg' => ['name' => (string) get_config('mod_these', 'dgname'), 'email' => (string) get_config('mod_these', 'dgemail')],
-            'ccem' => ['name' => (string) get_config('mod_these', 'ccemname'),
-                'email' => (string) get_config('mod_these', 'ccememail')],
-            'ucbl' => ['name' => (string) get_config('mod_these', 'ucblname'),
-                'email' => (string) get_config('mod_these', 'ucblemail')],
+            'dg' => ['name' => $settings['dgname'], 'email' => $settings['dgemail']],
+            'ccem' => ['name' => $settings['ccemname'], 'email' => $settings['ccememail']],
+            'ucbl' => ['name' => $settings['ucblname'], 'email' => $settings['ucblemail']],
         ];
         foreach (these_get_jury($dossier->id) as $member) {
             if ($member->juryrole === 'president') {

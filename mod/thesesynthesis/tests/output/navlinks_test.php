@@ -55,6 +55,7 @@ final class navlinks_test extends output_testcase {
         $labels = $this->labels();
         $this->assertContains(get_string('managelinks', 'mod_thesesynthesis'), $labels);
         $this->assertContains(get_string('jurors', 'mod_these'), $labels);
+        $this->assertContains(get_string('scopesettings', 'mod_these'), $labels);
     }
 
     /**

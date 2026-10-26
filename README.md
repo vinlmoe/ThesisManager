@@ -87,7 +87,8 @@ Bibliothèque ──conformité du manuscrit──▶ DEVE ──convocations, f
   **recherche des thèses** (texte, année, réponses au questionnaire) pour les
   enseignants, la DEVE et la bibliothèque.
 - La bibliothèque dispose d'un rôle propre (« Bibliothèque (thèses) »), et les
-  rôles DEVE et Bibliothèque se choisissent dans l'administration du site.
+  rôles DEVE et Bibliothèque se choisissent, comme tous les paramètres du
+  circuit, dans l'activité « Suivi des thèses » : aucun réglage du site.
 - La DEVE **génère** la convocation de l'étudiant et de chaque membre du jury,
   la feuille de jury et le procès-verbal à signer, puis les **transmet** par
   courriel (chaque membre reçoit sa convocation, l'université une archive de

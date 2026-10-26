@@ -226,10 +226,10 @@ final class signature_test extends these_testcase {
      * une seule fois chaque signataire extérieur pour tous ses documents.
      */
     public function test_defense_signatures_and_invitations(): void {
-        set_config('dgemail', 'dg@example.com', 'mod_these');
-        set_config('ccememail', 'ccem@example.com', 'mod_these');
-        set_config('ucblemail', 'ucbl@example.com', 'mod_these');
         $this->setup_activity();
+        \mod_these\local\scopesettings::set(these_local_scope($this->these), [
+            'dgemail' => 'dg@example.com', 'ccememail' => 'ccem@example.com', 'ucblemail' => 'ucbl@example.com',
+        ]);
         $sink = $this->redirectEmails();
         $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
             'status' => THESE_STATUS_ACTIVE, 'directorid' => $this->director->id, 'directortitle' => 'Pr',
@@ -315,7 +315,7 @@ final class signature_test extends these_testcase {
             $template->Write(5, 'Article ' . ($i + 1));
         }
         get_file_storage()->create_file_from_string([
-            'contextid' => \context_system::instance()->id, 'component' => 'mod_these', 'filearea' => 'contracttemplate',
+            'contextid' => $this->context->id, 'component' => 'mod_these', 'filearea' => 'contracttemplate',
             'itemid' => 0, 'filepath' => '/', 'filename' => 'contrat.pdf',
         ], $template->Output('', 'S'));
         $with = these_signed_document_pdf($this->these, $this->context, $dossier, 'contract');
@@ -323,7 +323,7 @@ final class signature_test extends these_testcase {
     }
 
     /**
-     * Les rôles des services se choisissent dans les réglages du site : un rôle attribué au
+     * Les rôles des services se choisissent dans les paramètres de l'activité : un rôle attribué au
      * niveau du site, sans inscription au cours, donne les droits du service.
      */
     public function test_service_roles_from_settings(): void {
@@ -341,7 +341,7 @@ final class signature_test extends these_testcase {
 
         // Un rôle personnalisé choisi pour la DEVE, sans aucune capacité du module.
         $deverole = $this->getDataGenerator()->create_role(['shortname' => 'devecustom']);
-        set_config('deverole', $deverole, 'mod_these');
+        \mod_these\local\scopesettings::set(these_local_scope($this->these), ['deverole' => $deverole]);
         $other = $this->getDataGenerator()->create_and_enrol($this->course, 'student');
         role_assign($deverole, $other->id, \context_course::instance($this->course->id));
         $this->assertTrue(these_get_rights($this->context, null, $other->id)->deve);

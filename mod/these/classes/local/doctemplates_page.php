@@ -160,6 +160,18 @@ class doctemplates_page {
         echo $renderer->render(new output\message($intro, 'mb-3'));
         echo $renderer->render(new output\doctemplate_list($scope, $listurl));
         echo $OUTPUT->heading(get_string('doctplimages', 'mod_these'), 3, 'mt-4');
+        // Images appelées par les modèles d'origine : le module n'en fournit aucune.
+        $images = doctemplates::doctemplate_images($scope);
+        $slots = [];
+        foreach (doctemplates::doctemplate_image_slots() as $slot) {
+            $slots[] = get_string('doctplimageslot', 'mod_these', (object) [
+                'file' => $slot . '.png',
+                'role' => get_string('doctplimageslot' . $slot, 'mod_these'),
+                'state' => get_string(isset($images[$slot]) ? 'doctplimagepresent' : 'doctplimagemissing', 'mod_these'),
+            ]);
+        }
+        echo $renderer->render(new output\message(get_string('doctplimageslots', 'mod_these'), 'mb-1'));
+        echo $renderer->render(new output\bullet_list($slots));
         $imagesform->display();
         echo $OUTPUT->footer();
     }

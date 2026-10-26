@@ -95,7 +95,8 @@ class jurors_page {
                 redirect($baseurl);
             }
             $juror = jurors::get($jurorid);
-            $form->set_data(($juror ? (array) $juror : ['institution' => (string) get_config('mod_these', 'institution')])
+            $institution = (string) scopesettings::for_context($PAGE->context)['institution'];
+            $form->set_data(($juror ? (array) $juror : ['institution' => $institution])
                 + ['jurorid' => $jurorid, 'action' => 'edit']);
             if ($data = $form->get_data()) {
                 $data->id = $data->jurorid;
