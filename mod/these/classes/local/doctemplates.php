@@ -499,21 +499,27 @@ class doctemplates {
             'correctionsnote' => (string) ($d->correctionsnote ?? ''),
         ];
 
-        // Cursus déclaré par l'étudiant (fiche signalétique) et agrément administratif de la DEVE.
+        // Cursus déclaré par l'étudiant (fiche signalétique) et agrément administratif de la DEVE. La
+        // validation de l'A6 est saisie par la DEVE (voir \mod_these\local\a6) ; à défaut, celle que
+        // l'étudiant avait déclarée.
+        $a6recorded = array_key_exists('a6date', $agreementdata) || array_key_exists('a6notyet', $agreementdata);
+        $a6source = $a6recorded ? $agreementdata : $b;
+        $a6notyet = !empty($a6source['a6notyet']) || empty($a6source['a6date']);
+        $a6school = (string) ($agreementdata['a6school'] ?? ($b['a6school'] ?? ''));
         $cursus = [
             'defvdate' => $day($b['defvdate'] ?? 0),
             'defvschool' => $school($b['defvschool'] ?? ''),
-            'a6notyet' => !empty($b['a6notyet']),
-            'a6date' => empty($b['a6notyet']) ? $day($b['a6date'] ?? 0) : '',
-            'a6school' => empty($b['a6notyet']) ? $school($b['a6school'] ?? '') : '',
+            'a6notyet' => $a6notyet,
+            'a6date' => $a6notyet ? '' : $day($a6source['a6date'] ?? 0),
+            'a6school' => $a6notyet ? '' : $school($a6school),
         ];
         $agreement = [
             'defv' => !empty($agreementdata['defvdate']),
             'defvdate' => $day($agreementdata['defvdate'] ?? 0),
             'mobility' => !empty($agreementdata['mobility']),
-            'a6notyet' => !empty($agreementdata['a6notyet']),
-            'a6' => empty($agreementdata['a6notyet']) && !empty($agreementdata['a6date']),
-            'a6date' => empty($agreementdata['a6notyet']) ? $day($agreementdata['a6date'] ?? 0) : '',
+            'a6notyet' => $a6notyet,
+            'a6' => !$a6notyet,
+            'a6date' => $a6notyet ? '' : $day($a6source['a6date'] ?? 0),
         ];
 
         // Jury : liste complète, et places fixes des formulaires (président, membre de

@@ -129,8 +129,11 @@ switch ($step['key']) {
         $declared = these_get_bordereau($dossier);
         $formdata->agdefvdate = $agreement['defvdate'] ?? ($declared['defvdate'] ?? 0);
         $formdata->agmobility = $agreement['mobility'] ?? 0;
-        $formdata->aga6notyet = $agreement['a6notyet'] ?? ($declared['a6notyet'] ?? 0);
-        $formdata->aga6date = $agreement['a6date'] ?? ($declared['a6date'] ?? 0);
+        // Validation de l'A6 : saisie par la DEVE (ici, à la modification du dossier, en lot ou par import).
+        $a6 = \mod_these\local\a6::get($dossier);
+        $formdata->aga6notyet = (int) ($a6['notyet'] || !$a6['date']);
+        $formdata->aga6date = $a6['date'];
+        $formdata->aga6school = $a6['school'];
         break;
 }
 $mform->set_data($formdata);
@@ -178,6 +181,7 @@ if ($mform->is_cancelled()) {
                 'mobility' => (int) !empty($data->agmobility),
                 'a6notyet' => (int) !empty($data->aga6notyet),
                 'a6date' => !empty($data->aga6notyet) ? 0 : (int) $data->aga6date,
+                'a6school' => (string) ($data->aga6school ?? ''),
             ]));
             these_save_jury($dossier->id, these_extract_submitted_jury($data, true), $USER->id);
             break;

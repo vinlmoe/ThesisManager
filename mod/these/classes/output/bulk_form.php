@@ -48,7 +48,8 @@ class bulk_form implements \renderable, \templatable {
      * Données du gabarit mod_these/bulk_form.
      *
      * @param \renderer_base $output
-     * @return array action, cmid, sesskey, table, label, options, submit
+     * @return array action, cmid, sesskey, table, label, options, submit, a6label, a6datelabel, schoollabel, schools,
+     *               importurl, importlabel
      */
     public function export_for_template(\renderer_base $output): array {
         $options = [];
@@ -63,6 +64,14 @@ class bulk_form implements \renderable, \templatable {
             'label' => get_string('bulkfor', 'mod_these'),
             'options' => $options,
             'submit' => get_string('bulkapply', 'mod_these'),
+            'a6label' => get_string('bulka6params', 'mod_these'),
+            'a6datelabel' => get_string('aga6date', 'mod_these'),
+            'schoollabel' => get_string('bschool', 'mod_these'),
+            'schools' => array_map(function ($value, $label) {
+                return ['value' => $value, 'label' => $label];
+            }, array_keys(these_school_options()), these_school_options()),
+            'importurl' => (new moodle_url('/mod/these/a6import.php', ['id' => $this->cm->id]))->out(false),
+            'importlabel' => get_string('a6import', 'mod_these'),
         ];
     }
 }

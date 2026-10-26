@@ -13,8 +13,17 @@ de version recalés sur la date. Les numéros entre parenthèses des sections de
 développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
 été étiquetée.
 
-## mod_these 0.18.0 (2026102701) — directeur non votant, liste du corps enseignant, aides pour la DEVE
+## mod_these 0.18.0 (2026102702) — directeur non votant, liste du corps enseignant, aides pour la DEVE
 
+- Validation de l'A6 saisie par la DEVE, plus par l'étudiant (le dépôt de la
+  soutenance la rappelle) : à la validation du dossier de soutenance, dans
+  « Modifier un dossier », en lot depuis le tableau de bord (action
+  « Enregistrer la validation de l'A6 », date et école) ou par import d'un
+  fichier Excel, OpenDocument ou CSV (`a6import.php`, colonnes etudiant, date,
+  ecole, avec simulation). Conservée dans l'agrément (`a6date`, `a6notyet`,
+  `a6school`), reprise par l'agrément administratif et la fiche signalétique,
+  inscrite à l'historique ; la déclaration antérieure de l'étudiant sert tant
+  que la DEVE ne l'a pas saisie (`\mod_these\local\a6`).
 - Relance automatique des signatures : la tâche quotidienne redemande les
   signatures en attente depuis plus que le délai de relance de l'activité
   (nouveau lien aux signataires sans compte qui ont une adresse, rappel aux

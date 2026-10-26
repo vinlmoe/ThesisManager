@@ -143,6 +143,8 @@ class review_form extends \moodleform {
                 $mform->addElement('advcheckbox', 'aga6notyet', '', get_string('aga6notyet', 'mod_these'));
                 $mform->addElement('date_selector', 'aga6date', get_string('aga6date', 'mod_these'), ['optional' => true]);
                 $mform->hideIf('aga6date', 'aga6notyet', 'checked');
+                $mform->addElement('select', 'aga6school', get_string('bschool', 'mod_these'), these_school_options());
+                $mform->hideIf('aga6school', 'aga6notyet', 'checked');
                 $mform->addElement('static', 'agauthorized', '', get_string('agauthorized', 'mod_these'));
                 break;
             case 'libraryconformity':

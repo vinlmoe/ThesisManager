@@ -633,6 +633,15 @@ const steps = {
     const p = await open(await as('sbonnet'), these('import.php'));
     await upto(p, '20_import');
   },
+  async '108_import_a6'() {
+    const p = await open(await as('sbonnet'), these('a6import.php'));
+    const csv = sample('validations-a6.csv');
+    fs.writeFileSync(csv, 'etudiant;date;ecole\nlucas;01/07/2025;Lyon\nromain;03/07/2025;Lyon\nsarah;non;\ninconnu;01/07/2025;\n');
+    await upload(p, 'a6file', csv);
+    await Promise.all([p.waitForNavigation(), p.click('#id_submitbutton')]);
+    await grow(p);
+    await upto(p, '108_import_a6');
+  },
   async '19_courriels'() {
     const p = await open(await as('sbonnet'), these('notifications.php'));
     await upto(p, '19_courriels');

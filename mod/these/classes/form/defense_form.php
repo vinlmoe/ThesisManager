@@ -102,11 +102,13 @@ class defense_form extends \moodleform {
         $mform->addElement('header', 'cursusheader', get_string('cursus', 'mod_these'));
         $mform->addElement('date_selector', 'bdefvdate', get_string('bdefvdate', 'mod_these'), ['optional' => true]);
         $mform->addElement('select', 'bdefvschool', get_string('bschool', 'mod_these'), these_school_options());
-        $mform->addElement('advcheckbox', 'ba6notyet', '', get_string('ba6notyet', 'mod_these'));
-        $mform->addElement('date_selector', 'ba6date', get_string('ba6date', 'mod_these'), ['optional' => true]);
-        $mform->hideIf('ba6date', 'ba6notyet', 'checked');
-        $mform->addElement('select', 'ba6school', get_string('bschool', 'mod_these'), these_school_options());
-        $mform->hideIf('ba6school', 'ba6notyet', 'checked');
+        // Validation de l'A6 : saisie par la DEVE (voir \mod_these\local\a6), rappelée ici.
+        $mform->addElement(
+            'static',
+            'a6status',
+            get_string('ba6date', 'mod_these'),
+            s($this->_customdata['a6label'] ?? get_string('a6bydeve', 'mod_these'))
+        );
 
         // Bordereau de thèse (ABES).
         $mform->addElement('header', 'bordereauheader', get_string('docbordereau', 'mod_these'));
@@ -281,9 +283,6 @@ class defense_form extends \moodleform {
         }
         if (empty($data['bdefvdate'])) {
             $errors['bdefvdate'] = get_string('required');
-        }
-        if (empty($data['ba6notyet']) && empty($data['ba6date'])) {
-            $errors['ba6date'] = get_string('a6required', 'mod_these');
         }
         if (!empty($this->_customdata['questionnairemissing'])) {
             $errors['questionnairestatus'] = get_string('questionnairerequired', 'mod_these');

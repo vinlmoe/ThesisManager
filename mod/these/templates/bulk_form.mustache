@@ -33,11 +33,17 @@
     * label Libellé de la liste des actions.
     * options Actions : value, label.
     * submit Libellé du bouton.
+    * a6label, a6datelabel, schoollabel Libellés des paramètres de la validation de l'A6.
+    * schools Écoles : value, label.
+    * importurl, importlabel Import des validations de l'A6 par fichier.
 
     Example context (json):
     {"action": "https://example.com/mod/these/bulk.php", "cmid": 2, "sesskey": "abc",
         "table": "<table></table>", "label": "Pour les dossiers cochés",
-        "options": [{"value": "remind", "label": "Relancer les signataires"}], "submit": "Appliquer"}
+        "options": [{"value": "remind", "label": "Relancer les signataires"}], "submit": "Appliquer",
+        "a6label": "Validation de l'A6", "a6datelabel": "Date", "schoollabel": "École",
+        "schools": [{"value": "", "label": "Choisir..."}], "importurl": "https://example.com/mod/these/a6import.php?id=2",
+        "importlabel": "Importer les validations de l'A6"}
 }}
 <form method="post" action="{{action}}" class="these-bulk-form">
 <input type="hidden" name="id" value="{{cmid}}" />
@@ -47,5 +53,13 @@
 <label for="these-bulkaction-{{uniqid}}" class="mr-2">{{label}}</label>
 <select id="these-bulkaction-{{uniqid}}" name="bulkaction" class="custom-select mr-2">{{#options}}<option value="{{value}}">{{label}}</option>{{/options}}</select>
 <button type="submit" class="btn btn-secondary">{{submit}}</button>
+</div>
+<div class="form-inline mb-3 small">
+<span class="mr-2">{{a6label}}</span>
+<label for="these-a6date-{{uniqid}}" class="mr-1">{{a6datelabel}}</label>
+<input type="date" id="these-a6date-{{uniqid}}" name="a6date" class="form-control form-control-sm mr-2" />
+<label for="these-a6school-{{uniqid}}" class="mr-1">{{schoollabel}}</label>
+<select id="these-a6school-{{uniqid}}" name="a6school" class="custom-select custom-select-sm mr-2">{{#schools}}<option value="{{value}}">{{label}}</option>{{/schools}}</select>
+<a href="{{importurl}}">{{importlabel}}</a>
 </div>
 </form>

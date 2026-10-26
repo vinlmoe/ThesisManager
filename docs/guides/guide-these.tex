@@ -102,7 +102,8 @@ bibliothèque listés dans les paramètres du circuit, sans rôle à attribuer. 
 2.12 & 27 octobre 2026 & Directeur de thèse non votant, au moins deux membres
 votants président compris ; liste du corps enseignant en PDF ; relance
 automatique des signatures ; récapitulatif hebdomadaire de la DEVE ;
-soutenances au calendrier Moodle ; modification d'un dossier allégée. \\
+soutenances au calendrier Moodle ; modification d'un dossier allégée ;
+validation de l'A6 saisie par la DEVE (dossier, lot, import Excel). \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -517,7 +518,8 @@ refusé.}
         établissement et adresse. Votre directeur est proposé d'office.
   \item Remplissez les données du bordereau ABES (identité, cursus, mots-clés,
         résumés), le titre anglais et les \textbf{conclusions} (une page au plus
-        avec les signatures).
+        avec les signatures). La validation de l'A6 n'est pas à saisir : la DEVE
+        l'enregistre, et le formulaire la rappelle.
   \item Indiquez vos choix pour le contrat de diffusion (confidentialité,
         diffusion sur internet). Pour différer la diffusion, cochez
         \bouton{Je demande un embargo de diffusion de 5 ans à compter de la
@@ -725,7 +727,9 @@ bord, avec le lien vers les \bouton{Paramètres du circuit}.
         signature est attendue), \bouton{Générer les documents de soutenance}
         (manuscrit conforme ou soutenance programmée) ou \bouton{Prévenir les
         membres du jury pas encore prévenus} (dossier validé, jusqu'à la
-        soutenance).
+        soutenance) ou \bouton{Enregistrer la validation de l'A6} : indiquez
+        alors, sur la ligne en dessous, la date (vide : non validée) et
+        l'école.
   \item Cliquez sur \bouton{Appliquer}.
 \end{etapes}
 \ensuite{un message indique le nombre de dossiers traités et ignorés : une
@@ -734,6 +738,35 @@ quelque chose en attente.}
 \end{procedure}
 
 \capture[0.85\linewidth]{105_actions_groupees}{Actions groupées sous la liste des dossiers.}
+
+\begin{procedure}{Enregistrer les validations de l'A6}{Équipe DEVE}
+La validation de l'A6 est saisie \textbf{par la DEVE}, plus par l'étudiant. Elle
+figure dans le dossier (rubrique \og Enregistrements\fg{}), dans l'agrément
+administratif et dans la fiche signalétique. Trois façons de la saisir :
+\begin{etapes}
+  \item \textbf{Un dossier} : \bouton{Modifier le dossier}, rubrique
+        \og Enregistrements\fg{}, ou la validation du dossier de soutenance
+        (agrément administratif) : date, ou \og A6 pas encore validée\fg{}, et
+        école.
+  \item \textbf{Plusieurs dossiers à la même date} : cochez-les au tableau de
+        bord, choisissez \bouton{Enregistrer la validation de l'A6}, la date
+        et l'école, puis \bouton{Appliquer}.
+  \item \textbf{Par fichier} : \bouton{Importer les validations de l'A6}
+        (sous la liste du tableau de bord, ou depuis l'import des dossiers).
+        Déposez un fichier Excel (.xlsx), OpenDocument (.ods) ou CSV, avec une
+        ligne d'en-tête et une ligne par étudiant : \texttt{etudiant}
+        (identifiant, adresse de courriel ou numéro d'étudiant),
+        \texttt{date} (jj/mm/aaaa, ou \og non\fg{}) et, facultative,
+        \texttt{ecole} (Lyon, Alfort, Nantes, Toulouse, Rouen). Lancez d'abord
+        la simulation, qui vérifie chaque ligne sans rien enregistrer.
+\end{etapes}
+\ensuite{chaque saisie est inscrite à l'historique du dossier (\og Validation
+de l'A6 enregistrée\fg{}). Pour les dossiers où l'étudiant l'avait déclarée
+avant cette version, sa déclaration est reprise tant que la DEVE ne l'a pas
+saisie.}
+\end{procedure}
+
+\capture[0.85\linewidth]{108_import_a6}{Import des validations de l'A6 : simulation et rapport ligne par ligne.}
 
 \begin{astuce}
 Quand des \textbf{agents DEVE signataires} sont désignés dans les réglages du
