@@ -79,9 +79,73 @@ class scopesettings {
             'deverole' => (int) $DB->get_field('role', 'id', ['shortname' => 'editingteacher']),
             'libraryrole' => (int) $DB->get_field('role', 'id', ['shortname' => 'theselibrary']),
             'deveagent' => '',
+            'libraryagent' => '',
             'defenseduration' => 60,
             'defenserooms' => '',
         ] + self::text_defaults();
+    }
+
+    /**
+     * Comptes désignés dans un paramètre (agents DEVE signataires, agents de la bibliothèque) :
+     * identifiants ou adresses de courriel séparés par des virgules, des points-virgules ou des retours
+     * à la ligne. Les comptes supprimés ou suspendus sont ignorés.
+     *
+     * @param string $setting
+     * @return stdClass[] Comptes, indexés par identifiant, dans l'ordre du paramètre.
+     */
+    public static function listed_users($setting) {
+        global $DB;
+
+        $setting = trim((string) $setting);
+        if ($setting === '') {
+            return [];
+        }
+        $key = 'users_' . sha1($setting);
+        $users = self::cache()->get($key);
+        if ($users === false) {
+            $users = [];
+            foreach (preg_split('/[\s,;]+/', $setting, -1, PREG_SPLIT_NO_EMPTY) as $value) {
+                $field = strpos($value, '@') !== false ? 'email' : 'username';
+                $found = $DB->get_records_select(
+                    'user',
+                    "LOWER($field) = LOWER(?) AND deleted = 0 AND suspended = 0",
+                    [$value],
+                    'id ASC',
+                    '*',
+                    0,
+                    1
+                );
+                if ($found) {
+                    $user = reset($found);
+                    $users[$user->id] = $user;
+                }
+            }
+            self::cache()->set($key, $users);
+        }
+        return $users;
+    }
+
+    /**
+     * Agents de la bibliothèque désignés dans les paramètres en vigueur dans un contexte (activité
+     * « Gestion des thèses » ou « Suivi des thèses ») : ils ont les droits de la bibliothèque sans rôle
+     * à attribuer, et seulement ceux-là (ni DEVE ni paramétrage).
+     *
+     * @param context $context
+     * @return stdClass[] Comptes, indexés par identifiant.
+     */
+    public static function library_agents(context $context) {
+        return self::listed_users(self::for_context($context)['libraryagent'] ?? '');
+    }
+
+    /**
+     * Indique si un utilisateur est agent de la bibliothèque dans un contexte (voir library_agents()).
+     *
+     * @param context $context
+     * @param int $userid
+     * @return bool
+     */
+    public static function is_library_agent(context $context, $userid) {
+        return $userid && isset(self::library_agents($context)[(int) $userid]);
     }
 
     /**
@@ -283,7 +347,7 @@ class scopesettings {
     /**
      * Réglages d'une portée à compléter avant de faire tourner le circuit : textes et signataires
      * des documents, contrat type, images des modèles, salles de soutenance, questionnaire. Les
-     * agents DEVE signataires sont facultatifs.
+     * agents DEVE signataires, ceux de la bibliothèque et le questionnaire sont facultatifs.
      *
      * @param stdClass $scope
      * @return array[] label, complete (bool), optional (bool), url (moodle_url de la page où le régler, ou null : cette page)
@@ -315,6 +379,7 @@ class scopesettings {
             ['settingscheckcontract', self::contract_template($scope) !== null, false, null],
             ['settingscheckrooms', (bool) self::rooms($values), false, null],
             ['settingscheckagents', $filled(['deveagent']), true, null],
+            ['settingschecklibraryagents', $filled(['libraryagent']), true, null],
             ['settingscheckquestions', (bool) these_get_questions($scope), true, $page('questions.php')],
         ];
         $list = [];

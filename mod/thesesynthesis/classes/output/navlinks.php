@@ -58,7 +58,7 @@ class navlinks implements \renderable, \templatable {
         if (has_capability('mod/thesesynthesis:search', $this->context)) {
             $links[get_string('searchtheses', 'mod_thesesynthesis')] = new moodle_url('/mod/thesesynthesis/search.php', $id);
         }
-        if (has_capability('mod/thesesynthesis:managelinks', $this->context)) {
+        if (\mod_these\local\rights::can_manage($this->context, 'mod/thesesynthesis:managelinks')) {
             $links[get_string('managelinks', 'mod_thesesynthesis')] = new moodle_url('/mod/thesesynthesis/administration.php', $id);
         }
         return $links;
@@ -72,13 +72,13 @@ class navlinks implements \renderable, \templatable {
     public function get_settings_links(): array {
         $id = ['id' => $this->cm->id];
         $links = [];
-        if (has_capability('mod/thesesynthesis:managesettings', $this->context)) {
+        if (\mod_these\local\rights::can_manage($this->context, 'mod/thesesynthesis:managesettings')) {
             $links[get_string('scopesettings', 'mod_these')] = new moodle_url('/mod/thesesynthesis/parameters.php', $id);
             $links[get_string('doctemplates', 'mod_these')] = new moodle_url('/mod/thesesynthesis/doctemplates.php', $id);
             $links[get_string('griditems', 'mod_these')] = new moodle_url('/mod/thesesynthesis/griditems.php', $id);
             $links[get_string('questions', 'mod_these')] = new moodle_url('/mod/thesesynthesis/questions.php', $id);
         }
-        if (has_capability('mod/thesesynthesis:managejurors', $this->context)) {
+        if (\mod_these\local\rights::can_manage($this->context, 'mod/thesesynthesis:managejurors')) {
             $links[get_string('jurors', 'mod_these')] = new moodle_url('/mod/thesesynthesis/jurors.php', $id);
         }
         return $links;

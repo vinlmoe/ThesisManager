@@ -134,6 +134,7 @@ $scope = these_settings_scope($these);
 \mod_these\local\scopesettings::reset_cache();
 \mod_these\local\scopesettings::set($scope, [
     'deveagent' => "agarnier, proux",
+    'libraryagent' => 'blefort',
     'institution' => 'VetAgro Sup', 'university' => "l'Université Claude Bernard Lyon 1", 'visaplace' => 'Lyon',
     'devename' => 'Anne GARNIER', 'dgtitle' => 'La Directrice générale de VetAgro Sup',
     'ucbltitle' => "Le Président de l'Université Claude Bernard Lyon 1",

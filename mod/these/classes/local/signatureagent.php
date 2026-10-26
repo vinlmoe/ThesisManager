@@ -105,28 +105,7 @@ class signatureagent {
      * @return stdClass[] Comptes actifs, indexés par identifiant, dans l'ordre du paramètre.
      */
     public static function deve_agents(stdClass $these) {
-        global $DB;
-
-        $agents = [];
-        $setting = (string) scopesettings::for_these($these)['deveagent'];
-        $values = preg_split('/[\s,;]+/', trim($setting), -1, PREG_SPLIT_NO_EMPTY);
-        foreach ($values as $value) {
-            $field = strpos($value, '@') !== false ? 'email' : 'username';
-            $users = $DB->get_records_select(
-                'user',
-                "LOWER($field) = LOWER(?) AND deleted = 0 AND suspended = 0",
-                [$value],
-                'id ASC',
-                '*',
-                0,
-                1
-            );
-            if ($users) {
-                $user = reset($users);
-                $agents[$user->id] = $user;
-            }
-        }
-        return $agents;
+        return scopesettings::listed_users(scopesettings::for_these($these)['deveagent']);
     }
 
     /**

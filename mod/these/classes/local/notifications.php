@@ -262,6 +262,9 @@ class notifications {
                 $users += $DB->get_records_list('user', 'id', $userids);
             }
         }
+        // Agents de la bibliothèque : destinataires de la bibliothèque, jamais de la DEVE.
+        $agents = scopesettings::library_agents($context);
+        $users = $actor === 'library' ? $users + $agents : array_diff_key($users, $agents);
         return array_values(array_filter($users, function ($user) {
             return empty($user->deleted) && empty($user->suspended);
         }));

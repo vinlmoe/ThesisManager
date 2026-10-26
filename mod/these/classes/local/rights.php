@@ -103,7 +103,8 @@ class rights {
      * Droits de l'utilisateur sur un dossier (ou sur l'activité, si aucun dossier n'est donné).
      *
      * La DEVE et la bibliothèque sont reconnues soit par leur capacité, soit par le rôle choisi pour
-     * leur service dans les paramètres de l'activité (voir these_user_has_service_role()). Un directeur de
+     * leur service dans les paramètres de l'activité (voir these_user_has_service_role()) ; la
+     * bibliothèque aussi par la liste de ses agents (voir scopesettings::library_agents()). Un directeur de
      * thèse n'a de droits que sur les dossiers qu'il dirige ; la DEVE et la bibliothèque, sur tous
      * les dossiers de l'activité.
      *
@@ -114,9 +115,12 @@ class rights {
      */
     public static function get_rights(context $context, ?stdClass $dossier, $userid) {
         $rights = new stdClass();
-        $rights->deve = has_capability('mod/these:managedeve', $context, $userid)
-            || these_user_has_service_role($context, $userid, 'deve');
-        $rights->library = has_capability('mod/these:managelibrary', $context, $userid)
+        // Un agent de la bibliothèque désigné dans les paramètres n'a que les droits de la bibliothèque,
+        // même si son rôle dans le cours lui donnerait ceux de la DEVE.
+        $agent = scopesettings::is_library_agent($context, $userid);
+        $rights->deve = !$agent && (has_capability('mod/these:managedeve', $context, $userid)
+            || these_user_has_service_role($context, $userid, 'deve'));
+        $rights->library = $agent || has_capability('mod/these:managelibrary', $context, $userid)
             || these_user_has_service_role($context, $userid, 'library');
         $rights->viewall = $rights->deve || $rights->library || has_capability('mod/these:viewall', $context, $userid);
         $rights->owner = $dossier !== null && (int) $dossier->userid === (int) $userid;
@@ -157,9 +161,44 @@ class rights {
 
         $rights = these_get_rights($context, null, $USER->id);
         if (empty($rights->$actor)) {
-            require_capability($actor === 'deve' ? 'mod/these:managedeve' : 'mod/these:managelibrary', $context);
+            $capability = $actor === 'deve' ? 'mod/these:managedeve' : 'mod/these:managelibrary';
+            if (scopesettings::is_library_agent($context, $USER->id)) {
+                // Agent de la bibliothèque : pas de page de la DEVE, quel que soit son rôle dans le cours.
+                throw new \required_capability_exception($context, $capability, 'nopermissions', '');
+            }
+            require_capability($capability, $context);
         }
         return $rights;
+    }
+
+    /**
+     * Capacité de gestion (paramètres, promotions suivies, annuaire...) refusée aux agents de la
+     * bibliothèque, quel que soit leur rôle dans le cours : ils ne voient que ce qui concerne la
+     * bibliothèque.
+     *
+     * @param context $context
+     * @param string $capability
+     * @param int|null $userid Par défaut, l'utilisateur courant.
+     * @return bool
+     */
+    public static function can_manage(context $context, $capability, $userid = null) {
+        global $USER;
+
+        $userid = $userid ?? $USER->id;
+        return has_capability($capability, $context, $userid) && !scopesettings::is_library_agent($context, $userid);
+    }
+
+    /**
+     * Exige une capacité de gestion (voir can_manage()).
+     *
+     * @param context $context
+     * @param string $capability
+     * @return void
+     */
+    public static function require_management(context $context, $capability) {
+        if (!self::can_manage($context, $capability)) {
+            throw new \required_capability_exception($context, $capability, 'nopermissions', '');
+        }
     }
 
     /**
@@ -256,6 +295,7 @@ class rights {
         }
         return has_capability('mod/these:managedeve', $context, $userid)
             || these_user_has_service_role($context, $userid, 'deve')
+            || scopesettings::is_library_agent($context, $userid)
             || has_capability('mod/these:managelibrary', $context, $userid)
             || these_user_has_service_role($context, $userid, 'library')
             || these_user_in_jury($dossier->id, $userid);

@@ -598,6 +598,9 @@ $string['settingscheckquestions'] = 'Pre-jury questionnaire';
 $string['settingscheckimages'] = 'Document template images';
 $string['settingscheckimagesmissing'] = 'Document template images (missing: {$a})';
 $string['settingsmissingnotice'] = 'Workflow settings to complete: {$a}.';
+$string['settingslibraryagent'] = 'Library agents';
+$string['settingslibraryagent_help'] = "Usernames or email addresses of the library agents' Moodle accounts, separated by commas or one per line. Without any role to assign, they get the library's rights (subject record, manuscript compliance, corrections) and only those: no registrar buttons or pages, even if their course role would give them. They receive the emails addressed to the library. They must be able to enter the course (enrolment with any role).";
+$string['settingschecklibraryagents'] = 'Library agents';
 $string['scopesettings'] = 'Workflow settings';
 $string['scopesettings_desc'] = 'Service roles, registrar signing agents, institution, university, document signatories and standard '
     . 'distribution contract of this activity. None of them is a site setting.';

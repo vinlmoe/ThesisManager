@@ -56,6 +56,17 @@ class scopesettings_form extends \moodleform {
         $mform->setType('deveagent', PARAM_TEXT);
         $mform->addHelpButton('deveagent', 'settingsdeveagent', 'mod_these');
 
+        $mform->addElement('header', 'libraryagentheader', get_string('settingslibraryagent', 'mod_these'));
+        $mform->setExpanded('libraryagentheader');
+        $mform->addElement(
+            'textarea',
+            'libraryagent',
+            get_string('settingslibraryagent', 'mod_these'),
+            ['rows' => 3, 'cols' => 60]
+        );
+        $mform->setType('libraryagent', PARAM_TEXT);
+        $mform->addHelpButton('libraryagent', 'settingslibraryagent', 'mod_these');
+
         $mform->addElement('header', 'defenseheader', get_string('settingsdefenses', 'mod_these'));
         $mform->setExpanded('defenseheader');
         $mform->addElement('text', 'defenseduration', get_string('settingsdefenseduration', 'mod_these'), ['size' => 5]);
