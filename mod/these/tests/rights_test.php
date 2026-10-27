@@ -170,20 +170,19 @@ final class rights_test extends these_testcase {
     }
 
     /**
-     * Accès à l'activité : la capacité de consultation, ou le rôle d'un service sans capacité.
+     * Accès à l'activité : la capacité de consultation, ou les droits d'un service (DEVE par sa
+     * capacité, bibliothèque par la liste de ses agents).
      */
     public function test_require_view(): void {
         $this->setup_activity();
         $this->setUser($this->student);
         $this->assertFalse(these_require_view($this->context)->deve);
-
-        // Un utilisateur titulaire du seul rôle DEVE choisi dans les paramètres, sans la capacité.
-        $role = $this->getDataGenerator()->create_role(['shortname' => 'devecustom']);
-        \mod_these\local\scopesettings::set(these_local_scope($this->these), ['deverole' => $role]);
-        $deve = $this->getDataGenerator()->create_user();
-        role_assign($role, $deve->id, \context_course::instance($this->course->id));
-        $this->setUser($deve);
+        $this->setUser($this->deve);
         $this->assertTrue(these_require_view($this->context)->deve);
+        $this->setUser($this->librarian);
+        $rights = these_require_view($this->context);
+        $this->assertTrue($rights->library);
+        $this->assertFalse($rights->deve);
 
         $this->setUser($this->getDataGenerator()->create_user());
         $this->expectException(\required_capability_exception::class);

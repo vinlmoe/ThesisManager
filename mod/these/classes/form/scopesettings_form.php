@@ -23,10 +23,11 @@ require_once($CFG->libdir . '/formslib.php');
 use mod_these\local\scopesettings;
 
 /**
- * Paramètres du circuit d'une portée (voir \mod_these\local\scopesettings) : rôles des services,
- * agents DEVE signataires, établissement, université, signataires des documents et contrat type.
+ * Paramètres du circuit d'une portée (voir \mod_these\local\scopesettings) :
+ * agents DEVE signataires et de la bibliothèque, établissement, université, signataires des documents
+ * et contrat type.
  *
- * customdata : roles (id => nom), fileoptions, agents (deveagent et libraryagent : identifiant => nom
+ * customdata : fileoptions, agents (deveagent et libraryagent : identifiant => nom
  * des comptes proposés, voir \mod_these\local\scopesettings::candidate_users()).
  *
  * @package   mod_these
@@ -43,13 +44,6 @@ class scopesettings_form extends \moodleform {
         $mform->addElement('hidden', 'id');
         $mform->setType('id', PARAM_INT);
 
-        $mform->addElement('header', 'rolesheader', get_string('settingsroles', 'mod_these'));
-        // Explications derrière les boutons d'aide : la page reste courte.
-        foreach (['deverole', 'libraryrole'] as $name) {
-            $mform->addElement('select', $name, get_string($name, 'mod_these'), $this->_customdata['roles']);
-            $mform->setType($name, PARAM_INT);
-            $mform->addHelpButton($name, $name, 'mod_these');
-        }
 
         $mform->addElement('header', 'agentheader', get_string('settingsdeveagent', 'mod_these'));
         $mform->setExpanded('agentheader');

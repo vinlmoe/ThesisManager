@@ -17,12 +17,11 @@
 namespace mod_these\local;
 
 use context;
-use context_system;
 use core_text;
 use stdClass;
 
 /**
- * Rôles de service, droits sur les dossiers, liens à jeton et connaissance du sujet d'une thèse confidentielle.
+ * Droits sur les dossiers, liens à jeton et connaissance du sujet d'une thèse confidentielle.
  *
  * Les fonctions these_*() correspondantes de locallib.php sont des façades de ces méthodes.
  *
@@ -32,79 +31,10 @@ use stdClass;
  */
 class rights {
     /**
-     * Rôle Moodle associé à un service dans les paramètres de l'activité (« deverole » ou
-     * « libraryrole », voir \mod_these\local\scopesettings) : ceux de l'activité « Suivi des thèses »
-     * qui la suit, sinon de l'activité elle-même.
-     *
-     * @param string $actor 'deve' ou 'library'.
-     * @param context $context Contexte de l'activité.
-     * @return int Identifiant du rôle, 0 si aucun n'est choisi.
-     */
-    public static function get_service_roleid($actor, context $context) {
-        return (int) scopesettings::for_context($context)[$actor === 'deve' ? 'deverole' : 'libraryrole'];
-    }
-
-    /**
-     * Indique si l'utilisateur détient le rôle d'un service dans le contexte ou l'un de ses parents :
-     * le rôle peut être attribué dans le cours, dans sa catégorie ou au niveau du site.
-     *
-     * @param context $context
-     * @param int $userid
-     * @param string $actor 'deve' ou 'library'.
-     * @return bool
-     */
-    public static function user_has_service_role(context $context, $userid, $actor) {
-        $roleid = these_get_service_roleid($actor, $context);
-        if (!$roleid || !$userid) {
-            return false;
-        }
-        foreach ($context->get_parent_context_ids(true) as $contextid) {
-            if (user_has_role_assignment($userid, $roleid, $contextid)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Crée, s'il n'existe pas encore, le rôle interne « Bibliothèque (thèses) », rôle par défaut de la
-     * bibliothèque dans les paramètres des activités (celui de la DEVE étant « Enseignant »).
-     *
-     * Le rôle peut être attribué au niveau du site ou d'une catégorie : il donne alors accès à toutes
-     * les activités de gestion des thèses concernées sans inscription au cours.
-     *
-     * @return int Identifiant du rôle interne.
-     */
-    public static function setup_default_roles() {
-        global $DB;
-
-        // À l'installation, xmldb_these_install() s'exécute avant l'enregistrement des capacités du
-        // module : elles sont enregistrées ici d'abord, pour pouvoir les accorder au rôle.
-        update_capabilities('mod_these');
-
-        $roleid = (int) $DB->get_field('role', 'id', ['shortname' => 'theselibrary']);
-        if (!$roleid) {
-            $roleid = create_role(
-                get_string('libraryrolename', 'mod_these'),
-                'theselibrary',
-                get_string('libraryroledescription', 'mod_these'),
-                ''
-            );
-            set_role_contextlevels($roleid, [CONTEXT_SYSTEM, CONTEXT_COURSECAT, CONTEXT_COURSE]);
-            $systemcontext = context_system::instance();
-            foreach (['mod/these:view', 'mod/these:managelibrary', 'mod/these:viewall', 'moodle/course:view'] as $capability) {
-                assign_capability($capability, CAP_ALLOW, $roleid, $systemcontext->id, true);
-            }
-        }
-        return $roleid;
-    }
-
-    /**
      * Droits de l'utilisateur sur un dossier (ou sur l'activité, si aucun dossier n'est donné).
      *
-     * La DEVE et la bibliothèque sont reconnues soit par leur capacité, soit par le rôle choisi pour
-     * leur service dans les paramètres de l'activité (voir these_user_has_service_role()) ; la
-     * bibliothèque aussi par la liste de ses agents (voir scopesettings::library_agents()). Un directeur de
+     * La DEVE est reconnue à sa capacité (rôle « Enseignant » par défaut) ; la bibliothèque à la liste
+     * de ses agents (voir scopesettings::library_agents()), ou à sa capacité. Un directeur de
      * thèse n'a de droits que sur les dossiers qu'il dirige ; la DEVE et la bibliothèque, sur tous
      * les dossiers de l'activité.
      *
@@ -118,10 +48,8 @@ class rights {
         // Un agent de la bibliothèque désigné dans les paramètres n'a que les droits de la bibliothèque,
         // même si son rôle dans le cours lui donnerait ceux de la DEVE.
         $agent = scopesettings::is_library_agent($context, $userid);
-        $rights->deve = !$agent && (has_capability('mod/these:managedeve', $context, $userid)
-            || these_user_has_service_role($context, $userid, 'deve'));
-        $rights->library = $agent || has_capability('mod/these:managelibrary', $context, $userid)
-            || these_user_has_service_role($context, $userid, 'library');
+        $rights->deve = !$agent && has_capability('mod/these:managedeve', $context, $userid);
+        $rights->library = $agent || has_capability('mod/these:managelibrary', $context, $userid);
         $rights->viewall = $rights->deve || $rights->library || has_capability('mod/these:viewall', $context, $userid);
         $rights->owner = $dossier !== null && (int) $dossier->userid === (int) $userid;
         $rights->student = $rights->owner && has_capability('mod/these:submit', $context, $userid);
@@ -294,10 +222,8 @@ class rights {
             return true;
         }
         return has_capability('mod/these:managedeve', $context, $userid)
-            || these_user_has_service_role($context, $userid, 'deve')
             || scopesettings::is_library_agent($context, $userid)
             || has_capability('mod/these:managelibrary', $context, $userid)
-            || these_user_has_service_role($context, $userid, 'library')
             || these_user_in_jury($dossier->id, $userid);
     }
 

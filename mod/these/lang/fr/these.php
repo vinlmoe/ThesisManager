@@ -641,22 +641,10 @@ $string['settingslibraryagent_help'] = "Agents de la bibliothèque, choisis parm
 $string['settingsagentsnone'] = 'Aucun agent choisi';
 $string['settingschecklibraryagents'] = 'Agents de la bibliothèque';
 $string['scopesettings'] = 'Paramètres du circuit';
-$string['scopesettings_desc'] = "Rôles des services, agents DEVE signataires, établissement, université, signataires des documents et "
+$string['scopesettings_desc'] = "Agents DEVE signataires et de la bibliothèque, établissement, université, signataires des documents et "
     . "contrat type de diffusion de cette activité. Aucun n'est un réglage du site.";
-$string['scopesettingsshared_desc'] = "Rôles des services, agents DEVE signataires, établissement, université, signataires des documents "
+$string['scopesettingsshared_desc'] = "Agents DEVE signataires et de la bibliothèque, établissement, université, signataires des documents "
     . "et contrat type de diffusion communs à toutes les activités « Gestion des thèses » suivies. Aucun n'est un réglage du site.";
-$string['settingsroles'] = 'Rôles des services';
-$string['deverole'] = 'Rôle DEVE';
-$string['deverole_help'] = 'Rôle dont les détenteurs agissent comme DEVE dans les activités de gestion des thèses.';
-$string['libraryrole'] = 'Rôle Bibliothèque';
-$string['libraryrole_help'] = "Rôle dont les détenteurs agissent comme bibliothèque. Par défaut, le rôle interne « Bibliothèque "
-    . "(thèses) » créé à l'installation du module."
-    . ' ' . "Comme la DEVE est reconnue au rôle « Enseignant », la bibliothèque est reconnue au rôle choisi ici. "
-    . "Le rôle peut être attribué dans le cours, dans sa catégorie ou au niveau du site (il donne alors accès à toutes les activités "
-    . "de gestion des thèses sans inscription). Les capacités du module restent également prises en compte.";
-$string['libraryrolename'] = 'Bibliothèque (thèses)';
-$string['libraryroledescription'] = "Rôle interne du module Gestion des thèses : enregistrement des sujets au référentiel documentaire et "
-    . "attestation de conformité des manuscrits. À attribuer au niveau du site, d'une catégorie ou d'un cours.";
 
 // Documents (paramètres du circuit).
 $string['settingsdefenses'] = 'Soutenances';

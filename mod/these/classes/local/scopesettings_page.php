@@ -25,7 +25,7 @@ use stdClass;
  * Page des paramètres du circuit d'une portée, commune à l'activité « Suivi des thèses » et à une
  * activité « Gestion des thèses » qu'aucune activité de suivi ne suit. Chaque page vérifie ses
  * propres droits et prépare $PAGE avant d'appeler output(). La DEVE, responsable de l'activité, y
- * règle tout, rôles des services compris.
+ * règle tout.
  *
  * @package   mod_these
  * @copyright 2026 Sébastien Lefebvre
@@ -43,10 +43,6 @@ class scopesettings_page {
     public static function output(stdClass $scope, moodle_url $baseurl, $navigation = '') {
         global $OUTPUT, $PAGE;
 
-        $roles = [0 => get_string('none')];
-        foreach (role_fix_names(get_all_roles(), null, ROLENAME_ORIGINALANDSHORT) as $role) {
-            $roles[$role->id] = $role->localname;
-        }
         $fileoptions = ['subdirs' => 0, 'maxfiles' => 1, 'accepted_types' => ['.pdf']];
         // Agents choisis parmi les comptes proposés : enregistrés par leur identifiant, un par ligne.
         $settings = scopesettings::get_all($scope);
@@ -60,7 +56,7 @@ class scopesettings_page {
                 return $user->username;
             }, scopesettings::listed_users($settings[$name])));
         }
-        $form = new scopesettings_form($baseurl, ['roles' => $roles, 'fileoptions' => $fileoptions, 'agents' => $agents]);
+        $form = new scopesettings_form($baseurl, ['fileoptions' => $fileoptions, 'agents' => $agents]);
 
         $draftitemid = file_get_submitted_draft_itemid('contracttemplate');
         file_prepare_draft_area($draftitemid, $scope->contextid, $scope->component, 'contracttemplate', 0, $fileoptions);

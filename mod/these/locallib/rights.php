@@ -27,38 +27,6 @@
 // Droits.
 
 /**
- * Voir \mod_these\local\rights::get_service_roleid().
- *
- * @param string $actor 'deve' ou 'library'.
- * @param context $context Contexte de l'activité.
- * @return int Identifiant du rôle, 0 si aucun n'est choisi.
- */
-function these_get_service_roleid($actor, context $context) {
-    return \mod_these\local\rights::get_service_roleid($actor, $context);
-}
-
-/**
- * Voir \mod_these\local\rights::user_has_service_role().
- *
- * @param context $context
- * @param int $userid
- * @param string $actor 'deve' ou 'library'.
- * @return bool
- */
-function these_user_has_service_role(context $context, $userid, $actor) {
-    return \mod_these\local\rights::user_has_service_role($context, $userid, $actor);
-}
-
-/**
- * Voir \mod_these\local\rights::setup_default_roles().
- *
- * @return int Identifiant du rôle interne.
- */
-function these_setup_default_roles() {
-    return \mod_these\local\rights::setup_default_roles();
-}
-
-/**
  * Voir \mod_these\local\rights::get_rights().
  *
  * @param context $context

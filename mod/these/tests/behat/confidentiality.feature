@@ -24,7 +24,7 @@ Feature: The subject of a confidential thesis is only known to the student, the 
     And the following "course enrolments" exist:
       | user     | course | role           |
       | deve1    | T1     | editingteacher |
-      | library1 | T1     | theselibrary   |
+      | library1 | T1     | teacher        |
       | viewer1  | T1     | theseviewall   |
       | student1 | T1     | student        |
     And the following "activities" exist:
@@ -33,6 +33,9 @@ Feature: The subject of a confidential thesis is only known to the student, the 
     And the following "mod_these > dossiers" exist:
       | activity | user     | status | title                          | confidential |
       | these1   | student1 | active | Experimental distemper vaccine | 1            |
+    And the following "mod_these > library agents" exist:
+      | activity | user     |
+      | these1   | library1 |
 
   Scenario: Staff who may see all files but not the subject see the file without its subject
     Given I log in as "viewer1"

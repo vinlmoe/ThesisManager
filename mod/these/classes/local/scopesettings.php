@@ -20,7 +20,7 @@ use context;
 use stdClass;
 
 /**
- * Paramètres du circuit : rôles des services, agents DEVE signataires, durée et salles des soutenances, établissement, université,
+ * Paramètres du circuit : agents DEVE signataires et agents de la bibliothèque, durée et salles des soutenances, établissement, université,
  * signataires et contrat type de diffusion. Aucun n'est un réglage du site : comme les modèles des
  * documents, ils appartiennent à une portée (voir these_settings_scope()), l'activité « Suivi des
  * thèses » qui suit l'activité, sinon l'activité « Gestion des thèses » elle-même (table
@@ -67,16 +67,12 @@ class scopesettings {
     }
 
     /**
-     * Tous les paramètres et leur valeur par défaut. Rôles des services : « Enseignant » pour la DEVE,
-     * le rôle interne « Bibliothèque (thèses) » pour la bibliothèque.
+     * Tous les paramètres et leur valeur par défaut.
      *
      * @return array nom => valeur par défaut
      */
     public static function defaults() {
-        global $DB;
         return [
-            'deverole' => (int) $DB->get_field('role', 'id', ['shortname' => 'editingteacher']),
-            'libraryrole' => (int) $DB->get_field('role', 'id', ['shortname' => 'theselibrary']),
             'deveagent' => '',
             'libraryagent' => '',
             'defenseduration' => 60,
@@ -161,10 +157,8 @@ class scopesettings {
     /**
      * Comptes proposés pour un paramètre d'agents d'une portée, dans les activités de la portée (voir
      * scope_contexts()) :
-     * - agents DEVE : les membres de la DEVE, inscrits avec le droit de la DEVE ou détenteurs de son
-     *   rôle (dans le cours, sa catégorie ou au niveau du site) ;
-     * - agents de la bibliothèque : les inscrits qui ne déposent pas de thèse (personnels), et les
-     *   détenteurs du rôle de la bibliothèque.
+     * - agents DEVE : les membres de la DEVE, inscrits avec le droit de la DEVE (rôle « Enseignant ») ;
+     * - agents de la bibliothèque : les inscrits qui ne déposent pas de thèse (personnels).
      * Les comptes déjà désignés restent proposés, même s'ils ne sont plus inscrits.
      *
      * @param stdClass $scope
@@ -172,10 +166,7 @@ class scopesettings {
      * @return stdClass[] Comptes actifs, indexés par identifiant, triés par nom.
      */
     public static function candidate_users(stdClass $scope, $actor) {
-        global $DB;
-
         $settings = self::get_all($scope);
-        $roleid = (int) $settings[$actor === 'deve' ? 'deverole' : 'libraryrole'];
         $users = [];
         foreach (self::scope_contexts($scope) as $context) {
             if ($actor === 'deve') {
@@ -183,19 +174,6 @@ class scopesettings {
             } else {
                 $students = get_enrolled_users($context, 'mod/these:submit', 0, 'u.id', null, 0, 0, true);
                 $users += array_diff_key(get_enrolled_users($context, '', 0, 'u.*', null, 0, 0, true), $students);
-            }
-            if ($roleid) {
-                [$insql, $params] = $DB->get_in_or_equal($context->get_parent_context_ids(true));
-                $userids = $DB->get_fieldset_select(
-                    'role_assignments',
-                    'userid',
-                    "roleid = ? AND contextid $insql",
-                    array_merge([$roleid], $params)
-                );
-                $userids = array_diff(array_unique($userids), array_keys($users));
-                if ($userids) {
-                    $users += $DB->get_records_list('user', 'id', $userids);
-                }
             }
         }
         $users += self::listed_users($settings[$actor === 'deve' ? 'deveagent' : 'libraryagent']);

@@ -242,31 +242,12 @@ class notifications {
      * @return array Utilisateurs (réels ou factices).
      */
     public static function get_service_recipients(stdClass $these, context $context, $actor) {
-        global $DB;
-
         $email = $actor === 'deve' ? trim((string) $these->deveemail) : trim((string) $these->libraryemail);
         if ($email !== '') {
             return [these_make_external_user($email, these_actor_label($actor))];
         }
         $capability = $actor === 'deve' ? 'mod/these:managedeve' : 'mod/these:managelibrary';
         $users = get_enrolled_users($context, $capability, 0, 'u.*', null, 0, 0, true);
-        // Détenteurs du rôle du service, attribué dans le cours, sa catégorie ou au niveau du site.
-        $roleid = these_get_service_roleid($actor, $context);
-        if ($roleid) {
-            $userids = [];
-            foreach ($context->get_parent_context_ids(true) as $contextid) {
-                $userids = array_merge($userids, $DB->get_fieldset_select(
-                    'role_assignments',
-                    'userid',
-                    'roleid = ? AND contextid = ?',
-                    [$roleid, $contextid]
-                ));
-            }
-            $userids = array_diff(array_unique($userids), array_keys($users));
-            if ($userids) {
-                $users += $DB->get_records_list('user', 'id', $userids);
-            }
-        }
         // Agents de la bibliothèque : destinataires de la bibliothèque, jamais de la DEVE.
         $agents = scopesettings::library_agents($context);
         $users = $actor === 'library' ? $users + $agents : array_diff_key($users, $agents);

@@ -19,9 +19,8 @@
  *
  * Quatre acteurs interviennent dans le circuit : l'étudiant, le directeur de thèse, la DEVE et la
  * bibliothèque. Les trois premiers correspondent aux archétypes standard (comme dans mod_stage, la
- * DEVE est le rôle « Enseignant ») ; la bibliothèque n'a pas d'équivalent et passe par un rôle
- * dédié, créé par l'administrateur à partir de l'archétype « Enseignant non éditeur » (voir
- * INSTALL.md).
+ * DEVE est le rôle « Enseignant ») ; la bibliothèque n'a pas d'équivalent : ses agents sont désignés
+ * dans les paramètres du circuit (voir INSTALL.md), sans rôle dédié.
  *
  * @package   mod_these
  * @copyright 2026 Sébastien Lefebvre

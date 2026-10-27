@@ -110,7 +110,8 @@ planning) ; version du guide et du module mises à jour en page de garde. \\
 par les agents DEVE (plus de lien ni d'adresse pour elle) ; relance des agents pour leurs signatures et
 celles de la direction générale (bouton \bouton{Relancer} du suivi des
 signatures) ; agents DEVE et agents de la bibliothèque choisis parmi les
-inscrits au lieu d'être saisis. \\
+inscrits au lieu d'être saisis ; plus de rôles des services ni de rôle
+\og Bibliothèque (thèses)\fg{}. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -253,42 +254,29 @@ administrateur. Le module requiert Moodle~4.0 ou supérieur.
 Étudiant & Étudiant & \texttt{mod/these:submit} \\
 Directeur de thèse & Enseignant non éditeur & \texttt{mod/these:direct} \\
 DEVE & Enseignant & \texttt{mod/these:managedeve}, \texttt{viewall} \\
-Bibliothèque & \og Bibliothèque (thèses)\fg{} (créé par le module) & \texttt{mod/these:managelibrary}, \texttt{viewall} \\
+Bibliothèque & rôle du cours (Enseignant non éditeur, par exemple), désignée agent de la bibliothèque & droits de la bibliothèque \\
 \bottomrule
 \end{tabularx}
 \end{center}
 
-Comme dans StageCompagnon, la DEVE est reconnue au rôle standard \og
-Enseignant\fg{}. La bibliothèque, qui n'a pas d'équivalent, dispose d'un
-\textbf{rôle interne au module}, \og Bibliothèque (thèses)\fg{}, créé à
-l'installation. Les deux correspondances se règlent dans les
-\bouton{Paramètres du circuit} de l'activité \og Suivi des thèses\fg{}
-(section~\ref{sec:parametres}) :
+Aucun rôle n'est à créer. Comme dans StageCompagnon, la DEVE est reconnue au
+rôle standard \og Enseignant\fg{}, qui porte la capacité
+\texttt{mod/these:managedeve}. Les directeurs de thèse sont inscrits comme
+\og Enseignant non éditeur\fg{} : inscrits comme \og Enseignant\fg{}, ils
+auraient aussi les droits de la DEVE.
 
-\begin{description}
-  \item[Rôle DEVE] par défaut \og Enseignant\fg{} ;
-  \item[Rôle Bibliothèque] par défaut \og Bibliothèque (thèses)\fg{}.
-\end{description}
-
-La DEVE, responsable de l'activité, choisit elle-même ces deux rôles. Un rôle choisi ici donne les droits du service même sans les
-capacités du module. Il peut être attribué dans le cours, dans sa catégorie ou \textbf{au
-niveau du site} (\chemin{Administration du site > Utilisateurs > Permissions >
-Attribution des rôles système}) : les bibliothécaires accèdent alors à toutes
-les activités de gestion des thèses sans être inscrits aux cours.
-
-\paragraph{Agents de la bibliothèque.} Plus simple, sans rôle à attribuer :
-la DEVE choisit les agents de la bibliothèque dans les
-\bouton{Paramètres du circuit} de l'activité de suivi, rubrique \og Agents de
-la bibliothèque\fg{} : on tape un nom, puis on le choisit dans la liste des
-personnels inscrits aux cours des activités suivies (inscrits qui ne déposent
-pas de thèse) et des détenteurs du rôle de la bibliothèque. Ils ont les droits de la bibliothèque et seulement
-ceux-là : leur tableau de bord ne montre que la file \og À traiter\fg{} de la
-bibliothèque, le planning et l'export ; ni création, ni import, ni menu
-\bouton{Paramètres}, ni pages de la DEVE, même si leur rôle dans le cours
-(enseignant, par exemple) les leur donnerait. Ils ne sont pas proposés comme
-directeurs de thèse et reçoivent les courriels adressés à la bibliothèque. Une
-personne absente de la liste doit d'abord être inscrite au cours (avec
-n'importe quel rôle sauf celui d'étudiant).
+\paragraph{Agents de la bibliothèque.} La bibliothèque est reconnue à la liste
+de ses agents : la DEVE les choisit dans les \bouton{Paramètres du circuit} de
+l'activité de suivi, rubrique \og Agents de la bibliothèque\fg{} ; on tape un
+nom, puis on le choisit dans la liste des personnels inscrits aux cours des
+activités suivies (inscrits qui ne déposent pas de thèse). Ils ont les droits de
+la bibliothèque et seulement ceux-là : leur tableau de bord ne montre que la
+file \og À traiter\fg{} de la bibliothèque, le planning et l'export ; ni
+création, ni import, ni menu \bouton{Paramètres}, ni pages de la DEVE, même si
+leur rôle dans le cours (enseignant, par exemple) les leur donnerait. Ils ne
+sont pas proposés comme directeurs de thèse et reçoivent les courriels adressés
+à la bibliothèque. Une personne absente de la liste doit d'abord être inscrite
+au cours (avec n'importe quel rôle sauf celui d'étudiant).
 
 \begin{astuce}
 Un directeur de thèse ne voit et ne valide que les dossiers qu'il dirige. Seuls
@@ -299,8 +287,8 @@ directeurs potentiels doivent donc être inscrits au cours.
 
 \subsection{Paramètres du circuit : documents et signataires}\label{sec:parametres}
 
-Le module n'a \textbf{aucun réglage du site}. Rôles des services, agents
-signataires, signataires et textes des documents, contrat type : tout se règle
+Le module n'a \textbf{aucun réglage du site}. Agents DEVE et agents de la
+bibliothèque, signataires et textes des documents, contrat type : tout se règle
 dans l'activité \og Suivi des thèses\fg{}, bouton \bouton{Paramètres du
 circuit}, et vaut pour toutes les promotions qu'elle suit (comme les modèles des
 documents). Une activité \og Gestion des thèses\fg{} qu'aucune activité de suivi
@@ -1118,8 +1106,7 @@ La signature enregistrée se supprime en bas de la page \bouton{Mes signatures}.
 % ===========================================================================
 \section{Bibliothèque : pas à pas}
 
-Les agents de la bibliothèque (listés dans les paramètres du circuit, ou
-détenteurs du rôle Bibliothèque) arrivent sur le tableau de bord : la file
+Les agents de la bibliothèque (désignés dans les paramètres du circuit) arrivent sur le tableau de bord : la file
 \og À traiter\fg{} propose directement le bouton de chaque contrôle attendu.
 
 \begin{procedure}{Enregistrer la notice du sujet (phase 1)}{Bibliothèque}

@@ -49,7 +49,6 @@ set_config('timezone', 'Europe/Paris');
 set_config('forcetimezone', 'Europe/Paris');
 
 $gen = new testing_data_generator();
-these_setup_default_roles();
 
 
 $course = $gen->create_course(['fullname' => 'Thèses vétérinaires', 'shortname' => 'THESES', 'numsections' => 1]);
@@ -89,7 +88,7 @@ $mk = function (string $username, string $first, string $last, ?string $role, st
 $deve = $mk('sbonnet', 'Sylvie', 'Bonnet', 'editingteacher');
 $agent1 = $mk('agarnier', 'Anne', 'Garnier', 'editingteacher');
 $agent2 = $mk('proux', 'Paul', 'Roux', 'editingteacher');
-$library = $mk('blefort', 'Bruno', 'Lefort', 'theselibrary');
+$library = $mk('blefort', 'Bruno', 'Lefort', 'teacher');
 $director = $mk('hdurand', 'Hélène', 'Durand', 'teacher');
 $director2 = $mk('mleroy', 'Marc', 'Leroy', 'teacher');
 $teacher = $mk('ncolin', 'Nadia', 'Colin', 'teacher');
@@ -123,7 +122,6 @@ $suivicourse = $gen->create_course(['fullname' => 'Suivi des thèses', 'shortnam
 foreach ([$deve, $library, $director, $director2, $teacher, $agent1] as $user) {
     $gen->enrol_user($user->id, $suivicourse->id, in_array($user, [$deve, $agent1], true) ? 'editingteacher' : 'teacher');
 }
-$gen->enrol_user($library->id, $suivicourse->id, 'theselibrary');
 $synthesis = $gen->create_module('thesesynthesis', ['course' => $suivicourse->id, 'name' => 'Suivi des thèses',
     'intro' => 'Suivi des thèses de toutes les promotions.']);
 $DB->insert_record('thesesynthesis_link', (object) ['synthesisid' => $synthesis->id, 'thesecmid' => $cm->id,

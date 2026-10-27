@@ -167,8 +167,6 @@ class jurors {
             if (
                 has_capability('mod/these:managedeve', $coursecontext, $user)
                     || has_capability('mod/these:managelibrary', $coursecontext, $user)
-                    || these_user_has_service_role($context, $user->id, 'deve')
-                    || these_user_has_service_role($context, $user->id, 'library')
                     || scopesettings::is_library_agent($context, $user->id)
                     || self::find_existing($user->email, $user->lastname, $user->firstname)
             ) {

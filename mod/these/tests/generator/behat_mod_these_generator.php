@@ -41,6 +41,12 @@ class behat_mod_these_generator extends behat_generator_base {
                 'required' => ['activity', 'user'],
                 'switchids' => ['activity' => 'cmid', 'user' => 'userid'],
             ],
+            'library agents' => [
+                'singular' => 'library agent',
+                'datagenerator' => 'library_agent',
+                'required' => ['activity', 'user'],
+                'switchids' => ['activity' => 'cmid', 'user' => 'userid'],
+            ],
         ];
     }
 
@@ -71,5 +77,22 @@ class behat_mod_these_generator extends behat_generator_base {
             $record['defensedate'] = $record['proposeddate'] = (int) $data['defensedate'];
         }
         $this->componentdatagenerator->create_dossier($theseid, $data['userid'], $record);
+    }
+
+    /**
+     * Désigne un agent de la bibliothèque dans les paramètres du circuit de l'activité.
+     *
+     * @param array $data
+     * @return void
+     */
+    protected function process_library_agent(array $data): void {
+        global $DB;
+
+        $theseid = $DB->get_field('course_modules', 'instance', ['id' => $data['cmid']], MUST_EXIST);
+        $these = $DB->get_record('these', ['id' => $theseid], '*', MUST_EXIST);
+        $scope = these_settings_scope($these);
+        $agents = trim((string) \mod_these\local\scopesettings::get_all($scope)['libraryagent']);
+        $username = $DB->get_field('user', 'username', ['id' => $data['userid']], MUST_EXIST);
+        \mod_these\local\scopesettings::set($scope, ['libraryagent' => ltrim($agents . "\n" . $username)]);
     }
 }

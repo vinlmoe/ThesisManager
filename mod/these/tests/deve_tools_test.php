@@ -193,31 +193,24 @@ final class deve_tools_test extends these_testcase {
 
     /**
      * Comptes proposés dans les paramètres du circuit : agents DEVE parmi les membres de la DEVE,
-     * agents de la bibliothèque parmi les personnels inscrits et les détenteurs du rôle de la
-     * bibliothèque ; jamais les étudiants ; un agent déjà désigné reste proposé. Un identifiant qui est
+     * agents de la bibliothèque parmi les personnels inscrits ; jamais les étudiants ; un agent déjà désigné reste proposé. Un identifiant qui est
      * une adresse désigne bien son compte.
      */
     public function test_agent_candidates(): void {
         $this->setup_activity();
         $gen = $this->getDataGenerator();
         $scope = these_settings_scope($this->these);
-        $sitelibrarian = $gen->create_user(['firstname' => 'Bibliothécaire', 'lastname' => 'Du site']);
-        role_assign(
-            (int) \mod_these\local\scopesettings::get_all($scope)['libraryrole'],
-            $sitelibrarian->id,
-            \context_system::instance()->id
-        );
         $former = $gen->create_user(['username' => 'ancien.agent@example.org', 'email' => 'autre@example.org']);
         \mod_these\local\scopesettings::set($scope, ['deveagent' => 'ancien.agent@example.org']);
 
         $deve = array_keys(\mod_these\local\scopesettings::candidate_users($scope, 'deve'));
         $this->assertContains((int) $this->deve->id, $deve);
         $this->assertContains((int) $former->id, $deve);
-        foreach ([$this->student, $this->director, $this->librarian, $sitelibrarian] as $user) {
+        foreach ([$this->student, $this->director, $this->librarian] as $user) {
             $this->assertNotContains((int) $user->id, $deve);
         }
         $library = array_keys(\mod_these\local\scopesettings::candidate_users($scope, 'library'));
-        foreach ([$this->director, $this->deve, $this->librarian, $sitelibrarian] as $user) {
+        foreach ([$this->director, $this->deve, $this->librarian] as $user) {
             $this->assertContains((int) $user->id, $library);
         }
         $this->assertNotContains((int) $this->student->id, $library);

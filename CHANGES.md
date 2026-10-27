@@ -13,7 +13,7 @@ de version recalés sur la date. Les numéros entre parenthèses des sections de
 développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
 été étiquetée.
 
-## mod_these 0.19.0 (2026102706) — direction générale signée par délégation des agents DEVE, relance des agents, agents choisis parmi les inscrits
+## mod_these 0.19.0 (2026102707) — direction générale signée par délégation des agents DEVE, relance des agents, agents choisis parmi les inscrits, plus de rôles des services
 
 - La direction générale ne signe jamais elle-même : ses documents (fiche
   signalétique, contrat de diffusion, conclusions) sont toujours signés par
@@ -42,6 +42,16 @@ développement ne correspondent à aucune version installable ; 0.11.2 n'a jamai
   réglages existants, le transfert et la sauvegarde ne changent pas ; un
   identifiant qui est une adresse de courriel désigne désormais bien son
   compte (`\mod_these\local\scopesettings::candidate_users()`).
+- Plus de rôles des services ni de rôle « Bibliothèque (thèses) » : la DEVE est
+  reconnue à la capacité `mod/these:managedeve` (rôle « Enseignant »), la
+  bibliothèque à la liste de ses agents (ou à `mod/these:managelibrary`).
+  Section « Rôles des services » retirée des paramètres du circuit ; le rôle
+  n'est plus créé à l'installation. Mise à jour 2026102707 : les détenteurs du
+  rôle choisi pour la bibliothèque sont ajoutés aux agents de la bibliothèque
+  (droits et courriels conservés), puis les réglages `deverole` et
+  `libraryrole` sont supprimés ; le rôle existant n'est pas supprimé. Un site
+  qui avait choisi pour la DEVE un rôle sans la capacité `managedeve` doit la
+  lui accorder.
 
 ## mod_these 0.18.0 (2026102703) — directeur non votant, liste du corps enseignant, aides pour la DEVE
 

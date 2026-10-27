@@ -156,10 +156,9 @@ final class shared_settings_test extends \advanced_testcase {
         $env = $this->setup_env();
         $followed = $env->activities[0]->these;
         $alone = $env->activities[2]->these;
-        $role = $this->getDataGenerator()->create_role(['shortname' => 'devesuivi']);
         $agent = $this->getDataGenerator()->create_user(['username' => 'agentsuivi']);
         \mod_these\local\scopesettings::set($env->scope, [
-            'deverole' => $role, 'deveagent' => 'agentsuivi', 'institution' => 'École du suivi', 'dgname' => 'Pr Suivi',
+            'deveagent' => 'agentsuivi', 'institution' => 'École du suivi', 'dgname' => 'Pr Suivi',
         ]);
         \mod_these\local\scopesettings::set(these_local_scope($alone), ['institution' => 'École seule']);
 
@@ -167,17 +166,12 @@ final class shared_settings_test extends \advanced_testcase {
         $this->assertSame('École seule', \mod_these\local\scopesettings::for_these($alone)['institution']);
         $this->assertSame([(int) $agent->id], array_map('intval', array_keys(these_deve_agents($followed))));
         $this->assertSame([], these_deve_agents($alone));
-        $context = \context_module::instance($followed->cmid);
-        $this->assertSame((int) $role, these_get_service_roleid('deve', $context));
-        $editingteacher = (int) $GLOBALS['DB']->get_field('role', 'id', ['shortname' => 'editingteacher']);
-        $this->assertSame($editingteacher, these_get_service_roleid('deve', \context_module::instance($alone->cmid)));
         $this->assertSame('Pr Suivi', these_external_signers($env->public)['dg']['name']);
         $this->assertFalse(get_config('mod_these', 'deveagent'));
 
         // Retirée du suivi, l'activité reprend ses propres paramètres.
         thesesynthesis_set_links($env->synthesis->id, [$env->activities[1]->these->cmid]);
         $this->assertSame([], these_deve_agents($followed));
-        $this->assertSame($editingteacher, these_get_service_roleid('deve', $context));
     }
 
     /**
@@ -240,8 +234,9 @@ final class shared_settings_test extends \advanced_testcase {
         $env = $this->setup_env();
         $gen = $this->getDataGenerator();
         $course = $env->activities[0]->course;
-        $library = $gen->create_user();
-        $gen->enrol_user($library->id, $course->id, these_setup_default_roles());
+        $library = $gen->create_user(['username' => 'bibliosuivi']);
+        $gen->enrol_user($library->id, $course->id, 'teacher');
+        \mod_these\local\scopesettings::set($env->scope, ['libraryagent' => 'bibliosuivi']);
         $roleid = $gen->create_role(['shortname' => 'theseviewall']);
         assign_capability('mod/these:view', CAP_ALLOW, $roleid, \context_system::instance()->id);
         assign_capability('mod/these:viewall', CAP_ALLOW, $roleid, \context_system::instance()->id);

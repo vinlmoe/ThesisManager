@@ -636,22 +636,10 @@ $string['settingslibraryagent_help'] = "Library agents, chosen among the staff e
 $string['settingsagentsnone'] = 'No agent selected';
 $string['settingschecklibraryagents'] = 'Library agents';
 $string['scopesettings'] = 'Workflow settings';
-$string['scopesettings_desc'] = 'Service roles, registrar signing agents, institution, university, document signatories and standard '
+$string['scopesettings_desc'] = 'Registrar signing agents, library agents, institution, university, document signatories and standard '
     . 'distribution contract of this activity. None of them is a site setting.';
-$string['scopesettingsshared_desc'] = 'Service roles, registrar signing agents, institution, university, document signatories and '
+$string['scopesettingsshared_desc'] = 'Registrar signing agents, library agents, institution, university, document signatories and '
     . 'standard distribution contract shared by all the followed thesis activities. None of them is a site setting.';
-$string['settingsroles'] = 'Service roles';
-$string['deverole'] = 'Registrar role';
-$string['deverole_help'] = 'Role whose holders act as the registrar in thesis activities.';
-$string['libraryrole'] = 'Library role';
-$string['libraryrole_help'] = 'Role whose holders act as the library. By default, the internal "Library (theses)" role created when '
-    . 'the module is installed.'
-    . ' ' . 'Just as the registrar is recognised by the "Teacher" role, the library is recognised by the role chosen '
-    . 'here. The role can be assigned in the course, its category or at site level (it then gives access to all thesis activities '
-    . 'without enrolment). The module capabilities are also taken into account.';
-$string['libraryrolename'] = 'Library (theses)';
-$string['libraryroledescription'] = 'Internal role of the thesis management module: recording subjects in the library catalogue and '
-    . 'certifying manuscripts. Assign it at site, category or course level.';
 
 // Documents (workflow settings).
 $string['settingsdefenses'] = 'Defences';
