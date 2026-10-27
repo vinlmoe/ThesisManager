@@ -13,9 +13,8 @@
 {{^hasmembers}}<p>Aucun enseignant actif de l’établissement dans l’annuaire.</p>{{/hasmembers}}
 {{#groups}}<div style="font-size:11pt;font-weight:bold;border-bottom:0.5px solid #888888;">{{label}}</div>
 <table cellpadding="1.5">
-{{#rows}}  <tr nobr="true">
-    <td width="85mm">{{#left}}{{name}}{{#discipline}}<br /><span style="font-size:8pt;color:#555555;">{{discipline}}</span>{{/discipline}}{{/left}}</td>
-    <td width="85mm">{{#right}}{{name}}{{#discipline}}<br /><span style="font-size:8pt;color:#555555;">{{discipline}}</span>{{/discipline}}{{/right}}</td>
+{{#rows}}  <tr nobr="true">{{#cells}}
+    <td width="56.6mm">{{#member}}{{name}}{{#discipline}}<br /><span style="font-size:8pt;color:#555555;">{{discipline}}</span>{{/discipline}}{{/member}}</td>{{/cells}}
   </tr>
 {{/rows}}</table>
 <br />

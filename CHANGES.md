@@ -56,11 +56,11 @@ développement ne correspondent à aucune version installable ; 0.11.2 n'a jamai
   mise à jour 2026102708), saisie dans la fiche de l'enseignant, affichée dans
   l'annuaire, importable (colonne CSV facultative `discipline`, la matière
   connue étant gardée sans elle) et déclarée pour la vie privée. Liste du
-  corps enseignant en PDF : chaque section sur deux colonnes (colonne de
-  gauche d'abord), la matière sous chaque nom. Une liste dont le modèle a été
+  corps enseignant en PDF : chaque section sur trois colonnes aussi égales que
+  possible (première colonne d'abord), la matière sous chaque nom. Une liste dont le modèle a été
   personnalisé garde sa mise en page : la rétablir depuis les modèles pour en
-  profiter (variable `rows` de chaque groupe, `discipline` de chaque
-  enseignant).
+  profiter (variable `rows` de chaque groupe, lignes de `cells` avec leur
+  `member`, et `discipline` de chaque enseignant).
 
 ## mod_these 0.18.0 (2026102703) — directeur non votant, liste du corps enseignant, aides pour la DEVE
 

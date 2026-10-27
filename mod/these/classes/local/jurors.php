@@ -30,6 +30,9 @@ namespace mod_these\local;
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class jurors {
+    /** @var int Colonnes de chaque section de la liste du corps enseignant. */
+    const TEACHING_LIST_COLUMNS = 3;
+
     /** @var string[] Statuts permettant de présider un jury. */
     const PRESIDENT_STATUSES = ['mcfhdr', 'pr', 'premerite', 'mcfemerite'];
 
@@ -396,13 +399,14 @@ class jurors {
     /**
      * Données du modèle « Liste du corps enseignant » : les enseignants actifs internes à
      * l'établissement (voir internal_members()), groupés par statut, à inclure dans les thèses. Chaque
-     * groupe est aussi présenté en deux colonnes (rows : lignes de deux enseignants, la colonne de
-     * gauche remplie d'abord, pour garder l'ordre alphabétique en lisant de haut en bas).
+     * groupe est aussi présenté en trois colonnes (rows : lignes de trois cellules, chacune avec son
+     * enseignant ou vide ; la première colonne remplie d'abord, pour garder l'ordre alphabétique en
+     * lisant de haut en bas).
      *
      * @param \stdClass|null $scope Portée dont reprendre l'établissement et les images.
      * @param \stdClass|null $activity Activité dont reprendre l'établissement, à défaut.
      * @param \stdClass[]|null $members Enseignants à lister (par défaut, ceux de l'annuaire).
-     * @return array today, establishment {name, city}, count, hasmembers, groups {label, members, rows {left, right}}, img ;
+     * @return array today, establishment {name, city}, count, hasmembers, groups {label, members, rows {cells {member}}}, img ;
      *               un enseignant : {name, title, fullname, discipline}
      */
     public static function teaching_list_context(?\stdClass $scope, ?\stdClass $activity = null, ?array $members = null) {
@@ -425,10 +429,23 @@ class jurors {
                     'discipline' => trim((string) ($juror->discipline ?? '')),
                 ];
             }, $rows);
-            $half = (int) ceil(count($people) / 2);
+            // Colonnes aussi égales que possible (4 enseignants : 2, 1, 1), remplies l'une après l'autre.
+            $sizes = [];
+            $starts = [];
+            $start = 0;
+            for ($column = 0; $column < self::TEACHING_LIST_COLUMNS; $column++) {
+                $sizes[$column] = intdiv(count($people), self::TEACHING_LIST_COLUMNS)
+                    + ($column < count($people) % self::TEACHING_LIST_COLUMNS ? 1 : 0);
+                $starts[$column] = $start;
+                $start += $sizes[$column];
+            }
             $columns = [];
-            for ($i = 0; $i < $half; $i++) {
-                $columns[] = ['left' => $people[$i], 'right' => $people[$i + $half] ?? null];
+            for ($i = 0; $i < $sizes[0]; $i++) {
+                $cells = [];
+                for ($column = 0; $column < self::TEACHING_LIST_COLUMNS; $column++) {
+                    $cells[] = ['member' => $i < $sizes[$column] ? $people[$starts[$column] + $i] : null];
+                }
+                $columns[] = ['cells' => $cells];
             }
             $groups[] = [
                 'label' => get_string('teachinggroup' . $status, 'mod_these'),

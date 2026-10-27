@@ -330,7 +330,7 @@ final class jury_directory_test extends these_testcase {
 
     /**
      * Liste du corps enseignant : enseignants actifs de l'établissement des paramètres, groupés par
-     * statut (professeurs d'abord), avec leur matière, en deux colonnes (colonne de gauche remplie
+     * statut (professeurs d'abord), avec leur matière, en trois colonnes (première colonne remplie
      * d'abord), rendue en PDF.
      */
     public function test_teaching_list(): void {
@@ -357,18 +357,22 @@ final class jury_directory_test extends these_testcase {
         $this->assertSame('', $data['groups'][0]['members'][0]['discipline']);
         $this->assertStringStartsWith('%PDF', these_render_scope_doctemplate($scope, 'teachinglist', $data));
 
-        // Trois professeurs : deux lignes, la colonne de gauche remplie d'abord.
+        // Quatre professeurs : deux lignes de trois cellules, la première colonne remplie d'abord.
         $DB->set_field('these_juror', 'discipline', 'Anatomie', ['id' => $mcf]);
         $this->juror('Albert', 'pr');
+        $this->juror('Petit', 'pr');
         $this->juror('Zola', 'pr');
         $DB->set_field_select('these_juror', 'institution', 'École vétérinaire', 'id NOT IN (?, ?)', [$mcf, $external]);
         $data = jurors::teaching_list_context($scope, $this->these);
         $rows = $data['groups'][0]['rows'];
         $this->assertCount(2, $rows);
-        $this->assertSame('Pr Jean ALBERT', $rows[0]['left']['name']);
-        $this->assertSame('Pr Jean ZOLA', $rows[0]['right']['name']);
-        $this->assertSame('Pr Jean MARTIN', $rows[1]['left']['name']);
-        $this->assertNull($rows[1]['right']);
+        $names = function (array $row) {
+            return array_map(function ($cell) {
+                return $cell['member']['name'] ?? null;
+            }, $row['cells']);
+        };
+        $this->assertSame(['Pr Jean ALBERT', 'Pr Jean PETIT', 'Pr Jean ZOLA'], $names($rows[0]));
+        $this->assertSame(['Pr Jean MARTIN', null, null], $names($rows[1]));
         $this->assertSame('Anatomie', $data['groups'][1]['members'][0]['discipline']);
         $body = \mod_these\pdf\html_document::parse(these_get_doctemplate($scope, 'teachinglist'))['body'];
         $html = \mod_these\pdf\html_document::mustache()->render($body, $data);
