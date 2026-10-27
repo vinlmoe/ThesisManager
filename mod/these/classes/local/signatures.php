@@ -924,7 +924,9 @@ class signatures {
      * Invite un signataire sans compte à signer, en une seule fois, les documents qui l'attendent :
      * chaque emplacement reçoit le même nouveau jeton, et le lien de signature est envoyé au
      * signataire s'il a une adresse. Sans adresse, les signatures restent en attente et peuvent être
-     * recueillies sur place par la DEVE (signatures.php).
+     * recueillies sur place par la DEVE (signatures.php). Quand les agents DEVE signent pour la
+     * direction générale par délégation, elle n'est pas invitée : ses documents sont demandés aux agents
+     * (voir signatureagent::request_agent_signatures()).
      *
      * @param stdClass $these
      * @param stdClass $cm
@@ -936,6 +938,9 @@ class signatures {
     public static function request_signature(stdClass $these, stdClass $cm, stdClass $dossier, $slot, ?array $doctypes = null) {
         global $DB;
 
+        if ($slot === 'dg' && signatureagent::signs_dg_by_delegation($these)) {
+            return null;
+        }
         $doctypes = these_pending_documents_for_slot($dossier, $slot, $doctypes);
         if (!$doctypes) {
             return null;

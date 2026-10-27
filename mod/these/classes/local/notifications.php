@@ -543,7 +543,8 @@ class notifications {
     /**
      * Relance les signataires dont une signature attend depuis plus longtemps que le délai de relance
      * de l'activité : signataires sans compte (nouveau lien, s'ils ont une adresse) et agents DEVE
-     * désignés. La relance remet le délai à zéro ; elle est répétée tant que la signature manque.
+     * désignés, pour leurs signatures et celles de la direction générale qu'ils signent par
+     * délégation. La relance remet le délai à zéro ; elle est répétée tant que la signature manque.
      *
      * @param int|null $now
      * @return int Signataires relancés.
@@ -594,7 +595,7 @@ class notifications {
                 }
             }
             if (
-                array_intersect(array_keys($slots), these_agent_slots()) && these_deve_agents($these)
+                array_intersect(array_keys($slots), signatureagent::slots_for($these)) && these_deve_agents($these)
                     && these_request_agent_signatures($these, $cm, $dossier, $available) > 0
             ) {
                 $sent++;

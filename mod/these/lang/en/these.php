@@ -762,6 +762,8 @@ $string['signer'] = 'Signatory';
 $string['noemail'] = 'no address';
 $string['documentstosign'] = 'Documents to sign';
 $string['resendsignature'] = 'Send the link';
+$string['remindagents'] = 'Remind';
+$string['agentsreminded'] = 'Reminder sent to the registrar signatories.';
 $string['signinperson'] = 'Sign in person';
 $string['signaturerequestsent'] = 'Signing link sent.';
 $string['signaturesrecorded'] = 'Signature recorded. Thank you.';
@@ -1269,6 +1271,14 @@ $string['settingsdeveagent_help'] = 'Usernames or email addresses of the Moodle 
     . 'signing; each officer then receives an email and finds the subject visa and the administrative approval in "My signatures": '
     . 'the first one to sign applies the signature, with their saved signature. Leave empty for the registrar member who validates '
     . 'to sign.';
+$string['settingsdgdelegation'] = 'Director general by delegation';
+$string['settingsdgdelegationlabel'] = 'The registrar signatories sign for the director general, by delegation';
+$string['settingsdgdelegation_help'] = 'Tick when the director general has delegated their signature to the registrar signatories. '
+    . 'The director general no longer receives a link: the information sheet, the distribution contract and the conclusions wait '
+    . 'for the officers in "My signatures", requested with the administrative approval when the defence file is validated. The '
+    . 'document bears the officer\'s name followed by "(by delegation)". The officers are reminded of these signatures as of their '
+    . 'own (reminder delay, "Remind" button of the signature tracking, bulk action). Without a designated officer, the box has no '
+    . 'effect.';
 $string['mysignatures'] = 'My signatures';
 $string['mysignatures_desc'] = 'Documents awaiting your signature, all cohorts together. Check each document as a PDF, tick those '
     . 'to sign, then sign once: your saved signature is used by default.';

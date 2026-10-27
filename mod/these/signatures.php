@@ -16,7 +16,8 @@
 
 /**
  * Suivi des signatures d'un dossier par la DEVE : état de chaque emplacement de chaque document,
- * relance par courriel des signataires sans compte, signature sur place.
+ * relance par courriel des signataires sans compte et des agents DEVE (direction générale par
+ * délégation comprise), signature sur place.
  *
  * @package   mod_these
  * @copyright 2026 Sébastien Lefebvre
@@ -56,7 +57,7 @@ if ($resend === 'agent' && confirm_sesskey()) {
     $count = these_request_agent_signatures($these, $cm, $dossier, $available);
     redirect(
         $PAGE->url,
-        get_string($count ? 'signaturerequestsent' : 'signnothingpending', 'mod_these'),
+        get_string($count ? 'agentsreminded' : 'signnothingpending', 'mod_these'),
         null,
         \core\output\notification::NOTIFY_SUCCESS
     );

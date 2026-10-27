@@ -4,9 +4,9 @@
 
 % Version du guide : à mettre à jour à chaque modification, avec une ligne dans l'historique.
 \newcommand{\titreguide}{Guide de la gestion des thèses}
-\newcommand{\versionguide}{2.12}
-\newcommand{\dateguide}{26 octobre 2026}
-\newcommand{\versionthese}{0.18.0}
+\newcommand{\versionguide}{2.13}
+\newcommand{\dateguide}{27 octobre 2026}
+\newcommand{\versionthese}{0.19.0}
 
 \usepackage{guide-commun}
 \usepackage{tikz}
@@ -106,6 +106,10 @@ soutenances au calendrier Moodle ; modification d'un dossier allégée ;
 validation de l'A6 saisie par la DEVE et liée à l'étudiant (dossier, lot,
 import Excel) ; partie DEVE réorganisée (circuit, A6, actions groupées,
 planning) ; version du guide et du module mises à jour en page de garde. \\
+2.13 & 27 octobre 2026 & Direction générale signée par délégation par les
+agents DEVE (paramètre du circuit) ; relance des agents pour leurs signatures et
+celles de la direction générale (bouton \bouton{Relancer} du suivi des
+signatures). \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -324,6 +328,12 @@ signataires et le questionnaire sont facultatifs.
         un par ligne : l'équipe valide sans signer, puis l'un des agents signe
         depuis \bouton{Mes signatures} (section~\ref{sec:agent}). Vide : la
         personne qui valide signe.
+  \item[Direction générale par délégation] case \bouton{Les agents DEVE
+        signent pour la direction générale, par délégation} : la direction
+        générale ne reçoit plus de lien, ses documents (fiche signalétique,
+        contrat de diffusion, conclusions) attendent les agents dans
+        \bouton{Mes signatures} et portent \og (par délégation)\fg{}. Sans agent
+        désigné, la case est sans effet.
   \item[Signataires] direction générale, président du CCEM, présidence de
         l'université : nom et adresse. Avec une adresse, le signataire reçoit un
         lien de signature ; sans adresse, la DEVE recueille sa signature sur place.
@@ -788,8 +798,11 @@ de signature.}
 \begin{etapes}
   \item Dans le dossier, cliquez sur \bouton{Suivi des signatures} : chaque
         document et chaque emplacement y figurent avec leur état.
-  \item Pour un signataire qui n'a pas reçu son lien, cliquez sur
-        \bouton{Envoyer le lien} (signataires invités et agents DEVE).
+  \item Pour un signataire invité qui n'a pas reçu son lien, cliquez sur
+        \bouton{Envoyer le lien}. Pour les agents DEVE, cliquez sur
+        \bouton{Relancer} : ils reçoivent un nouveau courriel \og Documents à
+        signer\fg{} pour leurs signatures et celles de la direction générale
+        qu'ils signent par délégation.
   \item Pour un signataire présent (signataire sans compte, mais aussi
         étudiant ou directeur), cliquez sur \bouton{Signer sur place}. Vérifiez
         d'abord son identité (pièce d'identité), cochez \bouton{Je certifie
@@ -1050,6 +1063,18 @@ administratif et la partie \og direction générale représentée par la DEVE\fg
 de la fiche d'agréments, une fois que l'équipe a tout vérifié.
 
 \begin{astuce}
+\textbf{Direction générale par délégation.} Quand la case \bouton{Les agents
+DEVE signent pour la direction générale, par délégation} est cochée dans les
+paramètres du circuit, les agents signent aussi, à la place de la direction
+générale, la fiche signalétique, le contrat de diffusion et les conclusions. Ces
+documents leur sont demandés avec l'agrément administratif, à la validation du
+dossier de soutenance ; ils apparaissent dans \bouton{Mes signatures} avec la
+mention \og (Direction générale, par délégation)\fg{}, et le document porte le
+nom de l'agent suivi de \og (par délégation)\fg{}. La direction générale ne
+reçoit alors aucun lien.
+\end{astuce}
+
+\begin{astuce}
 \textbf{Plusieurs agents.} On peut en désigner plusieurs (un responsable et son
 suppléant, par exemple) : chacun reçoit le courriel \og Documents à signer\fg{}
 et voit les mêmes documents dans \bouton{Mes signatures}. Le premier qui signe
@@ -1073,6 +1098,15 @@ autres. Un agent retiré du réglage ne voit plus les documents en attente.
 \ensuite{votre signature est apposée sur chaque document coché, avec la date et
 l'empreinte du contenu. La page regroupe les dossiers de toutes les promotions.}
 \end{procedure}
+
+\paragraph{Relances.} Tant qu'une signature attend, les agents sont relancés par
+courriel une fois le délai de relance de l'activité écoulé, puis à chaque
+nouveau délai. L'équipe de la DEVE peut aussi les relancer tout de suite, depuis
+le \bouton{Suivi des signatures} du dossier (bouton \bouton{Relancer} de la
+ligne \og Agent responsable de la DEVE\fg{}) ou pour plusieurs dossiers à la
+fois (action groupée \bouton{Relancer les signataires}). La relance porte sur
+leurs signatures et sur celles de la direction générale signées par
+délégation.
 
 \capture[0.8\linewidth]{64_agent_mes_signatures}{Mes signatures : première signature de l'agent DEVE.}
 
@@ -1679,7 +1713,8 @@ relances.
 La même tâche relance les \textbf{signatures en attente} depuis plus que ce
 délai : chaque signataire sans compte qui a une adresse (direction générale,
 CCEM, université, président du jury, directeur extérieur) reçoit un nouveau
-lien, et les agents DEVE désignés un nouveau rappel ; le délai repart à zéro à
+lien, et les agents DEVE désignés un nouveau rappel, qui couvre aussi la
+direction générale quand ils la signent par délégation ; le délai repart à zéro à
 chaque relance. Il n'y a donc plus à relancer à la main depuis le suivi des
 signatures (le bouton reste disponible pour une relance immédiate).
 

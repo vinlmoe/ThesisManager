@@ -79,6 +79,7 @@ class scopesettings {
             'deverole' => (int) $DB->get_field('role', 'id', ['shortname' => 'editingteacher']),
             'libraryrole' => (int) $DB->get_field('role', 'id', ['shortname' => 'theselibrary']),
             'deveagent' => '',
+            'dgdelegation' => 0,
             'libraryagent' => '',
             'defenseduration' => 60,
             'defenserooms' => '',

@@ -30,6 +30,8 @@ require_once(__DIR__ . '/these_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     ::these_request_agent_signatures
  * @covers     ::these_get_user_pending_signatures
+ * @covers     \mod_these\local\signatureagent::signs_dg_by_delegation
+ * @covers     \mod_these\local\notifications::send_signature_reminders
  * @covers     ::these_signature_from_form
  */
 final class signature_agent_test extends these_testcase {
@@ -139,6 +141,117 @@ final class signature_agent_test extends these_testcase {
         \mod_these\local\scopesettings::set(these_local_scope($this->these), ['deveagent' => 'agent2']);
         $this->assertCount(0, these_get_user_pending_signatures($first));
         $this->assertCount(1, these_get_user_pending_signatures($second));
+    }
+
+    /**
+     * Direction générale par délégation : à la validation du dossier de soutenance, les documents de la
+     * direction générale sont demandés aux agents (pas de lien à la direction générale), dans le même
+     * courriel que l'agrément ; l'agent les signe « par délégation » depuis « Mes signatures ». Les
+     * agents sont relancés pour leurs signatures et celles de la direction générale (bouton du suivi,
+     * tâche de relance) ; une invitation déjà envoyée à la direction générale leur revient à la relance.
+     */
+    public function test_dg_by_delegation(): void {
+        global $DB;
+        $this->setup_activity();
+        $agent = $this->getDataGenerator()->create_user(['username' => 'agentdeve', 'email' => 'agent@example.org']);
+        $scope = these_local_scope($this->these);
+        \mod_these\local\scopesettings::set($scope, ['dgname' => 'Directrice générale', 'dgemail' => 'dg@example.org']);
+        $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
+            'status' => THESE_STATUS_DEFENSE_APPROVED, 'directorid' => $this->director->id, 'conclusions' => 'Conclusions.',
+        ]);
+        these_save_jury($dossier->id, $this->generator->default_jury());
+
+        // Sans agent, la case est sans effet : la direction générale reçoit son lien.
+        \mod_these\local\scopesettings::set($scope, ['dgdelegation' => 1]);
+        $this->assertFalse(\mod_these\local\signatureagent::signs_dg_by_delegation($this->these));
+        $sink = $this->redirectEmails();
+        $this->assertNotNull(these_request_signature($this->these, $this->cm, $dossier, 'dg', ['conclusions']));
+        $this->assertSame(['dg@example.org'], array_column($sink->get_messages(), 'to'));
+        $sink->clear();
+
+        \mod_these\local\scopesettings::set($scope, ['deveagent' => 'agentdeve']);
+        $this->assertTrue(\mod_these\local\signatureagent::signs_dg_by_delegation($this->these));
+        $this->assertSame(['deve', 'dgrep', 'dg'], \mod_these\local\signatureagent::slots_for($this->these));
+        $this->assertNull(these_request_signature($this->these, $this->cm, $dossier, 'dg', ['conclusions']));
+        $this->assertCount(0, $sink->get_messages());
+
+        // Validation par l'équipe DEVE : un seul courriel à l'agent, rien à la direction générale.
+        these_validate_step($this->these, $this->cm, $dossier, $this->deve->id, [
+            'defensedate' => time() + 40 * DAYSECS, 'devenumber' => these_suggest_devenumber($this->these->id),
+        ]);
+        $dossier = $this->reload($dossier->id);
+        $this->assertEquals(THESE_STATUS_DEFENSE_VALIDATED, $dossier->status);
+        $recipients = array_column($sink->get_messages(), 'to');
+        $this->assertNotContains('dg@example.org', $recipients);
+        $this->assertCount(1, array_keys($recipients, 'agent@example.org'));
+        $request = these_get_signatures($dossier->id)['conclusions:dg'];
+        $this->assertNull($request->token);
+        $this->assertEquals($agent->id, $request->userid);
+        $sink->clear();
+
+        // « Mes signatures » de l'agent : les conclusions, à l'emplacement de la direction générale.
+        $pending = array_values(array_filter(these_get_user_pending_signatures($agent), function ($signature) {
+            return $signature->slot === 'dg';
+        }));
+        $this->assertSame(['conclusions'], array_column($pending, 'doctype'));
+        $this->assertStringContainsString(
+            get_string('signeddelegated', 'mod_these'),
+            \mod_these\local\signatureagent::document_label('conclusions', 'dg')
+        );
+
+        // Relance depuis le suivi des signatures (bouton « Relancer ») : l'agent est prévenu de nouveau.
+        $available = array_values(array_filter(array_keys(these_document_definitions()), function ($doctype) use ($dossier) {
+            return these_document_available($dossier, $doctype);
+        }));
+        $this->assertGreaterThan(0, these_request_agent_signatures($this->these, $this->cm, $dossier, $available));
+        $messages = $sink->get_messages();
+        $this->assertSame(['agent@example.org'], array_column($messages, 'to'));
+        $body = preg_replace('/\s+/', ' ', quoted_printable_decode($messages[0]->body));
+        $this->assertStringContainsString(these_slot_label('dg'), $body);
+        $sink->clear();
+
+        // Relance automatique, une fois le délai écoulé : le président du jury et l'agent, pas la
+        // direction générale.
+        $DB->set_field('these_signature', 'requesttime', time() - 20 * DAYSECS, ['dossierid' => $dossier->id]);
+        $this->assertEquals(2, \mod_these\local\notifications::send_signature_reminders());
+        $recipients = array_column($sink->get_messages(), 'to');
+        sort($recipients);
+        $this->assertSame(['agent@example.org', 'president@example.com'], $recipients);
+        $sink->clear();
+
+        // L'agent signe : signature par délégation, à son nom.
+        these_sign_document(
+            $this->context,
+            $pending[0]->dossier,
+            'conclusions',
+            'dg',
+            $agent->id,
+            fullname($agent),
+            these_sample_signature_image(),
+            '',
+            ['delegated' => true]
+        );
+        $signed = these_get_signatures($dossier->id)['conclusions:dg'];
+        $this->assertNotEmpty($signed->timesigned);
+        $this->assertEquals(1, $signed->delegated);
+        $this->assertEquals($agent->id, $signed->userid);
+
+        // Délégation retirée : les signatures en attente de la direction générale quittent « Mes
+        // signatures » de l'agent et la relance repasse par un lien à la direction générale.
+        $other = $this->generator->create_dossier($this->these, $this->getDataGenerator()->create_user()->id, [
+            'status' => THESE_STATUS_DEFENSE_VALIDATED, 'directorid' => $this->director->id, 'conclusions' => 'Conclusions.',
+        ]);
+        these_request_agent_signatures($this->these, $this->cm, $other, ['conclusions']);
+        $this->assertNotEmpty(array_filter(these_get_user_pending_signatures($agent), function ($signature) use ($other) {
+            return (int) $signature->dossierid === (int) $other->id;
+        }));
+        \mod_these\local\scopesettings::set($scope, ['dgdelegation' => 0]);
+        $this->assertEmpty(array_filter(these_get_user_pending_signatures($agent), function ($signature) use ($other) {
+            return (int) $signature->dossierid === (int) $other->id;
+        }));
+        $sink->clear();
+        $this->assertNotNull(these_request_signature($this->these, $this->cm, $other, 'dg', ['conclusions']));
+        $this->assertSame(['dg@example.org'], array_column($sink->get_messages(), 'to'));
     }
 
     /**

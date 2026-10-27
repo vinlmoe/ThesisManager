@@ -13,6 +13,27 @@ de version recalés sur la date. Les numéros entre parenthèses des sections de
 développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
 été étiquetée.
 
+## mod_these 0.19.0 (2026102704) — direction générale par délégation des agents DEVE, relance des agents
+
+- Direction générale signée par délégation par les agents DEVE : nouveau
+  paramètre du circuit « Direction générale par délégation » (`dgdelegation`,
+  sans effet sans agent désigné). La direction générale ne reçoit plus de
+  lien ; la fiche signalétique, le contrat de diffusion et les conclusions
+  sont demandés aux agents avec l'agrément administratif, à la validation du
+  dossier de soutenance, dans un seul courriel « Documents à signer ». Ils
+  apparaissent dans « Mes signatures » avec « (Direction générale, par
+  délégation) » ; la signature est enregistrée par délégation, au nom de
+  l'agent (« (par délégation) » sur le document, dans le suivi et à
+  l'historique). Une invitation déjà envoyée à la direction générale revient
+  aux agents à la relance suivante ; la case décochée, les signatures de la
+  direction générale quittent « Mes signatures » des agents.
+- Relance des agents DEVE : bouton « Relancer » (au lieu de « Envoyer le
+  lien ») sur la ligne des agents du suivi des signatures, message « Relance
+  envoyée aux agents DEVE. ». La relance, comme la relance automatique et
+  l'action groupée « Relancer les signataires », porte sur leurs signatures et
+  sur celles de la direction générale signées par délégation ; le bouton
+  « Envoyer le lien » de la direction générale disparaît dans ce cas.
+
 ## mod_these 0.18.0 (2026102703) — directeur non votant, liste du corps enseignant, aides pour la DEVE
 
 - Validation de l'A6 saisie par la DEVE, plus par l'étudiant (le dépôt de la

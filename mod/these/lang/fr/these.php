@@ -767,6 +767,8 @@ $string['signer'] = 'Signataire';
 $string['noemail'] = 'pas d\'adresse';
 $string['documentstosign'] = 'Documents à signer';
 $string['resendsignature'] = 'Envoyer le lien';
+$string['remindagents'] = 'Relancer';
+$string['agentsreminded'] = 'Relance envoyée aux agents DEVE.';
 $string['signinperson'] = 'Signer sur place';
 $string['signaturerequestsent'] = 'Lien de signature envoyé.';
 $string['signaturesrecorded'] = 'Signature enregistrée. Merci.';
@@ -1279,6 +1281,14 @@ $string['settingsdeveagent_help'] = "Identifiants ou adresses de courriel des co
     . "agent reçoit alors un courriel et retrouve le visa du sujet et l'agrément administratif dans « Mes signatures » : le premier "
     . "qui signe appose la signature, avec sa signature enregistrée. Laisser vide pour que la personne de la DEVE qui valide signe "
     . 'elle-même.';
+$string['settingsdgdelegation'] = 'Direction générale par délégation';
+$string['settingsdgdelegationlabel'] = 'Les agents DEVE signent pour la direction générale, par délégation';
+$string['settingsdgdelegation_help'] = "À cocher quand la direction générale a délégué sa signature aux agents DEVE signataires. "
+    . "La direction générale ne reçoit plus de lien : la fiche signalétique, le contrat de diffusion et les conclusions attendent "
+    . "les agents dans « Mes signatures », demandés avec l'agrément administratif à la validation du dossier de soutenance. Le "
+    . "document porte le nom de l'agent suivi de « (par délégation) ». Les agents sont relancés pour ces signatures comme pour les "
+    . "leurs (délai de relance, bouton « Relancer » du suivi des signatures, action groupée). Sans agent désigné, la case est "
+    . 'sans effet.';
 $string['mysignatures'] = 'Mes signatures';
 $string['mysignatures_desc'] = 'Documents qui attendent votre signature, toutes promotions confondues. Consultez chaque document en '
     . "PDF, cochez ceux à signer, puis signez une seule fois : votre signature enregistrée est reprise d'office.";
