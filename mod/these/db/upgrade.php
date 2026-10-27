@@ -237,5 +237,16 @@ function xmldb_these_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2026102707, 'these');
     }
 
+    if ($oldversion < 2026102708) {
+        // Annuaire du jury : matière enseignée, reprise dans la liste du corps enseignant.
+        $dbman = $DB->get_manager();
+        $table = new xmldb_table('these_juror');
+        $field = new xmldb_field('discipline', XMLDB_TYPE_CHAR, '255', null, null, null, null, 'institution');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        upgrade_mod_savepoint(true, 2026102708, 'these');
+    }
+
     return true;
 }

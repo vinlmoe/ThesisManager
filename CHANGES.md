@@ -13,7 +13,7 @@ de version recalés sur la date. Les numéros entre parenthèses des sections de
 développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
 été étiquetée.
 
-## mod_these 0.19.0 (2026102707) — direction générale signée par délégation des agents DEVE, relance des agents, agents choisis parmi les inscrits, plus de rôles des services
+## mod_these 0.19.0 (2026102708) — direction générale signée par délégation des agents DEVE, relance des agents, agents choisis parmi les inscrits, plus de rôles des services, matière des enseignants
 
 - La direction générale ne signe jamais elle-même : ses documents (fiche
   signalétique, contrat de diffusion, conclusions) sont toujours signés par
@@ -52,6 +52,15 @@ développement ne correspondent à aucune version installable ; 0.11.2 n'a jamai
   `libraryrole` sont supprimés ; le rôle existant n'est pas supprimé. Un site
   qui avait choisi pour la DEVE un rôle sans la capacité `managedeve` doit la
   lui accorder.
+- Annuaire du jury : matière enseignée (champ `discipline` de `these_juror`,
+  mise à jour 2026102708), saisie dans la fiche de l'enseignant, affichée dans
+  l'annuaire, importable (colonne CSV facultative `discipline`, la matière
+  connue étant gardée sans elle) et déclarée pour la vie privée. Liste du
+  corps enseignant en PDF : chaque section sur deux colonnes (colonne de
+  gauche d'abord), la matière sous chaque nom. Une liste dont le modèle a été
+  personnalisé garde sa mise en page : la rétablir depuis les modèles pour en
+  profiter (variable `rows` de chaque groupe, `discipline` de chaque
+  enseignant).
 
 ## mod_these 0.18.0 (2026102703) — directeur non votant, liste du corps enseignant, aides pour la DEVE
 

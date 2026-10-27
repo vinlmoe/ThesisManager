@@ -107,6 +107,7 @@ class provider implements
             'email' => 'privacy:metadata:these_juror:email',
             'status' => 'privacy:metadata:these_juror:status',
             'institution' => 'privacy:metadata:these_juror:institution',
+            'discipline' => 'privacy:metadata:these_juror:discipline',
         ], 'privacy:metadata:these_juror');
 
         $collection->add_database_table('these_a6', [

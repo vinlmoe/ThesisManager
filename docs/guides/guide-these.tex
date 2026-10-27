@@ -111,7 +111,8 @@ par les agents DEVE (plus de lien ni d'adresse pour elle) ; relance des agents p
 celles de la direction générale (bouton \bouton{Relancer} du suivi des
 signatures) ; agents DEVE et agents de la bibliothèque choisis parmi les
 inscrits au lieu d'être saisis ; plus de rôles des services ni de rôle
-\og Bibliothèque (thèses)\fg{}. \\
+\og Bibliothèque (thèses)\fg{} ; matière enseignée dans l'annuaire et liste du
+corps enseignant sur deux colonnes. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -1569,7 +1570,10 @@ Professeur émérite, maître de conférences émérite & oui & oui \\
 enseignant (PDF)} de l'annuaire produit une page à inclure dans les thèses :
 les enseignants \textbf{actifs} de l'annuaire dont l'établissement est celui
 des paramètres du circuit (champ \og Établissement\fg{}, casse et espaces
-ignorés), groupés par statut, professeurs d'abord, et datée du jour. Les
+ignorés), groupés par statut, professeurs d'abord, et datée du jour. Chaque
+section tient sur \textbf{deux colonnes} (lecture de haut en bas, colonne de
+gauche d'abord) ; sous chaque nom figure la \textbf{matière enseignée} saisie
+dans l'annuaire. Les
 étudiants la téléchargent depuis le dépôt de la soutenance (lien sous le
 manuscrit). Sa mise en page est un modèle de document comme les autres
 (\og Liste du corps enseignant\fg{}, section~\ref{sec:modeles}).
@@ -1581,12 +1585,14 @@ préremplit son titre, son statut, son établissement et son adresse. Un
 enseignant retiré (non actif) n'est plus proposé mais reste dans les jurys qui
 l'ont retenu. L'annuaire s'importe aussi d'un fichier CSV (colonnes
 \texttt{title}, \texttt{lastname}, \texttt{firstname}, \texttt{email},
-\texttt{status}, \texttt{institution}).
+\texttt{status}, \texttt{institution} et, facultativement,
+\texttt{discipline} pour la matière enseignée ; sans cette colonne, la matière
+déjà saisie est gardée).
 
 Le bouton \bouton{Préremplir avec les enseignants du cours} ajoute les
 enseignants non éditeurs (rôle \og Enseignant non éditeur\fg{}) inscrits au
 cours de l'activité qui ne sont pas encore dans l'annuaire (même adresse, ou
-mêmes nom et prénom). La DEVE (enseignant éditeur ou rôle DEVE) et la
+mêmes nom et prénom). La DEVE (enseignant éditeur) et la
 bibliothèque ne sont pas reprises. Une page de confirmation liste les
 enseignants concernés ; ils sont créés avec le titre Dr, le statut maître de
 conférences et l'établissement par défaut, à vérifier ensuite enseignant par

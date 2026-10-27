@@ -303,6 +303,8 @@ $string['juroractive'] = 'Offered in jury forms';
 $string['juroractiveyes'] = 'Active';
 $string['juroractiveno'] = 'Withdrawn';
 $string['jurorpresident'] = 'May chair';
+$string['jurordiscipline'] = 'Subject taught';
+$string['jurordiscipline_help'] = 'Subject or discipline taught, shown next to the name in the teaching staff list.';
 $string['juroradd'] = 'Add a teacher';
 $string['juroredit'] = 'Edit a teacher';
 $string['jurorsaved'] = 'The teacher has been saved.';
@@ -311,9 +313,10 @@ $string['jurordeleteconfirm'] = 'Remove {$a} from the directory? Juries that cho
 $string['jurorsnone'] = 'The directory is empty.';
 $string['jurorimport'] = 'Import a CSV file';
 $string['jurorimportfile'] = 'CSV file';
-$string['jurorimportfile_help'] = 'Columns: title (Dr or Pr), lastname, firstname, email, status, institution, separated by commas '
-    . 'or semicolons. The status is the key (ir, mcf, mcfhdr, mcfstag, prstag, pr, premerite, mcfemerite) or the label. A teacher '
-    . 'already present (same address, or same names) is updated.';
+$string['jurorimportfile_help'] = 'Columns: title (Dr or Pr), lastname, firstname, email, status, institution and, optionally, '
+    . 'discipline (subject taught), separated by commas or semicolons. The status is the key (ir, mcf, mcfhdr, mcfstag, '
+    . 'prstag, pr, premerite, mcfemerite) or the label. A teacher already present (same address, or same names) is updated; '
+    . 'without a discipline column, their subject is kept.';
 $string['jurorimportdone'] = '{$a->created} teacher(s) added, {$a->updated} updated.';
 $string['jurorimportbadline'] = 'Line {$a} ignored: wrong title, names, status or address.';
 $string['jurorprefill'] = 'Prefill with the course teachers';
@@ -589,6 +592,7 @@ $string['privacy:metadata:these_juror:firstname'] = 'First name of the teacher.'
 $string['privacy:metadata:these_juror:email'] = 'Email address of the teacher.';
 $string['privacy:metadata:these_juror:status'] = 'Status (rank) of the teacher.';
 $string['privacy:metadata:these_juror:institution'] = 'Institution of the teacher.';
+$string['privacy:metadata:these_juror:discipline'] = 'Subject taught by the teacher.';
 $string['privacy:metadata:these_answer'] = "Student answers to the pre-jury questionnaire.";
 $string['privacy:metadata:these_answer:questionid'] = 'Question.';
 $string['privacy:metadata:these_answer:value'] = 'Answer.';

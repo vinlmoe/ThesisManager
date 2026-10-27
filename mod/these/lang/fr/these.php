@@ -307,6 +307,8 @@ $string['juroractive'] = 'Proposé dans les formulaires de jury';
 $string['juroractiveyes'] = 'Actif';
 $string['juroractiveno'] = 'Retiré';
 $string['jurorpresident'] = 'Peut présider';
+$string['jurordiscipline'] = 'Matière enseignée';
+$string['jurordiscipline_help'] = 'Matière ou discipline enseignée, indiquée à côté du nom dans la liste du corps enseignant.';
 $string['juroradd'] = 'Ajouter un enseignant';
 $string['juroredit'] = 'Modifier un enseignant';
 $string['jurorsaved'] = "L'enseignant est enregistré.";
@@ -315,9 +317,10 @@ $string['jurordeleteconfirm'] = "Supprimer {\$a} de l'annuaire ? Les jurys qui l
 $string['jurorsnone'] = "L'annuaire est vide.";
 $string['jurorimport'] = 'Importer un fichier CSV';
 $string['jurorimportfile'] = 'Fichier CSV';
-$string['jurorimportfile_help'] = "Colonnes : title (Dr ou Pr), lastname, firstname, email, status, institution, séparées par des "
-    . "virgules ou des points-virgules. Le statut est la clé (ir, mcf, mcfhdr, mcfstag, prstag, pr, premerite, mcfemerite) ou le "
-    . "libellé. Un enseignant déjà présent (même adresse, ou mêmes nom et prénom) est mis à jour.";
+$string['jurorimportfile_help'] = "Colonnes : title (Dr ou Pr), lastname, firstname, email, status, institution et, "
+    . "facultativement, discipline (matière enseignée), séparées par des virgules ou des points-virgules. Le statut est la "
+    . "clé (ir, mcf, mcfhdr, mcfstag, prstag, pr, premerite, mcfemerite) ou le libellé. Un enseignant déjà présent (même "
+    . "adresse, ou mêmes nom et prénom) est mis à jour ; sans colonne discipline, sa matière est gardée.";
 $string['jurorimportdone'] = '{$a->created} enseignant(s) ajouté(s), {$a->updated} mis à jour.';
 $string['jurorimportbadline'] = 'Ligne {$a} ignorée : titre, nom, prénom, statut ou adresse incorrect.';
 $string['jurorprefill'] = 'Préremplir avec les enseignants du cours';
@@ -594,6 +597,7 @@ $string['privacy:metadata:these_juror:firstname'] = "Prénom de l'enseignant.";
 $string['privacy:metadata:these_juror:email'] = "Adresse de courriel de l'enseignant.";
 $string['privacy:metadata:these_juror:status'] = "Statut (corps) de l'enseignant.";
 $string['privacy:metadata:these_juror:institution'] = "Établissement de l'enseignant.";
+$string['privacy:metadata:these_juror:discipline'] = "Matière enseignée par l'enseignant.";
 $string['privacy:metadata:these_answer'] = "Réponses de l'étudiant au questionnaire préalable au jury.";
 $string['privacy:metadata:these_answer:questionid'] = 'Question.';
 $string['privacy:metadata:these_answer:value'] = 'Réponse.';
