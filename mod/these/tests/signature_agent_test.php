@@ -144,30 +144,29 @@ final class signature_agent_test extends these_testcase {
     }
 
     /**
-     * Direction générale par délégation : à la validation du dossier de soutenance, les documents de la
-     * direction générale sont demandés aux agents (pas de lien à la direction générale), dans le même
-     * courriel que l'agrément ; l'agent les signe « par délégation » depuis « Mes signatures ». Les
-     * agents sont relancés pour leurs signatures et celles de la direction générale (bouton du suivi,
-     * tâche de relance) ; une invitation déjà envoyée à la direction générale leur revient à la relance.
+     * La direction générale ne signe jamais elle-même : sans agent DEVE, aucun lien ne lui est envoyé
+     * (signature sur place ou par scan) ; avec des agents, ses documents leur sont demandés à la
+     * validation du dossier de soutenance, dans le même courriel que l'agrément, et l'agent les signe
+     * « par délégation » depuis « Mes signatures ». Les agents sont relancés pour leurs signatures et
+     * celles de la direction générale (bouton du suivi, tâche de relance).
      */
     public function test_dg_by_delegation(): void {
         global $DB;
         $this->setup_activity();
         $agent = $this->getDataGenerator()->create_user(['username' => 'agentdeve', 'email' => 'agent@example.org']);
         $scope = these_local_scope($this->these);
-        \mod_these\local\scopesettings::set($scope, ['dgname' => 'Directrice générale', 'dgemail' => 'dg@example.org']);
+        \mod_these\local\scopesettings::set($scope, ['dgname' => 'Directrice générale']);
         $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
             'status' => THESE_STATUS_DEFENSE_APPROVED, 'directorid' => $this->director->id, 'conclusions' => 'Conclusions.',
         ]);
         these_save_jury($dossier->id, $this->generator->default_jury());
 
-        // Sans agent, la case est sans effet : la direction générale reçoit son lien.
-        \mod_these\local\scopesettings::set($scope, ['dgdelegation' => 1]);
+        // Sans agent : signature en attente, sur place, et aucun courriel à la direction générale.
         $this->assertFalse(\mod_these\local\signatureagent::signs_dg_by_delegation($this->these));
+        $this->assertSame(['deve', 'dgrep'], \mod_these\local\signatureagent::slots_for($this->these));
         $sink = $this->redirectEmails();
         $this->assertNotNull(these_request_signature($this->these, $this->cm, $dossier, 'dg', ['conclusions']));
-        $this->assertSame(['dg@example.org'], array_column($sink->get_messages(), 'to'));
-        $sink->clear();
+        $this->assertCount(0, $sink->get_messages());
 
         \mod_these\local\scopesettings::set($scope, ['deveagent' => 'agentdeve']);
         $this->assertTrue(\mod_these\local\signatureagent::signs_dg_by_delegation($this->these));
@@ -182,7 +181,6 @@ final class signature_agent_test extends these_testcase {
         $dossier = $this->reload($dossier->id);
         $this->assertEquals(THESE_STATUS_DEFENSE_VALIDATED, $dossier->status);
         $recipients = array_column($sink->get_messages(), 'to');
-        $this->assertNotContains('dg@example.org', $recipients);
         $this->assertCount(1, array_keys($recipients, 'agent@example.org'));
         $request = these_get_signatures($dossier->id)['conclusions:dg'];
         $this->assertNull($request->token);
@@ -236,8 +234,8 @@ final class signature_agent_test extends these_testcase {
         $this->assertEquals(1, $signed->delegated);
         $this->assertEquals($agent->id, $signed->userid);
 
-        // Délégation retirée : les signatures en attente de la direction générale quittent « Mes
-        // signatures » de l'agent et la relance repasse par un lien à la direction générale.
+        // Agents retirés du réglage : les signatures en attente de la direction générale quittent
+        // « Mes signatures » de l'ancien agent et ne donnent lieu à aucun lien.
         $other = $this->generator->create_dossier($this->these, $this->getDataGenerator()->create_user()->id, [
             'status' => THESE_STATUS_DEFENSE_VALIDATED, 'directorid' => $this->director->id, 'conclusions' => 'Conclusions.',
         ]);
@@ -245,13 +243,13 @@ final class signature_agent_test extends these_testcase {
         $this->assertNotEmpty(array_filter(these_get_user_pending_signatures($agent), function ($signature) use ($other) {
             return (int) $signature->dossierid === (int) $other->id;
         }));
-        \mod_these\local\scopesettings::set($scope, ['dgdelegation' => 0]);
+        \mod_these\local\scopesettings::set($scope, ['deveagent' => '']);
         $this->assertEmpty(array_filter(these_get_user_pending_signatures($agent), function ($signature) use ($other) {
             return (int) $signature->dossierid === (int) $other->id;
         }));
         $sink->clear();
         $this->assertNotNull(these_request_signature($this->these, $this->cm, $other, 'dg', ['conclusions']));
-        $this->assertSame(['dg@example.org'], array_column($sink->get_messages(), 'to'));
+        $this->assertCount(0, $sink->get_messages());
     }
 
     /**

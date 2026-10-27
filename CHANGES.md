@@ -13,26 +13,26 @@ de version recalés sur la date. Les numéros entre parenthèses des sections de
 développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
 été étiquetée.
 
-## mod_these 0.19.0 (2026102705) — direction générale par délégation des agents DEVE, relance des agents, agents choisis parmi les inscrits
+## mod_these 0.19.0 (2026102706) — direction générale signée par délégation des agents DEVE, relance des agents, agents choisis parmi les inscrits
 
-- Direction générale signée par délégation par les agents DEVE : nouveau
-  paramètre du circuit « Direction générale par délégation » (`dgdelegation`,
-  sans effet sans agent désigné). La direction générale ne reçoit plus de
-  lien ; la fiche signalétique, le contrat de diffusion et les conclusions
-  sont demandés aux agents avec l'agrément administratif, à la validation du
-  dossier de soutenance, dans un seul courriel « Documents à signer ». Ils
-  apparaissent dans « Mes signatures » avec « (Direction générale, par
-  délégation) » ; la signature est enregistrée par délégation, au nom de
-  l'agent (« (par délégation) » sur le document, dans le suivi et à
-  l'historique). Une invitation déjà envoyée à la direction générale revient
-  aux agents à la relance suivante ; la case décochée, les signatures de la
-  direction générale quittent « Mes signatures » des agents.
+- La direction générale ne signe jamais elle-même : ses documents (fiche
+  signalétique, contrat de diffusion, conclusions) sont toujours signés par
+  délégation, par les agents DEVE signataires. Ils leur sont demandés avec
+  l'agrément administratif, à la validation du dossier de soutenance, dans un
+  seul courriel « Documents à signer », et apparaissent dans « Mes
+  signatures » avec « (Direction générale, par délégation) » ; la signature
+  porte le nom de l'agent suivi de « (par délégation) ». Plus de lien ni
+  d'adresse pour la direction générale (paramètre « Direction générale
+  (courriel) » retiré ; nom et qualité restent imprimés). Sans agent désigné,
+  ses documents se signent sur place ou par scan, toujours par délégation :
+  la case « Signature par délégation » disparaît de la signature sur place et
+  des scans. Les agents DEVE signataires deviennent un réglage attendu de
+  « Réglages à compléter ».
 - Relance des agents DEVE : bouton « Relancer » (au lieu de « Envoyer le
   lien ») sur la ligne des agents du suivi des signatures, message « Relance
   envoyée aux agents DEVE. ». La relance, comme la relance automatique et
   l'action groupée « Relancer les signataires », porte sur leurs signatures et
-  sur celles de la direction générale signées par délégation ; le bouton
-  « Envoyer le lien » de la direction générale disparaît dans ce cas.
+  sur celles de la direction générale.
 - Agents DEVE signataires et agents de la bibliothèque choisis dans une liste
   (choix multiple avec recherche) au lieu d'être saisis : membres de la DEVE
   inscrits aux cours des activités de la portée (droit ou rôle de la DEVE)

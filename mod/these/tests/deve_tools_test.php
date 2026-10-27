@@ -123,7 +123,8 @@ final class deve_tools_test extends these_testcase {
 
     /**
      * Réglages à compléter : les éléments manquants, puis complets une fois renseignés ; les agents
-     * DEVE et le questionnaire sont facultatifs.
+     * DEVE sont attendus (ils signent pour la direction générale), les agents de la bibliothèque et
+     * le questionnaire sont facultatifs.
      */
     public function test_settings_checklist(): void {
         $this->setup_activity();
@@ -133,8 +134,11 @@ final class deve_tools_test extends these_testcase {
             return !$item['optional'];
         });
         $this->assertNotEmpty($required);
-        $this->assertCount(3, array_filter($checklist, function ($item) {
+        $this->assertCount(2, array_filter($checklist, function ($item) {
             return $item['optional'];
+        }));
+        $this->assertNotEmpty(array_filter($required, function ($item) {
+            return $item['label'] === get_string('settingscheckagents', 'mod_these');
         }));
         $rooms = array_values(array_filter($checklist, function ($item) {
             return $item['label'] === get_string('settingscheckrooms', 'mod_these');

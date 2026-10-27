@@ -178,9 +178,9 @@ $signeremail = core_text::strtolower(trim((string) ($token !== '' ? $pending[0]-
 $allowsaved = !$inperson && $signeremail !== '' && isloggedin() && !isguestuser()
     && core_text::strtolower(trim((string) $USER->email)) === $signeremail;
 $mform = new \mod_these\form\sign_form($PAGE->url, [
-    'signername' => $signer['name'] !== '' ? $signer['name'] : ($allowsaved ? fullname($USER) : ''),
+    // Direction générale : signée par délégation, la personne qui signe saisit son propre nom.
+    'signername' => $slot !== 'dg' && $signer['name'] !== '' ? $signer['name'] : ($allowsaved ? fullname($USER) : ''),
     'allowsaved' => $allowsaved,
-    'delegation' => $slot === 'dg',
 ]);
 $mform->set_data($pageparams);
 
@@ -193,7 +193,7 @@ if ($doctypes && ($data = $mform->get_data())) {
     // étudiant ou un directeur signe en son nom de compte.
     $options = [
         'method' => $inperson ? 'inperson' : 'online',
-        'delegated' => $slot === 'dg' && !empty($data->delegated),
+        'delegated' => $slot === 'dg',
         'verifiedby' => $inperson ? (int) $SESSION->$verifiedkey : 0,
     ];
     foreach ($doctypes as $doctype) {

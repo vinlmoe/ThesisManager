@@ -261,7 +261,7 @@ final class signature_test extends these_testcase {
     public function test_defense_signatures_and_invitations(): void {
         $this->setup_activity();
         \mod_these\local\scopesettings::set(these_local_scope($this->these), [
-            'dgemail' => 'dg@example.com', 'ccememail' => 'ccem@example.com', 'ucblemail' => 'ucbl@example.com',
+            'dgname' => 'Directrice générale', 'ccememail' => 'ccem@example.com', 'ucblemail' => 'ucbl@example.com',
         ]);
         $sink = $this->redirectEmails();
         $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
@@ -300,15 +300,16 @@ final class signature_test extends these_testcase {
         // L'agrément administratif saisi par la DEVE n'invalide pas l'agrément scientifique.
         $this->assertNotEmpty($signatures['agreement:director']->timesigned);
 
-        // Une invitation par signataire : président, direction générale, CCEM, université.
+        // Une invitation par signataire : président, CCEM, université ; la direction générale, qui ne
+        // signe jamais elle-même, n'en reçoit pas (signature par délégation, sur place sans agent DEVE).
         $recipients = array_count_values(array_column($sink->get_messages(), 'to'));
-        foreach (['president@example.com', 'dg@example.com', 'ccem@example.com', 'ucbl@example.com'] as $email) {
+        foreach (['president@example.com', 'ccem@example.com', 'ucbl@example.com'] as $email) {
             $this->assertSame(1, $recipients[$email] ?? 0, $email);
         }
-        // Le même lien couvre tous les documents de la direction générale.
-        $token = $this->token_sent_to($sink->get_messages(), 'dg@example.com');
+        // Le même lien couvre tous les documents du CCEM.
+        $token = $this->token_sent_to($sink->get_messages(), 'ccem@example.com');
         $this->assertEqualsCanonicalizing(
-            ['signaletique', 'contract', 'conclusions'],
+            ['agreement', 'signaletique', 'conclusions'],
             array_column(these_get_signatures_by_token($token), 'doctype')
         );
 

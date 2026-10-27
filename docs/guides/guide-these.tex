@@ -106,8 +106,8 @@ soutenances au calendrier Moodle ; modification d'un dossier allégée ;
 validation de l'A6 saisie par la DEVE et liée à l'étudiant (dossier, lot,
 import Excel) ; partie DEVE réorganisée (circuit, A6, actions groupées,
 planning) ; version du guide et du module mises à jour en page de garde. \\
-2.13 & 27 octobre 2026 & Direction générale signée par délégation par les
-agents DEVE (paramètre du circuit) ; relance des agents pour leurs signatures et
+2.13 & 27 octobre 2026 & Direction générale toujours signée par délégation,
+par les agents DEVE (plus de lien ni d'adresse pour elle) ; relance des agents pour leurs signatures et
 celles de la direction générale (bouton \bouton{Relancer} du suivi des
 signatures) ; agents DEVE et agents de la bibliothèque choisis parmi les
 inscrits au lieu d'être saisis. \\
@@ -311,8 +311,9 @@ En tête de la page, l'encadré \og Réglages à compléter\fg{} liste ce qui
 manque encore pour faire tourner le circuit : établissement et université,
 signataires (direction générale, CCEM, présidence de l'université, direction
 des études), contrat type, salles de soutenance et images des modèles (avec le
-lien vers la page des modèles et le nom des images manquantes). Les agents DEVE
-signataires et le questionnaire sont facultatifs.
+lien vers la page des modèles et le nom des images manquantes), agents DEVE
+signataires (ils signent pour la direction générale). Les agents de la
+bibliothèque et le questionnaire sont facultatifs.
 
 \capture[0.85\linewidth]{24_parametres_circuit}{Paramètres du circuit, dans l'activité de suivi.}
 
@@ -327,18 +328,18 @@ signataires et le questionnaire sont facultatifs.
         à la DEVE.
   \item[Agents DEVE signataires] agents habilités à signer pour la DEVE,
         choisis (en tapant leur nom) parmi les membres de la DEVE inscrits aux
-        cours des activités suivies : l'équipe valide sans signer, puis l'un des agents signe
-        depuis \bouton{Mes signatures} (section~\ref{sec:agent}). Vide : la
-        personne qui valide signe.
-  \item[Direction générale par délégation] case \bouton{Les agents DEVE
-        signent pour la direction générale, par délégation} : la direction
-        générale ne reçoit plus de lien, ses documents (fiche signalétique,
-        contrat de diffusion, conclusions) attendent les agents dans
-        \bouton{Mes signatures} et portent \og (par délégation)\fg{}. Sans agent
-        désigné, la case est sans effet.
-  \item[Signataires] direction générale, président du CCEM, présidence de
-        l'université : nom et adresse. Avec une adresse, le signataire reçoit un
-        lien de signature ; sans adresse, la DEVE recueille sa signature sur place.
+        cours des activités suivies : l'équipe valide sans signer, puis l'un
+        des agents signe depuis \bouton{Mes signatures}
+        (section~\ref{sec:agent}). Les agents signent aussi, \textbf{par
+        délégation}, les documents de la direction générale, qui ne signe
+        jamais elle-même. Vide : la personne qui valide signe le visa et
+        l'agrément, et les documents de la direction générale se signent sur
+        place ou par scan.
+  \item[Signataires] direction générale (nom et qualité, imprimés sur les
+        documents ; pas d'adresse : elle ne signe pas elle-même), président du
+        CCEM et présidence de l'université (nom et adresse). Avec une adresse,
+        le signataire reçoit un lien de signature ; sans adresse, la DEVE
+        recueille sa signature sur place.
   \item[Soutenances] durée d'une soutenance, en minutes (60 par défaut), pour
         détecter les conflits de jury ; \textbf{salles de soutenance}, une par
         ligne, proposées à la saisie du lieu (dépôt de l'étudiant, validation et
@@ -787,9 +788,9 @@ le dépôt de sujet. Le numéro d'enregistrement n'est pas encore attribué.}
   \item Cliquez sur \bouton{Valider le dossier}.
 \end{etapes}
 \ensuite{le manuscrit passe à la bibliothèque ; les membres du jury reçoivent
-leur accès aux documents ; les signataires invités (président du jury,
-direction générale, CCEM, université) et les agents DEVE reçoivent leur demande
-de signature.}
+leur accès aux documents ; les signataires invités (président du jury, CCEM,
+université) et les agents DEVE, pour la DEVE et par délégation pour la direction
+générale, reçoivent leur demande de signature.}
 \end{procedure}
 
 \capture[0.85\linewidth]{71_deve_valide_soutenance}{Validation du dossier de soutenance : numéro, date, jury et éligibilité.}
@@ -815,10 +816,10 @@ de signature.}
         signataire les consulte, trace sa signature et valide. Votre compte est
         conservé avec la signature et imprimé dessous (\og identité vérifiée par
         la DEVE (Prénom Nom)\fg{}).
-  \item Pour la direction générale, la personne qui signe \textbf{par
-        délégation} saisit son propre nom et coche \bouton{Signature par
-        délégation de la direction générale} : \og (par délégation)\fg{}
-        accompagne son nom sur le document et dans le suivi.
+  \item La direction générale est toujours signée \textbf{par délégation} :
+        sans agent DEVE désigné, la personne qui signe sur place saisit son
+        propre nom, suivi de \og (par délégation)\fg{} sur le document et dans
+        le suivi.
 \end{etapes}
 \end{procedure}
 
@@ -1065,15 +1066,13 @@ administratif et la partie \og direction générale représentée par la DEVE\fg
 de la fiche d'agréments, une fois que l'équipe a tout vérifié.
 
 \begin{astuce}
-\textbf{Direction générale par délégation.} Quand la case \bouton{Les agents
-DEVE signent pour la direction générale, par délégation} est cochée dans les
-paramètres du circuit, les agents signent aussi, à la place de la direction
-générale, la fiche signalétique, le contrat de diffusion et les conclusions. Ces
-documents leur sont demandés avec l'agrément administratif, à la validation du
+\textbf{Direction générale par délégation.} La direction générale ne signe
+jamais elle-même : les agents signent à sa place la fiche signalétique, le
+contrat de diffusion et les conclusions. Ces documents leur sont demandés avec l'agrément administratif, à la validation du
 dossier de soutenance ; ils apparaissent dans \bouton{Mes signatures} avec la
 mention \og (Direction générale, par délégation)\fg{}, et le document porte le
 nom de l'agent suivi de \og (par délégation)\fg{}. La direction générale ne
-reçoit alors aucun lien.
+reçoit aucun lien.
 \end{astuce}
 
 \begin{astuce}
@@ -1428,8 +1427,9 @@ invité dont l'adresse est celle de son compte (président du jury, par exemple)
 
 \subsection{Signataires sans compte}
 
-Le président du jury, la direction générale, le CCEM, la présidence de
-l'université et un éventuel directeur extérieur n'ont pas de compte Moodle.
+Le président du jury, le CCEM, la présidence de l'université et un éventuel
+directeur extérieur n'ont pas de compte Moodle (la direction générale, elle, est
+signée par délégation par les agents DEVE, section~\ref{sec:agent}).
 À la validation du dossier de soutenance par la DEVE (et, pour le directeur
 extérieur, à la soumission du sujet), chacun reçoit \textbf{un seul lien}
 couvrant tous les documents qui l'attendent : il les consulte en PDF puis signe
@@ -1447,9 +1447,9 @@ pour un signataire présent ou sans adresse. L'étudiant et le directeur y
 figurent aussi, pour la signature sur place, dès que la signature d'un document
 a commencé. La page de signature sur place ne s'ouvre qu'une fois cochée la case
 qui certifie que l'identité du signataire a été vérifiée : le compte DEVE
-concerné est inscrit à l'historique et conservé avec la signature. La direction générale peut signer par délégation (case
-\bouton{Signature par délégation de la direction générale}, avec le nom de la
-personne qui signe). Le suivi précise pour chaque signature la manière de signer
+concerné est inscrit à l'historique et conservé avec la signature. La direction
+générale est toujours signée par délégation, avec le nom de la personne qui
+signe. Le suivi précise pour chaque signature la manière de signer
 (\og sur place, identité vérifiée par la DEVE\fg{}, \og à la main, scan joint au
 dossier\fg{}) et la délégation (figure~\ref{fig:40_suivi_signatures}).
 
@@ -1467,9 +1467,9 @@ scan, parmi les signatures encore attendues du document : ils sont inscrits comm
 ayant signé à la main à la date portée sur le document, ce qui met à jour le PDF
 du document (\og Signé à la main par \ldots{} le \ldots, scan joint au dossier
 par la DEVE\fg{}) et le suivi des signatures ; le document est scellé une fois
-toutes ses signatures réunies. Pour la direction générale, une case précise la
-signature par délégation (la signature porte alors \og Direction générale (par
-délégation)\fg{}). Le nom du signataire n'est pas demandé : chacun porte le nom
+toutes ses signatures réunies. La direction générale est toujours signée par
+délégation (la signature porte \og Direction générale (par délégation)\fg{}).
+Le nom du signataire n'est pas demandé : chacun porte le nom
 connu du module (étudiant, directeur, signataires des paramètres, président du
 jury). Sans case cochée, le scan est seulement conservé.
 
@@ -1479,8 +1479,7 @@ jury). Sans case cochée, le scan est seulement conservé.
         non abandonné) et cliquez sur \bouton{Ajouter un scan signé}.
   \item Choisissez le \textbf{document signé} et la date de la signature.
   \item Cochez les \textbf{signataires du scan} (seuls ceux du document
-        choisi sont proposés) et, le cas échéant, la signature par délégation de
-        la direction générale.
+        choisi sont proposés).
   \item Déposez le ou les fichiers scannés (PDF ou images, 10 fichiers au plus).
   \item Au besoin, précisez un commentaire, puis cliquez sur
         \bouton{Enregistrer le scan}.
@@ -1713,10 +1712,10 @@ les dossiers actifs ne sont jamais relancés ; un délai de 0 désactive les
 relances.
 
 La même tâche relance les \textbf{signatures en attente} depuis plus que ce
-délai : chaque signataire sans compte qui a une adresse (direction générale,
-CCEM, université, président du jury, directeur extérieur) reçoit un nouveau
-lien, et les agents DEVE désignés un nouveau rappel, qui couvre aussi la
-direction générale quand ils la signent par délégation ; le délai repart à zéro à
+délai : chaque signataire sans compte qui a une adresse (CCEM, université,
+président du jury, directeur extérieur) reçoit un nouveau lien, et les agents
+DEVE désignés un nouveau rappel, qui couvre aussi la direction générale qu'ils
+signent par délégation ; le délai repart à zéro à
 chaque relance. Il n'y a donc plus à relancer à la main depuis le suivi des
 signatures (le bouton reste disponible pour une relance immédiate).
 

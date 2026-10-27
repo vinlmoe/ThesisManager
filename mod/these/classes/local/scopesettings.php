@@ -32,7 +32,7 @@ use stdClass;
  */
 class scopesettings {
     /** @var string[] Paramètres contenant une adresse de courriel. */
-    const EMAILS = ['dgemail', 'ccememail', 'ucblemail'];
+    const EMAILS = ['ccememail', 'ucblemail'];
 
     /**
      * Cache des paramètres lus pendant la requête, par portée et par contexte (vidé entre deux tests).
@@ -57,7 +57,6 @@ class scopesettings {
             'devetitle' => 'Directrice des Etudes et de la Vie Etudiante',
             'dgtitle' => '',
             'dgname' => '',
-            'dgemail' => '',
             'visaplace' => '',
             'ccemname' => '',
             'ccememail' => '',
@@ -79,7 +78,6 @@ class scopesettings {
             'deverole' => (int) $DB->get_field('role', 'id', ['shortname' => 'editingteacher']),
             'libraryrole' => (int) $DB->get_field('role', 'id', ['shortname' => 'theselibrary']),
             'deveagent' => '',
-            'dgdelegation' => 0,
             'libraryagent' => '',
             'defenseduration' => 60,
             'defenserooms' => '',
@@ -462,7 +460,7 @@ class scopesettings {
             ['settingscheckdeve', $filled(['devename']), false, null],
             ['settingscheckcontract', self::contract_template($scope) !== null, false, null],
             ['settingscheckrooms', (bool) self::rooms($values), false, null],
-            ['settingscheckagents', $filled(['deveagent']), true, null],
+            ['settingscheckagents', $filled(['deveagent']), false, null],
             ['settingschecklibraryagents', $filled(['libraryagent']), true, null],
             ['settingscheckquestions', (bool) these_get_questions($scope), true, $page('questions.php')],
         ];

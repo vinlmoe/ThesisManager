@@ -129,8 +129,8 @@ if ($documents && ($data = $mform->get_data())) {
             $png->name,
             $png->png,
             (string) $signature->signeremail,
-            // Agent DEVE à l'emplacement de la direction générale : signature par délégation.
-            ['delegated' => $signature->slot === 'dg' && $signature->token === null]
+            // Direction générale : toujours signée par délégation.
+            ['delegated' => $signature->slot === 'dg']
         );
         $count++;
     }

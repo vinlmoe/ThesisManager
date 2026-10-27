@@ -95,20 +95,20 @@ class signatureagent {
     }
 
     /**
-     * Indique si les agents DEVE signent pour la direction générale, par délégation : paramètre
-     * « dgdelegation » du circuit, et au moins un agent désigné. La direction générale ne reçoit
-     * alors plus de lien ; ses signatures attendent les agents dans « Mes signatures ».
+     * Indique si les agents DEVE signent pour la direction générale : elle ne signe jamais elle-même,
+     * ses documents sont toujours signés par délégation, par les agents DEVE quand il y en a de
+     * désignés (sinon sur place ou par scan, auprès de la DEVE).
      *
      * @param stdClass $these
      * @return bool
      */
     public static function signs_dg_by_delegation(stdClass $these) {
-        return !empty(scopesettings::for_these($these)['dgdelegation']) && self::deve_agents($these);
+        return (bool) self::deve_agents($these);
     }
 
     /**
      * Emplacements que signent les agents DEVE d'une activité : les leurs (voir agent_slots()), et
-     * celui de la direction générale quand ils signent par délégation.
+     * celui de la direction générale, par délégation.
      *
      * @param stdClass $these
      * @return string[]

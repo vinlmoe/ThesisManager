@@ -695,8 +695,6 @@ $string['settingshetopurl_help'] = 'Reference terminology for subject keywords.'
 $string['settingsdgtitle'] = 'General management (title)';
 $string['settingsdgtitle_help'] = 'Full title printed above their signature, in French, for example « La Directrice générale de … ».';
 $string['settingsdgname'] = 'General management (name)';
-$string['settingsdgemail'] = 'General management (email)';
-$string['settingsdgemail_help'] = 'Address receiving signing links; empty: signature collected in person by the registrar.';
 $string['settingsvisaplace'] = 'Place of approval';
 $string['settingsvisaplace_help'] = '"Seen, at …" of the conclusions, "Done at" of the distribution contract.';
 $string['settingsccemname'] = 'CCEM (name)';
@@ -987,9 +985,6 @@ $string['pdfdelegated'] = '{$a} (by delegation)';
 $string['signeddelegated'] = 'by delegation';
 $string['signedmethodinperson'] = 'in person, identity checked by the registrar';
 $string['signedmethodscan'] = 'by hand, scan attached to the file';
-$string['signdelegated'] = 'Signature by delegation of the general management';
-$string['signdelegated_help'] = 'Tick when the person signing does so by delegation of the director general: "by delegation" '
-    . 'appears with their name on the document.';
 $string['signidentity'] = 'Checking the identity of the signatory';
 $string['signidentity_desc'] = 'Check the identity of the person present (identity document) before opening the signing page. '
     . 'The check is recorded in the history under your name, kept with the signature and printed under it.';
@@ -1269,17 +1264,11 @@ $string['agentdeve'] = 'Registrar officer';
 $string['settingsdeveagent'] = 'Registrar signatories';
 $string['settingsdeveagent_help'] = 'Officers allowed to sign for the registrar, chosen among the registrar members enrolled '
     . 'in the courses of the followed activities (registrar capability or role): type a name to find them. The registrar team '
-    . 'fills in and checks the file, then validates without signing; each officer then receives an email and finds the subject '
-    . 'visa and the administrative approval in "My signatures": the first one to sign applies the signature, with their saved '
-    . 'signature. Leave empty for the registrar member who validates to sign.';
-$string['settingsdgdelegation'] = 'Director general by delegation';
-$string['settingsdgdelegationlabel'] = 'The registrar signatories sign for the director general, by delegation';
-$string['settingsdgdelegation_help'] = 'Tick when the director general has delegated their signature to the registrar signatories. '
-    . 'The director general no longer receives a link: the information sheet, the distribution contract and the conclusions wait '
-    . 'for the officers in "My signatures", requested with the administrative approval when the defence file is validated. The '
-    . 'document bears the officer\'s name followed by "(by delegation)". The officers are reminded of these signatures as of their '
-    . 'own (reminder delay, "Remind" button of the signature tracking, bulk action). Without a designated officer, the box has no '
-    . 'effect.';
+    . 'fills in and checks the file, then validates without signing; each officer then receives an email and finds in "My '
+    . 'signatures" the subject visa, the administrative approval and the general management documents (information sheet, '
+    . 'distribution contract, conclusions), which they sign by delegation: the general management never signs itself. The first '
+    . 'officer to sign applies the signature, with their saved signature. Without an officer, the registrar member who validates '
+    . 'signs the visa and the approval, and the general management documents are signed in person or by scan.';
 $string['mysignatures'] = 'My signatures';
 $string['mysignatures_desc'] = 'Documents awaiting your signature, all cohorts together. Check each document as a PDF, tick those '
     . 'to sign, then sign once: your saved signature is used by default.';

@@ -54,13 +54,6 @@ class scopesettings_form extends \moodleform {
         $mform->addElement('header', 'agentheader', get_string('settingsdeveagent', 'mod_these'));
         $mform->setExpanded('agentheader');
         $this->add_agents_field('deveagent');
-        $mform->addElement(
-            'advcheckbox',
-            'dgdelegation',
-            get_string('settingsdgdelegation', 'mod_these'),
-            get_string('settingsdgdelegationlabel', 'mod_these')
-        );
-        $mform->addHelpButton('dgdelegation', 'settingsdgdelegation', 'mod_these');
 
         $mform->addElement('header', 'libraryagentheader', get_string('settingslibraryagent', 'mod_these'));
         $mform->setExpanded('libraryagentheader');

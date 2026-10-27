@@ -594,7 +594,7 @@ class dossiers {
                 }
             }
             if ($step['request'] && signatureagent::signs_dg_by_delegation($these)) {
-                // Direction générale signée par délégation : demandée aux agents, dans le même courriel.
+                // Direction générale, toujours par délégation : demandée aux agents, dans le même courriel.
                 $agentdoctypes = array_merge($agentdoctypes, $step['request']);
             }
             if ($agentdoctypes) {

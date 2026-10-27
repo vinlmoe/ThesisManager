@@ -700,8 +700,6 @@ $string['settingshetopurl_help'] = 'Terminologie de référence pour les mots-cl
 $string['settingsdgtitle'] = 'Direction générale (intitulé)';
 $string['settingsdgtitle_help'] = 'Intitulé complet imprimé au-dessus de sa signature, par exemple « La Directrice générale de … ».';
 $string['settingsdgname'] = 'Direction générale (nom)';
-$string['settingsdgemail'] = 'Direction générale (courriel)';
-$string['settingsdgemail_help'] = 'Adresse à laquelle envoyer les liens de signature ; vide : signature recueillie sur place par la DEVE.';
 $string['settingsvisaplace'] = 'Lieu du visa';
 $string['settingsvisaplace_help'] = '« Vu, … le » des conclusions, « Fait à » du contrat de diffusion.';
 $string['settingsccemname'] = 'CCEM (nom)';
@@ -992,9 +990,6 @@ $string['pdfdelegated'] = '{$a} (par délégation)';
 $string['signeddelegated'] = 'par délégation';
 $string['signedmethodinperson'] = 'sur place, identité vérifiée par la DEVE';
 $string['signedmethodscan'] = 'à la main, scan joint au dossier';
-$string['signdelegated'] = 'Signature par délégation de la direction générale';
-$string['signdelegated_help'] = "À cocher quand la personne qui signe le fait par délégation de la directrice ou du directeur général : "
-    . "la mention « par délégation » accompagne son nom sur le document.";
 $string['signidentity'] = "Vérification de l'identité du signataire";
 $string['signidentity_desc'] = "Vérifiez l'identité de la personne présente (pièce d'identité) avant d'ouvrir la page de signature. "
     . "La vérification est inscrite à l'historique à votre nom, conservée avec la signature et imprimée sous elle.";
@@ -1279,17 +1274,11 @@ $string['agentdeve'] = 'Agent responsable de la DEVE';
 $string['settingsdeveagent'] = 'Agents DEVE signataires';
 $string['settingsdeveagent_help'] = "Agents habilités à signer pour la DEVE, choisis parmi les membres de la DEVE inscrits "
     . "aux cours des activités suivies (droit de la DEVE ou rôle de la DEVE) : tapez un nom pour le retrouver. L'équipe de la "
-    . "DEVE remplit et vérifie le dossier puis valide sans signer ; chaque agent reçoit alors un courriel et retrouve le visa du "
-    . "sujet et l'agrément administratif dans « Mes signatures » : le premier qui signe appose la signature, avec sa signature "
-    . "enregistrée. Laisser vide pour que la personne de la DEVE qui valide signe elle-même.";
-$string['settingsdgdelegation'] = 'Direction générale par délégation';
-$string['settingsdgdelegationlabel'] = 'Les agents DEVE signent pour la direction générale, par délégation';
-$string['settingsdgdelegation_help'] = "À cocher quand la direction générale a délégué sa signature aux agents DEVE signataires. "
-    . "La direction générale ne reçoit plus de lien : la fiche signalétique, le contrat de diffusion et les conclusions attendent "
-    . "les agents dans « Mes signatures », demandés avec l'agrément administratif à la validation du dossier de soutenance. Le "
-    . "document porte le nom de l'agent suivi de « (par délégation) ». Les agents sont relancés pour ces signatures comme pour les "
-    . "leurs (délai de relance, bouton « Relancer » du suivi des signatures, action groupée). Sans agent désigné, la case est "
-    . 'sans effet.';
+    . "DEVE remplit et vérifie le dossier puis valide sans signer ; chaque agent reçoit alors un courriel et retrouve dans « Mes "
+    . "signatures » le visa du sujet, l'agrément administratif et les documents de la direction générale (fiche signalétique, "
+    . "contrat de diffusion, conclusions), qu'il signe par délégation : la direction générale ne signe jamais elle-même. Le "
+    . "premier agent qui signe appose la signature, avec sa signature enregistrée. Sans agent, la personne de la DEVE qui valide "
+    . "signe le visa et l'agrément, et les documents de la direction générale se signent sur place ou par scan.";
 $string['mysignatures'] = 'Mes signatures';
 $string['mysignatures_desc'] = 'Documents qui attendent votre signature, toutes promotions confondues. Consultez chaque document en '
     . "PDF, cochez ceux à signer, puis signez une seule fois : votre signature enregistrée est reprise d'office.";

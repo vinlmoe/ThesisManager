@@ -84,10 +84,12 @@ class external_signers implements \renderable, \templatable {
             if (!$pending) {
                 continue;
             }
+            if ($slot === 'dg' && signatureagent::signs_dg_by_delegation($these)) {
+                // Direction générale signée par les agents DEVE : voir leur ligne.
+                continue;
+            }
             $actions = [];
-            // Direction générale signée par délégation : la relance passe par les agents (ligne suivante).
-            $delegated = $slot === 'dg' && signatureagent::signs_dg_by_delegation($these);
-            if (in_array($slot, these_external_slots(), true) && $signer['email'] !== '' && !$delegated) {
+            if (in_array($slot, these_external_slots(), true) && $signer['email'] !== '') {
                 $actions[] = parts::link(
                     new moodle_url($this->pageurl, ['resend' => $slot, 'sesskey' => sesskey()]),
                     get_string('resendsignature', 'mod_these'),
