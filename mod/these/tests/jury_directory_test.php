@@ -378,4 +378,48 @@ final class jury_directory_test extends these_testcase {
         $html = \mod_these\pdf\html_document::mustache()->render($body, $data);
         $this->assertStringContainsString('Anatomie', $html);
     }
+
+    /**
+     * Annuaire en lecture seule : enseignants actifs internes et extérieurs, recherche sans accents
+     * dans le nom, la matière et l'établissement, limitation à ceux qui peuvent présider ; ouvert aux
+     * étudiants, sans adresse.
+     */
+    public function test_read_only_directory(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setup_activity();
+        $internal = $this->juror('Martin', 'pr');
+        $external = $this->juror('Curie', 'pr');
+        $mcf = $this->juror('Bernard', 'mcf', 'Dr');
+        $retired = $this->juror('Ancien', 'pr');
+        $DB->set_field('these_juror', 'institution', 'Faculté de médecine de Lyon', ['id' => $external]);
+        $DB->set_field('these_juror', 'discipline', 'Pharmacologie vétérinaire', ['id' => $internal]);
+        $DB->set_field('these_juror', 'active', 0, ['id' => $retired]);
+
+        $ids = function (array $jurors) {
+            return array_map('intval', array_column($jurors, 'id'));
+        };
+        $this->assertSame([$mcf, $external, $internal], $ids(jurors::directory()));
+        $this->assertSame([$external, $internal], $ids(jurors::directory('', true)));
+        $this->assertSame([$external], $ids(jurors::directory('faculte MEDECINE', true)));
+        $this->assertSame([$internal], $ids(jurors::directory('pharmacologie')));
+        $this->assertSame([], $ids(jurors::directory('Ancien')));
+
+        $url = new \moodle_url('/mod/these/directory.php', ['id' => $this->cm->id]);
+        $data = (new \mod_these\output\juror_directory($url, jurors::directory('', true), '', true))
+            ->export_for_template($GLOBALS['PAGE']->get_renderer('mod_these'));
+        $this->assertTrue($data['presidents']);
+        $json = json_encode($data, JSON_UNESCAPED_UNICODE);
+        $this->assertStringContainsString('Faculté de médecine de Lyon', $json);
+        $this->assertStringNotContainsString('@example.org', $json);
+
+        // Ouvert aux étudiants : lien dans la barre de navigation, sauf pour la DEVE qui tient l'annuaire.
+        $this->setUser($this->student);
+        $this->assertNotEmpty(these_require_view($this->context));
+        $links = (new \mod_these\output\navlinks($this->cm, $this->context))->get_links();
+        $this->assertArrayHasKey(get_string('jurordirectory', 'mod_these'), $links);
+        $this->setUser($this->deve);
+        $links = (new \mod_these\output\navlinks($this->cm, $this->context))->get_links();
+        $this->assertArrayNotHasKey(get_string('jurordirectory', 'mod_these'), $links);
+    }
 }

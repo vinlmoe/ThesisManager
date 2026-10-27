@@ -112,7 +112,8 @@ celles de la direction générale (bouton \bouton{Relancer} du suivi des
 signatures) ; agents DEVE et agents de la bibliothèque choisis parmi les
 inscrits au lieu d'être saisis ; plus de rôles des services ni de rôle
 \og Bibliothèque (thèses)\fg{} ; matière enseignée dans l'annuaire et liste du
-corps enseignant sur trois colonnes. \\
+corps enseignant sur trois colonnes ; annuaire des enseignants en lecture seule
+pour les étudiants. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -409,6 +410,17 @@ l'acteur attendu) ; \bouton{Voir toutes les étapes} déplie la frise complète.
 \capture[0.85\linewidth]{01_etudiant_accueil}{Accueil de l'activité : \og Mon dossier de thèse\fg{}.}
 
 \capture[0.35\linewidth]{104_frise_telephone}{Sur téléphone : l'étape en cours, la frise repliée, puis les actions.}
+
+\begin{astuce}
+\textbf{Annuaire des enseignants.} Le bouton \bouton{Annuaire des enseignants}
+de votre page ouvre, en lecture seule, la liste des enseignants pouvant diriger
+une thèse ou siéger au jury, de l'établissement comme \textbf{extérieurs} : nom,
+statut, matière enseignée, établissement, et colonne \og Peut présider\fg{}.
+Cherchez par nom, matière ou établissement (accents et majuscules ignorés) et
+cochez \bouton{Seulement ceux pouvant présider un jury} pour trouver un
+président de jury, y compris hors de l'établissement. La page donne aussi la
+liste du corps enseignant en PDF (enseignants de l'établissement seulement).
+\end{astuce}
 
 \begin{procedure}{Proposer son sujet (phase 1)}{Étudiant}
 \begin{etapes}
@@ -1575,8 +1587,17 @@ section tient sur \textbf{trois colonnes} (lecture de haut en bas, première
 colonne d'abord) ; sous chaque nom figure la \textbf{matière enseignée} saisie
 dans l'annuaire. Les
 étudiants la téléchargent depuis le dépôt de la soutenance (lien sous le
-manuscrit). Sa mise en page est un modèle de document comme les autres
-(\og Liste du corps enseignant\fg{}, section~\ref{sec:modeles}).
+manuscrit) et depuis l'annuaire des enseignants. Sa mise en page est un modèle
+de document comme les autres (\og Liste du corps enseignant\fg{},
+section~\ref{sec:modeles}).
+
+\paragraph{Annuaire des enseignants (lecture seule).} Les étudiants, les
+directeurs et la bibliothèque consultent l'annuaire sans pouvoir le modifier :
+bouton \bouton{Annuaire des enseignants} de la page de l'étudiant et de la barre
+de navigation. Contrairement à la liste en PDF, il montre aussi les enseignants
+\textbf{extérieurs}, avec la possibilité de présider un jury, une recherche (nom,
+matière, établissement) et un filtre \bouton{Seulement ceux pouvant présider un
+jury}. Ni adresse ni enseignant retiré n'y figurent.
 
 \capture[0.6\linewidth]{106_liste_corps_enseignant}{Liste du corps enseignant, à inclure dans la thèse.}
 

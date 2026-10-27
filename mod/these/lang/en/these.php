@@ -311,6 +311,14 @@ $string['jurorsaved'] = 'The teacher has been saved.';
 $string['jurordeleted'] = 'The teacher has been removed from the directory.';
 $string['jurordeleteconfirm'] = 'Remove {$a} from the directory? Juries that chose them keep them.';
 $string['jurorsnone'] = 'The directory is empty.';
+$string['jurordirectory'] = 'Teacher directory';
+$string['jurordirectory_desc'] = 'Teachers who may supervise a thesis or sit on a jury, from the institution and external, with '
+    . 'their status and subject. The "May chair" column shows those who may chair a jury: professors, emeritus professors, '
+    . 'associate professors with HDR or emeritus.';
+$string['jurordirectorysearch'] = 'Name, subject, institution';
+$string['jurordirectorypresidents'] = 'Only those who may chair a jury';
+$string['jurordirectorycount'] = '{$a} teacher(s)';
+$string['jurordirectorynone'] = 'No teacher matches the search.';
 $string['jurorimport'] = 'Import a CSV file';
 $string['jurorimportfile'] = 'CSV file';
 $string['jurorimportfile_help'] = 'Columns: title (Dr or Pr), lastname, firstname, email, status, institution and, optionally, '

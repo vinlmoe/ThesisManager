@@ -373,6 +373,35 @@ class jurors {
     }
 
     /**
+     * Annuaire en lecture seule (étudiants compris) : enseignants actifs, internes comme extérieurs,
+     * filtrés par un texte cherché dans le nom, la matière et l'établissement (casse et accents
+     * ignorés), et au besoin limités à ceux qui peuvent présider un jury.
+     *
+     * @param string $search
+     * @param bool $presidentsonly
+     * @return \stdClass[] Enseignants, triés par nom.
+     */
+    public static function directory($search = '', $presidentsonly = false) {
+        $normalise = function ($value) {
+            return trim(preg_replace('/\s+/', ' ', \core_text::strtolower(\core_text::specialtoascii((string) $value))));
+        };
+        $words = array_filter(explode(' ', $normalise($search)), 'strlen');
+        return array_values(array_filter(self::get_all(true), function ($juror) use ($normalise, $words, $presidentsonly) {
+            if ($presidentsonly && !self::can_preside($juror->status)) {
+                return false;
+            }
+            $haystack = $normalise(implode(' ', [$juror->title, $juror->lastname, $juror->firstname,
+                $juror->discipline ?? '', $juror->institution ?? '', self::status_label($juror->status)]));
+            foreach ($words as $word) {
+                if (strpos($haystack, $word) === false) {
+                    return false;
+                }
+            }
+            return true;
+        }));
+    }
+
+    /**
      * Statuts dans l'ordre de la liste du corps enseignant (professeurs d'abord).
      *
      * @return string[]

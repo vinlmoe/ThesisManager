@@ -1,0 +1,46 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_these/juror_directory
+
+    Annuaire des enseignants en lecture seule : recherche, case « pouvant présider » et tableau.
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * none
+
+    Context variables required for this template:
+    * action, id, search, placeholder, presidents, presidentslabel, filterlabel Formulaire de recherche.
+    * count Nombre d'enseignants affichés ; hasrows, none, table (voir mod_these/table).
+
+    Example context (json):
+    {"action": "https://example.com/mod/these/directory.php", "id": 2, "search": "", "placeholder": "Nom, matière, établissement",
+        "presidents": false, "presidentslabel": "Seulement ceux pouvant présider un jury", "filterlabel": "Filtrer",
+        "count": "1 enseignant", "hasrows": true, "none": "Aucun enseignant ne correspond.",
+        "table": {"tableclass": "generaltable", "hashead": true, "head": [{"text": "Nom", "class": "header c0 lastcol", "isth": true}],
+            "rows": [{"class": "lastrow", "cells": [{"class": "cell c0 lastcol", "parts": [{"ptext": {"value": "Pr DUPONT Jean"},
+            "phtml": false, "pstrong": false, "pstronghtml": false, "pem": false, "pbadge": false, "pspan": false, "plink": false,
+            "pmuted": false, "pbr": false, "pfiles": false, "pstatus": false, "pdetails": false, "pcode": false,
+            "pcheckbox": false}]}]}]}
+    }
+}}
+<form method="get" action="{{action}}" class="form-inline mb-3"><input type="hidden" name="id" value="{{id}}" /><input type="text" name="search" value="{{search}}" placeholder="{{placeholder}}" aria-label="{{placeholder}}" class="form-control mr-2 mb-1" /><div class="form-check mr-2 mb-1"><input type="checkbox" name="presidents" value="1" id="these-presidents" class="form-check-input" {{#presidents}}checked{{/presidents}} /><label class="form-check-label" for="these-presidents">{{presidentslabel}}</label></div><input type="submit" value="{{filterlabel}}" class="btn btn-secondary mb-1" /></form>
+<p class="text-muted">{{count}}</p>
+{{#hasrows}}{{#table}}{{> mod_these/table}}{{/table}}{{/hasrows}}
+{{^hasrows}}<p>{{none}}</p>{{/hasrows}}

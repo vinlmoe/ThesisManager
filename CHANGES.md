@@ -13,7 +13,7 @@ de version recalés sur la date. Les numéros entre parenthèses des sections de
 développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
 été étiquetée.
 
-## mod_these 0.19.0 (2026102708) — direction générale signée par délégation des agents DEVE, relance des agents, agents choisis parmi les inscrits, plus de rôles des services, matière des enseignants
+## mod_these 0.19.0 (2026102708) — direction générale signée par délégation des agents DEVE, relance des agents, agents choisis parmi les inscrits, plus de rôles des services, matière des enseignants, annuaire pour les étudiants
 
 - La direction générale ne signe jamais elle-même : ses documents (fiche
   signalétique, contrat de diffusion, conclusions) sont toujours signés par
@@ -61,6 +61,13 @@ développement ne correspondent à aucune version installable ; 0.11.2 n'a jamai
   personnalisé garde sa mise en page : la rétablir depuis les modèles pour en
   profiter (variable `rows` de chaque groupe, lignes de `cells` avec leur
   `member`, et `discipline` de chaque enseignant).
+- Annuaire des enseignants en lecture seule (`directory.php`), ouvert à
+  quiconque consulte l'activité, étudiants compris : bouton sur la page de
+  l'étudiant et lien de la barre de navigation (sauf pour la DEVE, qui tient
+  l'annuaire). Enseignants actifs internes et extérieurs : nom, statut,
+  matière, établissement, présidence possible ; recherche (nom, matière,
+  établissement, sans accents) et filtre « Seulement ceux pouvant présider un
+  jury ». Ni adresse ni modification ; lien vers la liste en PDF.
 
 ## mod_these 0.18.0 (2026102703) — directeur non votant, liste du corps enseignant, aides pour la DEVE
 

@@ -62,6 +62,12 @@ $PAGE->set_context($context);
 echo $OUTPUT->header();
 
 echo $OUTPUT->heading(get_string('mydossier', 'mod_these'), 3);
+// Annuaire des enseignants en lecture seule : pour choisir un directeur ou proposer un jury.
+echo $PAGE->get_renderer('mod_these')->render(new output\link(
+    new moodle_url('/mod/these/directory.php', ['id' => $cm->id]),
+    get_string('jurordirectory', 'mod_these'),
+    'btn btn-secondary mb-3'
+));
 if (!$dossier) {
     echo $OUTPUT->notification(get_string('nodossieryet', 'mod_these'), 'info');
     echo $PAGE->get_renderer('mod_these')->render(new output\link(

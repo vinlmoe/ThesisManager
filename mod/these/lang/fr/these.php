@@ -315,6 +315,14 @@ $string['jurorsaved'] = "L'enseignant est enregistré.";
 $string['jurordeleted'] = "L'enseignant est supprimé de l'annuaire.";
 $string['jurordeleteconfirm'] = "Supprimer {\$a} de l'annuaire ? Les jurys qui l'ont retenu le gardent.";
 $string['jurorsnone'] = "L'annuaire est vide.";
+$string['jurordirectory'] = 'Annuaire des enseignants';
+$string['jurordirectory_desc'] = "Enseignants pouvant diriger une thèse ou siéger au jury, de l'établissement et extérieurs, avec "
+    . "leur statut et leur matière. La colonne « Peut présider » indique ceux qui peuvent présider un jury : professeurs, "
+    . "professeurs émérites, maîtres de conférences HDR ou émérites.";
+$string['jurordirectorysearch'] = 'Nom, matière, établissement';
+$string['jurordirectorypresidents'] = 'Seulement ceux pouvant présider un jury';
+$string['jurordirectorycount'] = '{$a} enseignant(s)';
+$string['jurordirectorynone'] = 'Aucun enseignant ne correspond à la recherche.';
 $string['jurorimport'] = 'Importer un fichier CSV';
 $string['jurorimportfile'] = 'Fichier CSV';
 $string['jurorimportfile_help'] = "Colonnes : title (Dr ou Pr), lastname, firstname, email, status, institution et, "

@@ -31,8 +31,8 @@ require_once(__DIR__ . '/output_testcase.php');
  */
 final class navlinks_test extends output_testcase {
     /**
-     * Contexte : la DEVE a les liens de gestion ; le directeur le tableau de bord et le planning ;
-     * l'étudiant aucun.
+     * Contexte : la DEVE a les liens de gestion ; le directeur le tableau de bord, le planning et
+     * l'annuaire des enseignants ; l'étudiant l'annuaire seulement.
      */
     public function test_export_for_template(): void {
         $this->setup_activity();
@@ -52,15 +52,16 @@ final class navlinks_test extends output_testcase {
         $this->assertContains(get_string('scopesettings', 'mod_these'), $settings);
         $this->assertContains(get_string('doctemplates', 'mod_these'), $settings);
         [, $director, $settings] = $labels($this->director);
-        $this->assertSame([get_string('dashboard', 'mod_these'), get_string('planning', 'mod_these')], $director);
+        $this->assertSame([get_string('dashboard', 'mod_these'), get_string('planning', 'mod_these'),
+            get_string('jurordirectory', 'mod_these')], $director);
         $this->assertSame([], $settings);
         [$has, $student] = $labels($this->student);
-        $this->assertFalse($has);
-        $this->assertSame([], $student);
+        $this->assertTrue($has);
+        $this->assertSame([get_string('jurordirectory', 'mod_these')], $student);
     }
 
     /**
-     * Rendu : bloc these-navlinks ; rien pour l'étudiant.
+     * Rendu : bloc these-navlinks ; pour l'étudiant, le seul lien vers l'annuaire.
      */
     public function test_render(): void {
         $this->setup_activity();
@@ -69,6 +70,8 @@ final class navlinks_test extends output_testcase {
         $this->assertStringStartsWith('<div class="these-navlinks mb-3"><a href=', $html);
         $this->assertSame($html, these_render_navlinks($this->cm, $this->context));
         $this->setUser($this->student);
-        $this->assertSame('', these_render_navlinks($this->cm, $this->context));
+        $html = these_render_navlinks($this->cm, $this->context);
+        $this->assertStringContainsString('directory.php', $html);
+        $this->assertStringNotContainsString('dashboard.php', $html);
     }
 }
