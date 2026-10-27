@@ -632,7 +632,8 @@ $string['settingscheckimages'] = 'Document template images';
 $string['settingscheckimagesmissing'] = 'Document template images (missing: {$a})';
 $string['settingsmissingnotice'] = 'Workflow settings to complete: {$a}.';
 $string['settingslibraryagent'] = 'Library agents';
-$string['settingslibraryagent_help'] = "Usernames or email addresses of the library agents' Moodle accounts, separated by commas or one per line. Without any role to assign, they get the library's rights (subject record, manuscript compliance, corrections) and only those: no registrar buttons or pages, even if their course role would give them. They receive the emails addressed to the library. They must be able to enter the course (enrolment with any role).";
+$string['settingslibraryagent_help'] = "Library agents, chosen among the staff enrolled in the courses of the followed activities (enrolled users who do not submit a thesis) and the holders of the library role: type a name to find them. Without any role to assign, they get the library's rights (subject record, manuscript compliance, corrections) and only those: no registrar buttons or pages, even if their course role would give them. They receive the emails addressed to the library. Someone missing from the list must first be enrolled in the course.";
+$string['settingsagentsnone'] = 'No agent selected';
 $string['settingschecklibraryagents'] = 'Library agents';
 $string['scopesettings'] = 'Workflow settings';
 $string['scopesettings_desc'] = 'Service roles, registrar signing agents, institution, university, document signatories and standard '
@@ -1266,11 +1267,11 @@ Open the file: {$a->url}';
 // DEVE agent signatory and saved signature.
 $string['agentdeve'] = 'Registrar officer';
 $string['settingsdeveagent'] = 'Registrar signatories';
-$string['settingsdeveagent_help'] = 'Usernames or email addresses of the Moodle accounts of the officers allowed to sign for the '
-    . 'registrar, separated by commas or one per line. The registrar team fills in and checks the file, then validates without '
-    . 'signing; each officer then receives an email and finds the subject visa and the administrative approval in "My signatures": '
-    . 'the first one to sign applies the signature, with their saved signature. Leave empty for the registrar member who validates '
-    . 'to sign.';
+$string['settingsdeveagent_help'] = 'Officers allowed to sign for the registrar, chosen among the registrar members enrolled '
+    . 'in the courses of the followed activities (registrar capability or role): type a name to find them. The registrar team '
+    . 'fills in and checks the file, then validates without signing; each officer then receives an email and finds the subject '
+    . 'visa and the administrative approval in "My signatures": the first one to sign applies the signature, with their saved '
+    . 'signature. Leave empty for the registrar member who validates to sign.';
 $string['settingsdgdelegation'] = 'Director general by delegation';
 $string['settingsdgdelegationlabel'] = 'The registrar signatories sign for the director general, by delegation';
 $string['settingsdgdelegation_help'] = 'Tick when the director general has delegated their signature to the registrar signatories. '

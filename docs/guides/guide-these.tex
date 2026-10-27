@@ -109,7 +109,8 @@ planning) ; version du guide et du module mises à jour en page de garde. \\
 2.13 & 27 octobre 2026 & Direction générale signée par délégation par les
 agents DEVE (paramètre du circuit) ; relance des agents pour leurs signatures et
 celles de la direction générale (bouton \bouton{Relancer} du suivi des
-signatures). \\
+signatures) ; agents DEVE et agents de la bibliothèque choisis parmi les
+inscrits au lieu d'être saisis. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -276,17 +277,18 @@ Attribution des rôles système}) : les bibliothécaires accèdent alors à tout
 les activités de gestion des thèses sans être inscrits aux cours.
 
 \paragraph{Agents de la bibliothèque.} Plus simple, sans rôle à attribuer :
-la DEVE liste les agents de la bibliothèque (identifiants ou adresses de
-courriel, séparés par des virgules ou un par ligne) dans les
+la DEVE choisit les agents de la bibliothèque dans les
 \bouton{Paramètres du circuit} de l'activité de suivi, rubrique \og Agents de
-la bibliothèque\fg{}. Ils ont les droits de la bibliothèque et seulement
+la bibliothèque\fg{} : on tape un nom, puis on le choisit dans la liste des
+personnels inscrits aux cours des activités suivies (inscrits qui ne déposent
+pas de thèse) et des détenteurs du rôle de la bibliothèque. Ils ont les droits de la bibliothèque et seulement
 ceux-là : leur tableau de bord ne montre que la file \og À traiter\fg{} de la
 bibliothèque, le planning et l'export ; ni création, ni import, ni menu
 \bouton{Paramètres}, ni pages de la DEVE, même si leur rôle dans le cours
 (enseignant, par exemple) les leur donnerait. Ils ne sont pas proposés comme
-directeurs de thèse et reçoivent les courriels adressés à la bibliothèque. Ils
-doivent seulement pouvoir entrer dans le cours (inscription avec n'importe quel
-rôle).
+directeurs de thèse et reçoivent les courriels adressés à la bibliothèque. Une
+personne absente de la liste doit d'abord être inscrite au cours (avec
+n'importe quel rôle sauf celui d'étudiant).
 
 \begin{astuce}
 Un directeur de thèse ne voit et ne valide que les dossiers qu'il dirige. Seuls
@@ -323,9 +325,9 @@ signataires et le questionnaire sont facultatifs.
         contrat ne contient que les pages du module, n'est pas scellé
         (section~\ref{sec:integrite}) et le dossier affiche un avertissement
         à la DEVE.
-  \item[Agents DEVE signataires] identifiants ou adresses des comptes Moodle
-        des agents habilités à signer pour la DEVE, séparés par des virgules ou
-        un par ligne : l'équipe valide sans signer, puis l'un des agents signe
+  \item[Agents DEVE signataires] agents habilités à signer pour la DEVE,
+        choisis (en tapant leur nom) parmi les membres de la DEVE inscrits aux
+        cours des activités suivies : l'équipe valide sans signer, puis l'un des agents signe
         depuis \bouton{Mes signatures} (section~\ref{sec:agent}). Vide : la
         personne qui valide signe.
   \item[Direction générale par délégation] case \bouton{Les agents DEVE
@@ -343,9 +345,9 @@ signataires et le questionnaire sont facultatifs.
         modification par la DEVE), la première par défaut. Elles remplacent
         l'ancien \og lieu de soutenance proposé par défaut\fg{} des réglages
         de l'activité, repris tant qu'aucune salle n'est saisie.
-  \item[Agents de la bibliothèque] identifiants ou adresses des comptes des
-        agents de la bibliothèque, sans rôle à attribuer
-        (section~\ref{sec:roles}).
+  \item[Agents de la bibliothèque] agents de la bibliothèque, choisis parmi
+        les personnels inscrits et les détenteurs du rôle de la bibliothèque,
+        sans rôle à attribuer (section~\ref{sec:roles}).
   \item[Récapitulatif hebdomadaire] courriel du lundi à la DEVE
         (section~\ref{sec:relances}), activé par défaut.
   \item[Textes] établissement, université (avec son article : \og

@@ -90,7 +90,8 @@ class scopesettings {
     /**
      * Comptes désignés dans un paramètre (agents DEVE signataires, agents de la bibliothèque) :
      * identifiants ou adresses de courriel séparés par des virgules, des points-virgules ou des retours
-     * à la ligne. Les comptes supprimés ou suspendus sont ignorés.
+     * à la ligne (le formulaire enregistre les identifiants des comptes choisis, un par ligne). Les
+     * comptes supprimés ou suspendus sont ignorés.
      *
      * @param string $setting
      * @return stdClass[] Comptes, indexés par identifiant, dans l'ordre du paramètre.
@@ -107,24 +108,105 @@ class scopesettings {
         if ($users === false) {
             $users = [];
             foreach (preg_split('/[\s,;]+/', $setting, -1, PREG_SPLIT_NO_EMPTY) as $value) {
-                $field = strpos($value, '@') !== false ? 'email' : 'username';
-                $found = $DB->get_records_select(
-                    'user',
-                    "LOWER($field) = LOWER(?) AND deleted = 0 AND suspended = 0",
-                    [$value],
-                    'id ASC',
-                    '*',
-                    0,
-                    1
-                );
-                if ($found) {
-                    $user = reset($found);
-                    $users[$user->id] = $user;
+                // Identifiant d'abord (il peut être une adresse), puis adresse de courriel.
+                foreach (strpos($value, '@') !== false ? ['username', 'email'] : ['username'] as $field) {
+                    $found = $DB->get_records_select(
+                        'user',
+                        "LOWER($field) = LOWER(?) AND deleted = 0 AND suspended = 0",
+                        [$value],
+                        'id ASC',
+                        '*',
+                        0,
+                        1
+                    );
+                    if ($found) {
+                        $user = reset($found);
+                        $users[$user->id] = $user;
+                        break;
+                    }
                 }
             }
             self::cache()->set($key, $users);
         }
         return $users;
+    }
+
+    /**
+     * Contextes des activités dont les inscrits peuvent être désignés agents dans une portée :
+     * l'activité « Gestion des thèses » elle-même, ou l'activité « Suivi des thèses » et toutes les
+     * activités qu'elle suit.
+     *
+     * @param stdClass $scope Voir these_settings_scope().
+     * @return context[]
+     */
+    public static function scope_contexts(stdClass $scope) {
+        global $DB;
+
+        $cmids = $scope->cmid ? [(int) $scope->cmid] : [];
+        if ($scope->shared) {
+            $cmids = array_merge($cmids, array_map('intval', $DB->get_fieldset_select(
+                'thesesynthesis_link',
+                'thesecmid',
+                'synthesisid = ?',
+                [$scope->synthesisid]
+            )));
+        }
+        $contexts = [];
+        foreach (array_unique($cmids) as $cmid) {
+            if ($context = \context_module::instance($cmid, IGNORE_MISSING)) {
+                $contexts[$context->id] = $context;
+            }
+        }
+        return $contexts;
+    }
+
+    /**
+     * Comptes proposés pour un paramètre d'agents d'une portée, dans les activités de la portée (voir
+     * scope_contexts()) :
+     * - agents DEVE : les membres de la DEVE, inscrits avec le droit de la DEVE ou détenteurs de son
+     *   rôle (dans le cours, sa catégorie ou au niveau du site) ;
+     * - agents de la bibliothèque : les inscrits qui ne déposent pas de thèse (personnels), et les
+     *   détenteurs du rôle de la bibliothèque.
+     * Les comptes déjà désignés restent proposés, même s'ils ne sont plus inscrits.
+     *
+     * @param stdClass $scope
+     * @param string $actor 'deve' ou 'library'.
+     * @return stdClass[] Comptes actifs, indexés par identifiant, triés par nom.
+     */
+    public static function candidate_users(stdClass $scope, $actor) {
+        global $DB;
+
+        $settings = self::get_all($scope);
+        $roleid = (int) $settings[$actor === 'deve' ? 'deverole' : 'libraryrole'];
+        $users = [];
+        foreach (self::scope_contexts($scope) as $context) {
+            if ($actor === 'deve') {
+                $users += get_enrolled_users($context, 'mod/these:managedeve', 0, 'u.*', null, 0, 0, true);
+            } else {
+                $students = get_enrolled_users($context, 'mod/these:submit', 0, 'u.id', null, 0, 0, true);
+                $users += array_diff_key(get_enrolled_users($context, '', 0, 'u.*', null, 0, 0, true), $students);
+            }
+            if ($roleid) {
+                [$insql, $params] = $DB->get_in_or_equal($context->get_parent_context_ids(true));
+                $userids = $DB->get_fieldset_select(
+                    'role_assignments',
+                    'userid',
+                    "roleid = ? AND contextid $insql",
+                    array_merge([$roleid], $params)
+                );
+                $userids = array_diff(array_unique($userids), array_keys($users));
+                if ($userids) {
+                    $users += $DB->get_records_list('user', 'id', $userids);
+                }
+            }
+        }
+        $users += self::listed_users($settings[$actor === 'deve' ? 'deveagent' : 'libraryagent']);
+        $users = array_filter($users, function ($user) {
+            return empty($user->deleted) && empty($user->suspended) && !isguestuser($user);
+        });
+        $names = array_map('fullname', $users);
+        \core_collator::asort($names);
+        return array_replace($names, $users);
     }
 
     /**

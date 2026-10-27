@@ -13,7 +13,7 @@ de version recalés sur la date. Les numéros entre parenthèses des sections de
 développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
 été étiquetée.
 
-## mod_these 0.19.0 (2026102704) — direction générale par délégation des agents DEVE, relance des agents
+## mod_these 0.19.0 (2026102705) — direction générale par délégation des agents DEVE, relance des agents, agents choisis parmi les inscrits
 
 - Direction générale signée par délégation par les agents DEVE : nouveau
   paramètre du circuit « Direction générale par délégation » (`dgdelegation`,
@@ -33,6 +33,15 @@ développement ne correspondent à aucune version installable ; 0.11.2 n'a jamai
   l'action groupée « Relancer les signataires », porte sur leurs signatures et
   sur celles de la direction générale signées par délégation ; le bouton
   « Envoyer le lien » de la direction générale disparaît dans ce cas.
+- Agents DEVE signataires et agents de la bibliothèque choisis dans une liste
+  (choix multiple avec recherche) au lieu d'être saisis : membres de la DEVE
+  inscrits aux cours des activités de la portée (droit ou rôle de la DEVE)
+  pour les premiers ; personnels inscrits (hors étudiants) et détenteurs du
+  rôle de la bibliothèque pour les seconds. Un agent déjà désigné reste
+  proposé. Le paramètre garde son format (identifiants, un par ligne) : les
+  réglages existants, le transfert et la sauvegarde ne changent pas ; un
+  identifiant qui est une adresse de courriel désigne désormais bien son
+  compte (`\mod_these\local\scopesettings::candidate_users()`).
 
 ## mod_these 0.18.0 (2026102703) — directeur non votant, liste du corps enseignant, aides pour la DEVE
 

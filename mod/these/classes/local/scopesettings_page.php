@@ -48,16 +48,31 @@ class scopesettings_page {
             $roles[$role->id] = $role->localname;
         }
         $fileoptions = ['subdirs' => 0, 'maxfiles' => 1, 'accepted_types' => ['.pdf']];
-        $form = new scopesettings_form($baseurl, ['roles' => $roles, 'fileoptions' => $fileoptions]);
+        // Agents choisis parmi les comptes proposés : enregistrés par leur identifiant, un par ligne.
+        $settings = scopesettings::get_all($scope);
+        $agents = [];
+        foreach (['deveagent' => 'deve', 'libraryagent' => 'library'] as $name => $actor) {
+            $agents[$name] = [];
+            foreach (scopesettings::candidate_users($scope, $actor) as $user) {
+                $agents[$name][$user->username] = fullname($user) . ($user->email !== '' ? ' (' . $user->email . ')' : '');
+            }
+            $settings[$name] = array_values(array_map(function ($user) {
+                return $user->username;
+            }, scopesettings::listed_users($settings[$name])));
+        }
+        $form = new scopesettings_form($baseurl, ['roles' => $roles, 'fileoptions' => $fileoptions, 'agents' => $agents]);
 
         $draftitemid = file_get_submitted_draft_itemid('contracttemplate');
         file_prepare_draft_area($draftitemid, $scope->contextid, $scope->component, 'contracttemplate', 0, $fileoptions);
-        $form->set_data(['id' => $baseurl->get_param('id'), 'contracttemplate' => $draftitemid] + scopesettings::get_all($scope));
+        $form->set_data(['id' => $baseurl->get_param('id'), 'contracttemplate' => $draftitemid] + $settings);
 
         if ($data = $form->get_data()) {
             $values = [];
             foreach (array_keys(scopesettings::defaults()) as $name) {
-                if (isset($data->$name)) {
+                if (isset($agents[$name])) {
+                    // Aucun agent choisi : le champ peut manquer dans l'envoi.
+                    $values[$name] = implode("\n", array_intersect((array) ($data->$name ?? []), array_keys($agents[$name])));
+                } else if (isset($data->$name)) {
                     $values[$name] = $data->$name;
                 }
             }

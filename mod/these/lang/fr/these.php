@@ -637,7 +637,8 @@ $string['settingscheckimages'] = 'Images des modèles des documents';
 $string['settingscheckimagesmissing'] = 'Images des modèles des documents (manquent : {$a})';
 $string['settingsmissingnotice'] = 'Réglages du circuit à compléter : {$a}.';
 $string['settingslibraryagent'] = 'Agents de la bibliothèque';
-$string['settingslibraryagent_help'] = "Identifiants ou adresses de courriel des comptes Moodle des agents de la bibliothèque, séparés par des virgules ou un par ligne. Sans rôle à attribuer, ils ont les droits de la bibliothèque (notice du sujet, conformité du manuscrit, corrections) et seulement ceux-là : ni boutons ni pages de la DEVE, même si leur rôle dans le cours les leur donnerait. Ils reçoivent les courriels adressés à la bibliothèque. Ils doivent pouvoir entrer dans le cours (inscription avec n'importe quel rôle).";
+$string['settingslibraryagent_help'] = "Agents de la bibliothèque, choisis parmi les personnels inscrits aux cours des activités suivies (inscrits qui ne déposent pas de thèse) et les détenteurs du rôle de la bibliothèque : tapez un nom pour le retrouver. Sans rôle à attribuer, ils ont les droits de la bibliothèque (notice du sujet, conformité du manuscrit, corrections) et seulement ceux-là : ni boutons ni pages de la DEVE, même si leur rôle dans le cours les leur donnerait. Ils reçoivent les courriels adressés à la bibliothèque. Une personne absente de la liste doit d'abord être inscrite au cours.";
+$string['settingsagentsnone'] = 'Aucun agent choisi';
 $string['settingschecklibraryagents'] = 'Agents de la bibliothèque';
 $string['scopesettings'] = 'Paramètres du circuit';
 $string['scopesettings_desc'] = "Rôles des services, agents DEVE signataires, établissement, université, signataires des documents et "
@@ -1276,11 +1277,11 @@ Accéder au dossier : {$a->url}';
 // Agent DEVE signataire et signature enregistrée.
 $string['agentdeve'] = 'Agent responsable de la DEVE';
 $string['settingsdeveagent'] = 'Agents DEVE signataires';
-$string['settingsdeveagent_help'] = "Identifiants ou adresses de courriel des comptes Moodle des agents habilités à signer pour la DEVE, "
-    . "séparés par des virgules ou un par ligne. L'équipe de la DEVE remplit et vérifie le dossier puis valide sans signer ; chaque "
-    . "agent reçoit alors un courriel et retrouve le visa du sujet et l'agrément administratif dans « Mes signatures » : le premier "
-    . "qui signe appose la signature, avec sa signature enregistrée. Laisser vide pour que la personne de la DEVE qui valide signe "
-    . 'elle-même.';
+$string['settingsdeveagent_help'] = "Agents habilités à signer pour la DEVE, choisis parmi les membres de la DEVE inscrits "
+    . "aux cours des activités suivies (droit de la DEVE ou rôle de la DEVE) : tapez un nom pour le retrouver. L'équipe de la "
+    . "DEVE remplit et vérifie le dossier puis valide sans signer ; chaque agent reçoit alors un courriel et retrouve le visa du "
+    . "sujet et l'agrément administratif dans « Mes signatures » : le premier qui signe appose la signature, avec sa signature "
+    . "enregistrée. Laisser vide pour que la personne de la DEVE qui valide signe elle-même.";
 $string['settingsdgdelegation'] = 'Direction générale par délégation';
 $string['settingsdgdelegationlabel'] = 'Les agents DEVE signent pour la direction générale, par délégation';
 $string['settingsdgdelegation_help'] = "À cocher quand la direction générale a délégué sa signature aux agents DEVE signataires. "
