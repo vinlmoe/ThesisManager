@@ -13,7 +13,7 @@ de version recalés sur la date. Les numéros entre parenthèses des sections de
 développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
 été étiquetée.
 
-## mod_these 0.20.1 (2026102804) — liste des dossiers bloqués, captures du guide refaites
+## mod_these 0.20.1 (2026102804) — liste des dossiers bloqués, captures du guide refaites, scénarios Behat
 
 - Commande `php mod/these/cli/blocked_dossiers.php [--these=ID] [--csv]` :
   dossiers bloqués par des signatures manquantes (voir 0.20.0), à lancer après
@@ -22,6 +22,13 @@ développement ne correspondent à aucune version installable ; 0.11.2 n'a jamai
 - Guide 2.15 : captures refaites (formulaire de sujet, signatures, validation),
   nouvelles captures de la page de l'A6, d'une étape bloquée, des pièces pour
   l'université et du refus de signer ; mise en service du blocage décrite.
+- Scénarios Behat des nouveaux parcours : étape bloquée pour la bibliothèque,
+  refus de signer de l'agent DEVE (validateur affiché, dossier renvoyé),
+  procès-verbal en attente des scans de l'université (`signatures.feature`) ;
+  co-directeur interne choisi dans l'annuaire, nom de signataire imposé, page
+  de l'A6 (`subject_a6.feature`). Le générateur Behat crée les agents DEVE,
+  les demandes de signature aux agents, les signatures et les enseignants de
+  l'annuaire.
 - Jeu de données des captures (`docs/guides/captures/seed.php`) : les
   signatures attendues sont apposées avant chaque étape (agent DEVE, président
   du jury, scans de l'université), comme l'exige désormais le circuit.
