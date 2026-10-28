@@ -131,6 +131,48 @@ class jurors {
     }
 
     /**
+     * Titres connus par l'annuaire d'utilisateurs Moodle (directeurs de thèse) : ceux dont l'adresse
+     * est celle d'un enseignant actif de l'annuaire.
+     *
+     * @param int[] $userids
+     * @return array userid => titre (Dr ou Pr) ; les utilisateurs absents de l'annuaire n'y sont pas.
+     */
+    public static function titles_for_users(array $userids) {
+        global $DB;
+        $userids = array_filter(array_map('intval', $userids));
+        if (!$userids) {
+            return [];
+        }
+        $titles = [];
+        foreach ($DB->get_records_list('user', 'id', $userids, '', 'id, email') as $user) {
+            $juror = self::find_by_email($user->email);
+            if ($juror) {
+                $titles[(int) $user->id] = (string) $juror->title;
+            }
+        }
+        return $titles;
+    }
+
+    /**
+     * Options d'une liste déroulante des enseignants internes à l'établissement (voir
+     * internal_members()), pour choisir un co-directeur interne.
+     *
+     * @param \context $context Contexte de l'activité, dont la portée donne l'établissement.
+     * @param int $keep Enseignant à garder même s'il n'est plus actif ou interne (choix enregistré).
+     * @return array id => « Pr NOM Prénom »
+     */
+    public static function internal_options(\context $context, $keep = 0) {
+        $options = [];
+        foreach (self::internal_members((string) scopesettings::for_context($context)['institution']) as $juror) {
+            $options[(int) $juror->id] = self::name($juror);
+        }
+        if ($keep && !isset($options[(int) $keep]) && ($juror = self::get($keep))) {
+            $options[(int) $juror->id] = self::name($juror);
+        }
+        return $options;
+    }
+
+    /**
      * Enseignant de l'annuaire, actif ou retiré, ayant cette adresse ou, à défaut, ces nom et prénom.
      *
      * @param string|null $email

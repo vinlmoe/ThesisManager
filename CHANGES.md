@@ -13,6 +13,22 @@ de version recalés sur la date. Les numéros entre parenthèses des sections de
 développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
 été étiquetée.
 
+## mod_these 0.20.0 (2026102800) — titre du directeur repris de l'annuaire, co-directeur interne ou extérieur, nom de signature imposé
+
+- Dépôt du sujet : l'étudiant ne saisit plus le titre (Dr, Pr) d'un directeur
+  présent dans l'annuaire des enseignants ; le champ n'apparaît que pour un
+  directeur absent de l'annuaire, et le titre de l'annuaire est enregistré dans
+  le dossier.
+- Co-directeur : « Aucun », « Interne à l'établissement » (choisi parmi les
+  enseignants internes de l'annuaire, nom repris de l'annuaire) ou « Extérieur
+  à l'établissement » (titre, nom et qualité saisis). Même choix dans la
+  modification d'un dossier par la DEVE. Nouveau champ
+  `these_dossier.codirectorjurorid` (étape de mise à jour 2026102800).
+- Nom du signataire : celui du compte Moodle (ou de l'invitation, pour un
+  signataire sans compte), affiché sans pouvoir être modifié. Seule la DEVE le
+  saisit : signature sur place, direction générale par délégation (validation
+  d'une étape de la DEVE, « Mes signatures » d'un agent).
+
 ## mod_these 0.19.0 (2026102708) — direction générale signée par délégation des agents DEVE, relance des agents, agents choisis parmi les inscrits, plus de rôles des services, matière des enseignants, annuaire pour les étudiants
 
 - La direction générale ne signe jamais elle-même : ses documents (fiche

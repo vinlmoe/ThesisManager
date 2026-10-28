@@ -168,8 +168,13 @@ $string['director'] = 'Thesis director';
 $string['director_help'] = 'Teacher directing the thesis. Only teachers enrolled in this course and allowed to direct theses are '
     . 'listed: if yours is missing, contact the registrar.';
 $string['codirector'] = 'Co-director';
-$string['codirector_help'] = 'Optional. Name and position of a possible co-director, who may be external. The co-director does not '
-    . 'approve the file in the module.';
+$string['codirector_help'] = 'Optional. Possible co-director: a teacher of the institution, to choose from the list, or an external '
+    . 'person, whose name and position you enter. The co-director does not approve the file in the module.';
+$string['codirectornone'] = 'None';
+$string['codirectorinternal'] = 'Internal to the institution';
+$string['codirectorexternal'] = 'External to the institution';
+$string['codirectorjuror'] = 'Internal co-director';
+$string['codirectorname'] = 'External co-director: title, name and position';
 $string['subjectdocs'] = 'Subject attachments';
 $string['subjectdocs_help'] = 'Optional: bibliography, protocol, partner agreement...';
 $string['savedraft'] = 'Save draft';
@@ -721,7 +726,8 @@ $string['externaldirector_help'] = 'The external director, without a Moodle acco
     . 'Then choose below, as director in the module, the member of the institution who follows the thesis: this member validates '
     . 'the steps and signs as member.';
 $string['directortitle'] = 'Director title';
-$string['directortitle_help'] = 'Dr, Pr… as it must appear on the documents.';
+$string['directortitle_help'] = 'Dr, Pr… as it must appear on the documents. Asked only if the director is not in the teacher '
+    . 'directory, which otherwise gives the title.';
 $string['extdirectorname'] = 'External director: title, name';
 $string['extdirectorgrade'] = 'Grade';
 $string['extdirectorinstitution'] = 'Institution';

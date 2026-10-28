@@ -139,6 +139,7 @@ class subjectchange {
             foreach (['directorid', 'confidential', 'externaldirector'] as $field) {
                 $fields[$field] = (int) these_submitted_value($data, $dossier, $field);
             }
+            $fields = dossiers::people_fields($fields, $data);
             if (property_exists($data, 'commitguide')) {
                 $fields['commitments'] = (!empty($data->commitguide) ? THESE_COMMIT_GUIDE : 0)
                     | (!empty($data->commitduplicate) ? THESE_COMMIT_DUPLICATE : 0)

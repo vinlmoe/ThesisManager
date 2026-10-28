@@ -248,5 +248,25 @@ function xmldb_these_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2026102708, 'these');
     }
 
+    if ($oldversion < 2026102800) {
+        // Co-directeur interne choisi dans l'annuaire des enseignants.
+        $dbman = $DB->get_manager();
+        $table = new xmldb_table('these_dossier');
+        $field = new xmldb_field(
+            'codirectorjurorid',
+            XMLDB_TYPE_INTEGER,
+            '10',
+            null,
+            XMLDB_NOTNULL,
+            null,
+            '0',
+            'codirectorname'
+        );
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        upgrade_mod_savepoint(true, 2026102800, 'these');
+    }
+
     return true;
 }

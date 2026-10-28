@@ -55,6 +55,7 @@ $PAGE->set_context($context);
 
 $returned = $dossier && (int) $dossier->status === THESE_STATUS_SUBJECT_RETURNED;
 $mform = new subject_form($PAGE->url, [
+    'codirectors' => \mod_these\local\jurors::internal_options($context, $dossier ? (int) $dossier->codirectorjurorid : 0),
     'directors' => these_director_options($context, $dossier ? $dossier->directorid : 0),
     'submitlabel' => $returned ? 'resubmitsubject' : 'submitsubject',
     'allowdraft' => true,
@@ -74,6 +75,7 @@ $formdata = $dossier ? clone $dossier : new stdClass();
 $formdata->id = $cm->id;
 $formdata->dossierid = $dossier ? $dossier->id : 0;
 $formdata->subjectdocs = $draftitemid;
+$formdata->codirectortype = subject_form::codirector_type($formdata);
 $commitments = $dossier ? (int) $dossier->commitments : 0;
 $formdata->commitguide = $commitments & THESE_COMMIT_GUIDE ? 1 : 0;
 $formdata->commitduplicate = $commitments & THESE_COMMIT_DUPLICATE ? 1 : 0;

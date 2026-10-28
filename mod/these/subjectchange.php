@@ -53,6 +53,7 @@ $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($context);
 
 $mform = new subject_form($PAGE->url, [
+    'codirectors' => \mod_these\local\jurors::internal_options($context, (int) $dossier->codirectorjurorid),
     'directors' => these_director_options($context, $dossier->directorid),
     'submitlabel' => 'subjectchangesubmit',
     'allowdraft' => false,
@@ -73,6 +74,7 @@ $formdata = clone $dossier;
 $formdata->id = $cm->id;
 $formdata->dossierid = $dossier->id;
 $formdata->subjectdocs = $draftitemid;
+$formdata->codirectortype = subject_form::codirector_type($formdata);
 // Les engagements se prennent de nouveau pour le nouveau sujet.
 $formdata->commitguide = 0;
 $formdata->commitduplicate = 0;

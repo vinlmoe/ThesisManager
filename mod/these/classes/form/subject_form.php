@@ -24,7 +24,11 @@ require_once($CFG->dirroot . '/mod/these/locallib.php');
 /**
  * Formulaire de dépôt de sujet de thèse (phase 1, étape 1), reprenant le formulaire papier de
  * l'établissement : identité et année d'études, titre (confidentiel ou non), mots-clés,
- * directeur de thèse (et directeur extérieur éventuel), engagements de l'étudiant et signature.
+ * directeur de thèse (et directeur extérieur éventuel), co-directeur, engagements de l'étudiant et
+ * signature.
+ *
+ * Le titre du directeur n'est demandé que s'il ne figure pas dans l'annuaire des enseignants ; un
+ * co-directeur interne se choisit dans l'annuaire, un extérieur se saisit.
  *
  * L'étudiant peut l'enregistrer en brouillon ou le soumettre à son directeur ; les champs, les
  * engagements et la signature ne sont exigés qu'à la soumission.
@@ -106,14 +110,18 @@ class subject_form extends \moodleform {
         $mform->addElement('text', 'directortitle', get_string('directortitle', 'mod_these'), ['size' => 10]);
         $mform->setType('directortitle', PARAM_TEXT);
         $mform->addHelpButton('directortitle', 'directortitle', 'mod_these');
+        // Titre connu de l'annuaire : repris à l'enregistrement, l'étudiant n'a pas à le saisir.
+        $directorids = array_keys($this->_customdata['directors']);
+        $knowntitles = array_keys(\mod_these\local\jurors::titles_for_users($directorids));
+        if ($knowntitles) {
+            $mform->hideIf('directortitle', 'directorid', 'in', $knowntitles);
+        }
         foreach (['extdirectorname', 'extdirectorgrade', 'extdirectorinstitution', 'extdirectoremail'] as $field) {
             $mform->addElement('text', $field, get_string($field, 'mod_these'), ['size' => 64]);
             $mform->setType($field, $field === 'extdirectoremail' ? PARAM_RAW_TRIMMED : PARAM_TEXT);
             $mform->hideIf($field, 'externaldirector', 'notchecked');
         }
-        $mform->addElement('text', 'codirectorname', get_string('codirector', 'mod_these'), ['size' => 64]);
-        $mform->setType('codirectorname', PARAM_TEXT);
-        $mform->addHelpButton('codirectorname', 'codirector', 'mod_these');
+        self::add_codirector_fields($mform, $this->_customdata['codirectors'] ?? []);
 
         $mform->addElement(
             'filemanager',
@@ -147,6 +155,63 @@ class subject_form extends \moodleform {
         $buttons[] = $mform->createElement('cancel');
         $mform->addGroup($buttons, 'buttonar', '', [' '], false);
         $mform->closeHeaderBefore('buttonar');
+    }
+
+    /**
+     * Ajoute le choix du co-directeur : aucun, interne (choisi dans l'annuaire des enseignants) ou
+     * extérieur (nom et qualité en texte libre). Voir \mod_these\local\dossiers::codirector_fields().
+     *
+     * @param \MoodleQuickForm $mform
+     * @param array $internal Enseignants internes, id => nom (voir jurors::internal_options()).
+     * @return void
+     */
+    public static function add_codirector_fields(\MoodleQuickForm $mform, array $internal) {
+        $mform->addElement('select', 'codirectortype', get_string('codirector', 'mod_these'), [
+            '' => get_string('codirectornone', 'mod_these'),
+            'internal' => get_string('codirectorinternal', 'mod_these'),
+            'external' => get_string('codirectorexternal', 'mod_these'),
+        ]);
+        $mform->addHelpButton('codirectortype', 'codirector', 'mod_these');
+        $mform->addElement(
+            'select',
+            'codirectorjurorid',
+            get_string('codirectorjuror', 'mod_these'),
+            [0 => get_string('choosedots')] + $internal
+        );
+        $mform->hideIf('codirectorjurorid', 'codirectortype', 'neq', 'internal');
+        $mform->addElement('text', 'codirectorname', get_string('codirectorname', 'mod_these'), ['size' => 64]);
+        $mform->setType('codirectorname', PARAM_TEXT);
+        $mform->hideIf('codirectorname', 'codirectortype', 'neq', 'external');
+    }
+
+    /**
+     * Choix du co-directeur d'un dossier, pour préremplir add_codirector_fields().
+     *
+     * @param \stdClass $dossier
+     * @return string '', 'internal' ou 'external'
+     */
+    public static function codirector_type(\stdClass $dossier) {
+        if (!empty($dossier->codirectorjurorid)) {
+            return 'internal';
+        }
+        return trim((string) ($dossier->codirectorname ?? '')) !== '' ? 'external' : '';
+    }
+
+    /**
+     * Co-directeur interne choisi, ou extérieur nommé.
+     *
+     * @param array $data
+     * @return array Erreurs, indexées par champ.
+     */
+    public static function codirector_errors(array $data) {
+        $type = (string) ($data['codirectortype'] ?? '');
+        if ($type === 'internal' && empty($data['codirectorjurorid'])) {
+            return ['codirectorjurorid' => get_string('required')];
+        }
+        if ($type === 'external' && trim((string) ($data['codirectorname'] ?? '')) === '') {
+            return ['codirectorname' => get_string('required')];
+        }
+        return [];
     }
 
     /**
@@ -187,6 +252,7 @@ class subject_form extends \moodleform {
                 $errors['extdirectoremail'] = get_string('invalidemail');
             }
         }
+        $errors = array_merge($errors, self::codirector_errors($data));
         foreach (['commitguide', 'commitduplicate'] as $field) {
             if (empty($data[$field])) {
                 $errors[$field] = get_string('commitrequired', 'mod_these');

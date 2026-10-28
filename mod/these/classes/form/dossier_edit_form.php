@@ -51,8 +51,7 @@ class dossier_edit_form extends \moodleform {
         $mform->addElement('text', 'keywords', get_string('subjectkeywords', 'mod_these'), ['size' => 80]);
         $mform->setType('keywords', PARAM_TEXT);
         $mform->addElement('select', 'directorid', get_string('director', 'mod_these'), $this->_customdata['directors']);
-        $mform->addElement('text', 'codirectorname', get_string('codirector', 'mod_these'), ['size' => 64]);
-        $mform->setType('codirectorname', PARAM_TEXT);
+        subject_form::add_codirector_fields($mform, $this->_customdata['codirectors'] ?? []);
 
         $mform->addElement('header', 'registrationheader', get_string('registration', 'mod_these'));
         $mform->addElement('text', 'devenumber', get_string('devenumber', 'mod_these'), ['size' => 20]);
@@ -105,7 +104,7 @@ class dossier_edit_form extends \moodleform {
      * @return array
      */
     public function validation($data, $files) {
-        $errors = parent::validation($data, $files);
+        $errors = array_merge(parent::validation($data, $files), subject_form::codirector_errors($data));
         $number = trim((string) $data['devenumber']);
         if ($number !== '' && these_devenumber_taken($this->_customdata['theseid'], $number, $data['dossierid'])) {
             $errors['devenumber'] = get_string('devenumbertaken', 'mod_these');

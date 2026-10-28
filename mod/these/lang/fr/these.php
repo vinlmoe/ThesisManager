@@ -170,8 +170,13 @@ $string['director'] = 'Directeur de thèse';
 $string['director_help'] = "Enseignant qui dirige la thèse. Seuls les enseignants inscrits dans ce cours et autorisés à diriger des "
     . "thèses sont proposés : si le vôtre n'apparaît pas, contactez la DEVE.";
 $string['codirector'] = 'Co-directeur';
-$string['codirector_help'] = "Facultatif. Nom et qualité du co-directeur éventuel, qui peut être extérieur à l'établissement. Il ne "
-    . "valide pas le dossier dans le module.";
+$string['codirector_help'] = "Facultatif. Co-directeur éventuel : un enseignant de l'établissement, à choisir dans la liste, ou une "
+    . "personne extérieure, dont vous indiquez le nom et la qualité. Il ne valide pas le dossier dans le module.";
+$string['codirectornone'] = 'Aucun';
+$string['codirectorinternal'] = "Interne à l'établissement";
+$string['codirectorexternal'] = "Extérieur à l'établissement";
+$string['codirectorjuror'] = 'Co-directeur interne';
+$string['codirectorname'] = 'Co-directeur extérieur : titre, nom et qualité';
 $string['subjectdocs'] = 'Pièces jointes au sujet';
 $string['subjectdocs_help'] = 'Facultatif : bibliographie, protocole, accord de partenaire...';
 $string['savedraft'] = 'Enregistrer le brouillon';
@@ -726,7 +731,8 @@ $string['externaldirector_help'] = "Le directeur extérieur, sans compte Moodle,
     . "Choisissez alors ci-dessous, comme directeur dans le module, le membre de l'établissement (enseignant-chercheur) qui suit la "
     . "thèse : c'est lui qui valide les étapes et signe en qualité de membre.";
 $string['directortitle'] = 'Titre du directeur';
-$string['directortitle_help'] = 'Dr, Pr… tel qu\'il doit figurer sur les documents.';
+$string['directortitle_help'] = "Dr, Pr… tel qu'il doit figurer sur les documents. Demandé seulement si le directeur ne figure pas "
+    . "dans l'annuaire des enseignants, qui donne sinon son titre.";
 $string['extdirectorname'] = 'Directeur extérieur : titre, nom, prénom';
 $string['extdirectorgrade'] = 'Grade';
 $string['extdirectorinstitution'] = 'Établissement';

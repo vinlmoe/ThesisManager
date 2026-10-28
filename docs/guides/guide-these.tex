@@ -4,9 +4,9 @@
 
 % Version du guide : à mettre à jour à chaque modification, avec une ligne dans l'historique.
 \newcommand{\titreguide}{Guide de la gestion des thèses}
-\newcommand{\versionguide}{2.13}
+\newcommand{\versionguide}{2.14}
 \newcommand{\dateguide}{27 octobre 2026}
-\newcommand{\versionthese}{0.19.0}
+\newcommand{\versionthese}{0.20.0}
 
 \usepackage{guide-commun}
 \usepackage{tikz}
@@ -114,6 +114,11 @@ inscrits au lieu d'être saisis ; plus de rôles des services ni de rôle
 \og Bibliothèque (thèses)\fg{} ; matière enseignée dans l'annuaire et liste du
 corps enseignant sur trois colonnes ; annuaire des enseignants en lecture seule
 pour les étudiants. \\
+2.14 & 28 octobre 2026 & Dépôt du sujet : titre du directeur repris de
+l'annuaire des enseignants (demandé seulement s'il n'y figure pas) ;
+co-directeur interne choisi dans l'annuaire, ou extérieur saisi. Nom du
+signataire : celui du compte Moodle (ou de l'invitation), saisi seulement par la
+DEVE (signature sur place, par délégation). \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -433,7 +438,13 @@ liste du corps enseignant en PDF (enseignants de l'établissement seulement).
         divulgué (voir l'encadré ci-dessous).
   \item Choisissez votre directeur de thèse dans la liste ou, s'il est
         extérieur à l'école, cochez \bouton{Le directeur de thèse est extérieur à l'établissement} et saisissez
-        ses coordonnées ; ajoutez au besoin un co-directeur et des pièces jointes.
+        ses coordonnées. Le titre du directeur (Dr, Pr) est repris de
+        l'annuaire des enseignants : il n'est demandé que si votre directeur n'y
+        figure pas.
+  \item Ajoutez au besoin un co-directeur : \bouton{Interne à l'établissement},
+        choisi dans la liste des enseignants, ou \bouton{Extérieur à
+        l'établissement}, dont vous saisissez le titre, le nom et la qualité.
+        Joignez au besoin des pièces.
   \item Cochez les engagements du formulaire E01.
   \item Signez : tracez votre signature à la souris ou au doigt. Laissez
         cochée \bouton{Enregistrer cette signature pour mes prochaines
@@ -1542,6 +1553,8 @@ rien n'est enregistré. Il suffit de recharger le dossier pour voir son état.
 \textbf{Valeur des signatures.} Le tracé apposé dans le module est une
 signature électronique \emph{simple} au sens du règlement européen eIDAS : il
 identifie le signataire (compte Moodle, ou lien personnel reçu à son adresse),
+sous le nom de son compte ou de l'invitation, que seule la DEVE peut saisir
+(signature sur place, par délégation),
 date la signature et la lie au contenu signé par son empreinte, mais ne repose
 pas sur un certificat qualifié. Il revient à l'établissement de décider pour
 quels documents elle suffit (procès-verbal, contrat de diffusion) ; un document
