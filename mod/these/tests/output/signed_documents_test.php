@@ -73,7 +73,7 @@ final class signed_documents_test extends output_testcase {
         $rights = these_get_rights($this->context, $dossier, $this->deve->id);
         $html = $this->renderer()->render(new signed_documents($this->cm, $this->context, $dossier, $rights));
         $this->assertStringContainsString('<table class="generaltable these-signatures">', $html);
-        $button = 'class="btn btn-sm btn-secondary">' . get_string('downloadpdf', 'mod_these') . '</a>';
+        $button = 'class="btn btn-sm btn-secondary mr-1 mb-1">' . get_string('downloadpdf', 'mod_these') . '</a>';
         $this->assertStringContainsString($button, $html);
         $this->assertStringContainsString('<td class="header c2 lastcol"></td>', $html);
     }
