@@ -65,6 +65,12 @@ if ($dataformat !== '') {
         'result' => get_string('defenseresult', 'mod_these'),
         'mention' => get_string('mention', 'mod_these'),
         'embargo' => get_string('embargoexport', 'mod_these'),
+        'a6' => get_string('a6validation', 'mod_these'),
+        'directortitle' => get_string('directortitle', 'mod_these'),
+        'codirectortype' => get_string('exportcodirectortype', 'mod_these'),
+        'missingsignatures' => get_string('exportmissingsignatures', 'mod_these'),
+        'universitypieces' => get_string('universitypieces', 'mod_these'),
+        'lastrefusal' => get_string('exportlastrefusal', 'mod_these'),
     ];
     $dossiers = these_get_dossiers($these->id);
     $students = $DB->get_records_list('user', 'id', array_column($dossiers, 'userid'));

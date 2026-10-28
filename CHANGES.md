@@ -13,7 +13,7 @@ de version recalés sur la date. Les numéros entre parenthèses des sections de
 développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
 été étiquetée.
 
-## mod_these 0.20.1 (2026102804) — liste des dossiers bloqués, captures du guide refaites, scénarios Behat
+## mod_these 0.20.1 (2026102805) — liste des dossiers bloqués, captures du guide refaites, scénarios Behat, import et export complétés
 
 - Commande `php mod/these/cli/blocked_dossiers.php [--these=ID] [--csv]` :
   dossiers bloqués par des signatures manquantes (voir 0.20.0), à lancer après
@@ -29,6 +29,16 @@ développement ne correspondent à aucune version installable ; 0.11.2 n'a jamai
   de l'A6 (`subject_a6.feature`). Le générateur Behat crée les agents DEVE,
   les demandes de signature aux agents, les signatures et les enseignants de
   l'annuaire.
+- Import des dossiers : fichiers Excel (`.xlsx`, `.xls`) et OpenDocument
+  (`.ods`) acceptés, comme pour l'A6 ; colonne `status` pour reprendre une
+  thèse soutenue dont les corrections sont en cours (`corrections`) ou un
+  dossier clôturé (`closed`), avec `defensedate` (obligatoire),
+  `defenselocation`, `mention` et `corrections` ; un co-directeur dont le nom
+  est celui d'un enseignant interne de l'annuaire y est rattaché.
+- Export du registre : nouvelles colonnes validation de l'A6, titre du
+  directeur, co-directeur interne ou extérieur, signatures manquantes pour
+  passer à l'étape suivante, pièces pour l'université (scellées ou à sceller)
+  et dernier refus de signer d'un agent DEVE.
 - Jeu de données des captures (`docs/guides/captures/seed.php`) : les
   signatures attendues sont apposées avant chaque étape (agent DEVE, président
   du jury, scans de l'université), comme l'exige désormais le circuit.

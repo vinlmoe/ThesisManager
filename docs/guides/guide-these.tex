@@ -129,7 +129,11 @@ suivi des signatures. \\
 2.15 & 28 octobre 2026 & Liste des dossiers bloqués en ligne de commande (mise en
 service du blocage) ; captures refaites (formulaire de sujet, signatures,
 validation) et nouvelles captures : page de l'A6, étape bloquée, pièces pour
-l'université, refus de signer. \\
+l'université, refus de signer. Import des dossiers depuis Excel ou
+OpenDocument, à tous les statuts repris (actif, corrections, clôturé) avec
+soutenance et mention, co-directeur rattaché à l'annuaire ; export complété
+(A6, co-directeur, signatures manquantes, pièces pour l'université, dernier
+refus). \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -390,9 +394,11 @@ les dossiers que si l'option correspondante est explicitement cochée.
 
 \subsection{Reprise des dossiers existants}
 
-À la mise en service, les sujets déjà enregistrés se reprennent par
+À la mise en service, les dossiers déjà engagés se reprennent par
 \chemin{Importer des dossiers} : un fichier CSV (séparateur point-virgule par
-défaut), une ligne par dossier, avec une ligne d'en-tête.
+défaut), Excel (\texttt{.xlsx}, \texttt{.xls}) ou OpenDocument (\texttt{.ods}),
+une ligne par dossier, avec une ligne d'en-tête. Le séparateur et l'encodage ne
+servent qu'aux fichiers CSV.
 
 \begin{center}
 \small
@@ -403,14 +409,31 @@ défaut), une ligne par dossier, avec une ligne d'en-tête.
 \texttt{student} & Obligatoire. Identifiant de connexion, courriel ou numéro d'identification. \\
 \texttt{title} & Obligatoire. Titre du sujet. \\
 \texttt{director} & Directeur (même identification que l'étudiant). \\
+\texttt{codirector} & Nom du co-directeur. S'il est celui d'un enseignant interne
+de l'annuaire (\og Claire Martin\fg{}, \og Dr MARTIN Claire\fg{}), le dossier y
+est rattaché ; sinon le co-directeur est noté comme extérieur. \\
 \texttt{devenumber}, \texttt{libraryref} & Numéro DEVE et référence de notice. \\
-\texttt{titleen}, \texttt{summary}, \texttt{keywords}, \texttt{codirector} & Facultatifs. \\
+\texttt{titleen}, \texttt{summary}, \texttt{keywords} & Facultatifs. \\
+\texttt{status} & Vide ou \texttt{active} : \statut{Dossier actif} ;
+\texttt{corrections} : thèse soutenue, corrections en cours ; \texttt{closed} :
+dossier clôturé. Le libellé du statut est aussi accepté. \\
+\texttt{defensedate} & Obligatoire pour une thèse soutenue : \texttt{jj/mm/aaaa}
+ou \texttt{aaaa-mm-jj}, avec l'heure en option (14\,h sinon), ou date du
+tableur. \\
+\texttt{defenselocation} & Lieu de la soutenance. \\
+\texttt{mention} & \texttt{honorable}, \texttt{très honorable} ou
+\texttt{félicitations} (clé ou libellé). \\
+\texttt{corrections} & Corrections demandées par le jury. \\
 \bottomrule
 \end{tabularx}
 \end{center}
 
-Chaque ligne valide crée un dossier \statut{Dossier actif}. La simulation, cochée
-par défaut, affiche le compte rendu ligne par ligne sans rien créer.
+Chaque ligne valide crée un dossier au statut indiqué ; une thèse soutenue est
+enregistrée comme admise. Les documents du circuit ne sont pas repris : un
+dossier importé n'attend aucune signature. Une ligne au statut, à la date ou à
+la mention illisible est refusée et signalée, sans bloquer les autres. La
+simulation, cochée par défaut, affiche le compte rendu ligne par ligne sans
+rien créer.
 
 \capture{20_import}{Import de dossiers existants.}
 
@@ -741,6 +764,13 @@ paramètres (section~\ref{sec:transfert}) et, pour une activité qu'aucune
 activité de suivi ne suit, paramètres du circuit, modèles des documents
 (section~\ref{sec:modeles}), grille et questionnaire. Quand une activité
 \og Suivi des thèses\fg{} porte ces paramètres, un seul lien y mène.
+
+L'export du registre donne un dossier par ligne : numéro, étudiant, sujet,
+directeur et son titre, co-directeur (interne ou extérieur), statut,
+soutenance, jury, résultat, mention, embargo, validation de l'A6, signatures
+qui manquent pour passer à l'étape suivante, pièces pour l'université (scellées
+le \ldots{} ou à sceller) et dernier refus de signer d'un agent DEVE (date et
+motif).
 
 Pour garder les pages courtes, les explications destinées à la DEVE sont
 repliées sous \bouton{Aide} en tête des pages (paramètres, modèles, grille,

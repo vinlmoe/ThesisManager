@@ -429,11 +429,18 @@ $string['student'] = 'Étudiant';
 // Import.
 $string['importdossiers'] = 'Importer des dossiers';
 $string['import'] = 'Importer';
-$string['importhelp'] = "Reprise de sujets déjà enregistrés hors du module : chaque ligne crée un dossier actif. Colonnes reconnues "
-    . "(ligne d'en-tête) : <code>student</code> et <code>title</code> (obligatoires), <code>titleen</code>, <code>summary</code>, "
-    . "<code>keywords</code>, <code>director</code>, <code>codirector</code>, <code>devenumber</code>, <code>libraryref</code>. "
-    . "Étudiant et directeur sont désignés par identifiant de connexion, adresse de courriel ou numéro d'identification.";
-$string['csvfile'] = 'Fichier CSV';
+$string['importhelp'] = "Reprise de dossiers déjà engagés hors du module, depuis un fichier CSV, Excel (.xlsx, .xls) ou "
+    . "OpenDocument (.ods) dont la première ligne porte le nom des colonnes : <code>student</code> et <code>title</code> "
+    . "(obligatoires), <code>titleen</code>, <code>summary</code>, <code>keywords</code>, <code>director</code>, "
+    . "<code>codirector</code>, <code>devenumber</code>, <code>libraryref</code>, <code>status</code>, <code>defensedate</code>, "
+    . "<code>defenselocation</code>, <code>mention</code>, <code>corrections</code>. Étudiant et directeur sont désignés par "
+    . "identifiant de connexion, adresse de courriel ou numéro d'identification. Un co-directeur dont le nom (« Claire Martin », "
+    . "« Dr MARTIN Claire ») est celui d'un enseignant interne de l'annuaire y est rattaché ; sinon il est noté comme extérieur. "
+    . "<code>status</code> : vide ou <code>active</code> (sujet enregistré), <code>corrections</code> (thèse soutenue, "
+    . "corrections en cours) ou <code>closed</code> (thèse close) ; les deux derniers exigent <code>defensedate</code> "
+    . "(jj/mm/aaaa [hh:mm], aaaa-mm-jj ou date du tableur) et admettent une <code>mention</code> (honorable, très honorable, "
+    . "félicitations) et les <code>corrections</code> demandées. Séparateur et encodage ne servent qu'aux fichiers CSV.";
+$string['csvfile'] = "Fichier (CSV, Excel ou OpenDocument)";
 $string['importdryrun'] = 'Simulation (ne rien créer)';
 $string['importline'] = 'Ligne';
 $string['importusernotfound'] = 'Utilisateur introuvable : {$a}';
@@ -445,10 +452,16 @@ $string['importresult'] = '{$a->ok} dossier(s) importé(s), {$a->errors} ligne(s
 $string['importdryrunresult'] = 'Simulation : {$a->ok} dossier(s) importable(s), {$a->errors} ligne(s) en erreur.';
 $string['importinvalidfile'] = 'Fichier illisible : {$a}';
 $string['importmissingcolumn'] = 'Colonne obligatoire absente : {$a}';
+$string['importbadstatus'] = 'Statut non importable : {$a} (active, corrections ou closed).';
+$string['importbaddefensedate'] = 'Date de soutenance manquante ou illisible : {$a}';
+$string['importbadmention'] = 'Mention inconnue : {$a}';
+$string['importcodirectorinternal'] = 'co-directeur interne : {$a}';
 
 // Export.
 $string['export'] = 'Export du registre';
-$string['exporthelp'] = 'Un dossier par ligne : numéro, étudiant, sujet, directeur, statut, soutenance, jury et résultat.';
+$string['exporthelp'] = "Un dossier par ligne : numéro, étudiant, sujet, directeur, statut, soutenance, jury et résultat, puis la validation "
+    . "de l'A6, le type de co-directeur, les signatures qui manquent pour passer à l'étape suivante, les pièces pour l'université "
+    . "et le dernier refus d'un agent DEVE.";
 $string['exportformat'] = 'Format';
 
 // Historique.
@@ -935,6 +948,10 @@ $string['embargorequested'] = 'Demandé : {$a->years} ans après la soutenance, 
 $string['embargorequestednodate'] = 'Demandé : {$a} ans après la soutenance (date de soutenance à fixer)';
 $string['embargoreason'] = 'Motif de l\'embargo';
 $string['embargoexport'] = 'Embargo jusqu\'au';
+$string['exportcodirectortype'] = 'Co-directeur interne ou extérieur';
+$string['exportmissingsignatures'] = "Signatures manquantes pour passer à l'étape suivante";
+$string['exportuniversitytoseal'] = 'à sceller et envoyer';
+$string['exportlastrefusal'] = "Dernier refus d'un agent DEVE";
 $string['diffusion'] = 'Diffusion';
 $string['bdiffusion'] = 'Diffusion de la thèse';
 $string['bdiffusion_help'] = "Diffusion en texte intégral sur internet (portail DUMAS, catalogue Sudoc, catalogues des bibliothèques), "
