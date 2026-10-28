@@ -23,7 +23,7 @@ require_once(__DIR__ . '/these_testcase.php');
 
 /**
  * Outils de la DEVE : conflits de salle, action directe de la file « À traiter », actions groupées,
- * réglages du circuit à compléter ; agents de la bibliothèque.
+ * réglages du circuit à compléter ; agents de la bibliothèque ; comptes proposés comme agents.
  *
  * @package    mod_these
  * @copyright  2026 Sébastien Lefebvre
@@ -33,6 +33,8 @@ require_once(__DIR__ . '/these_testcase.php');
  * @covers     \mod_these\local\bulk
  * @covers     \mod_these\local\scopesettings::checklist
  * @covers     \mod_these\local\scopesettings::library_agents
+ * @covers     \mod_these\local\scopesettings::candidate_users
+ * @covers     \mod_these\local\scopesettings::listed_users
  * @covers     \mod_these\local\rights
  * @covers     \mod_these\local\calendar
  * @covers     \mod_these\local\notifications::digest_content
@@ -121,7 +123,8 @@ final class deve_tools_test extends these_testcase {
 
     /**
      * Réglages à compléter : les éléments manquants, puis complets une fois renseignés ; les agents
-     * DEVE et le questionnaire sont facultatifs.
+     * DEVE sont attendus (ils signent pour la direction générale), les agents de la bibliothèque et
+     * le questionnaire sont facultatifs.
      */
     public function test_settings_checklist(): void {
         $this->setup_activity();
@@ -131,8 +134,11 @@ final class deve_tools_test extends these_testcase {
             return !$item['optional'];
         });
         $this->assertNotEmpty($required);
-        $this->assertCount(3, array_filter($checklist, function ($item) {
+        $this->assertCount(2, array_filter($checklist, function ($item) {
             return $item['optional'];
+        }));
+        $this->assertNotEmpty(array_filter($required, function ($item) {
+            return $item['label'] === get_string('settingscheckagents', 'mod_these');
         }));
         $rooms = array_values(array_filter($checklist, function ($item) {
             return $item['label'] === get_string('settingscheckrooms', 'mod_these');
@@ -183,6 +189,34 @@ final class deve_tools_test extends these_testcase {
         $this->setUser($editor);
         $this->expectException(\required_capability_exception::class);
         these_require_service($this->context, 'deve');
+    }
+
+    /**
+     * Comptes proposés dans les paramètres du circuit : agents DEVE parmi les membres de la DEVE,
+     * agents de la bibliothèque parmi les personnels inscrits ; jamais les étudiants ; un agent déjà
+     * désigné reste proposé. Un identifiant qui est une adresse désigne bien son compte.
+     */
+    public function test_agent_candidates(): void {
+        $this->setup_activity();
+        $gen = $this->getDataGenerator();
+        $scope = these_settings_scope($this->these);
+        $former = $gen->create_user(['username' => 'ancien.agent@example.org', 'email' => 'autre@example.org']);
+        \mod_these\local\scopesettings::set($scope, ['deveagent' => 'ancien.agent@example.org']);
+
+        $deve = array_keys(\mod_these\local\scopesettings::candidate_users($scope, 'deve'));
+        $this->assertContains((int) $this->deve->id, $deve);
+        $this->assertContains((int) $former->id, $deve);
+        foreach ([$this->student, $this->director, $this->librarian] as $user) {
+            $this->assertNotContains((int) $user->id, $deve);
+        }
+        $library = array_keys(\mod_these\local\scopesettings::candidate_users($scope, 'library'));
+        foreach ([$this->director, $this->deve, $this->librarian] as $user) {
+            $this->assertContains((int) $user->id, $library);
+        }
+        $this->assertNotContains((int) $this->student->id, $library);
+        $this->assertNotContains((int) $former->id, $library);
+
+        $this->assertSame([(int) $former->id], array_keys(these_deve_agents($this->these)));
     }
 
     /**

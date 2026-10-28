@@ -46,7 +46,7 @@ final class external_signers_test extends output_testcase {
         );
         \mod_these\local\scopesettings::set(
             these_local_scope($this->these),
-            ['dgname' => 'Directrice & co', 'dgemail' => 'dg@example.org']
+            ['dgname' => 'Directrice & co', 'ccememail' => 'ccem@example.org']
         );
         return $this->reload($dossier->id);
     }
@@ -66,8 +66,10 @@ final class external_signers_test extends output_testcase {
         $this->assertSame(get_string('externalsigners', 'mod_these'), $data['heading']);
         $json = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         $this->assertStringContainsString('Directrice & co', $json);
-        $this->assertStringContainsString('dg@example.org', $json);
-        $this->assertStringContainsString('resend=dg', $json);
+        $this->assertStringContainsString('ccem@example.org', $json);
+        $this->assertStringContainsString('resend=ccem', $json);
+        // Direction générale : jamais de lien, elle ne signe pas elle-même.
+        $this->assertStringNotContainsString('resend=dg', $json);
         $this->assertStringContainsString('sign.php', $json);
     }
 

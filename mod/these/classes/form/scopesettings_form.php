@@ -23,10 +23,12 @@ require_once($CFG->libdir . '/formslib.php');
 use mod_these\local\scopesettings;
 
 /**
- * Paramètres du circuit d'une portée (voir \mod_these\local\scopesettings) : rôles des services,
- * agents DEVE signataires, établissement, université, signataires des documents et contrat type.
+ * Paramètres du circuit d'une portée (voir \mod_these\local\scopesettings) :
+ * agents DEVE signataires et de la bibliothèque, établissement, université, signataires des documents
+ * et contrat type.
  *
- * customdata : roles (id => nom), fileoptions.
+ * customdata : fileoptions, agents (deveagent et libraryagent : identifiant => nom
+ * des comptes proposés, voir \mod_these\local\scopesettings::candidate_users()).
  *
  * @package   mod_these
  * @copyright 2026 Sébastien Lefebvre
@@ -42,30 +44,13 @@ class scopesettings_form extends \moodleform {
         $mform->addElement('hidden', 'id');
         $mform->setType('id', PARAM_INT);
 
-        $mform->addElement('header', 'rolesheader', get_string('settingsroles', 'mod_these'));
-        // Explications derrière les boutons d'aide : la page reste courte.
-        foreach (['deverole', 'libraryrole'] as $name) {
-            $mform->addElement('select', $name, get_string($name, 'mod_these'), $this->_customdata['roles']);
-            $mform->setType($name, PARAM_INT);
-            $mform->addHelpButton($name, $name, 'mod_these');
-        }
-
         $mform->addElement('header', 'agentheader', get_string('settingsdeveagent', 'mod_these'));
         $mform->setExpanded('agentheader');
-        $mform->addElement('textarea', 'deveagent', get_string('settingsdeveagent', 'mod_these'), ['rows' => 3, 'cols' => 60]);
-        $mform->setType('deveagent', PARAM_TEXT);
-        $mform->addHelpButton('deveagent', 'settingsdeveagent', 'mod_these');
+        $this->add_agents_field('deveagent');
 
         $mform->addElement('header', 'libraryagentheader', get_string('settingslibraryagent', 'mod_these'));
         $mform->setExpanded('libraryagentheader');
-        $mform->addElement(
-            'textarea',
-            'libraryagent',
-            get_string('settingslibraryagent', 'mod_these'),
-            ['rows' => 3, 'cols' => 60]
-        );
-        $mform->setType('libraryagent', PARAM_TEXT);
-        $mform->addHelpButton('libraryagent', 'settingslibraryagent', 'mod_these');
+        $this->add_agents_field('libraryagent');
 
         $mform->addElement('header', 'defenseheader', get_string('settingsdefenses', 'mod_these'));
         $mform->setExpanded('defenseheader');
@@ -111,6 +96,29 @@ class scopesettings_form extends \moodleform {
         $mform->addHelpButton('contracttemplate', 'settingscontracttemplate', 'mod_these');
 
         $this->add_action_buttons(false, get_string('savechanges'));
+    }
+
+    /**
+     * Choix multiple, avec recherche, des agents parmi les comptes proposés (customdata agents).
+     *
+     * @param string $name 'deveagent' ou 'libraryagent'.
+     * @return void
+     */
+    protected function add_agents_field($name) {
+        $mform = $this->_form;
+        $mform->addElement(
+            'autocomplete',
+            $name,
+            get_string('settings' . $name, 'mod_these'),
+            $this->_customdata['agents'][$name] ?? [],
+            [
+                'multiple' => true,
+                'noselectionstring' => get_string('settingsagentsnone', 'mod_these'),
+                'placeholder' => get_string('search'),
+            ]
+        );
+        $mform->setType($name, PARAM_USERNAME);
+        $mform->addHelpButton($name, 'settings' . $name, 'mod_these');
     }
 
     /**

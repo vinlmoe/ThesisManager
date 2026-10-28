@@ -13,6 +13,64 @@ de version recalés sur la date. Les numéros entre parenthèses des sections de
 développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
 été étiquetée.
 
+## mod_these 0.19.0 (2026102708) — direction générale signée par délégation des agents DEVE, relance des agents, agents choisis parmi les inscrits, plus de rôles des services, matière des enseignants, annuaire pour les étudiants
+
+- La direction générale ne signe jamais elle-même : ses documents (fiche
+  signalétique, contrat de diffusion, conclusions) sont toujours signés par
+  délégation, par les agents DEVE signataires. Ils leur sont demandés avec
+  l'agrément administratif, à la validation du dossier de soutenance, dans un
+  seul courriel « Documents à signer », et apparaissent dans « Mes
+  signatures » avec « (Direction générale, par délégation) » ; la signature
+  porte le nom de l'agent suivi de « (par délégation) ». Plus de lien ni
+  d'adresse pour la direction générale (paramètre « Direction générale
+  (courriel) » retiré ; nom et qualité restent imprimés). Sans agent désigné,
+  ses documents se signent sur place ou par scan, toujours par délégation :
+  la case « Signature par délégation » disparaît de la signature sur place et
+  des scans. Les agents DEVE signataires deviennent un réglage attendu de
+  « Réglages à compléter ».
+- Relance des agents DEVE : bouton « Relancer » (au lieu de « Envoyer le
+  lien ») sur la ligne des agents du suivi des signatures, message « Relance
+  envoyée aux agents DEVE. ». La relance, comme la relance automatique et
+  l'action groupée « Relancer les signataires », porte sur leurs signatures et
+  sur celles de la direction générale.
+- Agents DEVE signataires et agents de la bibliothèque choisis dans une liste
+  (choix multiple avec recherche) au lieu d'être saisis : membres de la DEVE
+  inscrits aux cours des activités de la portée (droit ou rôle de la DEVE)
+  pour les premiers ; personnels inscrits (hors étudiants) et détenteurs du
+  rôle de la bibliothèque pour les seconds. Un agent déjà désigné reste
+  proposé. Le paramètre garde son format (identifiants, un par ligne) : les
+  réglages existants, le transfert et la sauvegarde ne changent pas ; un
+  identifiant qui est une adresse de courriel désigne désormais bien son
+  compte (`\mod_these\local\scopesettings::candidate_users()`).
+- Plus de rôles des services ni de rôle « Bibliothèque (thèses) » : la DEVE est
+  reconnue à la capacité `mod/these:managedeve` (rôle « Enseignant »), la
+  bibliothèque à la liste de ses agents (ou à `mod/these:managelibrary`).
+  Section « Rôles des services » retirée des paramètres du circuit ; le rôle
+  n'est plus créé à l'installation. Mise à jour 2026102707 : les détenteurs du
+  rôle choisi pour la bibliothèque sont ajoutés aux agents de la bibliothèque
+  (droits et courriels conservés), puis les réglages `deverole` et
+  `libraryrole` sont supprimés ; le rôle existant n'est pas supprimé. Un site
+  qui avait choisi pour la DEVE un rôle sans la capacité `managedeve` doit la
+  lui accorder.
+- Annuaire du jury : matière enseignée (champ `discipline` de `these_juror`,
+  mise à jour 2026102708), saisie dans la fiche de l'enseignant, affichée dans
+  l'annuaire, importable (colonne CSV facultative `discipline`, la matière
+  connue étant gardée sans elle) et déclarée pour la vie privée. Liste du
+  corps enseignant en PDF : chaque section sur trois colonnes aussi égales que
+  possible (première colonne d'abord), la matière sous chaque nom. Une liste dont le modèle a été
+  personnalisé garde sa mise en page : la rétablir depuis les modèles pour en
+  profiter (variable `rows` de chaque groupe, lignes de `cells` avec leur
+  `member`, et `discipline` de chaque enseignant).
+- Annuaire des enseignants en lecture seule (`directory.php`), ouvert à
+  quiconque consulte l'activité, étudiants compris : bouton sur la page de
+  l'étudiant et lien de la barre de navigation (sauf pour la DEVE, qui tient
+  l'annuaire). Enseignants actifs internes et extérieurs : nom, statut,
+  matière, établissement, présidence possible ; recherche (nom, matière,
+  établissement, sans accents) et filtre « Seulement ceux pouvant présider un
+  jury ». Adresse (lien de courriel) des seuls enseignants pouvant présider,
+  pour que l'étudiant les contacte ; aucune modification ; lien vers la liste
+  en PDF.
+
 ## mod_these 0.18.0 (2026102703) — directeur non votant, liste du corps enseignant, aides pour la DEVE
 
 - Validation de l'A6 saisie par la DEVE, plus par l'étudiant (le dépôt de la

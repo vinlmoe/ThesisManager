@@ -4,9 +4,9 @@
 
 % Version du guide : à mettre à jour à chaque modification, avec une ligne dans l'historique.
 \newcommand{\titreguide}{Guide de la gestion des thèses}
-\newcommand{\versionguide}{2.12}
-\newcommand{\dateguide}{26 octobre 2026}
-\newcommand{\versionthese}{0.18.0}
+\newcommand{\versionguide}{2.13}
+\newcommand{\dateguide}{27 octobre 2026}
+\newcommand{\versionthese}{0.19.0}
 
 \usepackage{guide-commun}
 \usepackage{tikz}
@@ -106,6 +106,14 @@ soutenances au calendrier Moodle ; modification d'un dossier allégée ;
 validation de l'A6 saisie par la DEVE et liée à l'étudiant (dossier, lot,
 import Excel) ; partie DEVE réorganisée (circuit, A6, actions groupées,
 planning) ; version du guide et du module mises à jour en page de garde. \\
+2.13 & 27 octobre 2026 & Direction générale toujours signée par délégation,
+par les agents DEVE (plus de lien ni d'adresse pour elle) ; relance des agents pour leurs signatures et
+celles de la direction générale (bouton \bouton{Relancer} du suivi des
+signatures) ; agents DEVE et agents de la bibliothèque choisis parmi les
+inscrits au lieu d'être saisis ; plus de rôles des services ni de rôle
+\og Bibliothèque (thèses)\fg{} ; matière enseignée dans l'annuaire et liste du
+corps enseignant sur trois colonnes ; annuaire des enseignants en lecture seule
+pour les étudiants. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -248,41 +256,29 @@ administrateur. Le module requiert Moodle~4.0 ou supérieur.
 Étudiant & Étudiant & \texttt{mod/these:submit} \\
 Directeur de thèse & Enseignant non éditeur & \texttt{mod/these:direct} \\
 DEVE & Enseignant & \texttt{mod/these:managedeve}, \texttt{viewall} \\
-Bibliothèque & \og Bibliothèque (thèses)\fg{} (créé par le module) & \texttt{mod/these:managelibrary}, \texttt{viewall} \\
+Bibliothèque & rôle du cours (Enseignant non éditeur, par exemple), désignée agent de la bibliothèque & droits de la bibliothèque \\
 \bottomrule
 \end{tabularx}
 \end{center}
 
-Comme dans StageCompagnon, la DEVE est reconnue au rôle standard \og
-Enseignant\fg{}. La bibliothèque, qui n'a pas d'équivalent, dispose d'un
-\textbf{rôle interne au module}, \og Bibliothèque (thèses)\fg{}, créé à
-l'installation. Les deux correspondances se règlent dans les
-\bouton{Paramètres du circuit} de l'activité \og Suivi des thèses\fg{}
-(section~\ref{sec:parametres}) :
+Aucun rôle n'est à créer. Comme dans StageCompagnon, la DEVE est reconnue au
+rôle standard \og Enseignant\fg{}, qui porte la capacité
+\texttt{mod/these:managedeve}. Les directeurs de thèse sont inscrits comme
+\og Enseignant non éditeur\fg{} : inscrits comme \og Enseignant\fg{}, ils
+auraient aussi les droits de la DEVE.
 
-\begin{description}
-  \item[Rôle DEVE] par défaut \og Enseignant\fg{} ;
-  \item[Rôle Bibliothèque] par défaut \og Bibliothèque (thèses)\fg{}.
-\end{description}
-
-La DEVE, responsable de l'activité, choisit elle-même ces deux rôles. Un rôle choisi ici donne les droits du service même sans les
-capacités du module. Il peut être attribué dans le cours, dans sa catégorie ou \textbf{au
-niveau du site} (\chemin{Administration du site > Utilisateurs > Permissions >
-Attribution des rôles système}) : les bibliothécaires accèdent alors à toutes
-les activités de gestion des thèses sans être inscrits aux cours.
-
-\paragraph{Agents de la bibliothèque.} Plus simple, sans rôle à attribuer :
-la DEVE liste les agents de la bibliothèque (identifiants ou adresses de
-courriel, séparés par des virgules ou un par ligne) dans les
-\bouton{Paramètres du circuit} de l'activité de suivi, rubrique \og Agents de
-la bibliothèque\fg{}. Ils ont les droits de la bibliothèque et seulement
-ceux-là : leur tableau de bord ne montre que la file \og À traiter\fg{} de la
-bibliothèque, le planning et l'export ; ni création, ni import, ni menu
-\bouton{Paramètres}, ni pages de la DEVE, même si leur rôle dans le cours
-(enseignant, par exemple) les leur donnerait. Ils ne sont pas proposés comme
-directeurs de thèse et reçoivent les courriels adressés à la bibliothèque. Ils
-doivent seulement pouvoir entrer dans le cours (inscription avec n'importe quel
-rôle).
+\paragraph{Agents de la bibliothèque.} La bibliothèque est reconnue à la liste
+de ses agents : la DEVE les choisit dans les \bouton{Paramètres du circuit} de
+l'activité de suivi, rubrique \og Agents de la bibliothèque\fg{} ; on tape un
+nom, puis on le choisit dans la liste des personnels inscrits aux cours des
+activités suivies (inscrits qui ne déposent pas de thèse). Ils ont les droits de
+la bibliothèque et seulement ceux-là : leur tableau de bord ne montre que la
+file \og À traiter\fg{} de la bibliothèque, le planning et l'export ; ni
+création, ni import, ni menu \bouton{Paramètres}, ni pages de la DEVE, même si
+leur rôle dans le cours (enseignant, par exemple) les leur donnerait. Ils ne
+sont pas proposés comme directeurs de thèse et reçoivent les courriels adressés
+à la bibliothèque. Une personne absente de la liste doit d'abord être inscrite
+au cours (avec n'importe quel rôle sauf celui d'étudiant).
 
 \begin{astuce}
 Un directeur de thèse ne voit et ne valide que les dossiers qu'il dirige. Seuls
@@ -293,8 +289,8 @@ directeurs potentiels doivent donc être inscrits au cours.
 
 \subsection{Paramètres du circuit : documents et signataires}\label{sec:parametres}
 
-Le module n'a \textbf{aucun réglage du site}. Rôles des services, agents
-signataires, signataires et textes des documents, contrat type : tout se règle
+Le module n'a \textbf{aucun réglage du site}. Agents DEVE et agents de la
+bibliothèque, signataires et textes des documents, contrat type : tout se règle
 dans l'activité \og Suivi des thèses\fg{}, bouton \bouton{Paramètres du
 circuit}, et vaut pour toutes les promotions qu'elle suit (comme les modèles des
 documents). Une activité \og Gestion des thèses\fg{} qu'aucune activité de suivi
@@ -305,8 +301,9 @@ En tête de la page, l'encadré \og Réglages à compléter\fg{} liste ce qui
 manque encore pour faire tourner le circuit : établissement et université,
 signataires (direction générale, CCEM, présidence de l'université, direction
 des études), contrat type, salles de soutenance et images des modèles (avec le
-lien vers la page des modèles et le nom des images manquantes). Les agents DEVE
-signataires et le questionnaire sont facultatifs.
+lien vers la page des modèles et le nom des images manquantes), agents DEVE
+signataires (ils signent pour la direction générale). Les agents de la
+bibliothèque et le questionnaire sont facultatifs.
 
 \capture[0.85\linewidth]{24_parametres_circuit}{Paramètres du circuit, dans l'activité de suivi.}
 
@@ -319,23 +316,29 @@ signataires et le questionnaire sont facultatifs.
         contrat ne contient que les pages du module, n'est pas scellé
         (section~\ref{sec:integrite}) et le dossier affiche un avertissement
         à la DEVE.
-  \item[Agents DEVE signataires] identifiants ou adresses des comptes Moodle
-        des agents habilités à signer pour la DEVE, séparés par des virgules ou
-        un par ligne : l'équipe valide sans signer, puis l'un des agents signe
-        depuis \bouton{Mes signatures} (section~\ref{sec:agent}). Vide : la
-        personne qui valide signe.
-  \item[Signataires] direction générale, président du CCEM, présidence de
-        l'université : nom et adresse. Avec une adresse, le signataire reçoit un
-        lien de signature ; sans adresse, la DEVE recueille sa signature sur place.
+  \item[Agents DEVE signataires] agents habilités à signer pour la DEVE,
+        choisis (en tapant leur nom) parmi les membres de la DEVE inscrits aux
+        cours des activités suivies : l'équipe valide sans signer, puis l'un
+        des agents signe depuis \bouton{Mes signatures}
+        (section~\ref{sec:agent}). Les agents signent aussi, \textbf{par
+        délégation}, les documents de la direction générale, qui ne signe
+        jamais elle-même. Vide : la personne qui valide signe le visa et
+        l'agrément, et les documents de la direction générale se signent sur
+        place ou par scan.
+  \item[Signataires] direction générale (nom et qualité, imprimés sur les
+        documents ; pas d'adresse : elle ne signe pas elle-même), président du
+        CCEM et présidence de l'université (nom et adresse). Avec une adresse,
+        le signataire reçoit un lien de signature ; sans adresse, la DEVE
+        recueille sa signature sur place.
   \item[Soutenances] durée d'une soutenance, en minutes (60 par défaut), pour
         détecter les conflits de jury ; \textbf{salles de soutenance}, une par
         ligne, proposées à la saisie du lieu (dépôt de l'étudiant, validation et
         modification par la DEVE), la première par défaut. Elles remplacent
         l'ancien \og lieu de soutenance proposé par défaut\fg{} des réglages
         de l'activité, repris tant qu'aucune salle n'est saisie.
-  \item[Agents de la bibliothèque] identifiants ou adresses des comptes des
-        agents de la bibliothèque, sans rôle à attribuer
-        (section~\ref{sec:roles}).
+  \item[Agents de la bibliothèque] agents de la bibliothèque, choisis parmi
+        les personnels inscrits et les détenteurs du rôle de la bibliothèque,
+        sans rôle à attribuer (section~\ref{sec:roles}).
   \item[Récapitulatif hebdomadaire] courriel du lundi à la DEVE
         (section~\ref{sec:relances}), activé par défaut.
   \item[Textes] établissement, université (avec son article : \og
@@ -407,6 +410,18 @@ l'acteur attendu) ; \bouton{Voir toutes les étapes} déplie la frise complète.
 \capture[0.85\linewidth]{01_etudiant_accueil}{Accueil de l'activité : \og Mon dossier de thèse\fg{}.}
 
 \capture[0.35\linewidth]{104_frise_telephone}{Sur téléphone : l'étape en cours, la frise repliée, puis les actions.}
+
+\begin{astuce}
+\textbf{Annuaire des enseignants.} Le bouton \bouton{Annuaire des enseignants}
+de votre page ouvre, en lecture seule, la liste des enseignants pouvant diriger
+une thèse ou siéger au jury, de l'établissement comme \textbf{extérieurs} : nom,
+statut, matière enseignée, établissement, colonne \og Peut présider\fg{} et,
+pour ceux qui peuvent présider, leur adresse pour les contacter.
+Cherchez par nom, matière ou établissement (accents et majuscules ignorés) et
+cochez \bouton{Seulement ceux pouvant présider un jury} pour trouver un
+président de jury, y compris hors de l'établissement. La page donne aussi la
+liste du corps enseignant en PDF (enseignants de l'établissement seulement).
+\end{astuce}
 
 \begin{procedure}{Proposer son sujet (phase 1)}{Étudiant}
 \begin{etapes}
@@ -775,9 +790,9 @@ le dépôt de sujet. Le numéro d'enregistrement n'est pas encore attribué.}
   \item Cliquez sur \bouton{Valider le dossier}.
 \end{etapes}
 \ensuite{le manuscrit passe à la bibliothèque ; les membres du jury reçoivent
-leur accès aux documents ; les signataires invités (président du jury,
-direction générale, CCEM, université) et les agents DEVE reçoivent leur demande
-de signature.}
+leur accès aux documents ; les signataires invités (président du jury, CCEM,
+université) et les agents DEVE, pour la DEVE et par délégation pour la direction
+générale, reçoivent leur demande de signature.}
 \end{procedure}
 
 \capture[0.85\linewidth]{71_deve_valide_soutenance}{Validation du dossier de soutenance : numéro, date, jury et éligibilité.}
@@ -788,8 +803,11 @@ de signature.}
 \begin{etapes}
   \item Dans le dossier, cliquez sur \bouton{Suivi des signatures} : chaque
         document et chaque emplacement y figurent avec leur état.
-  \item Pour un signataire qui n'a pas reçu son lien, cliquez sur
-        \bouton{Envoyer le lien} (signataires invités et agents DEVE).
+  \item Pour un signataire invité qui n'a pas reçu son lien, cliquez sur
+        \bouton{Envoyer le lien}. Pour les agents DEVE, cliquez sur
+        \bouton{Relancer} : ils reçoivent un nouveau courriel \og Documents à
+        signer\fg{} pour leurs signatures et celles de la direction générale
+        qu'ils signent par délégation.
   \item Pour un signataire présent (signataire sans compte, mais aussi
         étudiant ou directeur), cliquez sur \bouton{Signer sur place}. Vérifiez
         d'abord son identité (pièce d'identité), cochez \bouton{Je certifie
@@ -800,10 +818,10 @@ de signature.}
         signataire les consulte, trace sa signature et valide. Votre compte est
         conservé avec la signature et imprimé dessous (\og identité vérifiée par
         la DEVE (Prénom Nom)\fg{}).
-  \item Pour la direction générale, la personne qui signe \textbf{par
-        délégation} saisit son propre nom et coche \bouton{Signature par
-        délégation de la direction générale} : \og (par délégation)\fg{}
-        accompagne son nom sur le document et dans le suivi.
+  \item La direction générale est toujours signée \textbf{par délégation} :
+        sans agent DEVE désigné, la personne qui signe sur place saisit son
+        propre nom, suivi de \og (par délégation)\fg{} sur le document et dans
+        le suivi.
 \end{etapes}
 \end{procedure}
 
@@ -1050,6 +1068,16 @@ administratif et la partie \og direction générale représentée par la DEVE\fg
 de la fiche d'agréments, une fois que l'équipe a tout vérifié.
 
 \begin{astuce}
+\textbf{Direction générale par délégation.} La direction générale ne signe
+jamais elle-même : les agents signent à sa place la fiche signalétique, le
+contrat de diffusion et les conclusions. Ces documents leur sont demandés avec l'agrément administratif, à la validation du
+dossier de soutenance ; ils apparaissent dans \bouton{Mes signatures} avec la
+mention \og (Direction générale, par délégation)\fg{}, et le document porte le
+nom de l'agent suivi de \og (par délégation)\fg{}. La direction générale ne
+reçoit aucun lien.
+\end{astuce}
+
+\begin{astuce}
 \textbf{Plusieurs agents.} On peut en désigner plusieurs (un responsable et son
 suppléant, par exemple) : chacun reçoit le courriel \og Documents à signer\fg{}
 et voit les mêmes documents dans \bouton{Mes signatures}. Le premier qui signe
@@ -1074,6 +1102,15 @@ autres. Un agent retiré du réglage ne voit plus les documents en attente.
 l'empreinte du contenu. La page regroupe les dossiers de toutes les promotions.}
 \end{procedure}
 
+\paragraph{Relances.} Tant qu'une signature attend, les agents sont relancés par
+courriel une fois le délai de relance de l'activité écoulé, puis à chaque
+nouveau délai. L'équipe de la DEVE peut aussi les relancer tout de suite, depuis
+le \bouton{Suivi des signatures} du dossier (bouton \bouton{Relancer} de la
+ligne \og Agent responsable de la DEVE\fg{}) ou pour plusieurs dossiers à la
+fois (action groupée \bouton{Relancer les signataires}). La relance porte sur
+leurs signatures et sur celles de la direction générale signées par
+délégation.
+
 \capture[0.8\linewidth]{64_agent_mes_signatures}{Mes signatures : première signature de l'agent DEVE.}
 
 \capture[0.8\linewidth]{65_agent_signature_enregistree}{Signatures suivantes : la signature enregistrée est reprise d'office.}
@@ -1083,8 +1120,7 @@ La signature enregistrée se supprime en bas de la page \bouton{Mes signatures}.
 % ===========================================================================
 \section{Bibliothèque : pas à pas}
 
-Les agents de la bibliothèque (listés dans les paramètres du circuit, ou
-détenteurs du rôle Bibliothèque) arrivent sur le tableau de bord : la file
+Les agents de la bibliothèque (désignés dans les paramètres du circuit) arrivent sur le tableau de bord : la file
 \og À traiter\fg{} propose directement le bouton de chaque contrôle attendu.
 
 \begin{procedure}{Enregistrer la notice du sujet (phase 1)}{Bibliothèque}
@@ -1392,8 +1428,9 @@ invité dont l'adresse est celle de son compte (président du jury, par exemple)
 
 \subsection{Signataires sans compte}
 
-Le président du jury, la direction générale, le CCEM, la présidence de
-l'université et un éventuel directeur extérieur n'ont pas de compte Moodle.
+Le président du jury, le CCEM, la présidence de l'université et un éventuel
+directeur extérieur n'ont pas de compte Moodle (la direction générale, elle, est
+signée par délégation par les agents DEVE, section~\ref{sec:agent}).
 À la validation du dossier de soutenance par la DEVE (et, pour le directeur
 extérieur, à la soumission du sujet), chacun reçoit \textbf{un seul lien}
 couvrant tous les documents qui l'attendent : il les consulte en PDF puis signe
@@ -1411,9 +1448,9 @@ pour un signataire présent ou sans adresse. L'étudiant et le directeur y
 figurent aussi, pour la signature sur place, dès que la signature d'un document
 a commencé. La page de signature sur place ne s'ouvre qu'une fois cochée la case
 qui certifie que l'identité du signataire a été vérifiée : le compte DEVE
-concerné est inscrit à l'historique et conservé avec la signature. La direction générale peut signer par délégation (case
-\bouton{Signature par délégation de la direction générale}, avec le nom de la
-personne qui signe). Le suivi précise pour chaque signature la manière de signer
+concerné est inscrit à l'historique et conservé avec la signature. La direction
+générale est toujours signée par délégation, avec le nom de la personne qui
+signe. Le suivi précise pour chaque signature la manière de signer
 (\og sur place, identité vérifiée par la DEVE\fg{}, \og à la main, scan joint au
 dossier\fg{}) et la délégation (figure~\ref{fig:40_suivi_signatures}).
 
@@ -1431,9 +1468,9 @@ scan, parmi les signatures encore attendues du document : ils sont inscrits comm
 ayant signé à la main à la date portée sur le document, ce qui met à jour le PDF
 du document (\og Signé à la main par \ldots{} le \ldots, scan joint au dossier
 par la DEVE\fg{}) et le suivi des signatures ; le document est scellé une fois
-toutes ses signatures réunies. Pour la direction générale, une case précise la
-signature par délégation (la signature porte alors \og Direction générale (par
-délégation)\fg{}). Le nom du signataire n'est pas demandé : chacun porte le nom
+toutes ses signatures réunies. La direction générale est toujours signée par
+délégation (la signature porte \og Direction générale (par délégation)\fg{}).
+Le nom du signataire n'est pas demandé : chacun porte le nom
 connu du module (étudiant, directeur, signataires des paramètres, président du
 jury). Sans case cochée, le scan est seulement conservé.
 
@@ -1443,8 +1480,7 @@ jury). Sans case cochée, le scan est seulement conservé.
         non abandonné) et cliquez sur \bouton{Ajouter un scan signé}.
   \item Choisissez le \textbf{document signé} et la date de la signature.
   \item Cochez les \textbf{signataires du scan} (seuls ceux du document
-        choisi sont proposés) et, le cas échéant, la signature par délégation de
-        la direction générale.
+        choisi sont proposés).
   \item Déposez le ou les fichiers scannés (PDF ou images, 10 fichiers au plus).
   \item Au besoin, précisez un commentaire, puis cliquez sur
         \bouton{Enregistrer le scan}.
@@ -1547,10 +1583,23 @@ Professeur émérite, maître de conférences émérite & oui & oui \\
 enseignant (PDF)} de l'annuaire produit une page à inclure dans les thèses :
 les enseignants \textbf{actifs} de l'annuaire dont l'établissement est celui
 des paramètres du circuit (champ \og Établissement\fg{}, casse et espaces
-ignorés), groupés par statut, professeurs d'abord, et datée du jour. Les
+ignorés), groupés par statut, professeurs d'abord, et datée du jour. Chaque
+section tient sur \textbf{trois colonnes} (lecture de haut en bas, première
+colonne d'abord) ; sous chaque nom figure la \textbf{matière enseignée} saisie
+dans l'annuaire. Les
 étudiants la téléchargent depuis le dépôt de la soutenance (lien sous le
-manuscrit). Sa mise en page est un modèle de document comme les autres
-(\og Liste du corps enseignant\fg{}, section~\ref{sec:modeles}).
+manuscrit) et depuis l'annuaire des enseignants. Sa mise en page est un modèle
+de document comme les autres (\og Liste du corps enseignant\fg{},
+section~\ref{sec:modeles}).
+
+\paragraph{Annuaire des enseignants (lecture seule).} Les étudiants, les
+directeurs et la bibliothèque consultent l'annuaire sans pouvoir le modifier :
+bouton \bouton{Annuaire des enseignants} de la page de l'étudiant et de la barre
+de navigation. Contrairement à la liste en PDF, il montre aussi les enseignants
+\textbf{extérieurs}, avec la possibilité de présider un jury, une recherche (nom,
+matière, établissement) et un filtre \bouton{Seulement ceux pouvant présider un
+jury}. L'adresse n'y figure que pour les enseignants pouvant présider, que
+l'étudiant sollicite pour son jury ; les enseignants retirés n'y figurent pas.
 
 \capture[0.6\linewidth]{106_liste_corps_enseignant}{Liste du corps enseignant, à inclure dans la thèse.}
 
@@ -1559,12 +1608,14 @@ préremplit son titre, son statut, son établissement et son adresse. Un
 enseignant retiré (non actif) n'est plus proposé mais reste dans les jurys qui
 l'ont retenu. L'annuaire s'importe aussi d'un fichier CSV (colonnes
 \texttt{title}, \texttt{lastname}, \texttt{firstname}, \texttt{email},
-\texttt{status}, \texttt{institution}).
+\texttt{status}, \texttt{institution} et, facultativement,
+\texttt{discipline} pour la matière enseignée ; sans cette colonne, la matière
+déjà saisie est gardée).
 
 Le bouton \bouton{Préremplir avec les enseignants du cours} ajoute les
 enseignants non éditeurs (rôle \og Enseignant non éditeur\fg{}) inscrits au
 cours de l'activité qui ne sont pas encore dans l'annuaire (même adresse, ou
-mêmes nom et prénom). La DEVE (enseignant éditeur ou rôle DEVE) et la
+mêmes nom et prénom). La DEVE (enseignant éditeur) et la
 bibliothèque ne sont pas reprises. Une page de confirmation liste les
 enseignants concernés ; ils sont créés avec le titre Dr, le statut maître de
 conférences et l'établissement par défaut, à vérifier ensuite enseignant par
@@ -1677,9 +1728,10 @@ les dossiers actifs ne sont jamais relancés ; un délai de 0 désactive les
 relances.
 
 La même tâche relance les \textbf{signatures en attente} depuis plus que ce
-délai : chaque signataire sans compte qui a une adresse (direction générale,
-CCEM, université, président du jury, directeur extérieur) reçoit un nouveau
-lien, et les agents DEVE désignés un nouveau rappel ; le délai repart à zéro à
+délai : chaque signataire sans compte qui a une adresse (CCEM, université,
+président du jury, directeur extérieur) reçoit un nouveau lien, et les agents
+DEVE désignés un nouveau rappel, qui couvre aussi la direction générale qu'ils
+signent par délégation ; le délai repart à zéro à
 chaque relance. Il n'y a donc plus à relancer à la main depuis le suivi des
 signatures (le bouton reste disponible pour une relance immédiate).
 

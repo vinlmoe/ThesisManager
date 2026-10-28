@@ -261,7 +261,7 @@ final class signature_test extends these_testcase {
     public function test_defense_signatures_and_invitations(): void {
         $this->setup_activity();
         \mod_these\local\scopesettings::set(these_local_scope($this->these), [
-            'dgemail' => 'dg@example.com', 'ccememail' => 'ccem@example.com', 'ucblemail' => 'ucbl@example.com',
+            'dgname' => 'Directrice générale', 'ccememail' => 'ccem@example.com', 'ucblemail' => 'ucbl@example.com',
         ]);
         $sink = $this->redirectEmails();
         $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
@@ -300,15 +300,16 @@ final class signature_test extends these_testcase {
         // L'agrément administratif saisi par la DEVE n'invalide pas l'agrément scientifique.
         $this->assertNotEmpty($signatures['agreement:director']->timesigned);
 
-        // Une invitation par signataire : président, direction générale, CCEM, université.
+        // Une invitation par signataire : président, CCEM, université ; la direction générale, qui ne
+        // signe jamais elle-même, n'en reçoit pas (signature par délégation, sur place sans agent DEVE).
         $recipients = array_count_values(array_column($sink->get_messages(), 'to'));
-        foreach (['president@example.com', 'dg@example.com', 'ccem@example.com', 'ucbl@example.com'] as $email) {
+        foreach (['president@example.com', 'ccem@example.com', 'ucbl@example.com'] as $email) {
             $this->assertSame(1, $recipients[$email] ?? 0, $email);
         }
-        // Le même lien couvre tous les documents de la direction générale.
-        $token = $this->token_sent_to($sink->get_messages(), 'dg@example.com');
+        // Le même lien couvre tous les documents du CCEM.
+        $token = $this->token_sent_to($sink->get_messages(), 'ccem@example.com');
         $this->assertEqualsCanonicalizing(
-            ['signaletique', 'contract', 'conclusions'],
+            ['agreement', 'signaletique', 'conclusions'],
             array_column(these_get_signatures_by_token($token), 'doctype')
         );
 
@@ -353,34 +354,5 @@ final class signature_test extends these_testcase {
         ], $template->Output('', 'S'));
         $with = these_signed_document_pdf($this->these, $this->context, $dossier, 'contract');
         $this->assertSame(5, $pagecount($with));
-    }
-
-    /**
-     * Les rôles des services se choisissent dans les paramètres de l'activité : un rôle attribué au
-     * niveau du site, sans inscription au cours, donne les droits du service.
-     */
-    public function test_service_roles_from_settings(): void {
-        $this->setup_activity();
-        $user = $this->getDataGenerator()->create_user();
-        $rights = these_get_rights($this->context, null, $user->id);
-        $this->assertFalse($rights->library);
-
-        $roleid = these_setup_default_roles();
-        role_assign($roleid, $user->id, \context_system::instance()->id);
-        accesslib_clear_all_caches_for_unit_testing();
-        $rights = these_get_rights($this->context, null, $user->id);
-        $this->assertTrue($rights->library);
-        $this->assertFalse($rights->deve);
-
-        // Un rôle personnalisé choisi pour la DEVE, sans aucune capacité du module.
-        $deverole = $this->getDataGenerator()->create_role(['shortname' => 'devecustom']);
-        \mod_these\local\scopesettings::set(these_local_scope($this->these), ['deverole' => $deverole]);
-        $other = $this->getDataGenerator()->create_and_enrol($this->course, 'student');
-        role_assign($deverole, $other->id, \context_course::instance($this->course->id));
-        $this->assertTrue(these_get_rights($this->context, null, $other->id)->deve);
-
-        // Destinataires des notifications de la bibliothèque : le détenteur du rôle au niveau du site.
-        $recipients = these_get_service_recipients($this->these, $this->context, 'library');
-        $this->assertContains($user->id, array_column($recipients, 'id'));
     }
 }

@@ -31,20 +31,21 @@ require_once(__DIR__ . '/output_testcase.php');
  */
 final class juror_list_test extends output_testcase {
     /**
-     * Contexte : nom, statut, présidence possible, adresse, état et actions ; annuaire vide.
+     * Contexte : nom, statut, matière, présidence possible, adresse, état et actions ; annuaire vide.
      */
     public function test_export_for_template(): void {
         $this->setup_activity();
         \mod_these\local\jurors::save((object) ['title' => 'Pr', 'lastname' => "O'Neil", 'firstname' => 'Anne',
-            'email' => 'anne@example.org', 'status' => 'pr', 'institution' => 'ENV', 'active' => 1]);
+            'email' => 'anne@example.org', 'status' => 'pr', 'institution' => 'ENV', 'discipline' => 'Anatomie', 'active' => 1]);
         $url = new \moodle_url('/mod/these/jurors.php', ['id' => $this->cm->id]);
         $list = new juror_list(\mod_these\local\jurors::get_all(), $url);
         $this->assertFalse($list->is_empty());
         $cells = $list->export_for_template($this->renderer())['rows'][0]['cells'];
         $this->assertStringContainsString("O'NEIL", $cells[0]['parts'][0]['ptext']['value']);
-        $this->assertSame(get_string('yes'), $cells[2]['parts'][0]['ptext']['value']);
-        $this->assertSame('anne@example.org', $cells[4]['parts'][0]['ptext']['value']);
-        $this->assertStringContainsString('action=delete', $cells[6]['parts'][2]['plink']['url']);
+        $this->assertSame('Anatomie', $cells[2]['parts'][0]['ptext']['value']);
+        $this->assertSame(get_string('yes'), $cells[3]['parts'][0]['ptext']['value']);
+        $this->assertSame('anne@example.org', $cells[5]['parts'][0]['ptext']['value']);
+        $this->assertStringContainsString('action=delete', $cells[7]['parts'][2]['plink']['url']);
         $this->assertTrue((new juror_list([], $url))->is_empty());
     }
 

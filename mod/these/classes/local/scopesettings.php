@@ -20,11 +20,12 @@ use context;
 use stdClass;
 
 /**
- * Paramètres du circuit : rôles des services, agents DEVE signataires, durée et salles des soutenances, établissement, université,
- * signataires et contrat type de diffusion. Aucun n'est un réglage du site : comme les modèles des
- * documents, ils appartiennent à une portée (voir these_settings_scope()), l'activité « Suivi des
- * thèses » qui suit l'activité, sinon l'activité « Gestion des thèses » elle-même (table
- * these_setting, zone de fichiers « contracttemplate » de la portée).
+ * Paramètres du circuit : agents DEVE signataires et agents de la bibliothèque, durée et salles des
+ * soutenances, établissement, université, signataires et contrat type de diffusion. Aucun n'est un
+ * réglage du site : comme les modèles des documents, ils appartiennent à une portée (voir
+ * these_settings_scope()), l'activité « Suivi des thèses » qui suit l'activité, sinon l'activité
+ * « Gestion des thèses » elle-même (table these_setting, zone de fichiers « contracttemplate » de la
+ * portée).
  *
  * @package   mod_these
  * @copyright 2026 Sébastien Lefebvre
@@ -32,7 +33,7 @@ use stdClass;
  */
 class scopesettings {
     /** @var string[] Paramètres contenant une adresse de courriel. */
-    const EMAILS = ['dgemail', 'ccememail', 'ucblemail'];
+    const EMAILS = ['ccememail', 'ucblemail'];
 
     /**
      * Cache des paramètres lus pendant la requête, par portée et par contexte (vidé entre deux tests).
@@ -57,7 +58,6 @@ class scopesettings {
             'devetitle' => 'Directrice des Etudes et de la Vie Etudiante',
             'dgtitle' => '',
             'dgname' => '',
-            'dgemail' => '',
             'visaplace' => '',
             'ccemname' => '',
             'ccememail' => '',
@@ -68,16 +68,12 @@ class scopesettings {
     }
 
     /**
-     * Tous les paramètres et leur valeur par défaut. Rôles des services : « Enseignant » pour la DEVE,
-     * le rôle interne « Bibliothèque (thèses) » pour la bibliothèque.
+     * Tous les paramètres et leur valeur par défaut.
      *
      * @return array nom => valeur par défaut
      */
     public static function defaults() {
-        global $DB;
         return [
-            'deverole' => (int) $DB->get_field('role', 'id', ['shortname' => 'editingteacher']),
-            'libraryrole' => (int) $DB->get_field('role', 'id', ['shortname' => 'theselibrary']),
             'deveagent' => '',
             'libraryagent' => '',
             'defenseduration' => 60,
@@ -89,7 +85,8 @@ class scopesettings {
     /**
      * Comptes désignés dans un paramètre (agents DEVE signataires, agents de la bibliothèque) :
      * identifiants ou adresses de courriel séparés par des virgules, des points-virgules ou des retours
-     * à la ligne. Les comptes supprimés ou suspendus sont ignorés.
+     * à la ligne (le formulaire enregistre les identifiants des comptes choisis, un par ligne). Les
+     * comptes supprimés ou suspendus sont ignorés.
      *
      * @param string $setting
      * @return stdClass[] Comptes, indexés par identifiant, dans l'ordre du paramètre.
@@ -106,24 +103,87 @@ class scopesettings {
         if ($users === false) {
             $users = [];
             foreach (preg_split('/[\s,;]+/', $setting, -1, PREG_SPLIT_NO_EMPTY) as $value) {
-                $field = strpos($value, '@') !== false ? 'email' : 'username';
-                $found = $DB->get_records_select(
-                    'user',
-                    "LOWER($field) = LOWER(?) AND deleted = 0 AND suspended = 0",
-                    [$value],
-                    'id ASC',
-                    '*',
-                    0,
-                    1
-                );
-                if ($found) {
-                    $user = reset($found);
-                    $users[$user->id] = $user;
+                // Identifiant d'abord (il peut être une adresse), puis adresse de courriel.
+                foreach (strpos($value, '@') !== false ? ['username', 'email'] : ['username'] as $field) {
+                    $found = $DB->get_records_select(
+                        'user',
+                        "LOWER($field) = LOWER(?) AND deleted = 0 AND suspended = 0",
+                        [$value],
+                        'id ASC',
+                        '*',
+                        0,
+                        1
+                    );
+                    if ($found) {
+                        $user = reset($found);
+                        $users[$user->id] = $user;
+                        break;
+                    }
                 }
             }
             self::cache()->set($key, $users);
         }
         return $users;
+    }
+
+    /**
+     * Contextes des activités dont les inscrits peuvent être désignés agents dans une portée :
+     * l'activité « Gestion des thèses » elle-même, ou l'activité « Suivi des thèses » et toutes les
+     * activités qu'elle suit.
+     *
+     * @param stdClass $scope Voir these_settings_scope().
+     * @return context[]
+     */
+    public static function scope_contexts(stdClass $scope) {
+        global $DB;
+
+        $cmids = $scope->cmid ? [(int) $scope->cmid] : [];
+        if ($scope->shared) {
+            $cmids = array_merge($cmids, array_map('intval', $DB->get_fieldset_select(
+                'thesesynthesis_link',
+                'thesecmid',
+                'synthesisid = ?',
+                [$scope->synthesisid]
+            )));
+        }
+        $contexts = [];
+        foreach (array_unique($cmids) as $cmid) {
+            if ($context = \context_module::instance($cmid, IGNORE_MISSING)) {
+                $contexts[$context->id] = $context;
+            }
+        }
+        return $contexts;
+    }
+
+    /**
+     * Comptes proposés pour un paramètre d'agents d'une portée, dans les activités de la portée (voir
+     * scope_contexts()) :
+     * - agents DEVE : les membres de la DEVE, inscrits avec le droit de la DEVE (rôle « Enseignant ») ;
+     * - agents de la bibliothèque : les inscrits qui ne déposent pas de thèse (personnels).
+     * Les comptes déjà désignés restent proposés, même s'ils ne sont plus inscrits.
+     *
+     * @param stdClass $scope
+     * @param string $actor 'deve' ou 'library'.
+     * @return stdClass[] Comptes actifs, indexés par identifiant, triés par nom.
+     */
+    public static function candidate_users(stdClass $scope, $actor) {
+        $settings = self::get_all($scope);
+        $users = [];
+        foreach (self::scope_contexts($scope) as $context) {
+            if ($actor === 'deve') {
+                $users += get_enrolled_users($context, 'mod/these:managedeve', 0, 'u.*', null, 0, 0, true);
+            } else {
+                $students = get_enrolled_users($context, 'mod/these:submit', 0, 'u.id', null, 0, 0, true);
+                $users += array_diff_key(get_enrolled_users($context, '', 0, 'u.*', null, 0, 0, true), $students);
+            }
+        }
+        $users += self::listed_users($settings[$actor === 'deve' ? 'deveagent' : 'libraryagent']);
+        $users = array_filter($users, function ($user) {
+            return empty($user->deleted) && empty($user->suspended) && !isguestuser($user);
+        });
+        $names = array_map('fullname', $users);
+        \core_collator::asort($names);
+        return array_replace($names, $users);
     }
 
     /**
@@ -379,7 +439,7 @@ class scopesettings {
             ['settingscheckdeve', $filled(['devename']), false, null],
             ['settingscheckcontract', self::contract_template($scope) !== null, false, null],
             ['settingscheckrooms', (bool) self::rooms($values), false, null],
-            ['settingscheckagents', $filled(['deveagent']), true, null],
+            ['settingscheckagents', $filled(['deveagent']), false, null],
             ['settingschecklibraryagents', $filled(['libraryagent']), true, null],
             ['settingscheckquestions', (bool) these_get_questions($scope), true, $page('questions.php')],
         ];

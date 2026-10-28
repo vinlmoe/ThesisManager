@@ -95,6 +95,42 @@ class signatureagent {
     }
 
     /**
+     * Indique si les agents DEVE signent pour la direction générale : elle ne signe jamais elle-même,
+     * ses documents sont toujours signés par délégation, par les agents DEVE quand il y en a de
+     * désignés (sinon sur place ou par scan, auprès de la DEVE).
+     *
+     * @param stdClass $these
+     * @return bool
+     */
+    public static function signs_dg_by_delegation(stdClass $these) {
+        return (bool) self::deve_agents($these);
+    }
+
+    /**
+     * Emplacements que signent les agents DEVE d'une activité : les leurs (voir agent_slots()), et
+     * celui de la direction générale, par délégation.
+     *
+     * @param stdClass $these
+     * @return string[]
+     */
+    public static function slots_for(stdClass $these) {
+        return array_merge(these_agent_slots(), self::signs_dg_by_delegation($these) ? ['dg'] : []);
+    }
+
+    /**
+     * Libellé d'un document à signer par un agent : document, emplacement, et « par délégation »
+     * pour la direction générale.
+     *
+     * @param string $doctype
+     * @param string $slot
+     * @return string
+     */
+    public static function document_label($doctype, $slot) {
+        return these_document_label($doctype) . ' (' . these_slot_label($slot)
+            . ($slot === 'dg' ? ', ' . get_string('signeddelegated', 'mod_these') : '') . ')';
+    }
+
+    /**
      * Comptes des agents DEVE signataires, désignés dans les paramètres de l'activité (ceux de
      * l'activité « Suivi des thèses » qui la suit) : identifiants ou adresses de courriel séparés par
      * des virgules, des points-virgules ou des retours à la ligne. N'importe lequel d'entre eux signe
@@ -127,23 +163,33 @@ class signatureagent {
 
     /**
      * Indique si un document attend la signature de l'agent DEVE : une fois validée par l'équipe de la
-     * DEVE l'étape qui le remplit (enregistrement du sujet, validation du dossier de soutenance).
+     * DEVE l'étape qui le remplit (enregistrement du sujet, validation du dossier de soutenance). Les
+     * documents signés par la direction générale (par délégation) sont demandés, comme aux autres
+     * signataires, à la validation du dossier de soutenance.
      *
      * @param stdClass $dossier
      * @param string $doctype
      * @return bool
      */
     public static function agent_document_due(stdClass $dossier, $doctype) {
-        $after = ['subject' => THESE_STATUS_SUBJECT_REGISTERED, 'agreement' => THESE_STATUS_DEFENSE_VALIDATED];
+        $after = [
+            'subject' => THESE_STATUS_SUBJECT_REGISTERED,
+            'agreement' => THESE_STATUS_DEFENSE_VALIDATED,
+            'signaletique' => THESE_STATUS_DEFENSE_VALIDATED,
+            'contract' => THESE_STATUS_DEFENSE_VALIDATED,
+            'conclusions' => THESE_STATUS_DEFENSE_VALIDATED,
+        ];
         return isset($after[$doctype]) && these_document_available($dossier, $doctype)
             && these_rank_reached($dossier, $after[$doctype]);
     }
 
     /**
-     * Demande aux agents DEVE de signer les documents d'un dossier qui attendent leur signature :
-     * chaque agent est prévenu par courriel, avec le lien vers « Mes signatures », et le premier qui
-     * signe appose la signature. Avec un seul agent, les signatures en attente lui sont attribuées ;
-     * avec plusieurs, elles restent ouvertes à chacun d'eux.
+     * Demande aux agents DEVE de signer les documents d'un dossier qui attendent leur signature, y
+     * compris ceux de la direction générale quand ils la signent par délégation : chaque agent est
+     * prévenu par courriel, avec le lien vers « Mes signatures », et le premier qui signe appose la
+     * signature. Avec un seul agent, les signatures en attente lui sont attribuées ; avec plusieurs,
+     * elles restent ouvertes à chacun d'eux. Sert aussi de relance : la date de la demande repart de
+     * zéro.
      *
      * @param stdClass $these
      * @param stdClass $cm
@@ -161,7 +207,7 @@ class signatureagent {
         $single = count($agents) === 1 ? reset($agents) : null;
         $now = time();
         $labels = [];
-        foreach (these_agent_slots() as $slot) {
+        foreach (self::slots_for($these) as $slot) {
             foreach (these_pending_documents_for_slot($dossier, $slot, $doctypes) as $doctype) {
                 if (!these_agent_document_due($dossier, $doctype)) {
                     continue;
@@ -189,7 +235,7 @@ class signatureagent {
                     $record->timecreated = $now;
                     $DB->insert_record('these_signature', $record);
                 }
-                $labels[] = these_document_label($doctype) . ' (' . these_slot_label($slot) . ')';
+                $labels[] = self::document_label($doctype, $slot);
             }
         }
         if (!$labels) {
@@ -216,8 +262,9 @@ class signatureagent {
 
     /**
      * Signatures qui attendent un utilisateur connecté : pour un agent DEVE désigné, celles qui
-     * attendent un agent, quel qu'il soit ; et celles des signataires invités par courriel (président
-     * du jury, directeur extérieur...) dont l'adresse est celle de son compte.
+     * attendent un agent, quel qu'il soit (direction générale par délégation comprise) ; et celles des
+     * signataires invités par courriel (président du jury, directeur extérieur...) dont l'adresse est
+     * celle de son compte.
      *
      * @param stdClass $user
      * @return stdClass[] Signatures en attente, avec dossier, activité et module de cours.
@@ -227,7 +274,7 @@ class signatureagent {
 
         // Les agents sont désignés par activité : les signatures d'agent sont toutes lues, puis
         // gardées pour les activités dont l'utilisateur est agent.
-        $agentslots = these_agent_slots();
+        $agentslots = array_merge(these_agent_slots(), ['dg']);
         $email = core_text::strtolower(trim((string) $user->email));
         $params = ['userid' => $user->id, 'email1' => $email, 'email2' => $email];
         [$slotsql, $slotparams] = $DB->get_in_or_equal($agentslots, SQL_PARAMS_NAMED, 'agentslot');
@@ -253,8 +300,12 @@ class signatureagent {
             }
             $these = $DB->get_record('these', ['id' => $dossier->theseid]);
             // Signature d'agent : réservée aux agents désignés de l'activité (sinon à la personne qui l'a
-            // validée), une fois l'étape validée par l'équipe.
+            // validée), une fois l'étape validée par l'équipe. Direction générale : seulement tant que
+            // les agents la signent par délégation.
             if ($signature->token === null && in_array($signature->slot, $agentslots, true)) {
+                if (!in_array($signature->slot, self::slots_for($these), true)) {
+                    continue;
+                }
                 $agents = these_deve_agents($these);
                 $allowed = $agents ? isset($agents[(int) $user->id]) : (int) $signature->userid === (int) $user->id;
                 if (!$allowed || !these_agent_document_due($dossier, $signature->doctype)) {

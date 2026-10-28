@@ -30,6 +30,9 @@ namespace mod_these\local;
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class jurors {
+    /** @var int Colonnes de chaque section de la liste du corps enseignant. */
+    const TEACHING_LIST_COLUMNS = 3;
+
     /** @var string[] Statuts permettant de présider un jury. */
     const PRESIDENT_STATUSES = ['mcfhdr', 'pr', 'premerite', 'mcfemerite'];
 
@@ -138,13 +141,13 @@ class jurors {
     public static function find_existing($email, $lastname, $firstname) {
         global $DB;
         $email = trim((string) $email);
-        $existing = $email !== '' ? $DB->get_record('these_juror', ['email' => $email], 'id', IGNORE_MULTIPLE) : null;
+        $existing = $email !== '' ? $DB->get_record('these_juror', ['email' => $email], 'id, discipline', IGNORE_MULTIPLE) : null;
         if (!$existing) {
             $existing = $DB->get_record_select(
                 'these_juror',
                 'LOWER(lastname) = LOWER(:lastname) AND LOWER(firstname) = LOWER(:firstname)',
                 ['lastname' => trim($lastname), 'firstname' => trim($firstname)],
-                'id',
+                'id, discipline',
                 IGNORE_MULTIPLE
             );
         }
@@ -153,8 +156,8 @@ class jurors {
 
     /**
      * Enseignants inscrits au cours pouvant diriger une thèse (enseignants non éditeurs), absents de
-     * l'annuaire. La DEVE (capacité ou rôle de service, en pratique l'enseignant éditeur) et la
-     * bibliothèque en sont exclues.
+     * l'annuaire. La DEVE (capacité, en pratique l'enseignant éditeur) et la bibliothèque en sont
+     * exclues.
      *
      * @param \context $context Contexte de l'activité (Gestion ou Suivi des thèses) ou du cours.
      * @return array id => utilisateur, triés par nom.
@@ -167,8 +170,6 @@ class jurors {
             if (
                 has_capability('mod/these:managedeve', $coursecontext, $user)
                     || has_capability('mod/these:managelibrary', $coursecontext, $user)
-                    || these_user_has_service_role($context, $user->id, 'deve')
-                    || these_user_has_service_role($context, $user->id, 'library')
                     || scopesettings::is_library_agent($context, $user->id)
                     || self::find_existing($user->email, $user->lastname, $user->firstname)
             ) {
@@ -250,7 +251,7 @@ class jurors {
     /**
      * Enregistre un enseignant.
      *
-     * @param \stdClass $data {id?, title, lastname, firstname, email, status, institution, active}
+     * @param \stdClass $data {id?, title, lastname, firstname, email, status, institution, discipline?, active}
      * @return int id
      */
     public static function save(\stdClass $data) {
@@ -263,6 +264,7 @@ class jurors {
             'email' => trim((string) ($data->email ?? '')),
             'status' => array_key_exists($data->status, self::statuses()) ? $data->status : 'mcf',
             'institution' => trim((string) ($data->institution ?? '')),
+            'discipline' => trim((string) ($data->discipline ?? '')),
             'active' => empty($data->active) ? 0 : 1,
             'timemodified' => time(),
         ];
@@ -312,7 +314,7 @@ class jurors {
 
     /**
      * Importe des enseignants depuis un CSV (colonnes : title, lastname, firstname, email, status,
-     * institution ; séparateur virgule ou point-virgule). Un enseignant déjà présent (même adresse,
+     * institution, et facultativement discipline ; séparateur virgule ou point-virgule). Un enseignant déjà présent (même adresse,
      * ou à défaut mêmes nom et prénom) est mis à jour.
      *
      * @param string $content
@@ -360,11 +362,43 @@ class jurors {
                 'email' => $email,
                 'status' => $status,
                 'institution' => (string) ($row['institution'] ?? ''),
+                // Matière : colonne facultative ; sans elle, celle déjà connue est gardée.
+                'discipline' => array_key_exists('discipline', $row) ? (string) $row['discipline']
+                    : (string) ($existing->discipline ?? ''),
                 'active' => 1,
             ]);
             $existing ? $result->updated++ : $result->created++;
         }
         return $result;
+    }
+
+    /**
+     * Annuaire en lecture seule (étudiants compris) : enseignants actifs, internes comme extérieurs,
+     * filtrés par un texte cherché dans le nom, la matière et l'établissement (casse et accents
+     * ignorés), et au besoin limités à ceux qui peuvent présider un jury.
+     *
+     * @param string $search
+     * @param bool $presidentsonly
+     * @return \stdClass[] Enseignants, triés par nom.
+     */
+    public static function directory($search = '', $presidentsonly = false) {
+        $normalise = function ($value) {
+            return trim(preg_replace('/\s+/', ' ', \core_text::strtolower(\core_text::specialtoascii((string) $value))));
+        };
+        $words = array_filter(explode(' ', $normalise($search)), 'strlen');
+        return array_values(array_filter(self::get_all(true), function ($juror) use ($normalise, $words, $presidentsonly) {
+            if ($presidentsonly && !self::can_preside($juror->status)) {
+                return false;
+            }
+            $haystack = $normalise(implode(' ', [$juror->title, $juror->lastname, $juror->firstname,
+                $juror->discipline ?? '', $juror->institution ?? '', self::status_label($juror->status)]));
+            foreach ($words as $word) {
+                if (strpos($haystack, $word) === false) {
+                    return false;
+                }
+            }
+            return true;
+        }));
     }
 
     /**
@@ -393,12 +427,16 @@ class jurors {
 
     /**
      * Données du modèle « Liste du corps enseignant » : les enseignants actifs internes à
-     * l'établissement (voir internal_members()), groupés par statut, à inclure dans les thèses.
+     * l'établissement (voir internal_members()), groupés par statut, à inclure dans les thèses. Chaque
+     * groupe est aussi présenté en trois colonnes (rows : lignes de trois cellules, chacune avec son
+     * enseignant ou vide ; la première colonne remplie d'abord, pour garder l'ordre alphabétique en
+     * lisant de haut en bas).
      *
      * @param \stdClass|null $scope Portée dont reprendre l'établissement et les images.
      * @param \stdClass|null $activity Activité dont reprendre l'établissement, à défaut.
      * @param \stdClass[]|null $members Enseignants à lister (par défaut, ceux de l'annuaire).
-     * @return array today, establishment {name, city}, count, hasmembers, groups {label, members {name, title, fullname}}, img
+     * @return array today, establishment {name, city}, count, hasmembers, groups {label, members, rows {cells {member}}}, img ;
+     *               un enseignant : {name, title, fullname, discipline}
      */
     public static function teaching_list_context(?\stdClass $scope, ?\stdClass $activity = null, ?array $members = null) {
         $settings = $scope ? scopesettings::get_all($scope) : scopesettings::defaults();
@@ -412,15 +450,36 @@ class jurors {
             if (!$rows) {
                 continue;
             }
+            $people = array_map(function ($juror) {
+                return [
+                    'title' => (string) $juror->title,
+                    'fullname' => self::fullname($juror),
+                    'name' => trim($juror->title . ' ' . self::fullname($juror)),
+                    'discipline' => trim((string) ($juror->discipline ?? '')),
+                ];
+            }, $rows);
+            // Colonnes aussi égales que possible (4 enseignants : 2, 1, 1), remplies l'une après l'autre.
+            $sizes = [];
+            $starts = [];
+            $start = 0;
+            for ($column = 0; $column < self::TEACHING_LIST_COLUMNS; $column++) {
+                $sizes[$column] = intdiv(count($people), self::TEACHING_LIST_COLUMNS)
+                    + ($column < count($people) % self::TEACHING_LIST_COLUMNS ? 1 : 0);
+                $starts[$column] = $start;
+                $start += $sizes[$column];
+            }
+            $columns = [];
+            for ($i = 0; $i < $sizes[0]; $i++) {
+                $cells = [];
+                for ($column = 0; $column < self::TEACHING_LIST_COLUMNS; $column++) {
+                    $cells[] = ['member' => $i < $sizes[$column] ? $people[$starts[$column] + $i] : null];
+                }
+                $columns[] = ['cells' => $cells];
+            }
             $groups[] = [
                 'label' => get_string('teachinggroup' . $status, 'mod_these'),
-                'members' => array_map(function ($juror) {
-                    return [
-                        'title' => (string) $juror->title,
-                        'fullname' => self::fullname($juror),
-                        'name' => trim($juror->title . ' ' . self::fullname($juror)),
-                    ];
-                }, $rows),
+                'members' => $people,
+                'rows' => $columns,
             ];
         }
         return [
@@ -444,11 +503,14 @@ class jurors {
      */
     public static function sample_teaching_list_context(?\stdClass $scope = null, ?\stdClass $activity = null) {
         $sample = [
-            ['Pr', 'DUPONT', 'Jean', 'pr'], ['Pr', 'MARTIN', 'Claire', 'pr'], ['Dr', 'DURAND', 'Anne', 'mcfhdr'],
-            ['Dr', 'PETIT', 'Luc', 'mcf'], ['Dr', 'BERNARD', 'Marie', 'mcf'], ['Dr', 'ROUX', 'Paul', 'ir'],
+            ['Pr', 'DUPONT', 'Jean', 'pr', 'Anatomie'], ['Pr', 'MARTIN', 'Claire', 'pr', 'Pharmacologie'],
+            ['Pr', 'LEROY', 'Marc', 'pr', 'Chirurgie'], ['Dr', 'DURAND', 'Anne', 'mcfhdr', 'Parasitologie'],
+            ['Dr', 'PETIT', 'Luc', 'mcf', 'Médecine interne'], ['Dr', 'BERNARD', 'Marie', 'mcf', 'Biochimie'],
+            ['Dr', 'ROUX', 'Paul', 'ir', ''],
         ];
         $members = array_map(function ($row) {
-            return (object) ['title' => $row[0], 'lastname' => $row[1], 'firstname' => $row[2], 'status' => $row[3]];
+            return (object) ['title' => $row[0], 'lastname' => $row[1], 'firstname' => $row[2], 'status' => $row[3],
+                'discipline' => $row[4]];
         }, $sample);
         return self::teaching_list_context($scope, $activity, $members);
     }

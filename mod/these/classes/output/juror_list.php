@@ -67,6 +67,7 @@ class juror_list implements \renderable, \templatable {
             $rows[] = [
                 [parts::text(jurors::name($juror))],
                 [parts::text(jurors::status_label($juror->status))],
+                [parts::text((string) ($juror->discipline ?? ''))],
                 [parts::text(jurors::can_preside($juror->status) ? get_string('yes') : get_string('no'))],
                 [parts::text($juror->institution)],
                 [parts::text($juror->email)],
@@ -77,6 +78,7 @@ class juror_list implements \renderable, \templatable {
         $head = [
             get_string('juryname', 'mod_these'),
             get_string('jurystatus', 'mod_these'),
+            get_string('jurordiscipline', 'mod_these'),
             get_string('jurorpresident', 'mod_these'),
             get_string('juryinstitution', 'mod_these'),
             get_string('email'),

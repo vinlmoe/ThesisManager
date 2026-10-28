@@ -23,7 +23,8 @@ require_once($CFG->dirroot . '/mod/these/locallib.php');
 
 /**
  * Socle commun des tests de mod_these : un cours, une activité et les quatre acteurs du circuit,
- * chacun avec son rôle (la bibliothèque passant par un rôle dédié, comme sur un site réel).
+ * chacun avec son rôle (la bibliothèque désignée parmi les agents de la bibliothèque, comme sur un
+ * site réel).
  *
  * @package    mod_these
  * @copyright  2026 Sébastien Lefebvre
@@ -79,10 +80,9 @@ abstract class these_testcase extends \advanced_testcase {
         $this->director = $gen->create_and_enrol($this->course, 'teacher');
         $this->deve = $gen->create_and_enrol($this->course, 'editingteacher');
 
-        // Rôle interne « Bibliothèque (thèses) », créé à l'installation du module et choisi par
-        // défaut pour la bibliothèque dans les réglages du site.
-        these_setup_default_roles();
-        $this->librarian = $gen->create_and_enrol($this->course, 'theselibrary');
+        // Bibliothèque : inscrite au cours et désignée dans les paramètres du circuit, sans rôle dédié.
+        $this->librarian = $gen->create_and_enrol($this->course, 'teacher', ['username' => 'bibliotheque']);
+        \mod_these\local\scopesettings::set(these_settings_scope($this->these), ['libraryagent' => 'bibliotheque']);
         accesslib_clear_all_caches_for_unit_testing();
     }
 

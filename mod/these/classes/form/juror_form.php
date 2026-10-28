@@ -54,6 +54,9 @@ class juror_form extends \moodleform {
         $mform->addHelpButton('status', 'jurystatus', 'mod_these');
         $mform->addElement('text', 'institution', get_string('juryinstitution', 'mod_these'), ['size' => 60]);
         $mform->setType('institution', PARAM_TEXT);
+        $mform->addElement('text', 'discipline', get_string('jurordiscipline', 'mod_these'), ['size' => 60]);
+        $mform->setType('discipline', PARAM_TEXT);
+        $mform->addHelpButton('discipline', 'jurordiscipline', 'mod_these');
         $mform->addElement('advcheckbox', 'active', '', get_string('juroractive', 'mod_these'));
         $mform->setDefault('active', 1);
 

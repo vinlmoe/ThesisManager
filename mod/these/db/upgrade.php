@@ -205,5 +205,48 @@ function xmldb_these_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2026102703, 'these');
     }
 
+    if ($oldversion < 2026102707) {
+        // Plus de rôles des services : la DEVE est reconnue à sa capacité (rôle « Enseignant »), la
+        // bibliothèque à la liste de ses agents. Les détenteurs du rôle choisi pour la bibliothèque sont
+        // ajoutés à cette liste, pour garder leurs droits et leurs courriels ; le rôle n'est pas supprimé.
+        foreach ($DB->get_records('these_setting', ['name' => 'libraryrole']) as $setting) {
+            if (!(int) $setting->value) {
+                continue;
+            }
+            $usernames = $DB->get_fieldset_sql(
+                "SELECT DISTINCT u.username
+                   FROM {role_assignments} ra
+                   JOIN {user} u ON u.id = ra.userid
+                  WHERE ra.roleid = :roleid AND u.deleted = 0",
+                ['roleid' => (int) $setting->value]
+            );
+            if (!$usernames) {
+                continue;
+            }
+            $conditions = ['theseid' => $setting->theseid, 'synthesisid' => $setting->synthesisid, 'name' => 'libraryagent'];
+            $agents = $DB->get_record('these_setting', $conditions);
+            $current = $agents ? preg_split('/[\s,;]+/', (string) $agents->value, -1, PREG_SPLIT_NO_EMPTY) : [];
+            $value = implode("\n", array_unique(array_merge($current, $usernames)));
+            if ($agents) {
+                $DB->set_field('these_setting', 'value', $value, ['id' => $agents->id]);
+            } else {
+                $DB->insert_record('these_setting', (object) ($conditions + ['value' => $value]));
+            }
+        }
+        $DB->delete_records_list('these_setting', 'name', ['deverole', 'libraryrole']);
+        upgrade_mod_savepoint(true, 2026102707, 'these');
+    }
+
+    if ($oldversion < 2026102708) {
+        // Annuaire du jury : matière enseignée, reprise dans la liste du corps enseignant.
+        $dbman = $DB->get_manager();
+        $table = new xmldb_table('these_juror');
+        $field = new xmldb_field('discipline', XMLDB_TYPE_CHAR, '255', null, null, null, null, 'institution');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        upgrade_mod_savepoint(true, 2026102708, 'these');
+    }
+
     return true;
 }

@@ -31,7 +31,5 @@
 function xmldb_these_install() {
     global $CFG;
 
-    require_once($CFG->dirroot . '/mod/these/locallib.php');
-    these_setup_default_roles();
     return true;
 }

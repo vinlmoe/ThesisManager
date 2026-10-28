@@ -27,7 +27,7 @@ require_once($CFG->dirroot . '/mod/these/locallib.php');
  * reçu par courriel ou sur place auprès de la DEVE (sign.php). Un signataire connecté avec le
  * compte de l'adresse invitée peut reprendre sa signature enregistrée.
  *
- * La direction générale peut signer par délégation (customdata delegation). Les documents à signer
+ * La direction générale est toujours signée par délégation (voir sign.php). Les documents à signer
  * sont présentés au-dessus du formulaire (sign.php) ; sur place, la DEVE a d'abord certifié avoir
  * vérifié l'identité du signataire (identity_form).
  *
@@ -53,10 +53,6 @@ class sign_form extends \moodleform {
             get_string('signexternalintro', 'mod_these'),
             !empty($this->_customdata['allowsaved'])
         );
-        if (!empty($this->_customdata['delegation'])) {
-            $mform->addElement('advcheckbox', 'delegated', '', get_string('signdelegated', 'mod_these'));
-            $mform->addHelpButton('delegated', 'signdelegated', 'mod_these');
-        }
         $this->add_action_buttons(false, get_string('signdocuments', 'mod_these'));
     }
 

@@ -303,17 +303,28 @@ $string['juroractive'] = 'Offered in jury forms';
 $string['juroractiveyes'] = 'Active';
 $string['juroractiveno'] = 'Withdrawn';
 $string['jurorpresident'] = 'May chair';
+$string['jurordiscipline'] = 'Subject taught';
+$string['jurordiscipline_help'] = 'Subject or discipline taught, shown next to the name in the teaching staff list.';
 $string['juroradd'] = 'Add a teacher';
 $string['juroredit'] = 'Edit a teacher';
 $string['jurorsaved'] = 'The teacher has been saved.';
 $string['jurordeleted'] = 'The teacher has been removed from the directory.';
 $string['jurordeleteconfirm'] = 'Remove {$a} from the directory? Juries that chose them keep them.';
 $string['jurorsnone'] = 'The directory is empty.';
+$string['jurordirectory'] = 'Teacher directory';
+$string['jurordirectory_desc'] = 'Teachers who may supervise a thesis or sit on a jury, from the institution and external, with '
+    . 'their status and subject. The "May chair" column shows those who may chair a jury: professors, emeritus professors, '
+    . 'associate professors with HDR or emeritus; their address is given so you can contact them.';
+$string['jurordirectorysearch'] = 'Name, subject, institution';
+$string['jurordirectorypresidents'] = 'Only those who may chair a jury';
+$string['jurordirectorycount'] = '{$a} teacher(s)';
+$string['jurordirectorynone'] = 'No teacher matches the search.';
 $string['jurorimport'] = 'Import a CSV file';
 $string['jurorimportfile'] = 'CSV file';
-$string['jurorimportfile_help'] = 'Columns: title (Dr or Pr), lastname, firstname, email, status, institution, separated by commas '
-    . 'or semicolons. The status is the key (ir, mcf, mcfhdr, mcfstag, prstag, pr, premerite, mcfemerite) or the label. A teacher '
-    . 'already present (same address, or same names) is updated.';
+$string['jurorimportfile_help'] = 'Columns: title (Dr or Pr), lastname, firstname, email, status, institution and, optionally, '
+    . 'discipline (subject taught), separated by commas or semicolons. The status is the key (ir, mcf, mcfhdr, mcfstag, '
+    . 'prstag, pr, premerite, mcfemerite) or the label. A teacher already present (same address, or same names) is updated; '
+    . 'without a discipline column, their subject is kept.';
 $string['jurorimportdone'] = '{$a->created} teacher(s) added, {$a->updated} updated.';
 $string['jurorimportbadline'] = 'Line {$a} ignored: wrong title, names, status or address.';
 $string['jurorprefill'] = 'Prefill with the course teachers';
@@ -589,6 +600,7 @@ $string['privacy:metadata:these_juror:firstname'] = 'First name of the teacher.'
 $string['privacy:metadata:these_juror:email'] = 'Email address of the teacher.';
 $string['privacy:metadata:these_juror:status'] = 'Status (rank) of the teacher.';
 $string['privacy:metadata:these_juror:institution'] = 'Institution of the teacher.';
+$string['privacy:metadata:these_juror:discipline'] = 'Subject taught by the teacher.';
 $string['privacy:metadata:these_answer'] = "Student answers to the pre-jury questionnaire.";
 $string['privacy:metadata:these_answer:questionid'] = 'Question.';
 $string['privacy:metadata:these_answer:value'] = 'Answer.';
@@ -632,25 +644,14 @@ $string['settingscheckimages'] = 'Document template images';
 $string['settingscheckimagesmissing'] = 'Document template images (missing: {$a})';
 $string['settingsmissingnotice'] = 'Workflow settings to complete: {$a}.';
 $string['settingslibraryagent'] = 'Library agents';
-$string['settingslibraryagent_help'] = "Usernames or email addresses of the library agents' Moodle accounts, separated by commas or one per line. Without any role to assign, they get the library's rights (subject record, manuscript compliance, corrections) and only those: no registrar buttons or pages, even if their course role would give them. They receive the emails addressed to the library. They must be able to enter the course (enrolment with any role).";
+$string['settingslibraryagent_help'] = "Library agents, chosen among the staff enrolled in the courses of the followed activities (enrolled users who do not submit a thesis) and the holders of the library role: type a name to find them. Without any role to assign, they get the library's rights (subject record, manuscript compliance, corrections) and only those: no registrar buttons or pages, even if their course role would give them. They receive the emails addressed to the library. Someone missing from the list must first be enrolled in the course.";
+$string['settingsagentsnone'] = 'No agent selected';
 $string['settingschecklibraryagents'] = 'Library agents';
 $string['scopesettings'] = 'Workflow settings';
-$string['scopesettings_desc'] = 'Service roles, registrar signing agents, institution, university, document signatories and standard '
+$string['scopesettings_desc'] = 'Registrar signing agents, library agents, institution, university, document signatories and standard '
     . 'distribution contract of this activity. None of them is a site setting.';
-$string['scopesettingsshared_desc'] = 'Service roles, registrar signing agents, institution, university, document signatories and '
+$string['scopesettingsshared_desc'] = 'Registrar signing agents, library agents, institution, university, document signatories and '
     . 'standard distribution contract shared by all the followed thesis activities. None of them is a site setting.';
-$string['settingsroles'] = 'Service roles';
-$string['deverole'] = 'Registrar role';
-$string['deverole_help'] = 'Role whose holders act as the registrar in thesis activities.';
-$string['libraryrole'] = 'Library role';
-$string['libraryrole_help'] = 'Role whose holders act as the library. By default, the internal "Library (theses)" role created when '
-    . 'the module is installed.'
-    . ' ' . 'Just as the registrar is recognised by the "Teacher" role, the library is recognised by the role chosen '
-    . 'here. The role can be assigned in the course, its category or at site level (it then gives access to all thesis activities '
-    . 'without enrolment). The module capabilities are also taken into account.';
-$string['libraryrolename'] = 'Library (theses)';
-$string['libraryroledescription'] = 'Internal role of the thesis management module: recording subjects in the library catalogue and '
-    . 'certifying manuscripts. Assign it at site, category or course level.';
 
 // Documents (workflow settings).
 $string['settingsdefenses'] = 'Defences';
@@ -694,8 +695,6 @@ $string['settingshetopurl_help'] = 'Reference terminology for subject keywords.'
 $string['settingsdgtitle'] = 'General management (title)';
 $string['settingsdgtitle_help'] = 'Full title printed above their signature, in French, for example « La Directrice générale de … ».';
 $string['settingsdgname'] = 'General management (name)';
-$string['settingsdgemail'] = 'General management (email)';
-$string['settingsdgemail_help'] = 'Address receiving signing links; empty: signature collected in person by the registrar.';
 $string['settingsvisaplace'] = 'Place of approval';
 $string['settingsvisaplace_help'] = '"Seen, at …" of the conclusions, "Done at" of the distribution contract.';
 $string['settingsccemname'] = 'CCEM (name)';
@@ -762,6 +761,8 @@ $string['signer'] = 'Signatory';
 $string['noemail'] = 'no address';
 $string['documentstosign'] = 'Documents to sign';
 $string['resendsignature'] = 'Send the link';
+$string['remindagents'] = 'Remind';
+$string['agentsreminded'] = 'Reminder sent to the registrar signatories.';
 $string['signinperson'] = 'Sign in person';
 $string['signaturerequestsent'] = 'Signing link sent.';
 $string['signaturesrecorded'] = 'Signature recorded. Thank you.';
@@ -984,9 +985,6 @@ $string['pdfdelegated'] = '{$a} (by delegation)';
 $string['signeddelegated'] = 'by delegation';
 $string['signedmethodinperson'] = 'in person, identity checked by the registrar';
 $string['signedmethodscan'] = 'by hand, scan attached to the file';
-$string['signdelegated'] = 'Signature by delegation of the general management';
-$string['signdelegated_help'] = 'Tick when the person signing does so by delegation of the director general: "by delegation" '
-    . 'appears with their name on the document.';
 $string['signidentity'] = 'Checking the identity of the signatory';
 $string['signidentity_desc'] = 'Check the identity of the person present (identity document) before opening the signing page. '
     . 'The check is recorded in the history under your name, kept with the signature and printed under it.';
@@ -1264,11 +1262,13 @@ Open the file: {$a->url}';
 // DEVE agent signatory and saved signature.
 $string['agentdeve'] = 'Registrar officer';
 $string['settingsdeveagent'] = 'Registrar signatories';
-$string['settingsdeveagent_help'] = 'Usernames or email addresses of the Moodle accounts of the officers allowed to sign for the '
-    . 'registrar, separated by commas or one per line. The registrar team fills in and checks the file, then validates without '
-    . 'signing; each officer then receives an email and finds the subject visa and the administrative approval in "My signatures": '
-    . 'the first one to sign applies the signature, with their saved signature. Leave empty for the registrar member who validates '
-    . 'to sign.';
+$string['settingsdeveagent_help'] = 'Officers allowed to sign for the registrar, chosen among the registrar members enrolled '
+    . 'in the courses of the followed activities (registrar capability or role): type a name to find them. The registrar team '
+    . 'fills in and checks the file, then validates without signing; each officer then receives an email and finds in "My '
+    . 'signatures" the subject visa, the administrative approval and the general management documents (information sheet, '
+    . 'distribution contract, conclusions), which they sign by delegation: the general management never signs itself. The first '
+    . 'officer to sign applies the signature, with their saved signature. Without an officer, the registrar member who validates '
+    . 'signs the visa and the approval, and the general management documents are signed in person or by scan.';
 $string['mysignatures'] = 'My signatures';
 $string['mysignatures_desc'] = 'Documents awaiting your signature, all cohorts together. Check each document as a PDF, tick those '
     . 'to sign, then sign once: your saved signature is used by default.';

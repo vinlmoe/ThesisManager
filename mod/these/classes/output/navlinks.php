@@ -70,6 +70,10 @@ class navlinks implements \renderable, \templatable {
         if ($rights->viewall) {
             $links[get_string('export', 'mod_these')] = new moodle_url('/mod/these/export.php', $id);
         }
+        if (!$rights->deve) {
+            // La DEVE tient l'annuaire depuis son menu « Paramètres » ; les autres le consultent.
+            $links[get_string('jurordirectory', 'mod_these')] = new moodle_url('/mod/these/directory.php', $id);
+        }
         $tosign = count(these_get_user_pending_signatures($USER));
         if ($tosign) {
             $links[get_string('mysignaturescount', 'mod_these', $tosign)] = new moodle_url('/mod/these/mysignatures.php');

@@ -307,17 +307,28 @@ $string['juroractive'] = 'Proposé dans les formulaires de jury';
 $string['juroractiveyes'] = 'Actif';
 $string['juroractiveno'] = 'Retiré';
 $string['jurorpresident'] = 'Peut présider';
+$string['jurordiscipline'] = 'Matière enseignée';
+$string['jurordiscipline_help'] = 'Matière ou discipline enseignée, indiquée à côté du nom dans la liste du corps enseignant.';
 $string['juroradd'] = 'Ajouter un enseignant';
 $string['juroredit'] = 'Modifier un enseignant';
 $string['jurorsaved'] = "L'enseignant est enregistré.";
 $string['jurordeleted'] = "L'enseignant est supprimé de l'annuaire.";
 $string['jurordeleteconfirm'] = "Supprimer {\$a} de l'annuaire ? Les jurys qui l'ont retenu le gardent.";
 $string['jurorsnone'] = "L'annuaire est vide.";
+$string['jurordirectory'] = 'Annuaire des enseignants';
+$string['jurordirectory_desc'] = "Enseignants pouvant diriger une thèse ou siéger au jury, de l'établissement et extérieurs, avec "
+    . "leur statut et leur matière. La colonne « Peut présider » indique ceux qui peuvent présider un jury : professeurs, "
+    . "professeurs émérites, maîtres de conférences HDR ou émérites ; leur adresse est donnée pour les contacter.";
+$string['jurordirectorysearch'] = 'Nom, matière, établissement';
+$string['jurordirectorypresidents'] = 'Seulement ceux pouvant présider un jury';
+$string['jurordirectorycount'] = '{$a} enseignant(s)';
+$string['jurordirectorynone'] = 'Aucun enseignant ne correspond à la recherche.';
 $string['jurorimport'] = 'Importer un fichier CSV';
 $string['jurorimportfile'] = 'Fichier CSV';
-$string['jurorimportfile_help'] = "Colonnes : title (Dr ou Pr), lastname, firstname, email, status, institution, séparées par des "
-    . "virgules ou des points-virgules. Le statut est la clé (ir, mcf, mcfhdr, mcfstag, prstag, pr, premerite, mcfemerite) ou le "
-    . "libellé. Un enseignant déjà présent (même adresse, ou mêmes nom et prénom) est mis à jour.";
+$string['jurorimportfile_help'] = "Colonnes : title (Dr ou Pr), lastname, firstname, email, status, institution et, "
+    . "facultativement, discipline (matière enseignée), séparées par des virgules ou des points-virgules. Le statut est la "
+    . "clé (ir, mcf, mcfhdr, mcfstag, prstag, pr, premerite, mcfemerite) ou le libellé. Un enseignant déjà présent (même "
+    . "adresse, ou mêmes nom et prénom) est mis à jour ; sans colonne discipline, sa matière est gardée.";
 $string['jurorimportdone'] = '{$a->created} enseignant(s) ajouté(s), {$a->updated} mis à jour.';
 $string['jurorimportbadline'] = 'Ligne {$a} ignorée : titre, nom, prénom, statut ou adresse incorrect.';
 $string['jurorprefill'] = 'Préremplir avec les enseignants du cours';
@@ -594,6 +605,7 @@ $string['privacy:metadata:these_juror:firstname'] = "Prénom de l'enseignant.";
 $string['privacy:metadata:these_juror:email'] = "Adresse de courriel de l'enseignant.";
 $string['privacy:metadata:these_juror:status'] = "Statut (corps) de l'enseignant.";
 $string['privacy:metadata:these_juror:institution'] = "Établissement de l'enseignant.";
+$string['privacy:metadata:these_juror:discipline'] = "Matière enseignée par l'enseignant.";
 $string['privacy:metadata:these_answer'] = "Réponses de l'étudiant au questionnaire préalable au jury.";
 $string['privacy:metadata:these_answer:questionid'] = 'Question.';
 $string['privacy:metadata:these_answer:value'] = 'Réponse.';
@@ -637,25 +649,14 @@ $string['settingscheckimages'] = 'Images des modèles des documents';
 $string['settingscheckimagesmissing'] = 'Images des modèles des documents (manquent : {$a})';
 $string['settingsmissingnotice'] = 'Réglages du circuit à compléter : {$a}.';
 $string['settingslibraryagent'] = 'Agents de la bibliothèque';
-$string['settingslibraryagent_help'] = "Identifiants ou adresses de courriel des comptes Moodle des agents de la bibliothèque, séparés par des virgules ou un par ligne. Sans rôle à attribuer, ils ont les droits de la bibliothèque (notice du sujet, conformité du manuscrit, corrections) et seulement ceux-là : ni boutons ni pages de la DEVE, même si leur rôle dans le cours les leur donnerait. Ils reçoivent les courriels adressés à la bibliothèque. Ils doivent pouvoir entrer dans le cours (inscription avec n'importe quel rôle).";
+$string['settingslibraryagent_help'] = "Agents de la bibliothèque, choisis parmi les personnels inscrits aux cours des activités suivies (inscrits qui ne déposent pas de thèse) et les détenteurs du rôle de la bibliothèque : tapez un nom pour le retrouver. Sans rôle à attribuer, ils ont les droits de la bibliothèque (notice du sujet, conformité du manuscrit, corrections) et seulement ceux-là : ni boutons ni pages de la DEVE, même si leur rôle dans le cours les leur donnerait. Ils reçoivent les courriels adressés à la bibliothèque. Une personne absente de la liste doit d'abord être inscrite au cours.";
+$string['settingsagentsnone'] = 'Aucun agent choisi';
 $string['settingschecklibraryagents'] = 'Agents de la bibliothèque';
 $string['scopesettings'] = 'Paramètres du circuit';
-$string['scopesettings_desc'] = "Rôles des services, agents DEVE signataires, établissement, université, signataires des documents et "
+$string['scopesettings_desc'] = "Agents DEVE signataires et de la bibliothèque, établissement, université, signataires des documents et "
     . "contrat type de diffusion de cette activité. Aucun n'est un réglage du site.";
-$string['scopesettingsshared_desc'] = "Rôles des services, agents DEVE signataires, établissement, université, signataires des documents "
+$string['scopesettingsshared_desc'] = "Agents DEVE signataires et de la bibliothèque, établissement, université, signataires des documents "
     . "et contrat type de diffusion communs à toutes les activités « Gestion des thèses » suivies. Aucun n'est un réglage du site.";
-$string['settingsroles'] = 'Rôles des services';
-$string['deverole'] = 'Rôle DEVE';
-$string['deverole_help'] = 'Rôle dont les détenteurs agissent comme DEVE dans les activités de gestion des thèses.';
-$string['libraryrole'] = 'Rôle Bibliothèque';
-$string['libraryrole_help'] = "Rôle dont les détenteurs agissent comme bibliothèque. Par défaut, le rôle interne « Bibliothèque "
-    . "(thèses) » créé à l'installation du module."
-    . ' ' . "Comme la DEVE est reconnue au rôle « Enseignant », la bibliothèque est reconnue au rôle choisi ici. "
-    . "Le rôle peut être attribué dans le cours, dans sa catégorie ou au niveau du site (il donne alors accès à toutes les activités "
-    . "de gestion des thèses sans inscription). Les capacités du module restent également prises en compte.";
-$string['libraryrolename'] = 'Bibliothèque (thèses)';
-$string['libraryroledescription'] = "Rôle interne du module Gestion des thèses : enregistrement des sujets au référentiel documentaire et "
-    . "attestation de conformité des manuscrits. À attribuer au niveau du site, d'une catégorie ou d'un cours.";
 
 // Documents (paramètres du circuit).
 $string['settingsdefenses'] = 'Soutenances';
@@ -699,8 +700,6 @@ $string['settingshetopurl_help'] = 'Terminologie de référence pour les mots-cl
 $string['settingsdgtitle'] = 'Direction générale (intitulé)';
 $string['settingsdgtitle_help'] = 'Intitulé complet imprimé au-dessus de sa signature, par exemple « La Directrice générale de … ».';
 $string['settingsdgname'] = 'Direction générale (nom)';
-$string['settingsdgemail'] = 'Direction générale (courriel)';
-$string['settingsdgemail_help'] = 'Adresse à laquelle envoyer les liens de signature ; vide : signature recueillie sur place par la DEVE.';
 $string['settingsvisaplace'] = 'Lieu du visa';
 $string['settingsvisaplace_help'] = '« Vu, … le » des conclusions, « Fait à » du contrat de diffusion.';
 $string['settingsccemname'] = 'CCEM (nom)';
@@ -767,6 +766,8 @@ $string['signer'] = 'Signataire';
 $string['noemail'] = 'pas d\'adresse';
 $string['documentstosign'] = 'Documents à signer';
 $string['resendsignature'] = 'Envoyer le lien';
+$string['remindagents'] = 'Relancer';
+$string['agentsreminded'] = 'Relance envoyée aux agents DEVE.';
 $string['signinperson'] = 'Signer sur place';
 $string['signaturerequestsent'] = 'Lien de signature envoyé.';
 $string['signaturesrecorded'] = 'Signature enregistrée. Merci.';
@@ -989,9 +990,6 @@ $string['pdfdelegated'] = '{$a} (par délégation)';
 $string['signeddelegated'] = 'par délégation';
 $string['signedmethodinperson'] = 'sur place, identité vérifiée par la DEVE';
 $string['signedmethodscan'] = 'à la main, scan joint au dossier';
-$string['signdelegated'] = 'Signature par délégation de la direction générale';
-$string['signdelegated_help'] = "À cocher quand la personne qui signe le fait par délégation de la directrice ou du directeur général : "
-    . "la mention « par délégation » accompagne son nom sur le document.";
 $string['signidentity'] = "Vérification de l'identité du signataire";
 $string['signidentity_desc'] = "Vérifiez l'identité de la personne présente (pièce d'identité) avant d'ouvrir la page de signature. "
     . "La vérification est inscrite à l'historique à votre nom, conservée avec la signature et imprimée sous elle.";
@@ -1274,11 +1272,13 @@ Accéder au dossier : {$a->url}';
 // Agent DEVE signataire et signature enregistrée.
 $string['agentdeve'] = 'Agent responsable de la DEVE';
 $string['settingsdeveagent'] = 'Agents DEVE signataires';
-$string['settingsdeveagent_help'] = "Identifiants ou adresses de courriel des comptes Moodle des agents habilités à signer pour la DEVE, "
-    . "séparés par des virgules ou un par ligne. L'équipe de la DEVE remplit et vérifie le dossier puis valide sans signer ; chaque "
-    . "agent reçoit alors un courriel et retrouve le visa du sujet et l'agrément administratif dans « Mes signatures » : le premier "
-    . "qui signe appose la signature, avec sa signature enregistrée. Laisser vide pour que la personne de la DEVE qui valide signe "
-    . 'elle-même.';
+$string['settingsdeveagent_help'] = "Agents habilités à signer pour la DEVE, choisis parmi les membres de la DEVE inscrits "
+    . "aux cours des activités suivies (droit de la DEVE ou rôle de la DEVE) : tapez un nom pour le retrouver. L'équipe de la "
+    . "DEVE remplit et vérifie le dossier puis valide sans signer ; chaque agent reçoit alors un courriel et retrouve dans « Mes "
+    . "signatures » le visa du sujet, l'agrément administratif et les documents de la direction générale (fiche signalétique, "
+    . "contrat de diffusion, conclusions), qu'il signe par délégation : la direction générale ne signe jamais elle-même. Le "
+    . "premier agent qui signe appose la signature, avec sa signature enregistrée. Sans agent, la personne de la DEVE qui valide "
+    . "signe le visa et l'agrément, et les documents de la direction générale se signent sur place ou par scan.";
 $string['mysignatures'] = 'Mes signatures';
 $string['mysignatures_desc'] = 'Documents qui attendent votre signature, toutes promotions confondues. Consultez chaque document en '
     . "PDF, cochez ceux à signer, puis signez une seule fois : votre signature enregistrée est reprise d'office.";

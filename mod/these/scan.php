@@ -64,12 +64,12 @@ $mform->set_data((object) [
 if ($mform->is_cancelled()) {
     redirect($dossierurl);
 } else if ($data = $mform->get_data()) {
-    // Emplacements cochés pour le document choisi, avec la délégation éventuelle de la direction générale.
+    // Emplacements cochés pour le document choisi (direction générale : toujours par délégation).
     $slots = [];
     foreach (array_keys(\mod_these\local\scans::pending_slots($dossier)[$data->doctype] ?? []) as $slot) {
         $name = 'sign_' . $data->doctype . '_' . $slot;
         if (!empty($data->$name)) {
-            $slots[$slot] = !empty($data->{$name . '_delegated'});
+            $slots[$slot] = $slot === 'dg';
         }
     }
     $count = \mod_these\local\scans::add(

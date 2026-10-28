@@ -64,11 +64,6 @@ class scan_form extends \moodleform {
                 $name = 'sign_' . $doctype . '_' . $slot;
                 $mform->addElement('advcheckbox', $name, '', $label);
                 $mform->hideIf($name, 'doctype', 'neq', $doctype);
-                if ($slot === 'dg') {
-                    $mform->addElement('advcheckbox', $name . '_delegated', '', get_string('signdelegated', 'mod_these'));
-                    $mform->hideIf($name . '_delegated', 'doctype', 'neq', $doctype);
-                    $mform->disabledIf($name . '_delegated', $name, 'notchecked');
-                }
             }
         }
 

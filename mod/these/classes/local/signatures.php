@@ -885,7 +885,8 @@ class signatures {
                 'email' => trim((string) ($dossier->extdirectoremail ?? '')),
             ],
             'president' => ['name' => '', 'email' => ''],
-            'dg' => ['name' => $settings['dgname'], 'email' => $settings['dgemail']],
+            // La direction générale ne signe pas elle-même : pas d'adresse, ses documents vont aux agents DEVE.
+            'dg' => ['name' => $settings['dgname'], 'email' => ''],
             'ccem' => ['name' => $settings['ccemname'], 'email' => $settings['ccememail']],
             'ucbl' => ['name' => $settings['ucblname'], 'email' => $settings['ucblemail']],
         ];
@@ -924,7 +925,9 @@ class signatures {
      * Invite un signataire sans compte à signer, en une seule fois, les documents qui l'attendent :
      * chaque emplacement reçoit le même nouveau jeton, et le lien de signature est envoyé au
      * signataire s'il a une adresse. Sans adresse, les signatures restent en attente et peuvent être
-     * recueillies sur place par la DEVE (signatures.php).
+     * recueillies sur place par la DEVE (signatures.php). La direction générale n'est jamais invitée :
+     * ses documents sont signés par délégation, demandés aux agents DEVE quand il y en a (voir
+     * signatureagent::request_agent_signatures()).
      *
      * @param stdClass $these
      * @param stdClass $cm
@@ -936,6 +939,9 @@ class signatures {
     public static function request_signature(stdClass $these, stdClass $cm, stdClass $dossier, $slot, ?array $doctypes = null) {
         global $DB;
 
+        if ($slot === 'dg' && signatureagent::signs_dg_by_delegation($these)) {
+            return null;
+        }
         $doctypes = these_pending_documents_for_slot($dossier, $slot, $doctypes);
         if (!$doctypes) {
             return null;

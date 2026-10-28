@@ -30,6 +30,7 @@
 require(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/these/locallib.php');
 
+use mod_these\local\signatureagent;
 use mod_these\output;
 use mod_these\output\parts;
 
@@ -93,8 +94,11 @@ foreach ($pending as $signature) {
         ]), 'ids' => []];
     }
     $groups[$dossier->id]['ids'][] = $signature->id;
+    // Signature d'agent DEVE (sans jeton) : « par délégation » à l'emplacement de la direction générale.
+    $label = $signature->token === null ? signatureagent::document_label($signature->doctype, $signature->slot)
+        : these_document_label($signature->doctype) . ' (' . these_slot_label($signature->slot) . ')';
     $documents[$signature->id] = $renderer->render(new output\fragment([
-        parts::text(these_document_label($signature->doctype) . ' (' . these_slot_label($signature->slot) . ') — '),
+        parts::text($label . ' — '),
         parts::link(
             new moodle_url($PAGE->url, ['preview' => $signature->id]),
             get_string('signpreview', 'mod_these'),
@@ -124,7 +128,9 @@ if ($documents && ($data = $mform->get_data())) {
             $USER->id,
             $png->name,
             $png->png,
-            (string) $signature->signeremail
+            (string) $signature->signeremail,
+            // Direction générale : toujours signée par délégation.
+            ['delegated' => $signature->slot === 'dg']
         );
         $count++;
     }

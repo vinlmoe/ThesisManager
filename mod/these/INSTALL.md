@@ -28,25 +28,23 @@ l'installer.
 | Étudiant | Étudiant (`student`) | `mod/these:submit` — proposer son sujet, déposer sa soutenance |
 | Directeur de thèse | Enseignant non éditeur (`teacher`) | `mod/these:direct` — être choisi comme directeur, valider les dossiers qu'il dirige |
 | DEVE | Enseignant (`editingteacher`) | `mod/these:managedeve`, `mod/these:viewall` |
-| Bibliothèque | Rôle dédié « Bibliothèque » | `mod/these:managelibrary`, `mod/these:viewall` |
+| Bibliothèque | Rôle du cours (Enseignant non éditeur, par exemple), désignée dans *Agents de la bibliothèque* | droits de la bibliothèque |
 | Administration | Manager | Tous les droits |
 
-Le module n'a **aucun réglage du site**. Les rôles des services, comme tous les
-paramètres du circuit (voir 3 bis), se choisissent dans l'activité *Suivi des
-thèses*, bouton *Paramètres du circuit* ; une activité *Gestion des thèses*
-qu'aucune activité de suivi ne suit a les siens, sous le même bouton. La DEVE,
-responsable de l'activité, les règle elle-même :
+Aucun rôle n'est à créer. Le module n'a **aucun réglage du site** : ses
+paramètres (voir 3 bis) se règlent dans l'activité *Suivi des thèses*, bouton
+*Paramètres du circuit* ; une activité *Gestion des thèses* qu'aucune activité
+de suivi ne suit a les siens, sous le même bouton.
 
-- **Rôle DEVE** (« Enseignant » par défaut, comme pour `mod_stage`) ;
-- **Rôle Bibliothèque** : le module crée à l'installation le rôle « Bibliothèque
-  (thèses) » (`theselibrary`), attribuable au niveau système, catégorie ou
-  cours, avec `mod/these:view`, `mod/these:managelibrary`, `mod/these:viewall`
-  et `moodle/course:view`. Il suffit de l'attribuer aux bibliothécaires (au
-  niveau du site ou du cours) ; ils ne sont jamais proposés comme directeurs.
-
-Un utilisateur détient les droits d'un service s'il a la capacité
-correspondante **ou** le rôle choisi dans le contexte de l'activité ou un
-contexte parent.
+- **DEVE** : reconnue à la capacité `mod/these:managedeve`, celle du rôle
+  « Enseignant » (comme pour `mod_stage`). Les directeurs de thèse sont donc
+  inscrits comme « Enseignant non éditeur » : comme « Enseignant », ils
+  auraient aussi les droits de la DEVE.
+- **Bibliothèque** : la DEVE choisit ses agents parmi les personnels inscrits au
+  cours (*Agents de la bibliothèque*). Ils ont les droits de la bibliothèque et
+  seulement ceux-là, quel que soit leur rôle dans le cours, et ne sont jamais
+  proposés comme directeurs. La capacité `mod/these:managelibrary` (Manager)
+  donne aussi ces droits.
 
 Un directeur de thèse ne voit que les dossiers qu'il dirige. Seuls les
 enseignants **inscrits au cours** avec `mod/these:direct` sont proposés à

@@ -80,6 +80,13 @@ final class jury_directory_test extends these_testcase {
         $this->assertSame(1, $result->updated);
         $this->assertCount(1, $result->errors);
         $this->assertSame('premerite', jurors::get($pr)->status);
+
+        // Matière : colonne facultative, gardée quand le fichier n'en a pas.
+        jurors::import_csv("title;lastname;firstname;email;status;institution;discipline\n"
+            . "Pr;Martin;Jean;martin@example.org;pr;VetAgro Sup;Anatomie\n");
+        $this->assertSame('Anatomie', jurors::get($pr)->discipline);
+        jurors::import_csv("title;lastname;firstname;email;status;institution\nPr;Martin;Jean;martin@example.org;pr;VetAgro Sup\n");
+        $this->assertSame('Anatomie', jurors::get($pr)->discipline);
     }
 
     /**
@@ -323,7 +330,8 @@ final class jury_directory_test extends these_testcase {
 
     /**
      * Liste du corps enseignant : enseignants actifs de l'établissement des paramètres, groupés par
-     * statut (professeurs d'abord), rendue en PDF.
+     * statut (professeurs d'abord), avec leur matière, en trois colonnes (première colonne remplie
+     * d'abord), rendue en PDF.
      */
     public function test_teaching_list(): void {
         global $DB;
@@ -346,6 +354,77 @@ final class jury_directory_test extends these_testcase {
         $labels = array_column($data['groups'], 'label');
         $this->assertSame([get_string('teachinggrouppr', 'mod_these'), get_string('teachinggroupmcf', 'mod_these')], $labels);
         $this->assertSame('Pr Jean MARTIN', $data['groups'][0]['members'][0]['name']);
+        $this->assertSame('', $data['groups'][0]['members'][0]['discipline']);
         $this->assertStringStartsWith('%PDF', these_render_scope_doctemplate($scope, 'teachinglist', $data));
+
+        // Quatre professeurs : deux lignes de trois cellules, la première colonne remplie d'abord.
+        $DB->set_field('these_juror', 'discipline', 'Anatomie', ['id' => $mcf]);
+        $this->juror('Albert', 'pr');
+        $this->juror('Petit', 'pr');
+        $this->juror('Zola', 'pr');
+        $DB->set_field_select('these_juror', 'institution', 'École vétérinaire', 'id NOT IN (?, ?)', [$mcf, $external]);
+        $data = jurors::teaching_list_context($scope, $this->these);
+        $rows = $data['groups'][0]['rows'];
+        $this->assertCount(2, $rows);
+        $names = function (array $row) {
+            return array_map(function ($cell) {
+                return $cell['member']['name'] ?? null;
+            }, $row['cells']);
+        };
+        $this->assertSame(['Pr Jean ALBERT', 'Pr Jean PETIT', 'Pr Jean ZOLA'], $names($rows[0]));
+        $this->assertSame(['Pr Jean MARTIN', null, null], $names($rows[1]));
+        $this->assertSame('Anatomie', $data['groups'][1]['members'][0]['discipline']);
+        $body = \mod_these\pdf\html_document::parse(these_get_doctemplate($scope, 'teachinglist'))['body'];
+        $html = \mod_these\pdf\html_document::mustache()->render($body, $data);
+        $this->assertStringContainsString('Anatomie', $html);
+    }
+
+    /**
+     * Annuaire en lecture seule : enseignants actifs internes et extérieurs, recherche sans accents
+     * dans le nom, la matière et l'établissement, limitation à ceux qui peuvent présider ; ouvert aux
+     * étudiants, avec l'adresse des seuls enseignants pouvant présider.
+     */
+    public function test_read_only_directory(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setup_activity();
+        $internal = $this->juror('Martin', 'pr');
+        $external = $this->juror('Curie', 'pr');
+        $mcf = $this->juror('Bernard', 'mcf', 'Dr');
+        $retired = $this->juror('Ancien', 'pr');
+        $DB->set_field('these_juror', 'institution', 'Faculté de médecine de Lyon', ['id' => $external]);
+        $DB->set_field('these_juror', 'discipline', 'Pharmacologie vétérinaire', ['id' => $internal]);
+        $DB->set_field('these_juror', 'active', 0, ['id' => $retired]);
+
+        $ids = function (array $jurors) {
+            return array_map('intval', array_column($jurors, 'id'));
+        };
+        $this->assertSame([$mcf, $external, $internal], $ids(jurors::directory()));
+        $this->assertSame([$external, $internal], $ids(jurors::directory('', true)));
+        $this->assertSame([$external], $ids(jurors::directory('faculte MEDECINE', true)));
+        $this->assertSame([$internal], $ids(jurors::directory('pharmacologie')));
+        $this->assertSame([], $ids(jurors::directory('Ancien')));
+
+        $url = new \moodle_url('/mod/these/directory.php', ['id' => $this->cm->id]);
+        $data = (new \mod_these\output\juror_directory($url, jurors::directory('', true), '', true))
+            ->export_for_template($GLOBALS['PAGE']->get_renderer('mod_these'));
+        $this->assertTrue($data['presidents']);
+        $json = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $this->assertStringContainsString('Faculté de médecine de Lyon', $json);
+        $this->assertStringContainsString('mailto:curie@example.org', $json);
+        $data = (new \mod_these\output\juror_directory($url, jurors::directory()))
+            ->export_for_template($GLOBALS['PAGE']->get_renderer('mod_these'));
+        $json = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $this->assertStringContainsString('martin@example.org', $json);
+        $this->assertStringNotContainsString('bernard@example.org', $json);
+
+        // Ouvert aux étudiants : lien dans la barre de navigation, sauf pour la DEVE qui tient l'annuaire.
+        $this->setUser($this->student);
+        $this->assertNotEmpty(these_require_view($this->context));
+        $links = (new \mod_these\output\navlinks($this->cm, $this->context))->get_links();
+        $this->assertArrayHasKey(get_string('jurordirectory', 'mod_these'), $links);
+        $this->setUser($this->deve);
+        $links = (new \mod_these\output\navlinks($this->cm, $this->context))->get_links();
+        $this->assertArrayNotHasKey(get_string('jurordirectory', 'mod_these'), $links);
     }
 }

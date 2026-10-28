@@ -16,13 +16,15 @@
 
 namespace mod_these\output;
 
+use mod_these\local\signatureagent;
 use moodle_url;
 use stdClass;
 
 /**
  * Signatures à recueillir d'un dossier : signataires sans compte (président du jury, direction...),
- * étudiant et directeur, et agents de la DEVE. Documents qu'ils doivent encore signer, relance par
- * courriel (signataires sans compte, agents), signature sur place après vérification d'identité.
+ * étudiant et directeur, et agents de la DEVE (direction générale par délégation comprise). Documents
+ * qu'ils doivent encore signer, relance par courriel (signataires sans compte, agents), signature sur
+ * place après vérification d'identité.
  *
  * @package   mod_these
  * @copyright 2026 Sébastien Lefebvre
@@ -60,7 +62,9 @@ class external_signers implements \renderable, \templatable {
         if ($this->rows !== null) {
             return $this->rows;
         }
+        global $DB;
         $dossier = $this->dossier;
+        $these = $DB->get_record('these', ['id' => $dossier->theseid], '*', MUST_EXIST);
         $this->rows = [];
         // Étudiant et directeur : signature sur place seulement, pour les documents dont la signature a
         // commencé (une signature déjà apposée ou demandée) ; signataires sans compte : lien ou sur place.
@@ -78,6 +82,10 @@ class external_signers implements \renderable, \templatable {
                 }
             );
             if (!$pending) {
+                continue;
+            }
+            if ($slot === 'dg' && signatureagent::signs_dg_by_delegation($these)) {
+                // Direction générale signée par les agents DEVE : voir leur ligne.
                 continue;
             }
             $actions = [];
@@ -101,14 +109,14 @@ class external_signers implements \renderable, \templatable {
                 $actions,
             ];
         }
-        global $DB;
-        $agents = these_deve_agents($DB->get_record('these', ['id' => $dossier->theseid], '*', MUST_EXIST));
+        // Agents DEVE : leurs signatures et celles de la direction générale qu'ils signent par délégation.
+        $agents = these_deve_agents($these);
         if ($agents) {
             $pending = [];
-            foreach (these_agent_slots() as $slot) {
+            foreach (signatureagent::slots_for($these) as $slot) {
                 foreach (these_pending_documents_for_slot($dossier, $slot) as $doctype) {
                     if (these_agent_document_due($dossier, $doctype)) {
-                        $pending[] = these_document_label($doctype) . ' (' . these_slot_label($slot) . ')';
+                        $pending[] = signatureagent::document_label($doctype, $slot);
                     }
                 }
             }
@@ -120,7 +128,7 @@ class external_signers implements \renderable, \templatable {
                     [parts::text(implode(', ', $pending))],
                     [parts::link(
                         new moodle_url($this->pageurl, ['resend' => 'agent', 'sesskey' => sesskey()]),
-                        get_string('resendsignature', 'mod_these'),
+                        get_string('remindagents', 'mod_these'),
                         'btn btn-sm btn-secondary'
                     )],
                 ];
