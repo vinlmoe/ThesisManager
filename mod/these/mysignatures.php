@@ -111,6 +111,10 @@ $mform = new \mod_these\form\mysignatures_form($PAGE->url, [
     'documents' => $documents,
     'groups' => array_values($groups),
     'signername' => fullname($USER),
+    // Nom de signature saisi seulement par un agent DEVE (signatures sans jeton, par délégation).
+    'editablename' => (bool) array_filter($pending, function ($signature) {
+        return $signature->token === null;
+    }),
 ]);
 
 if ($documents && ($data = $mform->get_data())) {

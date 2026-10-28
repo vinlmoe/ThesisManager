@@ -56,7 +56,13 @@ class mysignatures_form extends \moodleform {
                 false
             );
         }
-        these_add_signature_fields($mform, $this->_customdata['signername'], get_string('signmyintro', 'mod_these'));
+        these_add_signature_fields(
+            $mform,
+            $this->_customdata['signername'],
+            get_string('signmyintro', 'mod_these'),
+            true,
+            !empty($this->_customdata['editablename'])
+        );
         $this->add_action_buttons(false, get_string('signdocuments', 'mod_these'));
     }
 

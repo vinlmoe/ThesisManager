@@ -51,20 +51,19 @@ class dossier_edit_form extends \moodleform {
         $mform->addElement('text', 'keywords', get_string('subjectkeywords', 'mod_these'), ['size' => 80]);
         $mform->setType('keywords', PARAM_TEXT);
         $mform->addElement('select', 'directorid', get_string('director', 'mod_these'), $this->_customdata['directors']);
-        $mform->addElement('text', 'codirectorname', get_string('codirector', 'mod_these'), ['size' => 64]);
-        $mform->setType('codirectorname', PARAM_TEXT);
+        subject_form::add_codirector_fields($mform, $this->_customdata['codirectors'] ?? []);
 
         $mform->addElement('header', 'registrationheader', get_string('registration', 'mod_these'));
         $mform->addElement('text', 'devenumber', get_string('devenumber', 'mod_these'), ['size' => 20]);
         $mform->setType('devenumber', PARAM_TEXT);
         $mform->addElement('text', 'libraryref', get_string('libraryref', 'mod_these'), ['size' => 40]);
         $mform->setType('libraryref', PARAM_TEXT);
-        // Validation de l'A6, saisie par la DEVE (voir \mod_these\local\a6).
-        $mform->addElement('advcheckbox', 'aga6notyet', '', get_string('aga6notyet', 'mod_these'));
-        $mform->addElement('date_selector', 'aga6date', get_string('aga6date', 'mod_these'), ['optional' => true]);
-        $mform->hideIf('aga6date', 'aga6notyet', 'checked');
-        $mform->addElement('select', 'aga6school', get_string('bschool', 'mod_these'), these_school_options());
-        $mform->hideIf('aga6school', 'aga6notyet', 'checked');
+        // Validation de l'A6 : saisie sur sa page à part (voir \mod_these\local\a6), rappelée ici.
+        \mod_these\local\a6::add_status_field(
+            $mform,
+            $this->_customdata['a6label'] ?? '',
+            $this->_customdata['a6url'] ?? null
+        );
 
         $mform->addElement('header', 'defenseheader', get_string('defense', 'mod_these'));
         $mform->addElement(
@@ -105,7 +104,7 @@ class dossier_edit_form extends \moodleform {
      * @return array
      */
     public function validation($data, $files) {
-        $errors = parent::validation($data, $files);
+        $errors = array_merge(parent::validation($data, $files), subject_form::codirector_errors($data));
         $number = trim((string) $data['devenumber']);
         if ($number !== '' && these_devenumber_taken($this->_customdata['theseid'], $number, $data['dossierid'])) {
             $errors['devenumber'] = get_string('devenumbertaken', 'mod_these');

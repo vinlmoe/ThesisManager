@@ -39,7 +39,6 @@ class bulk {
             'remind' => get_string('bulkremind', 'mod_these'),
             'generate' => get_string('bulkgenerate', 'mod_these'),
             'notifyjury' => get_string('bulknotifyjury', 'mod_these'),
-            'a6' => get_string('bulka6', 'mod_these'),
         ];
     }
 
@@ -52,8 +51,7 @@ class bulk {
      * @param stdClass $dossier
      * @param string $action Voir actions().
      * @param int $userid Compte de la DEVE.
-     * @param array $params Paramètres de l'action : a6date (horodatage, 0 si l'A6 n'est pas validée), a6school.
-     * @return bool L'action a porté (relance envoyée, documents générés, membre prévenu, A6 enregistrée).
+     * @return bool L'action a porté (relance envoyée, documents générés, membre prévenu).
      */
     public static function apply(
         stdClass $these,
@@ -61,8 +59,7 @@ class bulk {
         context $context,
         stdClass $dossier,
         $action,
-        $userid,
-        array $params = []
+        $userid
     ) {
         $status = (int) $dossier->status;
         switch ($action) {
@@ -89,12 +86,6 @@ class bulk {
                     return false;
                 }
                 these_generate_documents($these, $context, $dossier, $userid);
-                return true;
-            case 'a6':
-                if ($status === THESE_STATUS_CANCELLED || !array_key_exists('a6date', $params)) {
-                    return false;
-                }
-                a6::set($dossier, (int) $params['a6date'], (string) ($params['a6school'] ?? ''), $userid);
                 return true;
             case 'notifyjury':
                 if ($status < THESE_STATUS_DEFENSE_VALIDATED || $status > THESE_STATUS_SCHEDULED) {

@@ -71,6 +71,18 @@ final class dossier_table_test extends output_testcase {
         $this->assertStringContainsString('<table class="generaltable these-dossiers">', $html);
         $this->assertStringContainsString('<span class="badge badge-info">', $html);
         $this->assertStringContainsString('class="btn btn-sm btn-secondary">' . get_string('open', 'mod_thesesynthesis'), $html);
+        $this->assertStringNotContainsString('btn-primary', $html);
+
+        // File « À traiter » de la DEVE : l'action attendue est proposée avant « Ouvrir ».
+        $deve = $this->env->deve;
+        $todo = array_filter(thesesynthesis_get_dossiers($this->links_for($deve), $deve->id), function ($row) {
+            return $row->todo;
+        });
+        $this->assertCount(1, $todo);
+        $html = $this->renderer()->render(new dossier_table($todo, '', true));
+        $action = these_primary_action(reset($todo)->link->cm, reset($todo)->dossier, reset($todo)->link->rights);
+        $this->assertNotNull($action);
+        $this->assertStringContainsString('class="btn btn-sm btn-primary mr-1 mb-1">' . $action[0], $html);
         $this->assertSame(
             '<div class="alert alert-info">Aucun &amp; rien</div>',
             $this->renderer()->render(new dossier_table([], 'Aucun & rien'))

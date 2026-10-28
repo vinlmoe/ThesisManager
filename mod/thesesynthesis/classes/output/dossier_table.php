@@ -23,6 +23,8 @@ use moodle_url;
 
 /**
  * Tableau de dossiers suivis, toutes promotions confondues (dossiers à traiter, dossiers suivis).
+ * Dans la file « À traiter » (option todo), chaque dossier propose directement l'action qui attend
+ * l'utilisateur (voir these_primary_action()).
  *
  * Le titre d'une thèse confidentielle n'entre dans le contexte du gabarit que si l'utilisateur
  * connaît son sujet (knowssubject, évalué par thesesynthesis_get_dossiers()).
@@ -36,16 +38,20 @@ class dossier_table implements \renderable, \templatable {
     protected $rows;
     /** @var string */
     protected $emptymessage;
+    /** @var bool */
+    protected $todo;
 
     /**
      * Constructeur.
      *
      * @param array $rows Voir thesesynthesis_get_dossiers().
      * @param string $emptymessage Message affiché sans dossier.
+     * @param bool $todo Proposer l'action attendue de l'utilisateur.
      */
-    public function __construct(array $rows, $emptymessage) {
+    public function __construct(array $rows, $emptymessage, $todo = false) {
         $this->rows = $rows;
         $this->emptymessage = (string) $emptymessage;
+        $this->todo = (bool) $todo;
     }
 
     /**
@@ -55,6 +61,8 @@ class dossier_table implements \renderable, \templatable {
      * @return array isempty, emptymessage, table (voir \mod_these\output\table_context)
      */
     public function export_for_template(\renderer_base $output): array {
+        global $USER;
+
         if (!$this->rows) {
             return ['isempty' => true, 'emptymessage' => $this->emptymessage, 'table' => false];
         }
@@ -72,6 +80,15 @@ class dossier_table implements \renderable, \templatable {
         foreach ($this->rows as $row) {
             $date = (int) ($row->dossier->defensedate ?: $row->dossier->proposeddate);
             $url = new moodle_url('/mod/these/dossier.php', ['id' => $row->link->cm->id, 'dossierid' => $row->dossier->id]);
+            $actions = [parts::link($url, get_string('open', 'mod_thesesynthesis'), 'btn btn-sm btn-secondary')];
+            $action = $this->todo ? these_primary_action(
+                $row->link->cm,
+                $row->dossier,
+                these_get_rights($row->link->context, $row->dossier, $USER->id)
+            ) : null;
+            if ($action) {
+                array_unshift($actions, parts::link($action[1], $action[0], 'btn btn-sm btn-primary mr-1 mb-1'));
+            }
             $rows[] = [
                 [parts::html(format_string($row->link->course->shortname ?: $row->link->course->fullname))],
                 [parts::text($row->student ? fullname($row->student) : '-')],
@@ -81,7 +98,7 @@ class dossier_table implements \renderable, \templatable {
                 [parts::status((new status_badge($row->dossier->status))->export_for_template($output))],
                 [parts::text($row->actor ? these_actor_label($row->actor) : '-')],
                 [parts::text($date ? userdate($date, get_string('strftimedatefullshort', 'langconfig')) : '-')],
-                [parts::link($url, get_string('open', 'mod_thesesynthesis'), 'btn btn-sm btn-secondary')],
+                $actions,
             ];
         }
         return [

@@ -181,6 +181,8 @@ $mform = new \mod_these\form\sign_form($PAGE->url, [
     // Direction générale : signée par délégation, la personne qui signe saisit son propre nom.
     'signername' => $slot !== 'dg' && $signer['name'] !== '' ? $signer['name'] : ($allowsaved ? fullname($USER) : ''),
     'allowsaved' => $allowsaved,
+    // Nom saisi seulement par la DEVE : sur place, ou par délégation pour la direction générale.
+    'editablename' => $inperson || $slot === 'dg',
 ]);
 $mform->set_data($pageparams);
 

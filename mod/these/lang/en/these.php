@@ -168,8 +168,13 @@ $string['director'] = 'Thesis director';
 $string['director_help'] = 'Teacher directing the thesis. Only teachers enrolled in this course and allowed to direct theses are '
     . 'listed: if yours is missing, contact the registrar.';
 $string['codirector'] = 'Co-director';
-$string['codirector_help'] = 'Optional. Name and position of a possible co-director, who may be external. The co-director does not '
-    . 'approve the file in the module.';
+$string['codirector_help'] = 'Optional. Possible co-director: a teacher of the institution, to choose from the list, or an external '
+    . 'person, whose name and position you enter. The co-director does not approve the file in the module.';
+$string['codirectornone'] = 'None';
+$string['codirectorinternal'] = 'Internal to the institution';
+$string['codirectorexternal'] = 'External to the institution';
+$string['codirectorjuror'] = 'Internal co-director';
+$string['codirectorname'] = 'External co-director: title, name and position';
 $string['subjectdocs'] = 'Subject attachments';
 $string['subjectdocs_help'] = 'Optional: bibliography, protocol, partner agreement...';
 $string['savedraft'] = 'Save draft';
@@ -721,7 +726,8 @@ $string['externaldirector_help'] = 'The external director, without a Moodle acco
     . 'Then choose below, as director in the module, the member of the institution who follows the thesis: this member validates '
     . 'the steps and signs as member.';
 $string['directortitle'] = 'Director title';
-$string['directortitle_help'] = 'Dr, Pr… as it must appear on the documents.';
+$string['directortitle_help'] = 'Dr, Pr… as it must appear on the documents. Asked only if the director is not in the teacher '
+    . 'directory, which otherwise gives the title.';
 $string['extdirectorname'] = 'External director: title, name';
 $string['extdirectorgrade'] = 'Grade';
 $string['extdirectorinstitution'] = 'Institution';
@@ -826,8 +832,20 @@ $string['a6notvalidated'] = 'not validated';
 $string['a6bydeve'] = 'Entered by the registrar.';
 $string['a6bydevestatus'] = '{$a} (entered by the registrar)';
 $string['loga6recorded'] = 'A6 validation recorded';
-$string['bulka6'] = 'Record the A6 validation';
-$string['bulka6params'] = 'A6 validation (for that action; empty date: not validated):';
+$string['a6page_desc'] = 'The A6 validation belongs to the student, not to the file: it can be recorded before the file is created and applies to all of the student\'s files. The administrative approval and the thesis record reuse it. Edit a student, tick several to record the same validation for all of them, or import a file.';
+$string['a6edit'] = 'Record A6';
+$string['a6nodossier'] = 'No file';
+$string['a6stateall'] = 'All students';
+$string['a6statenotvalidated'] = 'A6 not validated';
+$string['a6statevalidated'] = 'A6 validated';
+$string['a6searchstudent'] = 'Name, email, number';
+$string['a6nostudents'] = 'No student.';
+$string['a6bulk'] = 'For the ticked students:';
+$string['a6bulknotyet'] = 'A6 not validated yet';
+$string['a6bulksubmit'] = 'Record the validation';
+$string['a6bulkdaterequired'] = 'Enter the A6 validation date, or tick "A6 not validated yet".';
+$string['a6bulkdone'] = 'A6 validation recorded for {$a} student(s).';
+$string['a6saved'] = 'A6 validation recorded.';
 $string['a6import'] = 'Import A6 validations';
 $string['a6dryrunresult'] = 'Dry run: {$a->ok} student(s) to record, {$a->errors} row(s) with errors.';
 $string['a6result'] = 'Import complete: {$a->ok} validation(s) recorded, {$a->errors} row(s) with errors.';

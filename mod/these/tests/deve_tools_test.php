@@ -98,7 +98,7 @@ final class deve_tools_test extends these_testcase {
      */
     public function test_bulk(): void {
         $this->setup_activity();
-        $this->assertSame(['remind', 'generate', 'notifyjury', 'a6'], array_keys(\mod_these\local\bulk::actions()));
+        $this->assertSame(['remind', 'generate', 'notifyjury'], array_keys(\mod_these\local\bulk::actions()));
         $validated = $this->generator->create_dossier($this->these, $this->student->id, [
             'status' => THESE_STATUS_DEFENSE_VALIDATED,
         ]);

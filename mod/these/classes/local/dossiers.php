@@ -325,6 +325,46 @@ class dossiers {
     }
 
     /**
+     * Co-directeur soumis par un formulaire (voir subject_form::add_codirector_fields()) : enseignant
+     * interne choisi dans l'annuaire, dont le nom est repris de l'annuaire, extérieur saisi en texte
+     * libre, ou aucun.
+     *
+     * @param stdClass $data
+     * @return array codirectorjurorid, codirectorname ; vide si le formulaire ne contient pas le choix.
+     */
+    public static function codirector_fields(stdClass $data) {
+        if (!property_exists($data, 'codirectortype')) {
+            return [];
+        }
+        $type = (string) $data->codirectortype;
+        $juror = $type === 'internal' ? jurors::get((int) ($data->codirectorjurorid ?? 0)) : null;
+        if ($juror) {
+            return ['codirectorjurorid' => (int) $juror->id, 'codirectorname' => jurors::name($juror)];
+        }
+        return [
+            'codirectorjurorid' => 0,
+            'codirectorname' => $type === 'external' ? trim((string) ($data->codirectorname ?? '')) : '',
+        ];
+    }
+
+    /**
+     * Champs de sujet dépendant des personnes : co-directeur (voir codirector_fields()) et titre du
+     * directeur, repris de l'annuaire quand il y figure (l'étudiant ne le saisit pas).
+     *
+     * @param array $fields Champs du sujet déjà relevés (directorid, directortitle, codirectorname...).
+     * @param stdClass $data Formulaire soumis.
+     * @return array Les champs, complétés.
+     */
+    public static function people_fields(array $fields, stdClass $data) {
+        $fields = array_merge($fields, self::codirector_fields($data));
+        $title = jurors::titles_for_users([(int) ($fields['directorid'] ?? 0)]);
+        if ($title) {
+            $fields['directortitle'] = reset($title);
+        }
+        return $fields;
+    }
+
+    /**
      * Statut atteint à la soumission, compte tenu des signatures que les modifications viennent
      * d'invalider : un dossier renvoyé revient normalement à l'étape qui l'a renvoyé, mais si un
      * document signé par le directeur a changé, il repart chez le directeur pour qu'il le signe de
@@ -382,6 +422,7 @@ class dossiers {
             foreach (['directorid', 'confidential', 'externaldirector'] as $field) {
                 $fields[$field] = (int) these_submitted_value($data, $dossier, $field);
             }
+            $fields = self::people_fields($fields, $data);
             if (property_exists($data, 'commitguide')) {
                 $fields['commitments'] = (!empty($data->commitguide) ? THESE_COMMIT_GUIDE : 0)
                     | (!empty($data->commitduplicate) ? THESE_COMMIT_DUPLICATE : 0)

@@ -170,8 +170,13 @@ $string['director'] = 'Directeur de thèse';
 $string['director_help'] = "Enseignant qui dirige la thèse. Seuls les enseignants inscrits dans ce cours et autorisés à diriger des "
     . "thèses sont proposés : si le vôtre n'apparaît pas, contactez la DEVE.";
 $string['codirector'] = 'Co-directeur';
-$string['codirector_help'] = "Facultatif. Nom et qualité du co-directeur éventuel, qui peut être extérieur à l'établissement. Il ne "
-    . "valide pas le dossier dans le module.";
+$string['codirector_help'] = "Facultatif. Co-directeur éventuel : un enseignant de l'établissement, à choisir dans la liste, ou une "
+    . "personne extérieure, dont vous indiquez le nom et la qualité. Il ne valide pas le dossier dans le module.";
+$string['codirectornone'] = 'Aucun';
+$string['codirectorinternal'] = "Interne à l'établissement";
+$string['codirectorexternal'] = "Extérieur à l'établissement";
+$string['codirectorjuror'] = 'Co-directeur interne';
+$string['codirectorname'] = 'Co-directeur extérieur : titre, nom et qualité';
 $string['subjectdocs'] = 'Pièces jointes au sujet';
 $string['subjectdocs_help'] = 'Facultatif : bibliographie, protocole, accord de partenaire...';
 $string['savedraft'] = 'Enregistrer le brouillon';
@@ -726,7 +731,8 @@ $string['externaldirector_help'] = "Le directeur extérieur, sans compte Moodle,
     . "Choisissez alors ci-dessous, comme directeur dans le module, le membre de l'établissement (enseignant-chercheur) qui suit la "
     . "thèse : c'est lui qui valide les étapes et signe en qualité de membre.";
 $string['directortitle'] = 'Titre du directeur';
-$string['directortitle_help'] = 'Dr, Pr… tel qu\'il doit figurer sur les documents.';
+$string['directortitle_help'] = "Dr, Pr… tel qu'il doit figurer sur les documents. Demandé seulement si le directeur ne figure pas "
+    . "dans l'annuaire des enseignants, qui donne sinon son titre.";
 $string['extdirectorname'] = 'Directeur extérieur : titre, nom, prénom';
 $string['extdirectorgrade'] = 'Grade';
 $string['extdirectorinstitution'] = 'Établissement';
@@ -830,8 +836,20 @@ $string['a6notvalidated'] = 'non validée';
 $string['a6bydeve'] = 'Saisie par la DEVE.';
 $string['a6bydevestatus'] = '{$a} (saisie par la DEVE)';
 $string['loga6recorded'] = "Validation de l'A6 enregistrée";
-$string['bulka6'] = "Enregistrer la validation de l'A6";
-$string['bulka6params'] = "Validation de l'A6 (pour l'action correspondante ; date vide : non validée) :";
+$string['a6page_desc'] = "La validation de l'A6 est liée à l'étudiant, pas à son dossier : elle peut être saisie avant la création du dossier et vaut pour tous ses dossiers. L'agrément administratif et la fiche signalétique la reprennent. Modifiez un étudiant, cochez-en plusieurs pour leur enregistrer la même validation, ou importez un fichier.";
+$string['a6edit'] = "Saisir l'A6";
+$string['a6nodossier'] = 'Pas de dossier';
+$string['a6stateall'] = 'Tous les étudiants';
+$string['a6statenotvalidated'] = 'A6 non validée';
+$string['a6statevalidated'] = 'A6 validée';
+$string['a6searchstudent'] = 'Nom, courriel, numéro';
+$string['a6nostudents'] = 'Aucun étudiant.';
+$string['a6bulk'] = 'Pour les étudiants cochés :';
+$string['a6bulknotyet'] = 'A6 pas encore validée';
+$string['a6bulksubmit'] = 'Enregistrer la validation';
+$string['a6bulkdaterequired'] = "Indiquez la date de validation de l'A6, ou cochez « A6 pas encore validée ».";
+$string['a6bulkdone'] = 'Validation de l\'A6 enregistrée pour {$a} étudiant(s).';
+$string['a6saved'] = "Validation de l'A6 enregistrée.";
 $string['a6import'] = "Importer les validations de l'A6";
 $string['a6dryrunresult'] = 'Simulation : {$a->ok} étudiant(s) à enregistrer, {$a->errors} ligne(s) en erreur.';
 $string['a6result'] = 'Import terminé : {$a->ok} validation(s) enregistrée(s), {$a->errors} ligne(s) en erreur.';

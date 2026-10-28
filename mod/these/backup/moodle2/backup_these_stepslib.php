@@ -69,7 +69,7 @@ class backup_these_activity_structure_step extends backup_activity_structure_ste
         $dossiers = new backup_nested_element('dossiers');
         $dossier = new backup_nested_element('dossier', ['id'], [
             'userid', 'status', 'statustime', 'title', 'titleen', 'summary', 'keywords',
-            'directorid', 'codirectorname', 'devenumber', 'libraryref',
+            'directorid', 'codirectorname', 'codirectorjurorid', 'devenumber', 'libraryref',
             'proposeddate', 'defensedate', 'defenselocation', 'defenseresult', 'mention',
             'prizeproposal', 'correctionsrequested', 'correctionsnote', 'correctionsdone',
             'studyyear', 'confidential', 'directortitle', 'externaldirector', 'extdirectorname', 'extdirectorgrade',

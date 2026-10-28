@@ -140,11 +140,12 @@ class review_form extends \moodleform {
                 $mform->setExpanded('adminheader');
                 $mform->addElement('date_selector', 'agdefvdate', get_string('agdefvdate', 'mod_these'), ['optional' => true]);
                 $mform->addElement('advcheckbox', 'agmobility', '', get_string('agmobility', 'mod_these'));
-                $mform->addElement('advcheckbox', 'aga6notyet', '', get_string('aga6notyet', 'mod_these'));
-                $mform->addElement('date_selector', 'aga6date', get_string('aga6date', 'mod_these'), ['optional' => true]);
-                $mform->hideIf('aga6date', 'aga6notyet', 'checked');
-                $mform->addElement('select', 'aga6school', get_string('bschool', 'mod_these'), these_school_options());
-                $mform->hideIf('aga6school', 'aga6notyet', 'checked');
+                // Validation de l'A6 : saisie sur sa page à part, rappelée ici avec le lien.
+                \mod_these\local\a6::add_status_field(
+                    $mform,
+                    $this->_customdata['a6label'] ?? '',
+                    $this->_customdata['a6url'] ?? null
+                );
                 $mform->addElement('static', 'agauthorized', '', get_string('agauthorized', 'mod_these'));
                 break;
             case 'libraryconformity':
@@ -156,7 +157,9 @@ class review_form extends \moodleform {
             these_add_signature_fields(
                 $mform,
                 $this->_customdata['signername'],
-                get_string('signreviewintro', 'mod_these', $this->_customdata['signs'])
+                get_string('signreviewintro', 'mod_these', $this->_customdata['signs']),
+                true,
+                !empty($this->_customdata['editablename'])
             );
         }
 
@@ -251,9 +254,6 @@ class review_form extends \moodleform {
                 }
                 if (empty($data['agdefvdate'])) {
                     $errors['agdefvdate'] = get_string('required');
-                }
-                if (empty($data['aga6notyet']) && empty($data['aga6date'])) {
-                    $errors['aga6date'] = get_string('a6required', 'mod_these');
                 }
                 if (trim((string) $data['defenselocation']) === '') {
                     $errors['defenselocation'] = get_string('required');

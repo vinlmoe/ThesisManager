@@ -1,0 +1,73 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_these/a6_list
+
+    Page de validation de l'A6 : filtres (GET), puis étudiants à cocher et enregistrement groupé
+    de la validation de l'A6 pour les étudiants cochés (POST vers la même page).
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * none
+
+    Context variables required for this template:
+    * action Adresse de la page.
+    * cmid Module de l'activité.
+    * sesskey Clé de session.
+    * statelabel, states Filtre de la validation (contexte de mod_these/select).
+    * search, placeholder, filterlabel Recherche d'un étudiant.
+    * isempty, emptymessage Aucun étudiant.
+    * table Contexte de mod_these/table (cases userids[]).
+    * bulklabel, notyetlabel, datelabel, schoollabel Libellés de l'enregistrement groupé.
+    * schools Écoles : value, label.
+    * submit Libellé du bouton d'enregistrement.
+    * importurl, importlabel Import des validations par fichier.
+
+    Example context (json):
+    {"action": "https://example.com/mod/these/a6.php", "cmid": 2, "sesskey": "abc",
+        "statelabel": "Validation de l'A6",
+        "states": {"name": "state", "id": "these-a6-state", "class": "select custom-select mr-2",
+            "options": [{"value": "", "label": "Tous les étudiants", "selected": true}]},
+        "search": "", "placeholder": "Étudiant", "filterlabel": "Filtrer", "isempty": true,
+        "emptymessage": "Aucun étudiant.", "table": false, "bulklabel": "Pour les étudiants cochés :",
+        "notyetlabel": "A6 non validée", "datelabel": "Validée le", "schoollabel": "École",
+        "schools": [{"value": "", "label": "Choisir..."}], "submit": "Enregistrer",
+        "importurl": "https://example.com/mod/these/a6import.php?id=2", "importlabel": "Importer"}
+}}
+<form method="get" action="{{action}}" class="form-inline mb-3"><input type="hidden" name="id" value="{{cmid}}" /><label class="mr-1" for="these-a6-state">{{statelabel}}</label>{{#states}}{{> mod_these/select}}{{/states}}<input type="text" name="search" value="{{search}}" placeholder="{{placeholder}}" class="form-control mr-2" /><input type="submit" value="{{filterlabel}}" class="btn btn-secondary" /></form>
+<p><a href="{{importurl}}" class="btn btn-secondary">{{importlabel}}</a></p>
+{{#isempty}}
+<div class="alert alert-info">{{emptymessage}}</div>
+{{/isempty}}
+{{^isempty}}
+<form method="post" action="{{action}}" class="these-a6-form">
+<input type="hidden" name="id" value="{{cmid}}" />
+<input type="hidden" name="sesskey" value="{{sesskey}}" />
+{{#table}}{{> mod_these/table}}{{/table}}
+<div class="form-inline mb-3">
+<span class="mr-2">{{bulklabel}}</span>
+<label for="these-a6date-{{uniqid}}" class="mr-1">{{datelabel}}</label>
+<input type="date" id="these-a6date-{{uniqid}}" name="a6date" class="form-control mr-2" />
+<label for="these-a6school-{{uniqid}}" class="mr-1">{{schoollabel}}</label>
+<select id="these-a6school-{{uniqid}}" name="a6school" class="custom-select mr-2">{{#schools}}<option value="{{value}}">{{label}}</option>{{/schools}}</select>
+<div class="form-check mr-2"><input type="checkbox" id="these-a6notyet-{{uniqid}}" name="a6notyet" value="1" class="form-check-input" /><label for="these-a6notyet-{{uniqid}}" class="form-check-label">{{notyetlabel}}</label></div>
+<button type="submit" class="btn btn-primary">{{submit}}</button>
+</div>
+</form>
+{{/isempty}}

@@ -97,7 +97,12 @@ $mform = new review_form($PAGE->url, [
     'roomconflicts' => $rights->viewall ? these_render_room_conflicts($dossier) : '',
     'signs' => implode(', ', $signs),
     'signername' => fullname($USER),
+    // Nom de signature saisi par la DEVE seulement ; les autres signent au nom de leur compte.
+    'editablename' => $step['actor'] === 'deve',
     'externaldirector' => !empty($dossier->externaldirector),
+    // Validation de l'A6 : rappelée, saisie sur sa page à part (retour ici après la saisie).
+    'a6label' => \mod_these\local\a6::label($dossier),
+    'a6url' => \mod_these\local\a6::url($cm, $dossier->userid, $PAGE->url),
     'report' => (object) [
         'text' => (string) $dossier->reporttext,
         'favorable' => !empty($dossier->reportfavorable),
@@ -129,11 +134,6 @@ switch ($step['key']) {
         $declared = these_get_bordereau($dossier);
         $formdata->agdefvdate = $agreement['defvdate'] ?? ($declared['defvdate'] ?? 0);
         $formdata->agmobility = $agreement['mobility'] ?? 0;
-        // Validation de l'A6 : saisie par la DEVE (ici, à la modification du dossier, en lot ou par import).
-        $a6 = \mod_these\local\a6::get($dossier);
-        $formdata->aga6notyet = (int) ($a6['notyet'] || !$a6['date']);
-        $formdata->aga6date = $a6['date'];
-        $formdata->aga6school = $a6['school'];
         break;
 }
 $mform->set_data($formdata);
@@ -180,13 +180,6 @@ if ($mform->is_cancelled()) {
                 'defvdate' => (int) $data->agdefvdate,
                 'mobility' => (int) !empty($data->agmobility),
             ]));
-            // Validation de l'A6 : liée à l'étudiant (voir \mod_these\local\a6), enregistrée si elle change.
-            $a6date = !empty($data->aga6notyet) ? 0 : (int) $data->aga6date;
-            $a6school = (string) ($data->aga6school ?? '');
-            $a6 = \mod_these\local\a6::get($dossier);
-            if (!$a6['recorded'] || $a6date !== $a6['date'] || $a6school !== $a6['school']) {
-                \mod_these\local\a6::set($dossier, $a6date, $a6school, $USER->id);
-            }
             these_save_jury($dossier->id, these_extract_submitted_jury($data, true), $USER->id);
             break;
     }

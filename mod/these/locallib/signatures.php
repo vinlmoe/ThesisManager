@@ -479,13 +479,20 @@ function these_get_signatures_by_token($token) {
  * Voir \mod_these\local\signatures::add_signature_fields().
  *
  * @param MoodleQuickForm $mform
- * @param string $defaultname Nom proposé.
+ * @param string $defaultname Nom du signataire (proposé s'il est modifiable).
  * @param string $intro Texte d'introduction (ce qui est signé).
  * @param bool $allowsaved Proposer de reprendre ou d'enregistrer la signature de l'utilisateur.
+ * @param bool $editablename Nom saisi par le signataire (DEVE, ou nom inconnu).
  * @return void
  */
-function these_add_signature_fields(MoodleQuickForm $mform, $defaultname, $intro = '', $allowsaved = true) {
-    return \mod_these\local\signatures::add_signature_fields($mform, $defaultname, $intro, $allowsaved);
+function these_add_signature_fields(
+    MoodleQuickForm $mform,
+    $defaultname,
+    $intro = '',
+    $allowsaved = true,
+    $editablename = false
+) {
+    return \mod_these\local\signatures::add_signature_fields($mform, $defaultname, $intro, $allowsaved, $editablename);
 }
 
 /**

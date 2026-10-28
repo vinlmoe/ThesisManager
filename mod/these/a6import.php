@@ -44,14 +44,14 @@ $PAGE->set_title(format_string($these->name) . ' - ' . get_string('a6import', 'm
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($context);
 
-$dashboardurl = new moodle_url('/mod/these/dashboard.php', ['id' => $cm->id]);
+$a6url = \mod_these\local\a6::url($cm);
 $mform = new \mod_these\form\a6import_form($PAGE->url);
 $mform->set_data(['id' => $cm->id]);
 
 $report = null;
 $error = null;
 if ($mform->is_cancelled()) {
-    redirect($dashboardurl);
+    redirect($a6url);
 } else if ($data = $mform->get_data()) {
     $path = $mform->save_temp_file('a6file');
     try {
@@ -69,6 +69,7 @@ $renderer = $PAGE->get_renderer('mod_these');
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('a6import', 'mod_these'));
 echo these_render_navlinks($cm, $context);
+echo $renderer->render(new output\link($a6url, get_string('back')));
 echo $renderer->render(output\message::help(get_string('a6import_desc', 'mod_these')));
 
 if ($error !== null) {

@@ -13,6 +13,39 @@ de version recalés sur la date. Les numéros entre parenthèses des sections de
 développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
 été étiquetée.
 
+## mod_these 0.20.0 (2026102801) et mod_thesesynthesis 0.7.0 (2026102800) — titre du directeur repris de l'annuaire, co-directeur interne ou extérieur, nom de signature imposé, signatures centralisées dans le suivi, page de l'A6
+
+- Dépôt du sujet : l'étudiant ne saisit plus le titre (Dr, Pr) d'un directeur
+  présent dans l'annuaire des enseignants ; le champ n'apparaît que pour un
+  directeur absent de l'annuaire, et le titre de l'annuaire est enregistré dans
+  le dossier.
+- Co-directeur : « Aucun », « Interne à l'établissement » (choisi parmi les
+  enseignants internes de l'annuaire, nom repris de l'annuaire) ou « Extérieur
+  à l'établissement » (titre, nom et qualité saisis). Même choix dans la
+  modification d'un dossier par la DEVE. Nouveau champ
+  `these_dossier.codirectorjurorid` (étape de mise à jour 2026102800).
+- Nom du signataire : celui du compte Moodle (ou de l'invitation, pour un
+  signataire sans compte), affiché sans pouvoir être modifié. Seule la DEVE le
+  saisit : signature sur place, direction générale par délégation (validation
+  d'une étape de la DEVE, « Mes signatures » d'un agent).
+- Validation de l'A6 sur une page à part (« Validation de l'A6 » dans la barre
+  de navigation de la DEVE) : tous les étudiants de l'activité, avec ou sans
+  dossier, filtrables (validée ou non, nom), saisie d'un étudiant,
+  enregistrement groupé pour les étudiants cochés, lien vers l'import. Le
+  dossier, sa modification et la validation du dossier de soutenance ne la
+  saisissent plus : ils la rappellent avec le bouton « Saisir l'A6 », qui
+  ramène ensuite à la page d'origine. L'action groupée « Enregistrer la
+  validation de l'A6 » du tableau de bord est retirée.
+- Suivi des thèses : dans « À traiter », chaque dossier propose directement
+  l'action attendue (validation de l'étape, documents de soutenance,
+  procès-verbal), à côté de « Ouvrir ». Signatures centralisées, toutes
+  promotions confondues : « Signatures à apposer » (documents qui attendent
+  l'utilisateur — agent DEVE signataire, bibliothèque, directeur, juré —, bouton
+  « Signer » vers « Mes signatures ») et, pour la DEVE, « Signatures attendues
+  d'autres signataires » (bouton « Suivi des signatures » du dossier, pour
+  relancer ou faire signer sur place). Une ligne par dossier, avec les
+  documents attendus et la date de la première demande.
+
 ## mod_these 0.19.0 (2026102708) — direction générale signée par délégation des agents DEVE, relance des agents, agents choisis parmi les inscrits, plus de rôles des services, matière des enseignants, annuaire pour les étudiants
 
 - La direction générale ne signe jamais elle-même : ses documents (fiche

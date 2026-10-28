@@ -1040,13 +1040,24 @@ class signatures {
      * certification. La zone de tracé alimente un champ caché « signaturedata » (module AMD
      * mod_these/signaturepad).
      *
+     * Le nom du signataire n'est saisi que par la DEVE (signature sur place, par délégation) : pour
+     * les autres, c'est le nom de leur compte Moodle (ou celui de l'invitation), affiché sans pouvoir
+     * être modifié.
+     *
      * @param MoodleQuickForm $mform
-     * @param string $defaultname Nom proposé.
+     * @param string $defaultname Nom du signataire (proposé s'il est modifiable).
      * @param string $intro Texte d'introduction (ce qui est signé).
      * @param bool $allowsaved Proposer de reprendre ou d'enregistrer la signature de l'utilisateur.
+     * @param bool $editablename Nom saisi par le signataire (DEVE, ou nom inconnu).
      * @return void
      */
-    public static function add_signature_fields(MoodleQuickForm $mform, $defaultname, $intro = '', $allowsaved = true) {
+    public static function add_signature_fields(
+        MoodleQuickForm $mform,
+        $defaultname,
+        $intro = '',
+        $allowsaved = true,
+        $editablename = false
+    ) {
         global $PAGE, $USER;
 
         $mform->addElement('header', 'signatureheader', get_string('signature', 'mod_these'));
@@ -1090,6 +1101,10 @@ class signatures {
         $mform->addElement('text', 'signername', get_string('signername', 'mod_these'), ['size' => 48]);
         $mform->setType('signername', PARAM_TEXT);
         $mform->setDefault('signername', $defaultname);
+        if (!$editablename && trim((string) $defaultname) !== '') {
+            // Nom imposé : affiché seulement, la valeur soumise est ignorée au profit de celle-ci.
+            $mform->hardFreeze('signername');
+        }
         $mform->addElement('advcheckbox', 'signatureconsent', '', get_string('signatureconsent', 'mod_these'));
         $PAGE->requires->js_call_amd('mod_these/signaturepad', 'init');
     }

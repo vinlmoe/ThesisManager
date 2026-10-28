@@ -55,7 +55,9 @@
         <FIELD NAME="keywords" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="directorid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="codirectorname" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"
-            COMMENT="Co-directeur éventuel, en texte libre (il peut être extérieur à l'établissement)"/>
+            COMMENT="Co-directeur éventuel : nom de l'enseignant interne choisi, ou du co-directeur extérieur saisi"/>
+        <FIELD NAME="codirectorjurorid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
+            COMMENT="Co-directeur interne : enseignant de l'annuaire (these_juror), 0 si extérieur ou aucun"/>
         <FIELD NAME="studyyear" TYPE="char" LENGTH="4" NOTNULL="false" SEQUENCE="false"
             COMMENT="Année d'études au dépôt du sujet (A2 à A6)"/>
         <FIELD NAME="confidential" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
