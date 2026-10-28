@@ -605,6 +605,10 @@ const steps = {
     const p = await open(await as('sbonnet'), synthesis('parameters.php'));
     await upto(p, '24_parametres_circuit', form);
   },
+  async '114_signatures_universite'() {
+    const p = await open(await as('sbonnet'), synthesis('parameters.php'));
+    await region(p, '114_signatures_universite', fieldset("Signatures de l'université"));
+  },
   async '44_modele_edition'() {
     const p = await open(await as('sbonnet'), synthesis('doctemplates.php', { type: 'subject' }));
     await upto(p, '44_modele_edition', form);

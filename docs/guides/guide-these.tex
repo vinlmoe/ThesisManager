@@ -4,9 +4,9 @@
 
 % Version du guide : à mettre à jour à chaque modification, avec une ligne dans l'historique.
 \newcommand{\titreguide}{Guide de la gestion des thèses}
-\newcommand{\versionguide}{2.15}
+\newcommand{\versionguide}{2.16}
 \newcommand{\dateguide}{28 octobre 2026}
-\newcommand{\versionthese}{0.20.1}
+\newcommand{\versionthese}{0.21.0}
 
 \usepackage{guide-commun}
 \usepackage{tikz}
@@ -134,6 +134,10 @@ OpenDocument, à tous les statuts repris (actif, corrections, clôturé) avec
 soutenance et mention, co-directeur rattaché à l'annuaire ; export complété
 (A6, co-directeur, signatures manquantes, pièces pour l'université, dernier
 refus). \\
+2.16 & 29 octobre 2026 & Signatures de l'université dans les paramètres du
+circuit : tout sur papier (par défaut) ou en ligne, et délégataires internes du
+président du CCEM et de la présidence de l'université, qui signent par
+délégation depuis \bouton{Mes signatures}. Capture de l'import refaite. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -327,6 +331,8 @@ bibliothèque et le questionnaire sont facultatifs.
 
 \capture[0.85\linewidth]{24_parametres_circuit}{Paramètres du circuit, dans l'activité de suivi.}
 
+\capture[0.85\linewidth]{114_signatures_universite}{Signatures de l'université : tout sur papier ou en ligne, délégataires internes.}
+
 \begin{description}
   \item[Contrat type de diffusion électronique] le PDF officiel
         (ENS-INI-P308-E04), déposé tel quel. Le module le fait précéder d'une
@@ -348,8 +354,16 @@ bibliothèque et le questionnaire sont facultatifs.
   \item[Signataires] direction générale (nom et qualité, imprimés sur les
         documents ; pas d'adresse : elle ne signe pas elle-même), président du
         CCEM et présidence de l'université (nom et adresse). Avec une adresse,
-        le signataire reçoit un lien de signature ; sans adresse, la DEVE
-        recueille sa signature sur place.
+        le signataire reçoit un lien de signature (pour l'université, en mode
+        \og en ligne\fg{} seulement) ; sans adresse, la DEVE recueille sa
+        signature sur place.
+  \item[Signatures de l'université] \textbf{mode de signature} : \og tout sur
+        papier\fg{} (par défaut : pièces scellées envoyées, scans déposés au
+        retour, sans lien) ou \og en ligne\fg{} (lien de signature par
+        courriel) ; \textbf{délégataires internes} du président du CCEM et de
+        la présidence de l'université, choisis parmi les personnels inscrits :
+        s'il y en a, ils signent par délégation depuis \bouton{Mes
+        signatures}, quel que soit le mode (section~\ref{sec:universite}).
   \item[Soutenances] durée d'une soutenance, en minutes (60 par défaut), pour
         détecter les conflits de jury ; \textbf{salles de soutenance}, une par
         ligne, proposées à la saisie du lieu (dépôt de l'étudiant, validation et
@@ -1601,10 +1615,28 @@ Procès-verbal & toutes, université comprise \\
 
 \subsection{Pièces pour l'université}\label{sec:universite}
 
-La présidence de l'université et le président du CCEM signent sur papier. Dès
-qu'un document n'attend plus que leurs signatures, la page
-\bouton{Documents de soutenance} (et celle du procès-verbal) le présente dans
-\og Pièces pour l'université\fg{}.
+La présidence de l'université et le président du CCEM signent selon les
+paramètres du circuit, rubrique \og Signatures de l'université\fg{}
+(section~\ref{sec:parametres}) :
+\begin{itemize}
+  \item \textbf{par délégation}, quand des délégataires internes sont
+        désignés pour ce signataire : à la validation du dossier de
+        soutenance, la demande leur part, et l'un d'eux signe depuis
+        \bouton{Mes signatures}, comme les agents DEVE pour la direction
+        générale (\og par délégation\fg{} est imprimé sous la signature) ;
+        ils ne peuvent pas refuser de signer ;
+  \item sinon, \textbf{tout sur papier} (choix par défaut) : aucun lien ne
+        leur est envoyé, les pièces leur sont envoyées scellées et leurs scans
+        déposés au retour, comme décrit ci-dessous ;
+  \item sinon, \textbf{en ligne} : ils reçoivent un lien de signature à
+        l'adresse indiquée ; la DEVE peut toujours déposer un scan ou
+        recueillir leur signature sur place.
+\end{itemize}
+
+Dans tous les cas, leurs signatures ne sont exigées qu'au dépôt du
+procès-verbal. Sur papier, dès qu'un document n'attend plus que leurs
+signatures, la page \bouton{Documents de soutenance} (et celle du
+procès-verbal) le présente dans \og Pièces pour l'université\fg{}.
 
 \begin{procedure}{Envoyer les pièces à l'université et enregistrer leur retour}{Équipe DEVE}
 \begin{etapes}

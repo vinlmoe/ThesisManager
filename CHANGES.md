@@ -13,8 +13,30 @@ de version recalés sur la date. Les numéros entre parenthèses des sections de
 développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
 été étiquetée.
 
-## mod_these 0.20.1 (2026102805) — liste des dossiers bloqués, captures du guide refaites, scénarios Behat, import et export complétés
+## mod_these 0.21.0 (2026102806) — signatures de l'université au choix (papier, en ligne, délégataires internes), liste des dossiers bloqués, captures du guide refaites, scénarios Behat, import et export complétés
 
+Les modifications prévues pour 0.20.1, jamais publiée, sont reprises dans cette version.
+
+- Paramètres du circuit, rubrique « Signatures de l'université » :
+  - **mode de signature** du président du CCEM et de la présidence de
+    l'université : tout sur papier (par défaut, comme depuis 0.20.0 : pièces
+    scellées envoyées, scans déposés au retour) ou en ligne (lien de signature
+    par courriel). Sur papier, plus aucun lien ne leur est envoyé (ni à la
+    validation, ni en relance, ni en action groupée) ;
+  - **délégataires internes** de chacun d'eux (`ccemagent`, `ucblagent`),
+    choisis parmi les personnels inscrits : s'il y en a, la demande leur part
+    à la validation du dossier de soutenance, comme aux agents DEVE pour la
+    direction générale ; l'un d'eux signe « par délégation » depuis « Mes
+    signatures », avec le compte validateur de la DEVE. Ils priment sur le mode
+    choisi et ne peuvent pas refuser de signer. Le suivi des signatures les
+    présente sur une ligne à part, avec la relance.
+  - Les pièces pour l'université (scellement, téléchargement, dépôt des scans)
+    et l'avertissement du procès-verbal ne concernent plus que les signataires
+    sur papier.
+- Scénarios Behat de l'import (simulation puis import, à plusieurs statuts) et
+  de l'export du registre (nouvelles colonnes), `import_export.feature`.
+- Guide 2.16 : signatures de l'université, capture des paramètres
+  correspondants et de l'import refaites.
 - Commande `php mod/these/cli/blocked_dossiers.php [--these=ID] [--csv]` :
   dossiers bloqués par des signatures manquantes (voir 0.20.0), à lancer après
   la mise à jour pour que la DEVE fasse signer ou dépose les scans des dossiers
