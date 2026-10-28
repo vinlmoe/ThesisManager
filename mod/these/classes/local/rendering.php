@@ -303,6 +303,8 @@ class rendering {
      * @return array|null [libellé, moodle_url], ou null sans action attendue.
      */
     public static function primary_action(stdClass $cm, stdClass $dossier, stdClass $rights) {
+        global $DB;
+
         $params = ['id' => $cm->id, 'dossierid' => $dossier->id];
         $status = (int) $dossier->status;
         $steps = these_review_steps();
@@ -314,7 +316,8 @@ class rendering {
         }
         if ($rights->deve && $status === THESE_STATUS_SCHEDULED) {
             // Pièces de l'université pas encore revenues signées : leurs scans d'abord.
-            if (prerequisites::only_university(prerequisites::missing($dossier))) {
+            $these = $DB->get_record('these', ['id' => $dossier->theseid], '*', MUST_EXIST);
+            if (prerequisites::only_university(prerequisites::missing($dossier), university::paper_slots($these))) {
                 return [get_string('universityaddscan', 'mod_these'), new moodle_url('/mod/these/scan.php', $params)];
             }
             return [get_string('depositminutes', 'mod_these'), new moodle_url('/mod/these/minutes.php', $params)];
@@ -383,7 +386,70 @@ class rendering {
             'result' => (int) $dossier->defenseresult ? these_result_label($dossier->defenseresult) : '',
             'mention' => these_mention_label($dossier->mention),
             'embargo' => $embargo ? userdate($embargo, get_string('strftimedatefullshort', 'langconfig')) : '',
+            'a6' => a6::label($dossier),
+            'directortitle' => (string) $dossier->directortitle,
+            'codirectortype' => self::codirector_type_label($dossier),
+            'missingsignatures' => implode(' ; ', array_map(function ($item) {
+                return these_document_label($item['doctype']) . ' — ' . these_slot_label($item['slot']);
+            }, prerequisites::missing($dossier))),
+            'universitypieces' => self::university_pieces_label($context, $dossier),
+            'lastrefusal' => self::last_refusal_label($dossier),
         ];
+    }
+
+    /**
+     * Co-directeur interne (annuaire) ou extérieur, pour l'export.
+     *
+     * @param stdClass $dossier
+     * @return string
+     */
+    protected static function codirector_type_label(stdClass $dossier) {
+        $type = \mod_these\form\subject_form::codirector_type($dossier);
+        return $type === '' ? '' : get_string('codirector' . $type, 'mod_these');
+    }
+
+    /**
+     * Pièces pour l'université, pour l'export : documents qui n'attendent plus que l'université,
+     * scellés pour l'envoi (avec la date) ou encore à sceller.
+     *
+     * @param context $context
+     * @param stdClass $dossier
+     * @return string
+     */
+    protected static function university_pieces_label(context $context, stdClass $dossier) {
+        $dateformat = get_string('strftimedatefullshort', 'langconfig');
+        $items = [];
+        foreach (array_keys(university::pending($dossier)) as $doctype) {
+            $file = university::get_sealed($context, $dossier->id, $doctype);
+            $items[] = these_document_label($doctype) . ' — ' . ($file
+                ? get_string('universitysealedon', 'mod_these', userdate($file->get_timecreated(), $dateformat))
+                : get_string('exportuniversitytoseal', 'mod_these'));
+        }
+        return implode(' ; ', $items);
+    }
+
+    /**
+     * Dernier refus de signer d'un agent DEVE, pour l'export : date et motif.
+     *
+     * @param stdClass $dossier
+     * @return string
+     */
+    protected static function last_refusal_label(stdClass $dossier) {
+        global $DB;
+
+        $logs = $DB->get_records(
+            'these_log',
+            ['dossierid' => $dossier->id, 'logaction' => 'agentrefused'],
+            'timecreated DESC, id DESC',
+            'id, timecreated, remark',
+            0,
+            1
+        );
+        if (!$logs) {
+            return '';
+        }
+        $log = reset($logs);
+        return userdate($log->timecreated, get_string('strftimedatetimeshort', 'langconfig')) . ' — ' . $log->remark;
     }
 
     /**

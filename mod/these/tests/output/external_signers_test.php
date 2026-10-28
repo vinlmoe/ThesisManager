@@ -46,7 +46,7 @@ final class external_signers_test extends output_testcase {
         );
         \mod_these\local\scopesettings::set(
             these_local_scope($this->these),
-            ['dgname' => 'Directrice & co', 'ccememail' => 'ccem@example.org']
+            ['dgname' => 'Directrice & co', 'ccememail' => 'ccem@example.org', 'universitypaper' => 0]
         );
         return $this->reload($dossier->id);
     }

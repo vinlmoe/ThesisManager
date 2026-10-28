@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Import CSV de dossiers existants par la DEVE (voir these_import_dossiers()), avec un mode de
+ * Import (CSV, Excel ou OpenDocument) de dossiers existants par la DEVE (voir these_import_dossiers()), avec un mode de
  * simulation activé par défaut qui affiche le compte rendu sans rien créer.
  *
  * @package   mod_these
@@ -49,23 +49,45 @@ $mform = new \mod_these\form\import_form($PAGE->url);
 $mform->set_data(['id' => $cm->id]);
 
 $report = null;
+$error = null;
 if ($mform->is_cancelled()) {
     redirect($dashboardurl);
 } else if ($data = $mform->get_data()) {
-    $report = these_import_dossiers(
-        $these,
-        $mform->get_file_content('csvfile'),
-        $data->delimiter,
-        $data->encoding,
-        !empty($data->dryrun),
-        $USER->id
-    );
+    // Excel et OpenDocument lus comme l'import de l'A6 ; CSV avec le séparateur et l'encodage choisis.
+    $filename = (string) $mform->get_new_filename('csvfile');
+    try {
+        if (in_array(core_text::strtolower(pathinfo($filename, PATHINFO_EXTENSION)), ['xlsx', 'xls', 'ods'], true)) {
+            $path = $mform->save_temp_file('csvfile');
+            try {
+                $rows = \mod_these\local\a6::read_rows($path, $filename);
+            } finally {
+                @unlink($path);
+            }
+            $report = \mod_these\local\import::import_rows($these, $rows, !empty($data->dryrun), $USER->id);
+        } else {
+            $report = these_import_dossiers(
+                $these,
+                $mform->get_file_content('csvfile'),
+                $data->delimiter,
+                $data->encoding,
+                !empty($data->dryrun),
+                $USER->id
+            );
+        }
+    } catch (moodle_exception $e) {
+        $error = $e->getMessage();
+    } catch (\PhpOffice\PhpSpreadsheet\Exception $e) {
+        $error = get_string('a6importunreadable', 'mod_these');
+    }
 }
 
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('importdossiers', 'mod_these'));
 echo these_render_navlinks($cm, $context);
 
+if ($error !== null) {
+    echo $OUTPUT->notification($error, 'error');
+}
 if ($report !== null) {
     $ok = count(array_filter($report, function ($row) {
         return $row['ok'];

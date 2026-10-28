@@ -85,8 +85,10 @@ class refusal {
      * @return bool
      */
     public static function refusable(stdClass $signature, stdClass $dossier) {
+        // Seuls les agents DEVE refusent : pas les délégataires de l'université.
         $step = self::creation_steps()[$signature->doctype] ?? null;
-        return $step !== null && $signature->token === null && empty($signature->timesigned)
+        return $step !== null && $signature->token === null
+            && !in_array($signature->slot, prerequisites::UNIVERSITY_SLOTS, true) && empty($signature->timesigned)
             && (int) $signature->dossierid === (int) $dossier->id
             && (int) $dossier->status === $step['from'];
     }

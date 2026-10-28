@@ -46,7 +46,7 @@ class import_form extends \moodleform {
             'csvfile',
             get_string('csvfile', 'mod_these'),
             null,
-            ['accepted_types' => ['.csv', '.txt']]
+            ['accepted_types' => ['.csv', '.txt', '.xlsx', '.xls', '.ods']]
         );
         $mform->addRule('csvfile', null, 'required', null, 'client');
         $mform->addElement(

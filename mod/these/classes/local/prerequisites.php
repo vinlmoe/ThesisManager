@@ -26,9 +26,9 @@ use stdClass;
  *
  * Pour chaque statut, la liste des signatures qui doivent être apposées avant de le quitter (validation
  * de l'étape, transmission des documents, procès-verbal). Les signataires de l'université (présidence
- * de l'université, CCEM) signent sur papier les pièces scellées qui leur sont envoyées (voir
- * university) : leurs signatures ne sont exigées qu'au procès-verbal, une fois les scans revenus et
- * déposés. Seuls comptent les documents dont les données sont saisies.
+ * de l'université, CCEM) signent sur papier les pièces scellées qui leur sont envoyées, en ligne ou
+ * par délégation (voir university) : leurs signatures ne sont exigées qu'au procès-verbal (sur
+ * papier, une fois les scans revenus et déposés). Seuls comptent les documents dont les données sont saisies.
  *
  * Le blocage s'applique aux pages (review.php, documents.php, minutes.php), pas aux fonctions du
  * circuit elles-mêmes.
@@ -115,14 +115,48 @@ class prerequisites {
     }
 
     /**
+     * Dossiers bloqués par des signatures manquantes, toutes activités confondues (ou une seule) :
+     * pour préparer la mise en service du blocage, ou pour le suivi de la DEVE.
+     *
+     * @param int $theseid Activité, 0 pour toutes.
+     * @return array Liste de {dossier, these, student, missing (voir missing())}, par activité puis dossier.
+     */
+    public static function blocked_dossiers($theseid = 0) {
+        global $DB;
+
+        $conditions = $theseid ? ['theseid' => (int) $theseid] : [];
+        $blocked = [];
+        $activities = [];
+        foreach ($DB->get_records('these_dossier', $conditions, 'theseid ASC, id ASC') as $dossier) {
+            $missing = self::missing($dossier);
+            if (!$missing) {
+                continue;
+            }
+            if (!isset($activities[$dossier->theseid])) {
+                $activities[$dossier->theseid] = $DB->get_record('these', ['id' => $dossier->theseid]);
+            }
+            $blocked[] = (object) [
+                'dossier' => $dossier,
+                'these' => $activities[$dossier->theseid],
+                'student' => $DB->get_record('user', ['id' => $dossier->userid]) ?: null,
+                'missing' => $missing,
+            ];
+        }
+        return $blocked;
+    }
+
+    /**
      * Indique s'il ne manque, pour quitter le statut actuel, que des signatures de l'université.
      *
      * @param array $missing Voir missing().
+     * @param string[]|null $slots Emplacements comptés (par défaut, tous ceux de l'université ; voir
+     *                             university::paper_slots() pour ceux signés sur papier).
      * @return bool
      */
-    public static function only_university(array $missing) {
+    public static function only_university(array $missing, ?array $slots = null) {
+        $slots = $slots ?? self::UNIVERSITY_SLOTS;
         foreach ($missing as $item) {
-            if (!in_array($item['slot'], self::UNIVERSITY_SLOTS, true)) {
+            if (!in_array($item['slot'], $slots, true)) {
                 return false;
             }
         }
@@ -140,8 +174,9 @@ class prerequisites {
      * @return string HTML
      */
     public static function render_missing(stdClass $cm, context $context, stdClass $dossier, array $missing) {
-        global $PAGE, $USER;
+        global $DB, $PAGE, $USER;
 
+        $these = $DB->get_record('these', ['id' => $dossier->theseid], '*', MUST_EXIST);
         $dateformat = get_string('strftimedatetimeshort', 'langconfig');
         $items = [];
         foreach ($missing as $item) {
@@ -151,11 +186,9 @@ class prerequisites {
             }
             $items[] = $label;
         }
+        $paper = self::only_university($missing, university::paper_slots($these));
         $parts = [
-            \mod_these\output\parts::strong(get_string(
-                self::only_university($missing) ? 'prerequisitesuniversity' : 'prerequisitesmissing',
-                'mod_these'
-            )),
+            \mod_these\output\parts::strong(get_string($paper ? 'prerequisitesuniversity' : 'prerequisitesmissing', 'mod_these')),
             \mod_these\output\parts::html($PAGE->get_renderer('mod_these')->render(new \mod_these\output\bullet_list($items))),
         ];
         if (these_get_rights($context, $dossier, $USER->id)->deve) {

@@ -47,7 +47,8 @@ class scopesettings_page {
         // Agents choisis parmi les comptes proposés : enregistrés par leur identifiant, un par ligne.
         $settings = scopesettings::get_all($scope);
         $agents = [];
-        foreach (['deveagent' => 'deve', 'libraryagent' => 'library'] as $name => $actor) {
+        $actors = ['deveagent' => 'deve', 'libraryagent' => 'library', 'ccemagent' => 'ccem', 'ucblagent' => 'ucbl'];
+        foreach ($actors as $name => $actor) {
             $agents[$name] = [];
             foreach (scopesettings::candidate_users($scope, $actor) as $user) {
                 $agents[$name][$user->username] = fullname($user) . ($user->email !== '' ? ' (' . $user->email . ')' : '');

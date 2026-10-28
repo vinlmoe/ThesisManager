@@ -429,11 +429,18 @@ $string['student'] = 'Étudiant';
 // Import.
 $string['importdossiers'] = 'Importer des dossiers';
 $string['import'] = 'Importer';
-$string['importhelp'] = "Reprise de sujets déjà enregistrés hors du module : chaque ligne crée un dossier actif. Colonnes reconnues "
-    . "(ligne d'en-tête) : <code>student</code> et <code>title</code> (obligatoires), <code>titleen</code>, <code>summary</code>, "
-    . "<code>keywords</code>, <code>director</code>, <code>codirector</code>, <code>devenumber</code>, <code>libraryref</code>. "
-    . "Étudiant et directeur sont désignés par identifiant de connexion, adresse de courriel ou numéro d'identification.";
-$string['csvfile'] = 'Fichier CSV';
+$string['importhelp'] = "Reprise de dossiers déjà engagés hors du module, depuis un fichier CSV, Excel (.xlsx, .xls) ou "
+    . "OpenDocument (.ods) dont la première ligne porte le nom des colonnes : <code>student</code> et <code>title</code> "
+    . "(obligatoires), <code>titleen</code>, <code>summary</code>, <code>keywords</code>, <code>director</code>, "
+    . "<code>codirector</code>, <code>devenumber</code>, <code>libraryref</code>, <code>status</code>, <code>defensedate</code>, "
+    . "<code>defenselocation</code>, <code>mention</code>, <code>corrections</code>. Étudiant et directeur sont désignés par "
+    . "identifiant de connexion, adresse de courriel ou numéro d'identification. Un co-directeur dont le nom (« Claire Martin », "
+    . "« Dr MARTIN Claire ») est celui d'un enseignant interne de l'annuaire y est rattaché ; sinon il est noté comme extérieur. "
+    . "<code>status</code> : vide ou <code>active</code> (sujet enregistré), <code>corrections</code> (thèse soutenue, "
+    . "corrections en cours) ou <code>closed</code> (dossier clôturé) ; les deux derniers exigent <code>defensedate</code> "
+    . "(jj/mm/aaaa [hh:mm], aaaa-mm-jj ou date du tableur) et admettent une <code>mention</code> (honorable, très honorable, "
+    . "félicitations) et les <code>corrections</code> demandées. Séparateur et encodage ne servent qu'aux fichiers CSV.";
+$string['csvfile'] = "Fichier (CSV, Excel ou OpenDocument)";
 $string['importdryrun'] = 'Simulation (ne rien créer)';
 $string['importline'] = 'Ligne';
 $string['importusernotfound'] = 'Utilisateur introuvable : {$a}';
@@ -445,10 +452,16 @@ $string['importresult'] = '{$a->ok} dossier(s) importé(s), {$a->errors} ligne(s
 $string['importdryrunresult'] = 'Simulation : {$a->ok} dossier(s) importable(s), {$a->errors} ligne(s) en erreur.';
 $string['importinvalidfile'] = 'Fichier illisible : {$a}';
 $string['importmissingcolumn'] = 'Colonne obligatoire absente : {$a}';
+$string['importbadstatus'] = 'Statut non importable : {$a} (active, corrections ou closed).';
+$string['importbaddefensedate'] = 'Date de soutenance manquante ou illisible : {$a}';
+$string['importbadmention'] = 'Mention inconnue : {$a}';
+$string['importcodirectorinternal'] = 'co-directeur interne : {$a}';
 
 // Export.
 $string['export'] = 'Export du registre';
-$string['exporthelp'] = 'Un dossier par ligne : numéro, étudiant, sujet, directeur, statut, soutenance, jury et résultat.';
+$string['exporthelp'] = "Un dossier par ligne : numéro, étudiant, sujet, directeur, statut, soutenance, jury et résultat, puis la validation "
+    . "de l'A6, le type de co-directeur, les signatures qui manquent pour passer à l'étape suivante, les pièces pour l'université "
+    . "et le dernier refus d'un agent DEVE.";
 $string['exportformat'] = 'Format';
 
 // Historique.
@@ -655,6 +668,18 @@ $string['settingscheckimagesmissing'] = 'Images des modèles des documents (manq
 $string['settingsmissingnotice'] = 'Réglages du circuit à compléter : {$a}.';
 $string['settingslibraryagent'] = 'Agents de la bibliothèque';
 $string['settingslibraryagent_help'] = "Agents de la bibliothèque, choisis parmi les personnels inscrits aux cours des activités suivies (inscrits qui ne déposent pas de thèse) et les détenteurs du rôle de la bibliothèque : tapez un nom pour le retrouver. Sans rôle à attribuer, ils ont les droits de la bibliothèque (notice du sujet, conformité du manuscrit, corrections) et seulement ceux-là : ni boutons ni pages de la DEVE, même si leur rôle dans le cours les leur donnerait. Ils reçoivent les courriels adressés à la bibliothèque. Une personne absente de la liste doit d'abord être inscrite au cours.";
+$string['settingsuniversitysigning'] = "Signatures de l'université";
+$string['settingsuniversitypaper'] = "Mode de signature de l'université";
+$string['settingsuniversitypaper_help'] = "Pour le président du CCEM et la présidence de l'université, sauf s'ils ont des délégataires internes (ci-dessous).<br>"
+    . "<strong>Tout sur papier</strong> : aucun lien de signature ne leur est envoyé. Dès qu'un document n'attend plus que l'université, la DEVE le scelle et télécharge les pièces à envoyer ; au retour, elle dépose les scans signés, que le procès-verbal attend.<br>"
+    . "<strong>En ligne</strong> : un lien de signature est envoyé par courriel à l'adresse indiquée dans les signataires des documents ; la DEVE peut toujours déposer un scan ou recueillir la signature sur place.";
+$string['settingsuniversitypaperyes'] = 'Tout sur papier (pièces scellées envoyées, scans déposés au retour)';
+$string['settingsuniversitypaperno'] = 'En ligne (lien de signature par courriel)';
+$string['settingsccemagent'] = 'Délégataires internes du président du CCEM';
+$string['settingsccemagent_help'] = "Comptes internes qui signent, par délégation, à la place du président du CCEM, depuis « Mes signatures », comme les agents DEVE pour la direction générale : la demande leur part à la validation du dossier de soutenance et n'importe lequel d'entre eux signe. Ils priment sur le mode de signature choisi ci-dessus. Laissez vide s'il n'y en a pas.";
+$string['settingsucblagent'] = "Délégataires internes de la présidence de l'université";
+$string['settingsucblagent_help'] = "Comptes internes qui signent, par délégation, à la place de la présidence de l'université, depuis « Mes signatures », comme les agents DEVE pour la direction générale : la demande leur part à la validation du dossier de soutenance et n'importe lequel d'entre eux signe. Ils priment sur le mode de signature choisi ci-dessus. Laissez vide s'il n'y en a pas.";
+$string['agentuniversity'] = 'Délégataires — {$a}';
 $string['settingsagentsnone'] = 'Aucun agent choisi';
 $string['settingschecklibraryagents'] = 'Agents de la bibliothèque';
 $string['scopesettings'] = 'Paramètres du circuit';
@@ -935,6 +960,10 @@ $string['embargorequested'] = 'Demandé : {$a->years} ans après la soutenance, 
 $string['embargorequestednodate'] = 'Demandé : {$a} ans après la soutenance (date de soutenance à fixer)';
 $string['embargoreason'] = 'Motif de l\'embargo';
 $string['embargoexport'] = 'Embargo jusqu\'au';
+$string['exportcodirectortype'] = 'Co-directeur interne ou extérieur';
+$string['exportmissingsignatures'] = "Signatures manquantes pour passer à l'étape suivante";
+$string['exportuniversitytoseal'] = 'à sceller et envoyer';
+$string['exportlastrefusal'] = "Dernier refus d'un agent DEVE";
 $string['diffusion'] = 'Diffusion';
 $string['bdiffusion'] = 'Diffusion de la thèse';
 $string['bdiffusion_help'] = "Diffusion en texte intégral sur internet (portail DUMAS, catalogue Sudoc, catalogues des bibliothèques), "

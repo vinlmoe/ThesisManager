@@ -424,11 +424,18 @@ $string['student'] = 'Student';
 // Import.
 $string['importdossiers'] = 'Import files';
 $string['import'] = 'Import';
-$string['importhelp'] = 'Import of subjects already registered outside the module: each row creates an active file. Recognised '
-    . 'columns (header row): <code>student</code> and <code>title</code> (required), <code>titleen</code>, <code>summary</code>, '
-    . '<code>keywords</code>, <code>director</code>, <code>codirector</code>, <code>devenumber</code>, <code>libraryref</code>. '
-    . 'Student and director are identified by username, email address or ID number.';
-$string['csvfile'] = 'CSV file';
+$string['importhelp'] = 'Import of files already under way outside the module, from a CSV, Excel (.xlsx, .xls) or OpenDocument '
+    . '(.ods) file whose first row holds the column names: <code>student</code> and <code>title</code> (required), '
+    . '<code>titleen</code>, <code>summary</code>, <code>keywords</code>, <code>director</code>, <code>codirector</code>, '
+    . '<code>devenumber</code>, <code>libraryref</code>, <code>status</code>, <code>defensedate</code>, '
+    . '<code>defenselocation</code>, <code>mention</code>, <code>corrections</code>. Student and director are identified by '
+    . 'username, email address or ID number. A co-director whose name ("Claire Martin", "Dr MARTIN Claire") matches an '
+    . 'internal teacher of the directory is linked to them; otherwise they are recorded as external. <code>status</code>: '
+    . 'empty or <code>active</code> (subject registered), <code>corrections</code> (thesis defended, corrections under way) '
+    . 'or <code>closed</code> (thesis closed); the last two require <code>defensedate</code> (dd/mm/yyyy [hh:mm], yyyy-mm-dd '
+    . 'or spreadsheet date) and accept a <code>mention</code> (honorable, très honorable, félicitations) and the requested '
+    . '<code>corrections</code>. Delimiter and encoding only apply to CSV files.';
+$string['csvfile'] = 'File (CSV, Excel or OpenDocument)';
 $string['importdryrun'] = 'Dry run (create nothing)';
 $string['importline'] = 'Line';
 $string['importusernotfound'] = 'User not found: {$a}';
@@ -440,10 +447,15 @@ $string['importresult'] = '{$a->ok} file(s) imported, {$a->errors} line(s) with 
 $string['importdryrunresult'] = 'Dry run: {$a->ok} file(s) importable, {$a->errors} line(s) with errors.';
 $string['importinvalidfile'] = 'Unreadable file: {$a}';
 $string['importmissingcolumn'] = 'Missing required column: {$a}';
+$string['importbadstatus'] = 'Status cannot be imported: {$a} (active, corrections or closed).';
+$string['importbaddefensedate'] = 'Missing or unreadable defence date: {$a}';
+$string['importbadmention'] = 'Unknown mention: {$a}';
+$string['importcodirectorinternal'] = 'internal co-director: {$a}';
 
 // Export.
 $string['export'] = 'Register export';
-$string['exporthelp'] = 'One file per row: number, student, subject, director, status, defence, jury and result.';
+$string['exporthelp'] = 'One file per row: number, student, subject, director, status, defence, jury and result, then the A6 validation, the '
+    . 'co-director type, the signatures still missing to move on, the university documents and the last refusal by a registrar agent.';
 $string['exportformat'] = 'Format';
 
 // History.
@@ -650,6 +662,18 @@ $string['settingscheckimagesmissing'] = 'Document template images (missing: {$a}
 $string['settingsmissingnotice'] = 'Workflow settings to complete: {$a}.';
 $string['settingslibraryagent'] = 'Library agents';
 $string['settingslibraryagent_help'] = "Library agents, chosen among the staff enrolled in the courses of the followed activities (enrolled users who do not submit a thesis) and the holders of the library role: type a name to find them. Without any role to assign, they get the library's rights (subject record, manuscript compliance, corrections) and only those: no registrar buttons or pages, even if their course role would give them. They receive the emails addressed to the library. Someone missing from the list must first be enrolled in the course.";
+$string['settingsuniversitysigning'] = 'University signatures';
+$string['settingsuniversitypaper'] = 'University signing mode';
+$string['settingsuniversitypaper_help'] = 'For the CCEM president and the university presidency, unless they have internal delegates (below).<br>'
+    . '<strong>Paper only</strong>: no signing link is sent to them. As soon as a document only awaits the university, the registrar seals it and downloads the documents to send; when they come back, the registrar uploads the signed scans, which the minutes await.<br>'
+    . '<strong>Online</strong>: a signing link is emailed to the address given in the document signatories; the registrar can still upload a scan or collect the signature in person.';
+$string['settingsuniversitypaperyes'] = 'Paper only (sealed documents sent, scans uploaded on return)';
+$string['settingsuniversitypaperno'] = 'Online (signing link by email)';
+$string['settingsccemagent'] = 'Internal delegates of the CCEM president';
+$string['settingsccemagent_help'] = 'Internal accounts that sign on behalf of the CCEM president, from "My signatures", like the registrar agents for the general management: the request is sent to them when the defence file is validated and any of them signs. They take precedence over the signing mode chosen above. Leave empty if there are none.';
+$string['settingsucblagent'] = 'Internal delegates of the university presidency';
+$string['settingsucblagent_help'] = 'Internal accounts that sign on behalf of the university presidency, from "My signatures", like the registrar agents for the general management: the request is sent to them when the defence file is validated and any of them signs. They take precedence over the signing mode chosen above. Leave empty if there are none.';
+$string['agentuniversity'] = 'Delegates — {$a}';
 $string['settingsagentsnone'] = 'No agent selected';
 $string['settingschecklibraryagents'] = 'Library agents';
 $string['scopesettings'] = 'Workflow settings';
@@ -931,6 +955,10 @@ $string['embargorequested'] = 'Requested: {$a->years} years after the defence, u
 $string['embargorequestednodate'] = 'Requested: {$a} years after the defence (defence date to be set)';
 $string['embargoreason'] = 'Embargo reason';
 $string['embargoexport'] = 'Embargo until';
+$string['exportcodirectortype'] = 'Internal or external co-director';
+$string['exportmissingsignatures'] = 'Signatures missing to move to the next step';
+$string['exportuniversitytoseal'] = 'to seal and send';
+$string['exportlastrefusal'] = 'Last refusal by a registrar agent';
 $string['diffusion'] = 'Distribution';
 $string['bdiffusion'] = 'Thesis distribution';
 $string['bdiffusion_help'] = 'Full text on the internet (DUMAS, Sudoc, library catalogues), or paper copy in veterinary school '

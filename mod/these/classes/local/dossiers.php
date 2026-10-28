@@ -634,8 +634,9 @@ class dossiers {
                     }
                 }
             }
-            if ($step['request'] && signatureagent::signs_dg_by_delegation($these)) {
-                // Direction générale, toujours par délégation : demandée aux agents, dans le même courriel.
+            if ($step['request']) {
+                // Direction générale et université par délégation : demandées à leurs agents, s'il y en a,
+                // dans le même courriel.
                 $agentdoctypes = array_merge($agentdoctypes, $step['request']);
             }
             if ($agentdoctypes) {

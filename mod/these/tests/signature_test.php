@@ -262,6 +262,7 @@ final class signature_test extends these_testcase {
         $this->setup_activity();
         \mod_these\local\scopesettings::set(these_local_scope($this->these), [
             'dgname' => 'Directrice générale', 'ccememail' => 'ccem@example.com', 'ucblemail' => 'ucbl@example.com',
+            'universitypaper' => 0,
         ]);
         $sink = $this->redirectEmails();
         $dossier = $this->generator->create_dossier($this->these, $this->student->id, [

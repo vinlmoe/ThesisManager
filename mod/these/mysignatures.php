@@ -98,7 +98,7 @@ foreach ($pending as $signature) {
     if (\mod_these\local\refusal::refusable($signature, $dossier)) {
         $groups[$dossier->id]['refuseurl'] = new moodle_url('/mod/these/refuse.php', ['dossierid' => $dossier->id]);
     }
-    // Signature d'agent DEVE (sans jeton) : « par délégation » à l'emplacement de la direction générale.
+    // Signature d'agent (sans jeton) : « par délégation » aux emplacements de la direction générale et de l'université.
     $label = $signature->token === null ? signatureagent::document_label($signature->doctype, $signature->slot)
         : these_document_label($signature->doctype) . ' (' . these_slot_label($signature->slot) . ')';
     // Compte de l'équipe DEVE qui a validé les documents que l'agent signe.
@@ -142,8 +142,8 @@ if ($documents && ($data = $mform->get_data())) {
             $png->name,
             $png->png,
             (string) $signature->signeremail,
-            // Direction générale : toujours signée par délégation.
-            ['delegated' => $signature->slot === 'dg']
+            // Direction générale et université : signées par délégation.
+            ['delegated' => signatureagent::delegated_slot($signature->slot)]
         );
         $count++;
     }

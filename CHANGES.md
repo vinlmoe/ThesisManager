@@ -13,6 +13,58 @@ de version recalés sur la date. Les numéros entre parenthèses des sections de
 développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
 été étiquetée.
 
+## mod_these 0.21.0 (2026102806) — signatures de l'université au choix (papier, en ligne, délégataires internes), liste des dossiers bloqués, captures du guide refaites, scénarios Behat, import et export complétés
+
+Les modifications prévues pour 0.20.1, jamais publiée, sont reprises dans cette version.
+
+- Paramètres du circuit, rubrique « Signatures de l'université » :
+  - **mode de signature** du président du CCEM et de la présidence de
+    l'université : tout sur papier (par défaut, comme depuis 0.20.0 : pièces
+    scellées envoyées, scans déposés au retour) ou en ligne (lien de signature
+    par courriel). Sur papier, plus aucun lien ne leur est envoyé (ni à la
+    validation, ni en relance, ni en action groupée) ;
+  - **délégataires internes** de chacun d'eux (`ccemagent`, `ucblagent`),
+    choisis parmi les personnels inscrits : s'il y en a, la demande leur part
+    à la validation du dossier de soutenance, comme aux agents DEVE pour la
+    direction générale ; l'un d'eux signe « par délégation » depuis « Mes
+    signatures », avec le compte validateur de la DEVE. Ils priment sur le mode
+    choisi et ne peuvent pas refuser de signer. Le suivi des signatures les
+    présente sur une ligne à part, avec la relance.
+  - Les pièces pour l'université (scellement, téléchargement, dépôt des scans)
+    et l'avertissement du procès-verbal ne concernent plus que les signataires
+    sur papier.
+- Scénarios Behat de l'import (simulation puis import, à plusieurs statuts) et
+  de l'export du registre (nouvelles colonnes), `import_export.feature`.
+- Guide 2.16 : signatures de l'université, capture des paramètres
+  correspondants et de l'import refaites.
+- Commande `php mod/these/cli/blocked_dossiers.php [--these=ID] [--csv]` :
+  dossiers bloqués par des signatures manquantes (voir 0.20.0), à lancer après
+  la mise à jour pour que la DEVE fasse signer ou dépose les scans des dossiers
+  en cours.
+- Guide 2.15 : captures refaites (formulaire de sujet, signatures, validation),
+  nouvelles captures de la page de l'A6, d'une étape bloquée, des pièces pour
+  l'université et du refus de signer ; mise en service du blocage décrite.
+- Scénarios Behat des nouveaux parcours : étape bloquée pour la bibliothèque,
+  refus de signer de l'agent DEVE (validateur affiché, dossier renvoyé),
+  procès-verbal en attente des scans de l'université (`signatures.feature`) ;
+  co-directeur interne choisi dans l'annuaire, nom de signataire imposé, page
+  de l'A6 (`subject_a6.feature`). Le générateur Behat crée les agents DEVE,
+  les demandes de signature aux agents, les signatures et les enseignants de
+  l'annuaire.
+- Import des dossiers : fichiers Excel (`.xlsx`, `.xls`) et OpenDocument
+  (`.ods`) acceptés, comme pour l'A6 ; colonne `status` pour reprendre une
+  thèse soutenue dont les corrections sont en cours (`corrections`) ou un
+  dossier clôturé (`closed`), avec `defensedate` (obligatoire),
+  `defenselocation`, `mention` et `corrections` ; un co-directeur dont le nom
+  est celui d'un enseignant interne de l'annuaire y est rattaché.
+- Export du registre : nouvelles colonnes validation de l'A6, titre du
+  directeur, co-directeur interne ou extérieur, signatures manquantes pour
+  passer à l'étape suivante, pièces pour l'université (scellées ou à sceller)
+  et dernier refus de signer d'un agent DEVE.
+- Jeu de données des captures (`docs/guides/captures/seed.php`) : les
+  signatures attendues sont apposées avant chaque étape (agent DEVE, président
+  du jury, scans de l'université), comme l'exige désormais le circuit.
+
 ## mod_these 0.20.0 (2026102803) et mod_thesesynthesis 0.7.0 (2026102800) — titre du directeur repris de l'annuaire, co-directeur interne ou extérieur, nom de signature imposé, signatures centralisées dans le suivi, page de l'A6, signatures préalables aux étapes, pièces pour l'université
 
 - Dépôt du sujet : l'étudiant ne saisit plus le titre (Dr, Pr) d'un directeur

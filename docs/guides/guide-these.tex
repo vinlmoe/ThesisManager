@@ -4,9 +4,9 @@
 
 % Version du guide : à mettre à jour à chaque modification, avec une ligne dans l'historique.
 \newcommand{\titreguide}{Guide de la gestion des thèses}
-\newcommand{\versionguide}{2.14}
+\newcommand{\versionguide}{2.16}
 \newcommand{\dateguide}{28 octobre 2026}
-\newcommand{\versionthese}{0.20.0}
+\newcommand{\versionthese}{0.21.0}
 
 \usepackage{guide-commun}
 \usepackage{tikz}
@@ -126,6 +126,18 @@ scellées et téléchargées, scans au retour ; compte DEVE validateur des
 signatures par délégation, avec la date ; refus de signer d'un agent DEVE, avec
 motif et renvoi à l'étape de création des documents ; scans ouverts depuis le
 suivi des signatures. \\
+2.15 & 28 octobre 2026 & Liste des dossiers bloqués en ligne de commande (mise en
+service du blocage) ; captures refaites (formulaire de sujet, signatures,
+validation) et nouvelles captures : page de l'A6, étape bloquée, pièces pour
+l'université, refus de signer. Import des dossiers depuis Excel ou
+OpenDocument, à tous les statuts repris (actif, corrections, clôturé) avec
+soutenance et mention, co-directeur rattaché à l'annuaire ; export complété
+(A6, co-directeur, signatures manquantes, pièces pour l'université, dernier
+refus). \\
+2.16 & 29 octobre 2026 & Signatures de l'université dans les paramètres du
+circuit : tout sur papier (par défaut) ou en ligne, et délégataires internes du
+président du CCEM et de la présidence de l'université, qui signent par
+délégation depuis \bouton{Mes signatures}. Capture de l'import refaite. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -319,6 +331,8 @@ bibliothèque et le questionnaire sont facultatifs.
 
 \capture[0.85\linewidth]{24_parametres_circuit}{Paramètres du circuit, dans l'activité de suivi.}
 
+\capture[0.85\linewidth]{114_signatures_universite}{Signatures de l'université : tout sur papier ou en ligne, délégataires internes.}
+
 \begin{description}
   \item[Contrat type de diffusion électronique] le PDF officiel
         (ENS-INI-P308-E04), déposé tel quel. Le module le fait précéder d'une
@@ -340,8 +354,16 @@ bibliothèque et le questionnaire sont facultatifs.
   \item[Signataires] direction générale (nom et qualité, imprimés sur les
         documents ; pas d'adresse : elle ne signe pas elle-même), président du
         CCEM et présidence de l'université (nom et adresse). Avec une adresse,
-        le signataire reçoit un lien de signature ; sans adresse, la DEVE
-        recueille sa signature sur place.
+        le signataire reçoit un lien de signature (pour l'université, en mode
+        \og en ligne\fg{} seulement) ; sans adresse, la DEVE recueille sa
+        signature sur place.
+  \item[Signatures de l'université] \textbf{mode de signature} : \og tout sur
+        papier\fg{} (par défaut : pièces scellées envoyées, scans déposés au
+        retour, sans lien) ou \og en ligne\fg{} (lien de signature par
+        courriel) ; \textbf{délégataires internes} du président du CCEM et de
+        la présidence de l'université, choisis parmi les personnels inscrits :
+        s'il y en a, ils signent par délégation depuis \bouton{Mes
+        signatures}, quel que soit le mode (section~\ref{sec:universite}).
   \item[Soutenances] durée d'une soutenance, en minutes (60 par défaut), pour
         détecter les conflits de jury ; \textbf{salles de soutenance}, une par
         ligne, proposées à la saisie du lieu (dépôt de l'étudiant, validation et
@@ -386,9 +408,11 @@ les dossiers que si l'option correspondante est explicitement cochée.
 
 \subsection{Reprise des dossiers existants}
 
-À la mise en service, les sujets déjà enregistrés se reprennent par
+À la mise en service, les dossiers déjà engagés se reprennent par
 \chemin{Importer des dossiers} : un fichier CSV (séparateur point-virgule par
-défaut), une ligne par dossier, avec une ligne d'en-tête.
+défaut), Excel (\texttt{.xlsx}, \texttt{.xls}) ou OpenDocument (\texttt{.ods}),
+une ligne par dossier, avec une ligne d'en-tête. Le séparateur et l'encodage ne
+servent qu'aux fichiers CSV.
 
 \begin{center}
 \small
@@ -399,14 +423,31 @@ défaut), une ligne par dossier, avec une ligne d'en-tête.
 \texttt{student} & Obligatoire. Identifiant de connexion, courriel ou numéro d'identification. \\
 \texttt{title} & Obligatoire. Titre du sujet. \\
 \texttt{director} & Directeur (même identification que l'étudiant). \\
+\texttt{codirector} & Nom du co-directeur. S'il est celui d'un enseignant interne
+de l'annuaire (\og Claire Martin\fg{}, \og Dr MARTIN Claire\fg{}), le dossier y
+est rattaché ; sinon le co-directeur est noté comme extérieur. \\
 \texttt{devenumber}, \texttt{libraryref} & Numéro DEVE et référence de notice. \\
-\texttt{titleen}, \texttt{summary}, \texttt{keywords}, \texttt{codirector} & Facultatifs. \\
+\texttt{titleen}, \texttt{summary}, \texttt{keywords} & Facultatifs. \\
+\texttt{status} & Vide ou \texttt{active} : \statut{Dossier actif} ;
+\texttt{corrections} : thèse soutenue, corrections en cours ; \texttt{closed} :
+dossier clôturé. Le libellé du statut est aussi accepté. \\
+\texttt{defensedate} & Obligatoire pour une thèse soutenue : \texttt{jj/mm/aaaa}
+ou \texttt{aaaa-mm-jj}, avec l'heure en option (14\,h sinon), ou date du
+tableur. \\
+\texttt{defenselocation} & Lieu de la soutenance. \\
+\texttt{mention} & \texttt{honorable}, \texttt{très honorable} ou
+\texttt{félicitations} (clé ou libellé). \\
+\texttt{corrections} & Corrections demandées par le jury. \\
 \bottomrule
 \end{tabularx}
 \end{center}
 
-Chaque ligne valide crée un dossier \statut{Dossier actif}. La simulation, cochée
-par défaut, affiche le compte rendu ligne par ligne sans rien créer.
+Chaque ligne valide crée un dossier au statut indiqué ; une thèse soutenue est
+enregistrée comme admise. Les documents du circuit ne sont pas repris : un
+dossier importé n'attend aucune signature. Une ligne au statut, à la date ou à
+la mention illisible est refusée et signalée, sans bloquer les autres. La
+simulation, cochée par défaut, affiche le compte rendu ligne par ligne sans
+rien créer.
 
 \capture{20_import}{Import de dossiers existants.}
 
@@ -738,6 +779,13 @@ activité de suivi ne suit, paramètres du circuit, modèles des documents
 (section~\ref{sec:modeles}), grille et questionnaire. Quand une activité
 \og Suivi des thèses\fg{} porte ces paramètres, un seul lien y mène.
 
+L'export du registre donne un dossier par ligne : numéro, étudiant, sujet,
+directeur et son titre, co-directeur (interne ou extérieur), statut,
+soutenance, jury, résultat, mention, embargo, validation de l'A6, signatures
+qui manquent pour passer à l'étape suivante, pièces pour l'université (scellées
+le \ldots{} ou à sceller) et dernier refus de signer d'un agent DEVE (date et
+motif).
+
 Pour garder les pages courtes, les explications destinées à la DEVE sont
 repliées sous \bouton{Aide} en tête des pages (paramètres, modèles, grille,
 questionnaire, annuaire, transfert, modification d'un dossier, documents,
@@ -962,6 +1010,8 @@ mène à cette page. Trois façons de la saisir :
 l'avait déclarée avant cette version, sa déclaration est reprise tant que la
 DEVE ne l'a pas saisie.}
 \end{procedure}
+
+\capture[0.85\linewidth]{109_page_a6}{Page de validation de l'A6 : étudiants de l'activité, filtres, saisie et enregistrement groupé.}
 
 \capture[0.85\linewidth]{108_import_a6}{Import des validations de l'A6 : simulation et rapport ligne par ligne.}
 
@@ -1541,6 +1591,8 @@ demande ; le bouton de validation disparaît, le renvoi reste possible. La DEVE 
 trouve \bouton{Suivi des signatures} (relancer, faire signer sur place) et
 \bouton{Ajouter un scan signé}.
 
+\capture[0.85\linewidth]{110_etape_bloquee}{Conformité du manuscrit bloquée : signatures de l'agent DEVE et du président du jury encore attendues.}
+
 \begin{center}
 \small
 \begin{tabularx}{\linewidth}{@{}l X@{}}
@@ -1563,10 +1615,28 @@ Procès-verbal & toutes, université comprise \\
 
 \subsection{Pièces pour l'université}\label{sec:universite}
 
-La présidence de l'université et le président du CCEM signent sur papier. Dès
-qu'un document n'attend plus que leurs signatures, la page
-\bouton{Documents de soutenance} (et celle du procès-verbal) le présente dans
-\og Pièces pour l'université\fg{}.
+La présidence de l'université et le président du CCEM signent selon les
+paramètres du circuit, rubrique \og Signatures de l'université\fg{}
+(section~\ref{sec:parametres}) :
+\begin{itemize}
+  \item \textbf{par délégation}, quand des délégataires internes sont
+        désignés pour ce signataire : à la validation du dossier de
+        soutenance, la demande leur part, et l'un d'eux signe depuis
+        \bouton{Mes signatures}, comme les agents DEVE pour la direction
+        générale (\og par délégation\fg{} est imprimé sous la signature) ;
+        ils ne peuvent pas refuser de signer ;
+  \item sinon, \textbf{tout sur papier} (choix par défaut) : aucun lien ne
+        leur est envoyé, les pièces leur sont envoyées scellées et leurs scans
+        déposés au retour, comme décrit ci-dessous ;
+  \item sinon, \textbf{en ligne} : ils reçoivent un lien de signature à
+        l'adresse indiquée ; la DEVE peut toujours déposer un scan ou
+        recueillir leur signature sur place.
+\end{itemize}
+
+Dans tous les cas, leurs signatures ne sont exigées qu'au dépôt du
+procès-verbal. Sur papier, dès qu'un document n'attend plus que leurs
+signatures, la page \bouton{Documents de soutenance} (et celle du
+procès-verbal) le présente dans \og Pièces pour l'université\fg{}.
 
 \begin{procedure}{Envoyer les pièces à l'université et enregistrer leur retour}{Équipe DEVE}
 \begin{etapes}
@@ -1582,6 +1652,10 @@ qu'un document n'attend plus que leurs signatures, la page
 dossier\fg{}, le document est scellé définitivement et le procès-verbal peut
 être déposé.}
 \end{procedure}
+
+\capture[0.85\linewidth]{111_pieces_universite}{Pièces qui n'attendent plus que l'université, avant leur scellement.}
+
+\capture[0.85\linewidth]{112_pieces_universite_envoyees}{Pièces scellées et téléchargées : dépôt des scans au retour de l'université.}
 
 \subsection{Signatures par délégation : compte validateur}
 
@@ -1611,6 +1685,18 @@ l'équipe DEVE et au compte qui avait validé. Les demandes de signature de cett
 validation sont retirées et repartent à la validation suivante. Le refus n'est
 plus possible une fois l'étape suivante franchie.}
 \end{procedure}
+
+\capture[0.85\linewidth]{113_refus_signature}{Refus de signer : documents refusés, étape où chacun renvoie le dossier, motif.}
+
+\begin{astuce}
+\textbf{Mise en service du blocage.} Après la mise à jour qui introduit les
+signatures préalables, un dossier en cours auquel il manque une signature reste
+bloqué à son étape. L'administrateur du site obtient la liste des dossiers
+concernés et des signatures manquantes par
+\texttt{php mod/these/cli/blocked\_dossiers.php} (\texttt{-{}-csv} pour un
+tableur, \texttt{-{}-these=ID} pour une seule activité) ; la DEVE les fait signer
+ou dépose les scans.
+\end{astuce}
 
 \subsection{Intégrité}\label{sec:integrite}
 

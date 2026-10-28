@@ -581,7 +581,7 @@ class notifications {
                 }
             }
             if (
-                array_intersect(array_keys($slots), signatureagent::slots_for($these)) && these_deve_agents($these)
+                array_intersect(array_keys($slots), signatureagent::slots_for($these))
                     && these_request_agent_signatures($these, $cm, $dossier, $available) > 0
             ) {
                 $sent++;
