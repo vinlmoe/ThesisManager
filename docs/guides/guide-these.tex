@@ -4,9 +4,9 @@
 
 % Version du guide : à mettre à jour à chaque modification, avec une ligne dans l'historique.
 \newcommand{\titreguide}{Guide de la gestion des thèses}
-\newcommand{\versionguide}{2.14}
+\newcommand{\versionguide}{2.15}
 \newcommand{\dateguide}{28 octobre 2026}
-\newcommand{\versionthese}{0.20.0}
+\newcommand{\versionthese}{0.20.1}
 
 \usepackage{guide-commun}
 \usepackage{tikz}
@@ -126,6 +126,10 @@ scellées et téléchargées, scans au retour ; compte DEVE validateur des
 signatures par délégation, avec la date ; refus de signer d'un agent DEVE, avec
 motif et renvoi à l'étape de création des documents ; scans ouverts depuis le
 suivi des signatures. \\
+2.15 & 28 octobre 2026 & Liste des dossiers bloqués en ligne de commande (mise en
+service du blocage) ; captures refaites (formulaire de sujet, signatures,
+validation) et nouvelles captures : page de l'A6, étape bloquée, pièces pour
+l'université, refus de signer. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -963,6 +967,8 @@ l'avait déclarée avant cette version, sa déclaration est reprise tant que la
 DEVE ne l'a pas saisie.}
 \end{procedure}
 
+\capture[0.85\linewidth]{109_page_a6}{Page de validation de l'A6 : étudiants de l'activité, filtres, saisie et enregistrement groupé.}
+
 \capture[0.85\linewidth]{108_import_a6}{Import des validations de l'A6 : simulation et rapport ligne par ligne.}
 
 \subsection{Actions groupées}\label{sec:lot}
@@ -1541,6 +1547,8 @@ demande ; le bouton de validation disparaît, le renvoi reste possible. La DEVE 
 trouve \bouton{Suivi des signatures} (relancer, faire signer sur place) et
 \bouton{Ajouter un scan signé}.
 
+\capture[0.85\linewidth]{110_etape_bloquee}{Conformité du manuscrit bloquée : signatures de l'agent DEVE et du président du jury encore attendues.}
+
 \begin{center}
 \small
 \begin{tabularx}{\linewidth}{@{}l X@{}}
@@ -1583,6 +1591,10 @@ dossier\fg{}, le document est scellé définitivement et le procès-verbal peut
 être déposé.}
 \end{procedure}
 
+\capture[0.85\linewidth]{111_pieces_universite}{Pièces qui n'attendent plus que l'université, avant leur scellement.}
+
+\capture[0.85\linewidth]{112_pieces_universite_envoyees}{Pièces scellées et téléchargées : dépôt des scans au retour de l'université.}
+
 \subsection{Signatures par délégation : compte validateur}
 
 Quand des agents DEVE signent après la validation de l'équipe (visa de la DEVE,
@@ -1611,6 +1623,18 @@ l'équipe DEVE et au compte qui avait validé. Les demandes de signature de cett
 validation sont retirées et repartent à la validation suivante. Le refus n'est
 plus possible une fois l'étape suivante franchie.}
 \end{procedure}
+
+\capture[0.85\linewidth]{113_refus_signature}{Refus de signer : documents refusés, étape où chacun renvoie le dossier, motif.}
+
+\begin{astuce}
+\textbf{Mise en service du blocage.} Après la mise à jour qui introduit les
+signatures préalables, un dossier en cours auquel il manque une signature reste
+bloqué à son étape. L'administrateur du site obtient la liste des dossiers
+concernés et des signatures manquantes par
+\texttt{php mod/these/cli/blocked\_dossiers.php} (\texttt{-{}-csv} pour un
+tableur, \texttt{-{}-these=ID} pour une seule activité) ; la DEVE les fait signer
+ou dépose les scans.
+\end{astuce}
 
 \subsection{Intégrité}\label{sec:integrite}
 

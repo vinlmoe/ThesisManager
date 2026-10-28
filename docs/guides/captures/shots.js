@@ -502,6 +502,24 @@ const steps = {
     const p = await open(await as(null), these('jury.php', { token: ids.juryaccess }));
     await upto(p, '50_acces_jury');
   },
+  // Avant le procès-verbal, qui attend le contrat signé par l'université.
+  async '98_deve_scan_depot'() {
+    const p = await open(await as('sbonnet'), these('scan.php', { dossierid: ids.theo }));
+    await p.selectOption('#id_doctype', 'contract');
+    await p.waitForTimeout(500);
+    await check(p, '#id_sign_contract_ucbl');
+    await p.selectOption('#id_signeddate_day', '22');
+    await p.selectOption('#id_signeddate_month', '10');
+    await p.selectOption('#id_signeddate_year', '2026');
+    await upload(p, 'scan', path.join(HERE, 'scan-contrat-signe.png'));
+    await p.fill('#id_remark', 'Contrat visé sur papier, reçu par courrier interne.');
+    await upto(p, '98_deve_scan_depot', form);
+    await Promise.all([p.waitForNavigation(), p.click('#id_submitbutton')]);
+    await grow(p);
+    await section(p, '99_dossier_scans', 'Soutenance');
+    const [h] = await sectionSel(p, 'Historique');
+    await region(p, '100_historique_scan', h, '[data-shot="n-Historique"] tbody tr:first-child');
+  },
   async '54_pv_decisions'() {
     const p = await open(await as('sbonnet'), these('minutes.php', { dossierid: ids.theo }));
     await upload(p, 'pv', samplePdf('pv-signe.pdf', 'Procès-verbal signé'));
@@ -550,23 +568,6 @@ const steps = {
     fs.unlinkSync(path.join(OUT, 'tmp_85b.png'));
     console.log('capture 85_sujets_precedents');
   },
-  async '98_deve_scan_depot'() {
-    const p = await open(await as('sbonnet'), these('scan.php', { dossierid: ids.theo }));
-    await p.selectOption('#id_doctype', 'contract');
-    await p.waitForTimeout(500);
-    await check(p, '#id_sign_contract_ucbl');
-    await p.selectOption('#id_signeddate_day', '22');
-    await p.selectOption('#id_signeddate_month', '10');
-    await p.selectOption('#id_signeddate_year', '2026');
-    await upload(p, 'scan', path.join(HERE, 'scan-contrat-signe.png'));
-    await p.fill('#id_remark', 'Contrat visé sur papier, reçu par courrier interne.');
-    await upto(p, '98_deve_scan_depot', form);
-    await Promise.all([p.waitForNavigation(), p.click('#id_submitbutton')]);
-    await grow(p);
-    await section(p, '99_dossier_scans', 'Soutenance');
-    const [h] = await sectionSel(p, 'Historique');
-    await region(p, '100_historique_scan', h, '[data-shot="n-Historique"] tbody tr:first-child');
-  },
   async '74_deve_transmis'() {
     const p = await open(await as('sbonnet'), these('documents.php', { dossierid: ids.camille }));
     await Promise.all([p.waitForNavigation(), p.getByRole('button', { name: "Transmettre au jury et à l'université" }).click()]);
@@ -581,7 +582,7 @@ const steps = {
     await upto(p, '07_bibliotheque_notice', form);
   },
   async '72_biblio_conformite'() {
-    const p = await open(await as('blefort'), these('review.php', { dossierid: ids.manon }));
+    const p = await open(await as('blefort'), these('review.php', { dossierid: ids.lea }));
     const boxes = p.locator(`${form} input[type=checkbox]:not(#id_savesignature)`);
     for (let i = 0; i < await boxes.count(); i++) {
       if (!(await boxes.nth(i).isChecked())) {
@@ -640,11 +641,12 @@ const steps = {
     // Sélecteur d'un seul fichier (filepicker) : bouton « Choisir un fichier ».
     await p.locator('#fitem_id_a6file .fp-btn-choose').first().click();
     await p.locator('.fp-repo-name', { hasText: 'Upload a file' }).first().click();
+    await p.waitForTimeout(500);
     const input = p.locator('input[name="repo_upload_file"]').first();
     await input.waitFor({ state: 'attached', timeout: 15000 });
     await input.setInputFiles(csv);
     await p.locator('.fp-upload-btn:visible').first().click();
-    await p.locator('#fitem_id_a6file .filepicker-filename a').first().waitFor({ timeout: 15000 });
+    await p.locator('#fitem_id_a6file a', { hasText: '.csv' }).first().waitFor({ timeout: 15000 });
     await Promise.all([p.waitForNavigation(), p.click('#id_submitbutton')]);
     await grow(p);
     await upto(p, '108_import_a6');
@@ -680,6 +682,29 @@ const steps = {
   async '90_recherche_confidentielle'() {
     const p = await open(await as('ncolin'), synthesis('search.php', { year: 2026, search: 1 }));
     await upto(p, '90_recherche_confidentielle');
+  },
+  async '109_page_a6'() {
+    const p = await open(await as('sbonnet'), these('a6.php'));
+    await upto(p, '109_page_a6');
+  },
+  async '110_etape_bloquee'() {
+    // Dossier de Manon : signatures de l'agent DEVE et du président du jury encore attendues.
+    const p = await open(await as('blefort'), these('review.php', { dossierid: ids.manon }));
+    await upto(p, '110_etape_bloquee', form);
+  },
+  async '113_refus_signature'() {
+    const p = await open(await as('agarnier'), url('/mod/these/refuse.php?dossierid=' + ids.manon));
+    await p.fill('#id_reason', "Date de DEFV erronée dans l'agrément administratif.");
+    await upto(p, '113_refus_signature', form);
+  },
+  async '111_pieces_universite'() {
+    // Dossier de Clara : n'attend plus que l'université (fiche d'agréments, contrat de diffusion).
+    const p = await open(await as('sbonnet'), these('documents.php', { dossierid: ids.clara }));
+    await upto(p, '111_pieces_universite');
+    await Promise.all([p.waitForEvent('download'),
+      p.getByRole('button', { name: "Sceller et télécharger les pièces pour l'université" }).click()]);
+    await open(p, these('documents.php', { dossierid: ids.clara }));
+    await upto(p, '112_pieces_universite_envoyees');
   },
 };
 

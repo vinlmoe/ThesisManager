@@ -13,6 +13,19 @@ de version recalés sur la date. Les numéros entre parenthèses des sections de
 développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
 été étiquetée.
 
+## mod_these 0.20.1 (2026102804) — liste des dossiers bloqués, captures du guide refaites
+
+- Commande `php mod/these/cli/blocked_dossiers.php [--these=ID] [--csv]` :
+  dossiers bloqués par des signatures manquantes (voir 0.20.0), à lancer après
+  la mise à jour pour que la DEVE fasse signer ou dépose les scans des dossiers
+  en cours.
+- Guide 2.15 : captures refaites (formulaire de sujet, signatures, validation),
+  nouvelles captures de la page de l'A6, d'une étape bloquée, des pièces pour
+  l'université et du refus de signer ; mise en service du blocage décrite.
+- Jeu de données des captures (`docs/guides/captures/seed.php`) : les
+  signatures attendues sont apposées avant chaque étape (agent DEVE, président
+  du jury, scans de l'université), comme l'exige désormais le circuit.
+
 ## mod_these 0.20.0 (2026102803) et mod_thesesynthesis 0.7.0 (2026102800) — titre du directeur repris de l'annuaire, co-directeur interne ou extérieur, nom de signature imposé, signatures centralisées dans le suivi, page de l'A6, signatures préalables aux étapes, pièces pour l'université
 
 - Dépôt du sujet : l'étudiant ne saisit plus le titre (Dr, Pr) d'un directeur

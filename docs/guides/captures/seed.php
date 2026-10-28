@@ -196,10 +196,36 @@ $jury = function (stdClass $dirjuror, string $diremail) use ($jurors): array {
  * Amène un dossier, du dépôt du sujet jusqu'à l'étape voulue, par les fonctions du circuit.
  */
 $advance = function (stdClass $student, array $spec, int $target) use (
-    $these, $cm, $context, $deve, $library, $sig, $reload, $file, $pdf, $jury, $questions, $users
+    $these, $cm, $context, $deve, $library, $sig, $reload, $file, $pdf, $jury, $questions, $users, $fs
 ): stdClass {
     $director = $users[$spec['director'] ?? 'hdurand'];
     $diremail = $director->email;
+    // Signatures encore attendues pour quitter l'étape (voir \mod_these\local\prerequisites), apposées
+    // par leur signataire : agent DEVE (direction générale par délégation), président du jury, et, pour
+    // l'université, scan déposé par la DEVE. Sauf les emplacements « document:emplacement » exclus.
+    $complete = function (stdClass $d, array $except = []) use ($context, $student, $director, $library, $deve, $users, $fs) {
+        $signers = ['student' => $student, 'director' => $director, 'library' => $library, 'president' => $users['jdupont'],
+            'deve' => $users['agarnier'], 'dgrep' => $users['agarnier'], 'dg' => $users['agarnier']];
+        foreach (\mod_these\local\prerequisites::missing($d) as $item) {
+            [$doctype, $slot] = [$item['doctype'], $item['slot']];
+            if (in_array($doctype . ':' . $slot, $except, true)) {
+                continue;
+            }
+            if (in_array($slot, \mod_these\local\prerequisites::UNIVERSITY_SLOTS, true)) {
+                $date = time() - DAYSECS;
+                $fs->create_file_from_string(['contextid' => $context->id, 'component' => 'mod_these',
+                    'filearea' => 'signedscan', 'itemid' => $d->id, 'filepath' => '/',
+                    'filename' => userdate($date, '%Y-%m-%d') . "-$doctype-$slot-scan.pdf"], '%PDF-1.4 scan');
+                these_sign_document($context, $d, $doctype, $slot, 0, \mod_these\local\scans::slot_signer_name($d, $slot),
+                    '', '', ['method' => 'scan', 'verifiedby' => $deve->id, 'time' => $date]);
+                continue;
+            }
+            $user = $signers[$slot] ?? null;
+            these_sign_document($context, $d, $doctype, $slot, $user ? $user->id : 0,
+                $user ? fullname($user) : these_inperson_signer($d, $slot)['name'], these_sample_signature_image(),
+                '', ['delegated' => $slot === 'dg']);
+        }
+    };
     $dossier = these_create_dossier($these->id, $student->id, $student->id);
     $subject = (object) [
         'title' => $spec['title'], 'titleen' => $spec['titleen'] ?? '', 'summary' => $spec['summary'],
@@ -290,6 +316,7 @@ $advance = function (stdClass $student, array $spec, int $target) use (
             }
             continue;
         }
+        $complete($reload($dossier));
         $step($reload($dossier));
         $dossier = $reload($dossier);
         if ((int) $dossier->status !== $status) {
@@ -298,6 +325,10 @@ $advance = function (stdClass $student, array $spec, int $target) use (
         if ($status === $target) {
             break;
         }
+    }
+    // Dossier montré « tout signé » à son étape, sauf les signatures volontairement laissées en attente.
+    if (isset($spec['complete'])) {
+        $complete($reload($dossier), $spec['complete']);
     }
     return $reload($dossier);
 };
@@ -344,19 +375,25 @@ $specs = [
         'title' => 'Les zoonoses chez les nouveaux animaux de compagnie',
         'summary' => 'Revue et enquête auprès des praticiens.', 'keywords' => 'NAC ; zoonoses',
         'date' => $day('2026-11-05 10:00'), 'species' => 'NAC']],
+    // Dossier validé par la DEVE et entièrement signé : conformité de la bibliothèque (capture 72).
+    'lea' => ['Léa', 'Fontaine', THESE_STATUS_DEFENSE_VALIDATED, [
+        'title' => 'Teigne du chat en refuge : prévalence et facteurs de risque',
+        'summary' => 'Prélèvements dans six refuges.', 'keywords' => 'chat ; dermatologie ; refuge',
+        'date' => $day('2026-11-03 14:00'), 'complete' => []]],
     'camille' => ['Camille', 'Martin', THESE_STATUS_CONFORM, [
         'title' => 'Leptospirose canine en zone périurbaine lyonnaise : étude rétrospective et prospective',
         'titleen' => 'Canine leptospirosis in peri-urban areas: a retrospective study',
         'summary' => "Contexte, objectifs et démarche de l'étude.", 'keywords' => 'leptospirose ; chien ; épidémiologie',
         'date' => $day('2026-10-28 14:00')]],
-    'clara' => ['Clara', 'Morel', THESE_STATUS_DEFENSE_VALIDATED, [
+    'clara' => ['Clara', 'Morel', THESE_STATUS_CONFORM, [
         'title' => "Nouvelle molécule antiparasitaire chez le chien : essai préclinique",
         'summary' => 'Essai mené avec un partenaire industriel.', 'keywords' => 'chien ; antiparasitaire',
         'date' => $day('2026-10-29 10:00'), 'confidential' => 1, 'director' => 'mleroy']],
     'theo' => ['Théo', 'Lefèvre', THESE_STATUS_SCHEDULED, [
         'title' => "Prévalence de l'obésité chez le chien en milieu urbain",
         'summary' => 'Étude transversale en clinique.', 'keywords' => 'chien ; obésité ; nutrition',
-        'date' => $day('2026-10-22 14:00')]],
+        // Signatures de l'université revenues, sauf le contrat, dont le scan est déposé par la capture 98.
+        'date' => $day('2026-10-22 14:00'), 'complete' => ['contract:ucbl']]],
     'sarah' => ['Sarah', 'Dumas', THESE_STATUS_SCHEDULED, [
         'title' => 'Effets du stress de transport chez le veau de boucherie',
         'summary' => 'Mesures du cortisol et comportement.', 'keywords' => 'bovins ; transport ; stress',
@@ -416,10 +453,6 @@ $ids['juryaccess'] = 'DemonstrationAccesJuryCamille2026'; // Alphanumérique : j
 $member = $DB->get_record('these_jury', ['dossierid' => $camille->id, 'juryrole' => 'president']);
 $DB->set_field('these_jury', 'accesstoken', these_token_hash($ids['juryaccess']), ['id' => $member->id]);
 $DB->set_field('these_jury', 'notifiedtime', $now, ['dossierid' => $camille->id]);
-
-// Clara : thèse confidentielle, soutenance programmée.
-$clara = $DB->get_record('these_dossier', ['id' => $ids['clara']]);
-these_validate_step($these, $cm, $clara, $library->id, [], '', $sig($library));
 
 // Lucas : questionnaire déjà rempli, dossier actif.
 these_save_answers($DB->get_record('these_dossier', ['id' => $ids['lucas']]), $questions, []);
