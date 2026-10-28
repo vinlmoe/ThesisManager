@@ -75,6 +75,7 @@ final class dossier_table_test extends output_testcase {
 
         // File « À traiter » de la DEVE : l'action attendue est proposée avant « Ouvrir ».
         $deve = $this->env->deve;
+        $this->setUser($deve);
         $todo = array_filter(thesesynthesis_get_dossiers($this->links_for($deve), $deve->id), function ($row) {
             return $row->todo;
         });

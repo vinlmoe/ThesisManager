@@ -761,6 +761,7 @@ $string['signeddocuments'] = 'Signed documents';
 $string['signatures'] = 'Signatures';
 $string['document'] = 'Document';
 $string['downloadpdf'] = 'PDF';
+$string['downloadscan'] = 'Scan';
 $string['managesignatures'] = 'Signature tracking';
 $string['externalsigners'] = 'Signatures to collect';
 $string['signer'] = 'Signatory';
@@ -832,6 +833,46 @@ $string['a6notvalidated'] = 'not validated';
 $string['a6bydeve'] = 'Entered by the registrar.';
 $string['a6bydevestatus'] = '{$a} (entered by the registrar)';
 $string['loga6recorded'] = 'A6 validation recorded';
+$string['loguniversitysealed'] = 'Document sealed for the university';
+$string['loguniversitydownloaded'] = 'Documents for the university downloaded';
+$string['prerequisitesmissing'] = 'Step blocked: documents of the previous steps are still waiting for these signatures.';
+$string['prerequisitesuniversity'] = 'Step blocked: the documents sent to the university have not come back signed. Upload their scans to continue.';
+$string['validatedbyname'] = 'validated by {$a}';
+$string['refusetitle'] = 'Refuse to sign';
+$string['refusesign'] = 'Refuse to sign…';
+$string['refuse_help'] = 'Refused documents are not signed: the file goes back, with your reason, to the step where they were created (the student for the subject form, the thesis record, the distribution contract and the conclusions; the registrar validation for the approval form). Several refused documents: the earliest of these steps. The registrar team and the account that validated are notified; the signatures will be requested from you again at the next validation.';
+$string['refusedocuments'] = 'Refused documents';
+$string['refusereason'] = 'Reason for refusal';
+$string['refusesubmit'] = 'Refuse and return the file';
+$string['refusereturntostudent'] = 'returned to the student';
+$string['refusereturntodeve'] = 'returned to the registrar validation';
+$string['refusedone'] = 'Signature refused: the file is now "{$a}".';
+$string['refusenothing'] = 'No document of this file can be refused: it no longer waits for your signature or the next step has already moved on.';
+$string['refusalremark'] = 'Signature refused by the registrar\'s signing officer: {$a->documents}. Reason: {$a->reason}';
+$string['logagentrefused'] = "Signature refused by the registrar's signing officer";
+$string['emailkeyagentrefused'] = "Signature refused by the registrar's signing officer";
+$string['emailagentrefusedsubject'] = 'Thesis of {$a->student}: signature refused';
+$string['emailagentrefusedbody'] = 'Hello,
+
+{$a->name} refused to sign, for the thesis file of {$a->student} ({$a->activity}): {$a->document}.
+
+Reason: {$a->comment}
+
+The file goes back to: {$a->target}.
+
+File: {$a->url}';
+$string['validatedbynameon'] = 'validated by {$a->name} on {$a->date}';
+$string['pdfvalidatedbyon'] = 'documents validated by {$a->name} (registrar) on {$a->date}';
+$string['pdfvalidatedby'] = 'documents validated by {$a} (registrar)';
+$string['universitypieces'] = 'Documents for the university';
+$string['universitypieces_help'] = 'These documents only wait for the university signatures. Download them: they are sealed as they are (fingerprint written to the history) to be sent to the university. When they come back, upload the signed scans: the minutes wait for these signatures.';
+$string['universitywaitingfor'] = 'waiting for: {$a}';
+$string['universitysealedon'] = 'sealed on {$a}';
+$string['universitydownload'] = 'Seal and download the documents for the university';
+$string['universitydownloadagain'] = 'Download the documents for the university again';
+$string['universityreturn'] = 'Documents sent to the university: when they come back, upload the signed scans, ticking the university signatories they cover.';
+$string['universityaddscan'] = 'Upload the scans back from the university';
+$string['universitynothing'] = 'No document waits only for the university.';
 $string['a6page_desc'] = 'The A6 validation belongs to the student, not to the file: it can be recorded before the file is created and applies to all of the student\'s files. The administrative approval and the thesis record reuse it. Edit a student, tick several to record the same validation for all of them, or import a file.';
 $string['a6edit'] = 'Record A6';
 $string['a6nodossier'] = 'No file';
@@ -1033,6 +1074,7 @@ $string['privacy:metadata:these_signature:signername'] = 'Signatory name.';
 $string['privacy:metadata:these_signature:signeremail'] = 'Address of a signatory without an account.';
 $string['privacy:metadata:these_signature:ipaddress'] = 'IP address when signing.';
 $string['privacy:metadata:these_signature:timesigned'] = 'Signature date.';
+$string['privacy:metadata:these_signature:validatedby'] = 'Registrar account that validated the documents signed by an agent.';
 $string['directorfunction'] = 'Your position';
 $string['directorfunction_help'] = 'Position printed in the scientific approval: "I, the undersigned NAME First name, position, declare…" (for example: Associate professor, Professor).';
 

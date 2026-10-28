@@ -289,6 +289,8 @@ class doctemplates {
             foreach (these_get_signatures($dossier->id) as $signature) {
                 if ($signature->doctype === $doctype && !empty($signature->timesigned)) {
                     $verifier = !empty($signature->verifiedby) ? $DB->get_record('user', ['id' => $signature->verifiedby]) : null;
+                    $validator = !empty($signature->validatedby)
+                        ? $DB->get_record('user', ['id' => $signature->validatedby]) : null;
                     $signatures[$signature->slot] = [
                         'name' => $signature->signername,
                         'time' => (int) $signature->timesigned,
@@ -297,6 +299,8 @@ class doctemplates {
                         'method' => (string) ($signature->method ?? 'online'),
                         'delegated' => !empty($signature->delegated),
                         'verifier' => $verifier ? fullname($verifier) : '',
+                        'validator' => $validator ? fullname($validator) : '',
+                        'validatedtime' => (int) ($signature->validatedtime ?? 0),
                     ];
                 }
             }
@@ -746,7 +750,10 @@ class doctemplates {
      * Mention imprimée sous une signature : manière de signer (en ligne, sur place avec identité
      * vérifiée par la DEVE, à la main avec scan joint au dossier), délégation, date et empreinte.
      *
-     * @param array $signature {name, time, hash, method?, delegated?, verifier?}
+     * Une signature d'agent DEVE (direction générale par délégation comprise) précise le compte de
+     * l'équipe DEVE qui a validé les documents.
+     *
+     * @param array $signature {name, time, hash, method?, delegated?, verifier?, validator?, validatedtime?}
      * @return string
      */
     public static function signature_caption(array $signature) {
@@ -756,12 +763,21 @@ class doctemplates {
             $name = get_string('pdfdelegated', 'mod_these', $name);
         }
         $format = $method === 'scan' ? get_string('strftimedate', 'langconfig') : get_string('strftimedatetimeshort', 'langconfig');
-        return get_string($method === 'online' ? 'pdfsignedby' : 'pdfsignedby' . $method, 'mod_these', (object) [
+        $caption = get_string($method === 'online' ? 'pdfsignedby' : 'pdfsignedby' . $method, 'mod_these', (object) [
             'name' => $name,
             'date' => userdate($signature['time'], $format),
             'hash' => $signature['hash'],
             'verifier' => ($signature['verifier'] ?? '') !== '' ? $signature['verifier'] : '-',
         ]);
+        if (($signature['validator'] ?? '') !== '') {
+            $caption .= ' — ' . (!empty($signature['validatedtime'])
+                ? get_string('pdfvalidatedbyon', 'mod_these', (object) [
+                    'name' => $signature['validator'],
+                    'date' => userdate($signature['validatedtime'], get_string('strftimedatetimeshort', 'langconfig')),
+                ])
+                : get_string('pdfvalidatedby', 'mod_these', $signature['validator']));
+        }
+        return $caption;
     }
 
     /**

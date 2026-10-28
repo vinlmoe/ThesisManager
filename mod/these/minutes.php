@@ -53,6 +53,19 @@ $PAGE->set_title(format_string($these->name) . ' - ' . get_string('depositminute
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($context);
 
+// Toutes les signatures, université comprise (scans des pièces revenues), avant le procès-verbal.
+$missing = \mod_these\local\prerequisites::missing($dossier);
+if ($missing) {
+    $renderer = $PAGE->get_renderer('mod_these');
+    echo $OUTPUT->header();
+    echo $OUTPUT->heading(get_string('depositminutes', 'mod_these'));
+    echo $renderer->render(new output\link($dossierurl, get_string('back')));
+    echo \mod_these\local\university::render_section($cm, $context, $dossier);
+    echo \mod_these\local\prerequisites::render_missing($cm, $context, $dossier, $missing);
+    echo $OUTPUT->footer();
+    exit;
+}
+
 $mform = new \mod_these\form\minutes_form($PAGE->url);
 $draftitemid = file_get_submitted_draft_itemid('pv');
 file_prepare_draft_area($draftitemid, $context->id, 'mod_these', 'pv', $dossier->id, these_filemanager_options('pv'));

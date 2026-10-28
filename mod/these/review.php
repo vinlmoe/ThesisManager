@@ -81,6 +81,8 @@ foreach ($step['sign'] as $slot => $doctypes) {
     }
 }
 $juryconflicts = $rights->viewall ? these_render_jury_conflicts($dossier) : '';
+// Documents des étapes précédentes encore à signer : l'étape ne peut pas être validée (le renvoi reste possible).
+$missing = \mod_these\local\prerequisites::missing($dossier);
 $mform = new review_form($PAGE->url, [
     'stepkey' => $step['key'],
     'returnto' => $step['returnto'],
@@ -96,6 +98,7 @@ $mform = new review_form($PAGE->url, [
     'juryconflicts' => $juryconflicts,
     'roomconflicts' => $rights->viewall ? these_render_room_conflicts($dossier) : '',
     'signs' => implode(', ', $signs),
+    'missingsignatures' => $missing ? \mod_these\local\prerequisites::render_missing($cm, $context, $dossier, $missing) : '',
     'signername' => fullname($USER),
     // Nom de signature saisi par la DEVE seulement ; les autres signent au nom de leur compte.
     'editablename' => $step['actor'] === 'deve',
@@ -152,6 +155,9 @@ if ($mform->is_cancelled()) {
         );
     }
 
+    if ($missing) {
+        redirect($PAGE->url, get_string('prerequisitesmissing', 'mod_these'), null, \core\output\notification::NOTIFY_WARNING);
+    }
     $fields = [];
     switch ($step['key']) {
         case 'librarysubject':

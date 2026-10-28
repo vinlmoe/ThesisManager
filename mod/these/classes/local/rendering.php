@@ -313,6 +313,10 @@ class rendering {
             return [get_string('documents', 'mod_these'), new moodle_url('/mod/these/documents.php', $params)];
         }
         if ($rights->deve && $status === THESE_STATUS_SCHEDULED) {
+            // Pièces de l'université pas encore revenues signées : leurs scans d'abord.
+            if (prerequisites::only_university(prerequisites::missing($dossier))) {
+                return [get_string('universityaddscan', 'mod_these'), new moodle_url('/mod/these/scan.php', $params)];
+            }
             return [get_string('depositminutes', 'mod_these'), new moodle_url('/mod/these/minutes.php', $params)];
         }
         return null;

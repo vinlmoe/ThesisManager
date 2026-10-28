@@ -91,12 +91,21 @@ foreach ($pending as $signature) {
             ),
             'number' => trim((string) $dossier->devenumber) !== '' ? ' — ' . get_string('signinfonumber', 'mod_these')
                 . ' ' . $dossier->devenumber : '',
-        ]), 'ids' => []];
+        ]), 'ids' => [], 'refuseurl' => null];
     }
     $groups[$dossier->id]['ids'][] = $signature->id;
+    // Agent DEVE : il peut refuser de signer, ce qui renvoie le dossier à l'étape de création des documents.
+    if (\mod_these\local\refusal::refusable($signature, $dossier)) {
+        $groups[$dossier->id]['refuseurl'] = new moodle_url('/mod/these/refuse.php', ['dossierid' => $dossier->id]);
+    }
     // Signature d'agent DEVE (sans jeton) : « par délégation » à l'emplacement de la direction générale.
     $label = $signature->token === null ? signatureagent::document_label($signature->doctype, $signature->slot)
         : these_document_label($signature->doctype) . ' (' . these_slot_label($signature->slot) . ')';
+    // Compte de l'équipe DEVE qui a validé les documents que l'agent signe.
+    $validated = signatureagent::validator_label($signature);
+    if ($validated !== '') {
+        $label .= ' — ' . $validated;
+    }
     $documents[$signature->id] = $renderer->render(new output\fragment([
         parts::text($label . ' — '),
         parts::link(

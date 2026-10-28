@@ -77,15 +77,27 @@ class signed_documents implements \renderable, \templatable {
             if (in_array($signature->method ?? '', ['inperson', 'scan'], true)) {
                 $label .= ' — ' . get_string('signedmethod' . $signature->method, 'mod_these');
             }
-            return parts::badge($label, 'badge badge-success');
+            return parts::badge($label . $this->validator($signature), 'badge badge-success');
         }
         if ($signature && $signature->requesttime) {
             return parts::badge(
-                get_string('signaturerequestedon', 'mod_these', userdate($signature->requesttime, $dateformat)),
+                get_string('signaturerequestedon', 'mod_these', userdate($signature->requesttime, $dateformat))
+                    . $this->validator($signature),
                 'badge badge-warning'
             );
         }
         return parts::badge(get_string('signaturepending', 'mod_these'), 'badge badge-light');
+    }
+
+    /**
+     * Compte de l'équipe DEVE qui a validé les documents d'une signature d'agent, à la suite de son état.
+     *
+     * @param stdClass $signature
+     * @return string « — validé par … », ou vide.
+     */
+    protected function validator(stdClass $signature): string {
+        $label = \mod_these\local\signatureagent::validator_label($signature);
+        return $label !== '' ? ' — ' . $label : '';
     }
 
     /**
@@ -106,6 +118,16 @@ class signed_documents implements \renderable, \templatable {
      */
     public function export_for_template(\renderer_base $output): array {
         $signatures = these_get_signatures($this->dossier->id);
+        // Scans joints au dossier, par document : leur nom commence par la date puis le document
+        // (voir \mod_these\local\scans::add()).
+        $scans = [];
+        if (these_can_view_filearea('signedscan', $this->rights)) {
+            foreach (these_get_files($this->context, 'signedscan', $this->dossier->id) as $file) {
+                if (preg_match('/^\d{4}-\d{2}-\d{2}-([a-z]+)(-|$)/', $file->get_filename(), $match)) {
+                    $scans[$match[1]][] = $file;
+                }
+            }
+        }
         $rows = [];
         foreach (array_keys(these_document_definitions()) as $doctype) {
             if (!these_document_available($this->dossier, $doctype) || !these_can_view_document($doctype, $this->rights)) {
@@ -125,10 +147,28 @@ class signed_documents implements \renderable, \templatable {
                 'dossierid' => $this->dossier->id,
                 'type' => $doctype,
             ]);
+            // Le PDF est le document du module (scellé une fois signé) ; les scans des signatures à la
+            // main sont proposés à côté.
+            $actions = [parts::link($url, get_string('downloadpdf', 'mod_these'), 'btn btn-sm btn-secondary mr-1 mb-1')];
+            foreach ($scans[$doctype] ?? [] as $file) {
+                $actions[] = parts::link(
+                    moodle_url::make_pluginfile_url(
+                        $file->get_contextid(),
+                        'mod_these',
+                        'signedscan',
+                        $file->get_itemid(),
+                        $file->get_filepath(),
+                        $file->get_filename(),
+                        true
+                    ),
+                    get_string('downloadscan', 'mod_these'),
+                    'btn btn-sm btn-outline-secondary mr-1 mb-1'
+                );
+            }
             $rows[] = [
                 [parts::text(these_document_label($doctype))],
                 $states,
-                [parts::link($url, get_string('downloadpdf', 'mod_these'), 'btn btn-sm btn-secondary')],
+                $actions,
             ];
         }
         if (empty($rows)) {

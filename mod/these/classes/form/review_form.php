@@ -58,6 +58,11 @@ class review_form extends \moodleform {
         $mform->addElement('header', 'stepheader', get_string('review' . $stepkey, 'mod_these'));
         $mform->setExpanded('stepheader');
         $mform->addElement('static', 'stephelp', '', get_string('review' . $stepkey . '_help', 'mod_these'));
+        // Signatures des étapes précédentes encore attendues : pas de validation possible.
+        $missing = (string) ($this->_customdata['missingsignatures'] ?? '');
+        if ($missing !== '') {
+            $mform->addElement('static', 'missingsignatures', '', $missing);
+        }
 
         switch ($stepkey) {
             case 'librarysubject':
@@ -182,7 +187,9 @@ class review_form extends \moodleform {
         }
 
         $buttons = [];
-        $buttons[] = $mform->createElement('submit', 'validatestep', get_string('validate' . $stepkey, 'mod_these'));
+        if ($missing === '') {
+            $buttons[] = $mform->createElement('submit', 'validatestep', get_string('validate' . $stepkey, 'mod_these'));
+        }
         // Renvoi : bouton secondaire, d'alerte, pour ne pas le confondre avec la validation ; un
         // commentaire est obligatoire (voir validation()).
         $buttons[] = $mform->createElement(

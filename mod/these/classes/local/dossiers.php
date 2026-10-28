@@ -639,7 +639,7 @@ class dossiers {
                 $agentdoctypes = array_merge($agentdoctypes, $step['request']);
             }
             if ($agentdoctypes) {
-                these_request_agent_signatures($these, $cm, $dossier, array_unique($agentdoctypes));
+                these_request_agent_signatures($these, $cm, $dossier, array_unique($agentdoctypes), $userid);
             }
             if ($step['request']) {
                 // Un seul appel pour tous les documents : chaque signataire reçoit un seul lien.
@@ -907,7 +907,7 @@ class dossiers {
         if ($context !== null) {
             $fs = get_file_storage();
             foreach ($dossierids as $dossierid) {
-                foreach (array_merge(THESE_FILEAREAS, ['sealed']) as $filearea) {
+                foreach (array_merge(THESE_FILEAREAS, ['sealed', university::FILEAREA]) as $filearea) {
                     $fs->delete_area_files($context->id, 'mod_these', $filearea, $dossierid);
                 }
             }

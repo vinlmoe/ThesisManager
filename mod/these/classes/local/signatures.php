@@ -656,6 +656,10 @@ class signatures {
         if ($record->delegated) {
             $remark .= ' (' . get_string('signeddelegated', 'mod_these') . ')';
         }
+        $validated = $signature ? signatureagent::validator_label($signature) : '';
+        if ($validated !== '') {
+            $remark .= ' — ' . $validated;
+        }
         if ($method !== 'online') {
             $remark .= ' — ' . get_string('signedmethod' . $method, 'mod_these');
         }
@@ -866,6 +870,8 @@ class signatures {
         if ($file = these_get_sealed_document($context, $dossierid, $doctype)) {
             $file->delete();
         }
+        // La pièce scellée pour l'université ne vaut plus non plus.
+        university::unseal($context, $dossierid, $doctype);
     }
 
     /**

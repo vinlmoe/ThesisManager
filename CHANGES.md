@@ -13,7 +13,7 @@ de version recalés sur la date. Les numéros entre parenthèses des sections de
 développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
 été étiquetée.
 
-## mod_these 0.20.0 (2026102801) et mod_thesesynthesis 0.7.0 (2026102800) — titre du directeur repris de l'annuaire, co-directeur interne ou extérieur, nom de signature imposé, signatures centralisées dans le suivi, page de l'A6
+## mod_these 0.20.0 (2026102803) et mod_thesesynthesis 0.7.0 (2026102800) — titre du directeur repris de l'annuaire, co-directeur interne ou extérieur, nom de signature imposé, signatures centralisées dans le suivi, page de l'A6, signatures préalables aux étapes, pièces pour l'université
 
 - Dépôt du sujet : l'étudiant ne saisit plus le titre (Dr, Pr) d'un directeur
   présent dans l'annuaire des enseignants ; le champ n'apparaît que pour un
@@ -36,6 +36,43 @@ développement ne correspondent à aucune version installable ; 0.11.2 n'a jamai
   saisissent plus : ils la rappellent avec le bouton « Saisir l'A6 », qui
   ramène ensuite à la page d'origine. L'action groupée « Enregistrer la
   validation de l'A6 » du tableau de bord est retirée.
+- Correction : « voir le PDF » dans « Mes signatures », et l'aperçu d'un
+  document sur la page de signature par lien, échouaient (« Call to undefined
+  function send_file() ») : la bibliothèque de fichiers de Moodle n'était pas
+  chargée hors d'un cours.
+- Signatures préalables : un dossier ne passe pas à l'étape suivante tant que
+  les documents des étapes précédentes ne sont pas signés. Validation d'étape,
+  transmission des documents et procès-verbal affichent « Étape bloquée » avec
+  les signatures manquantes (le renvoi reste possible) et, pour la DEVE, les
+  liens vers le suivi des signatures et le dépôt d'un scan.
+- Pièces pour l'université (présidence de l'université, CCEM) : un document qui
+  n'attend plus que l'université est scellé tel quel et téléchargé pour l'envoi
+  (« Sceller et télécharger les pièces pour l'université », page des documents
+  de soutenance et du procès-verbal) ; au retour, la DEVE dépose les scans
+  (« Déposer les scans revenus de l'université », aussi dans « À traiter ») ;
+  le procès-verbal attend ces signatures. Nouvelle zone de fichiers
+  `universityseal`.
+- Signatures par délégation : le compte de l'équipe DEVE qui a validé l'étape
+  est enregistré avec la demande aux agents (`these_signature.validatedby`,
+  étape de mise à jour 2026102802), gardé à la relance, et affiché dans le
+  courriel, « Mes signatures », le suivi des signatures, l'historique et sous la
+  signature imprimée (« documents validés par … (DEVE) »).
+- Date de la validation de l'équipe DEVE enregistrée avec le compte validateur
+  (`these_signature.validatedtime`, étape de mise à jour 2026102803) :
+  « validé par … le … » partout où le validateur apparaît, et « documents
+  validés par … (DEVE) le … » sous la signature imprimée.
+- Refus de signer d'un agent DEVE (« Refuser de signer… » dans « Mes
+  signatures », page `refuse.php`) : motif obligatoire, documents cochés
+  d'office ; le dossier revient à l'étape de création des documents refusés
+  (étudiant pour le sujet, la fiche signalétique, le contrat et les
+  conclusions, avec reprise à la validation de la DEVE ; validation de la DEVE
+  pour la fiche d'agréments), la première s'il y en a plusieurs. Demandes de la
+  même validation retirées ; équipe DEVE et validateur prévenus (nouveau
+  courriel personnalisable « Signature refusée par l'agent DEVE »). Nouvelle
+  transition « Dossier validé par la DEVE » → « Soutenance validée par le
+  directeur ».
+- Suivi des signatures : bouton « Scan » à côté de « PDF » pour ouvrir le scan
+  d'un document signé à la main (« PDF » reste le document du module).
 - Suivi des thèses : dans « À traiter », chaque dossier propose directement
   l'action attendue (validation de l'étape, documents de soutenance,
   procès-verbal), à côté de « Ouvrir ». Signatures centralisées, toutes

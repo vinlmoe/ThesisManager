@@ -90,6 +90,7 @@ class provider implements
             'signeremail' => 'privacy:metadata:these_signature:signeremail',
             'ipaddress' => 'privacy:metadata:these_signature:ipaddress',
             'timesigned' => 'privacy:metadata:these_signature:timesigned',
+            'validatedby' => 'privacy:metadata:these_signature:validatedby',
         ], 'privacy:metadata:these_signature');
 
         $collection->add_database_table('these_jury', [

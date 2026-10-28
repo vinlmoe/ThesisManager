@@ -766,6 +766,7 @@ $string['signeddocuments'] = 'Documents signés';
 $string['signatures'] = 'Signatures';
 $string['document'] = 'Document';
 $string['downloadpdf'] = 'PDF';
+$string['downloadscan'] = 'Scan';
 $string['managesignatures'] = 'Suivi des signatures';
 $string['externalsigners'] = 'Signatures à recueillir';
 $string['signer'] = 'Signataire';
@@ -836,6 +837,46 @@ $string['a6notvalidated'] = 'non validée';
 $string['a6bydeve'] = 'Saisie par la DEVE.';
 $string['a6bydevestatus'] = '{$a} (saisie par la DEVE)';
 $string['loga6recorded'] = "Validation de l'A6 enregistrée";
+$string['loguniversitysealed'] = "Pièce scellée pour l'université";
+$string['loguniversitydownloaded'] = "Pièces pour l'université téléchargées";
+$string['prerequisitesmissing'] = "Étape bloquée : des documents des étapes précédentes attendent encore ces signatures.";
+$string['prerequisitesuniversity'] = "Étape bloquée : les pièces envoyées à l'université ne sont pas revenues signées. Déposez leurs scans pour continuer.";
+$string['validatedbyname'] = 'validé par {$a}';
+$string['refusetitle'] = 'Refuser de signer';
+$string['refusesign'] = 'Refuser de signer…';
+$string['refuse_help'] = "Les documents refusés ne sont pas signés : le dossier revient, avec votre motif, à l'étape où ils ont été créés (l'étudiant pour le dépôt de sujet, la fiche signalétique, le contrat de diffusion et les conclusions ; la validation de la DEVE pour la fiche d'agréments). Plusieurs documents refusés : la première de ces étapes. L'équipe DEVE et le compte qui avait validé sont prévenus ; les signatures vous seront demandées de nouveau à la prochaine validation.";
+$string['refusedocuments'] = 'Documents refusés';
+$string['refusereason'] = 'Motif du refus';
+$string['refusesubmit'] = 'Refuser et renvoyer le dossier';
+$string['refusereturntostudent'] = "renvoi à l'étudiant";
+$string['refusereturntodeve'] = 'renvoi à la validation de la DEVE';
+$string['refusedone'] = 'Signature refusée : le dossier est maintenant « {$a} ».';
+$string['refusenothing'] = "Aucun document de ce dossier ne peut être refusé : il n'attend plus votre signature ou l'étape suivante a déjà avancé.";
+$string['refusalremark'] = 'Signature refusée par l\'agent DEVE : {$a->documents}. Motif : {$a->reason}';
+$string['logagentrefused'] = "Signature refusée par l'agent DEVE";
+$string['emailkeyagentrefused'] = "Signature refusée par l'agent DEVE";
+$string['emailagentrefusedsubject'] = 'Thèse de {$a->student} : signature refusée';
+$string['emailagentrefusedbody'] = 'Bonjour,
+
+{$a->name} a refusé de signer, pour le dossier de thèse de {$a->student} ({$a->activity}) : {$a->document}.
+
+Motif : {$a->comment}
+
+Le dossier revient à : {$a->target}.
+
+Dossier : {$a->url}';
+$string['validatedbynameon'] = 'validé par {$a->name} le {$a->date}';
+$string['pdfvalidatedbyon'] = 'documents validés par {$a->name} (DEVE) le {$a->date}';
+$string['pdfvalidatedby'] = 'documents validés par {$a} (DEVE)';
+$string['universitypieces'] = "Pièces pour l'université";
+$string['universitypieces_help'] = "Ces documents n'attendent plus que les signatures de l'université. Téléchargez-les : ils sont scellés tels quels (empreinte inscrite à l'historique) pour être envoyés à l'université. À leur retour, déposez les scans signés : le procès-verbal attend ces signatures.";
+$string['universitywaitingfor'] = 'en attente de : {$a}';
+$string['universitysealedon'] = 'scellé le {$a}';
+$string['universitydownload'] = "Sceller et télécharger les pièces pour l'université";
+$string['universitydownloadagain'] = "Télécharger de nouveau les pièces pour l'université";
+$string['universityreturn'] = "Pièces envoyées à l'université : à leur retour, déposez les scans signés, en cochant les signataires de l'université qu'ils couvrent.";
+$string['universityaddscan'] = "Déposer les scans revenus de l'université";
+$string['universitynothing'] = "Aucun document n'attend seulement l'université.";
 $string['a6page_desc'] = "La validation de l'A6 est liée à l'étudiant, pas à son dossier : elle peut être saisie avant la création du dossier et vaut pour tous ses dossiers. L'agrément administratif et la fiche signalétique la reprennent. Modifiez un étudiant, cochez-en plusieurs pour leur enregistrer la même validation, ou importez un fichier.";
 $string['a6edit'] = "Saisir l'A6";
 $string['a6nodossier'] = 'Pas de dossier';
@@ -1038,6 +1079,7 @@ $string['privacy:metadata:these_signature:signername'] = 'Nom du signataire.';
 $string['privacy:metadata:these_signature:signeremail'] = 'Adresse du signataire sans compte.';
 $string['privacy:metadata:these_signature:ipaddress'] = 'Adresse IP au moment de la signature.';
 $string['privacy:metadata:these_signature:timesigned'] = 'Date de signature.';
+$string['privacy:metadata:these_signature:validatedby'] = "Compte de l'équipe DEVE qui a validé les documents signés par un agent.";
 $string['directorfunction'] = 'Votre fonction';
 $string['directorfunction_help'] = "Fonction imprimée dans l'agrément scientifique : « Je soussigné(e), NOM Prénom, fonction, déclare… » (par exemple : Maître de conférences, Professeur).";
 

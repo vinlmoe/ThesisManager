@@ -162,13 +162,15 @@ final class a6_test extends these_testcase {
             'bordereau' => json_encode(['a6date' => 0, 'a6school' => 'nantes', 'a6notyet' => 1]),
         ]);
 
-        $rows = a6::students($this->these, $this->context);
-        $this->assertSame([(int) $this->student->id, (int) $other->id], array_map(function ($row) {
-            return (int) $row->user->id;
-        }, $rows));
-        $this->assertEquals($dossier->id, $rows[0]->dossier->id);
-        $this->assertNull($rows[1]->dossier);
-        $this->assertSame(get_string('a6notvalidated', 'mod_these'), $rows[1]->label);
+        // Étudiants triés par nom : l'ordre dépend des noms générés, les lignes sont lues par compte.
+        $rows = [];
+        foreach (a6::students($this->these, $this->context) as $row) {
+            $rows[(int) $row->user->id] = $row;
+        }
+        $this->assertEqualsCanonicalizing([(int) $this->student->id, (int) $other->id], array_keys($rows));
+        $this->assertEquals($dossier->id, $rows[$this->student->id]->dossier->id);
+        $this->assertNull($rows[$other->id]->dossier);
+        $this->assertSame(get_string('a6notvalidated', 'mod_these'), $rows[$other->id]->label);
 
         $date = make_timestamp(2025, 7, 1, 12);
         a6::record($this->these, $this->student->id, $date, '', $this->deve->id);

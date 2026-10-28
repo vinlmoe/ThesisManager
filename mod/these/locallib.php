@@ -44,6 +44,9 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+// send_file() et les fonctions de fichiers : chargées par require_login() avec un cours, mais pas
+// sur les pages hors cours (« Mes signatures ») ni sur la page de signature par lien, sans connexion.
+require_once($CFG->libdir . '/filelib.php');
 require_once($CFG->dirroot . '/mod/these/lib.php');
 
 require_once($CFG->dirroot . '/mod/these/locallib/workflow.php');
