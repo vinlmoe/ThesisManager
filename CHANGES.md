@@ -36,6 +36,10 @@ développement ne correspondent à aucune version installable ; 0.11.2 n'a jamai
   saisissent plus : ils la rappellent avec le bouton « Saisir l'A6 », qui
   ramène ensuite à la page d'origine. L'action groupée « Enregistrer la
   validation de l'A6 » du tableau de bord est retirée.
+- Correction : « voir le PDF » dans « Mes signatures », et l'aperçu d'un
+  document sur la page de signature par lien, échouaient (« Call to undefined
+  function send_file() ») : la bibliothèque de fichiers de Moodle n'était pas
+  chargée hors d'un cours.
 - Suivi des thèses : dans « À traiter », chaque dossier propose directement
   l'action attendue (validation de l'étape, documents de soutenance,
   procès-verbal), à côté de « Ouvrir ». Signatures centralisées, toutes
