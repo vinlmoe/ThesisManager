@@ -76,6 +76,9 @@ class scopesettings {
         return [
             'deveagent' => '',
             'libraryagent' => '',
+            'universitypaper' => 1,
+            'ccemagent' => '',
+            'ucblagent' => '',
             'defenseduration' => 60,
             'defenserooms' => '',
             'weeklydigest' => 1,
@@ -159,11 +162,12 @@ class scopesettings {
      * Comptes proposés pour un paramètre d'agents d'une portée, dans les activités de la portée (voir
      * scope_contexts()) :
      * - agents DEVE : les membres de la DEVE, inscrits avec le droit de la DEVE (rôle « Enseignant ») ;
-     * - agents de la bibliothèque : les inscrits qui ne déposent pas de thèse (personnels).
+     * - agents de la bibliothèque, délégataires internes du président du CCEM et de la présidence de
+     *   l'université : les inscrits qui ne déposent pas de thèse (personnels).
      * Les comptes déjà désignés restent proposés, même s'ils ne sont plus inscrits.
      *
      * @param stdClass $scope
-     * @param string $actor 'deve' ou 'library'.
+     * @param string $actor 'deve', 'library', 'ccem' ou 'ucbl' (paramètre « <actor>agent »).
      * @return stdClass[] Comptes actifs, indexés par identifiant, triés par nom.
      */
     public static function candidate_users(stdClass $scope, $actor) {
@@ -177,7 +181,7 @@ class scopesettings {
                 $users += array_diff_key(get_enrolled_users($context, '', 0, 'u.*', null, 0, 0, true), $students);
             }
         }
-        $users += self::listed_users($settings[$actor === 'deve' ? 'deveagent' : 'libraryagent']);
+        $users += self::listed_users($settings[$actor . 'agent']);
         $users = array_filter($users, function ($user) {
             return empty($user->deleted) && empty($user->suspended) && !isguestuser($user);
         });

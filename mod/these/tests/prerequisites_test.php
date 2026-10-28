@@ -33,6 +33,7 @@ require_once(__DIR__ . '/these_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_these\local\prerequisites
  * @covers     \mod_these\local\university
+ * @covers     \mod_these\local\signatureagent
  */
 final class prerequisites_test extends these_testcase {
     /**
@@ -236,5 +237,71 @@ final class prerequisites_test extends these_testcase {
         $this->assertEquals($this->student->id, $rows[0]->student->id);
         $this->assertSame(['student', 'director'], array_column($rows[0]->missing, 'slot'));
         $this->assertSame([], prerequisites::blocked_dossiers($this->these->id + 1000));
+    }
+
+    /**
+     * Mode de signature de l'université : sur papier (par défaut), aucun lien et pièces à envoyer ;
+     * en ligne, lien par courriel et rien à sceller ; délégataires internes, signature par délégation
+     * depuis « Mes signatures », sans refus possible.
+     */
+    public function test_university_modes(): void {
+        $this->setup_activity();
+        $this->redirectEmails();
+        $scope = these_local_scope($this->these);
+        \mod_these\local\scopesettings::set($scope, ['ccememail' => 'ccem@example.org']);
+        $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
+            'status' => THESE_STATUS_CONFORM, 'directorid' => $this->director->id, 'title' => 'Sujet',
+            'agreement' => json_encode(['defvdate' => time(), 'mobility' => 1]),
+        ]);
+        foreach (['deve', 'director', 'dgrep'] as $slot) {
+            $this->sign($dossier, 'agreement', $slot);
+        }
+        $dossier = $this->reload($dossier->id);
+
+        // Tout sur papier : pas de lien, pièce à envoyer.
+        $this->assertTrue(university::paper_only($this->these));
+        $this->assertNull(these_request_signature($this->these, $this->cm, $dossier, 'ccem', ['agreement']));
+        $this->assertSame(['agreement' => ['ccem']], university::pending($dossier));
+
+        // En ligne : lien envoyé, rien à sceller.
+        \mod_these\local\scopesettings::set($scope, ['universitypaper' => 0]);
+        $this->assertNotNull(these_request_signature($this->these, $this->cm, $dossier, 'ccem', ['agreement']));
+        $this->assertSame([], university::pending($dossier));
+
+        // Délégataires internes du CCEM : ils priment sur le mode, signent par délégation.
+        $delegate = $this->getDataGenerator()->create_user(['username' => 'delegueccem', 'email' => 'delegue@example.org']);
+        \mod_these\local\scopesettings::set($scope, ['universitypaper' => 1, 'ccemagent' => 'delegueccem']);
+        $this->assertSame(['ccem'], university::delegated_slots($this->these));
+        $this->assertSame(['ucbl'], university::paper_slots($this->these));
+        $this->assertNull(these_request_signature($this->these, $this->cm, $dossier, 'ccem', ['agreement']));
+        $this->assertSame([], university::pending($dossier));
+        $this->assertSame(1, these_request_agent_signatures($this->these, $this->cm, $dossier, ['agreement'], $this->deve->id));
+
+        $pending = array_values(these_get_user_pending_signatures($delegate));
+        $this->assertCount(1, $pending);
+        $this->assertSame('ccem', $pending[0]->slot);
+        $this->assertFalse(\mod_these\local\refusal::refusable($pending[0], $dossier));
+        $this->assertStringContainsString(
+            get_string('signeddelegated', 'mod_these'),
+            \mod_these\local\signatureagent::document_label('agreement', 'ccem')
+        );
+        // Un autre compte ne la voit pas.
+        $this->assertSame([], these_get_user_pending_signatures($this->getDataGenerator()->create_user()));
+
+        these_sign_document(
+            $this->context,
+            $dossier,
+            'agreement',
+            'ccem',
+            $delegate->id,
+            fullname($delegate),
+            these_sample_signature_image(),
+            '',
+            ['delegated' => true]
+        );
+        $signature = these_get_signatures($dossier->id)['agreement:ccem'];
+        $this->assertNotEmpty($signature->timesigned);
+        $this->assertEquals(1, $signature->delegated);
+        $this->assertEquals($this->deve->id, $signature->validatedby);
     }
 }

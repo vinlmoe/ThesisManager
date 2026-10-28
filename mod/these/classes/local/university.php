@@ -21,10 +21,13 @@ use stdClass;
 use stored_file;
 
 /**
- * Pièces à faire signer par l'université (présidence de l'université, CCEM : voir
- * prerequisites::UNIVERSITY_SLOTS), qui signe sur papier.
+ * Signatures de l'université (présidence de l'université, CCEM : voir
+ * prerequisites::UNIVERSITY_SLOTS). Selon les paramètres, chacun de ces signataires signe :
+ * - par ses délégataires internes, depuis « Mes signatures » (voir signatureagent) ;
+ * - sinon, si l'université signe tout sur papier, sur les pièces scellées qui lui sont envoyées ;
+ * - sinon, en ligne, par le lien de signature reçu par courriel.
  *
- * Dès qu'un document n'attend plus que les signatures de l'université, la DEVE le scelle tel quel
+ * Pièces sur papier : dès qu'un document n'attend plus que les signatures de l'université, la DEVE le scelle tel quel
  * (zone « universityseal », empreinte SHA-256 à l'historique) et télécharge les pièces scellées pour
  * les envoyer à l'université. Au retour, elle dépose les scans signés (scan.php) : les signatures de
  * l'université sont alors inscrites (méthode « scan ») et le document est scellé définitivement (voir
@@ -39,12 +42,86 @@ class university {
     const FILEAREA = 'universityseal';
 
     /**
-     * Documents qui n'attendent plus que les signatures de l'université.
+     * Indique si l'université signe tout sur papier (paramètre « universitypaper ») : aucun lien de
+     * signature ne lui est envoyé, les pièces scellées lui sont envoyées et les scans déposés au retour.
+     * Sinon, un lien de signature est envoyé par courriel.
+     *
+     * @param stdClass $these
+     * @return bool
+     */
+    public static function paper_only(stdClass $these) {
+        return (bool) scopesettings::for_these($these)['universitypaper'];
+    }
+
+    /**
+     * Délégataires internes d'un signataire de l'université (paramètres « ccemagent », « ucblagent ») :
+     * ils signent à sa place, par délégation, depuis « Mes signatures ».
+     *
+     * @param stdClass $these
+     * @param string $slot
+     * @return stdClass[] Comptes, indexés par identifiant.
+     */
+    public static function agents(stdClass $these, $slot) {
+        if (!in_array($slot, prerequisites::UNIVERSITY_SLOTS, true)) {
+            return [];
+        }
+        return scopesettings::listed_users(scopesettings::for_these($these)[$slot . 'agent']);
+    }
+
+    /**
+     * Emplacements de l'université signés par des délégataires internes.
+     *
+     * @param stdClass $these
+     * @return string[]
+     */
+    public static function delegated_slots(stdClass $these) {
+        return array_values(array_filter(prerequisites::UNIVERSITY_SLOTS, function ($slot) use ($these) {
+            return (bool) self::agents($these, $slot);
+        }));
+    }
+
+    /**
+     * Emplacements de l'université signés sur papier : tous ceux sans délégataire, si l'université
+     * signe tout sur papier ; aucun sinon.
+     *
+     * @param stdClass $these
+     * @return string[]
+     */
+    public static function paper_slots(stdClass $these) {
+        if (!self::paper_only($these)) {
+            return [];
+        }
+        return array_values(array_diff(prerequisites::UNIVERSITY_SLOTS, self::delegated_slots($these)));
+    }
+
+    /**
+     * Indique si un signataire reçoit un lien de signature par courriel : pas l'université quand elle
+     * signe sur papier ou par ses délégataires internes.
+     *
+     * @param stdClass $these
+     * @param string $slot
+     * @return bool
+     */
+    public static function sends_link(stdClass $these, $slot) {
+        return !in_array($slot, prerequisites::UNIVERSITY_SLOTS, true)
+            || (!self::paper_only($these) && !self::agents($these, $slot));
+    }
+
+    /**
+     * Documents qui n'attendent plus que les signatures de l'université sur papier (voir
+     * paper_slots()).
      *
      * @param stdClass $dossier
      * @return array doctype => emplacements de l'université encore attendus
      */
     public static function pending(stdClass $dossier) {
+        global $DB;
+
+        $these = $DB->get_record('these', ['id' => $dossier->theseid]);
+        $paper = $these ? self::paper_slots($these) : [];
+        if (!$paper) {
+            return [];
+        }
         $signatures = these_get_signatures($dossier->id);
         $pending = [];
         foreach (array_keys(these_document_definitions()) as $doctype) {
@@ -56,7 +133,7 @@ class university {
                 if (!empty($signatures[$doctype . ':' . $slot]->timesigned)) {
                     continue;
                 }
-                if (!in_array($slot, prerequisites::UNIVERSITY_SLOTS, true)) {
+                if (!in_array($slot, $paper, true)) {
                     // Une autre signature manque encore : pas encore à envoyer.
                     $university = [];
                     break;

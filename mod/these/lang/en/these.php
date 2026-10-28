@@ -662,6 +662,18 @@ $string['settingscheckimagesmissing'] = 'Document template images (missing: {$a}
 $string['settingsmissingnotice'] = 'Workflow settings to complete: {$a}.';
 $string['settingslibraryagent'] = 'Library agents';
 $string['settingslibraryagent_help'] = "Library agents, chosen among the staff enrolled in the courses of the followed activities (enrolled users who do not submit a thesis) and the holders of the library role: type a name to find them. Without any role to assign, they get the library's rights (subject record, manuscript compliance, corrections) and only those: no registrar buttons or pages, even if their course role would give them. They receive the emails addressed to the library. Someone missing from the list must first be enrolled in the course.";
+$string['settingsuniversitysigning'] = 'University signatures';
+$string['settingsuniversitypaper'] = 'University signing mode';
+$string['settingsuniversitypaper_help'] = 'For the CCEM president and the university presidency, unless they have internal delegates (below).<br>'
+    . '<strong>Paper only</strong>: no signing link is sent to them. As soon as a document only awaits the university, the registrar seals it and downloads the documents to send; when they come back, the registrar uploads the signed scans, which the minutes await.<br>'
+    . '<strong>Online</strong>: a signing link is emailed to the address given in the document signatories; the registrar can still upload a scan or collect the signature in person.';
+$string['settingsuniversitypaperyes'] = 'Paper only (sealed documents sent, scans uploaded on return)';
+$string['settingsuniversitypaperno'] = 'Online (signing link by email)';
+$string['settingsccemagent'] = 'Internal delegates of the CCEM president';
+$string['settingsccemagent_help'] = 'Internal accounts that sign on behalf of the CCEM president, from "My signatures", like the registrar agents for the general management: the request is sent to them when the defence file is validated and any of them signs. They take precedence over the signing mode chosen above. Leave empty if there are none.';
+$string['settingsucblagent'] = 'Internal delegates of the university presidency';
+$string['settingsucblagent_help'] = 'Internal accounts that sign on behalf of the university presidency, from "My signatures", like the registrar agents for the general management: the request is sent to them when the defence file is validated and any of them signs. They take precedence over the signing mode chosen above. Leave empty if there are none.';
+$string['agentuniversity'] = 'Delegates — {$a}';
 $string['settingsagentsnone'] = 'No agent selected';
 $string['settingschecklibraryagents'] = 'Library agents';
 $string['scopesettings'] = 'Workflow settings';

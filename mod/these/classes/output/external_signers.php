@@ -17,6 +17,7 @@
 namespace mod_these\output;
 
 use mod_these\local\signatureagent;
+use mod_these\local\university;
 use moodle_url;
 use stdClass;
 
@@ -84,12 +85,15 @@ class external_signers implements \renderable, \templatable {
             if (!$pending) {
                 continue;
             }
-            if ($slot === 'dg' && signatureagent::signs_dg_by_delegation($these)) {
-                // Direction générale signée par les agents DEVE : voir leur ligne.
+            if (
+                ($slot === 'dg' && signatureagent::signs_dg_by_delegation($these))
+                    || in_array($slot, university::delegated_slots($these), true)
+            ) {
+                // Direction générale et université signées par délégation : voir la ligne de leurs agents.
                 continue;
             }
             $actions = [];
-            if (in_array($slot, these_external_slots(), true) && $signer['email'] !== '') {
+            if (in_array($slot, these_external_slots(), true) && $signer['email'] !== '' && university::sends_link($these, $slot)) {
                 $actions[] = parts::link(
                     new moodle_url($this->pageurl, ['resend' => $slot, 'sesskey' => sesskey()]),
                     get_string('resendsignature', 'mod_these'),
@@ -109,30 +113,40 @@ class external_signers implements \renderable, \templatable {
                 $actions,
             ];
         }
-        // Agents DEVE : leurs signatures et celles de la direction générale qu'ils signent par délégation.
-        $agents = these_deve_agents($these);
-        if ($agents) {
-            $pending = [];
-            foreach (signatureagent::slots_for($these) as $slot) {
-                foreach (these_pending_documents_for_slot($dossier, $slot) as $doctype) {
-                    if (these_agent_document_due($dossier, $doctype)) {
-                        $pending[] = signatureagent::document_label($doctype, $slot);
-                    }
-                }
-            }
-            if ($pending) {
-                $this->rows[] = [
-                    [parts::text(get_string('agentdeve', 'mod_these') . ' — '
-                        . implode(', ', array_map('fullname', $agents)))],
-                    [parts::text(implode(', ', array_column($agents, 'email')))],
-                    [parts::text(implode(', ', $pending))],
-                    [parts::link(
-                        new moodle_url($this->pageurl, ['resend' => 'agent', 'sesskey' => sesskey()]),
-                        get_string('remindagents', 'mod_these'),
-                        'btn btn-sm btn-secondary'
-                    )],
+        // Agents : agents DEVE (leurs signatures et celles de la direction générale qu'ils signent par
+        // délégation), puis délégataires internes de chaque signataire de l'université.
+        $groups = [];
+        foreach (signatureagent::slots_for($these) as $slot) {
+            $university = in_array($slot, university::delegated_slots($these), true);
+            $key = $university ? $slot : 'deve';
+            if (!isset($groups[$key])) {
+                $groups[$key] = [
+                    'label' => $university ? get_string('agentuniversity', 'mod_these', these_slot_label($slot))
+                        : get_string('agentdeve', 'mod_these'),
+                    'agents' => signatureagent::agents_for_slot($these, $slot),
+                    'pending' => [],
                 ];
             }
+            foreach (these_pending_documents_for_slot($dossier, $slot) as $doctype) {
+                if (these_agent_document_due($dossier, $doctype)) {
+                    $groups[$key]['pending'][] = signatureagent::document_label($doctype, $slot);
+                }
+            }
+        }
+        foreach ($groups as $group) {
+            if (!$group['agents'] || !$group['pending']) {
+                continue;
+            }
+            $this->rows[] = [
+                [parts::text($group['label'] . ' — ' . implode(', ', array_map('fullname', $group['agents'])))],
+                [parts::text(implode(', ', array_column($group['agents'], 'email')))],
+                [parts::text(implode(', ', $group['pending']))],
+                [parts::link(
+                    new moodle_url($this->pageurl, ['resend' => 'agent', 'sesskey' => sesskey()]),
+                    get_string('remindagents', 'mod_these'),
+                    'btn btn-sm btn-secondary'
+                )],
+            ];
         }
         return $this->rows;
     }

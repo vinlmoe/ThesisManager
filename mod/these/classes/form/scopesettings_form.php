@@ -27,7 +27,7 @@ use mod_these\local\scopesettings;
  * agents DEVE signataires et de la bibliothèque, établissement, université, signataires des documents
  * et contrat type.
  *
- * customdata : fileoptions, agents (deveagent et libraryagent : identifiant => nom
+ * customdata : fileoptions, agents (deveagent, libraryagent, ccemagent et ucblagent : identifiant => nom
  * des comptes proposés, voir \mod_these\local\scopesettings::candidate_users()).
  *
  * @package   mod_these
@@ -51,6 +51,18 @@ class scopesettings_form extends \moodleform {
         $mform->addElement('header', 'libraryagentheader', get_string('settingslibraryagent', 'mod_these'));
         $mform->setExpanded('libraryagentheader');
         $this->add_agents_field('libraryagent');
+
+        // Signatures de l'université : tout sur papier ou lien en ligne, et délégataires internes.
+        $mform->addElement('header', 'universityheader', get_string('settingsuniversitysigning', 'mod_these'));
+        $mform->setExpanded('universityheader');
+        $mform->addElement('select', 'universitypaper', get_string('settingsuniversitypaper', 'mod_these'), [
+            1 => get_string('settingsuniversitypaperyes', 'mod_these'),
+            0 => get_string('settingsuniversitypaperno', 'mod_these'),
+        ]);
+        $mform->setType('universitypaper', PARAM_INT);
+        $mform->addHelpButton('universitypaper', 'settingsuniversitypaper', 'mod_these');
+        $this->add_agents_field('ccemagent');
+        $this->add_agents_field('ucblagent');
 
         $mform->addElement('header', 'defenseheader', get_string('settingsdefenses', 'mod_these'));
         $mform->setExpanded('defenseheader');
@@ -101,7 +113,7 @@ class scopesettings_form extends \moodleform {
     /**
      * Choix multiple, avec recherche, des agents parmi les comptes proposés (customdata agents).
      *
-     * @param string $name 'deveagent' ou 'libraryagent'.
+     * @param string $name 'deveagent', 'libraryagent', 'ccemagent' ou 'ucblagent'.
      * @return void
      */
     protected function add_agents_field($name) {

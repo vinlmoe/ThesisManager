@@ -933,7 +933,8 @@ class signatures {
      * signataire s'il a une adresse. Sans adresse, les signatures restent en attente et peuvent être
      * recueillies sur place par la DEVE (signatures.php). La direction générale n'est jamais invitée :
      * ses documents sont signés par délégation, demandés aux agents DEVE quand il y en a (voir
-     * signatureagent::request_agent_signatures()).
+     * signatureagent::request_agent_signatures()). L'université non plus quand elle signe sur papier
+     * ou par ses délégataires internes (voir university::sends_link()).
      *
      * @param stdClass $these
      * @param stdClass $cm
@@ -945,7 +946,7 @@ class signatures {
     public static function request_signature(stdClass $these, stdClass $cm, stdClass $dossier, $slot, ?array $doctypes = null) {
         global $DB;
 
-        if ($slot === 'dg' && signatureagent::signs_dg_by_delegation($these)) {
+        if (($slot === 'dg' && signatureagent::signs_dg_by_delegation($these)) || !university::sends_link($these, $slot)) {
             return null;
         }
         $doctypes = these_pending_documents_for_slot($dossier, $slot, $doctypes);

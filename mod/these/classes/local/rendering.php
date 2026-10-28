@@ -303,6 +303,8 @@ class rendering {
      * @return array|null [libellé, moodle_url], ou null sans action attendue.
      */
     public static function primary_action(stdClass $cm, stdClass $dossier, stdClass $rights) {
+        global $DB;
+
         $params = ['id' => $cm->id, 'dossierid' => $dossier->id];
         $status = (int) $dossier->status;
         $steps = these_review_steps();
@@ -314,7 +316,8 @@ class rendering {
         }
         if ($rights->deve && $status === THESE_STATUS_SCHEDULED) {
             // Pièces de l'université pas encore revenues signées : leurs scans d'abord.
-            if (prerequisites::only_university(prerequisites::missing($dossier))) {
+            $these = $DB->get_record('these', ['id' => $dossier->theseid], '*', MUST_EXIST);
+            if (prerequisites::only_university(prerequisites::missing($dossier), university::paper_slots($these))) {
                 return [get_string('universityaddscan', 'mod_these'), new moodle_url('/mod/these/scan.php', $params)];
             }
             return [get_string('depositminutes', 'mod_these'), new moodle_url('/mod/these/minutes.php', $params)];
