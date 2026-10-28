@@ -20,11 +20,12 @@ use context;
 use stdClass;
 
 /**
- * Paramètres du circuit : agents DEVE signataires et agents de la bibliothèque, durée et salles des soutenances, établissement, université,
- * signataires et contrat type de diffusion. Aucun n'est un réglage du site : comme les modèles des
- * documents, ils appartiennent à une portée (voir these_settings_scope()), l'activité « Suivi des
- * thèses » qui suit l'activité, sinon l'activité « Gestion des thèses » elle-même (table
- * these_setting, zone de fichiers « contracttemplate » de la portée).
+ * Paramètres du circuit : agents DEVE signataires et agents de la bibliothèque, durée et salles des
+ * soutenances, établissement, université, signataires et contrat type de diffusion. Aucun n'est un
+ * réglage du site : comme les modèles des documents, ils appartiennent à une portée (voir
+ * these_settings_scope()), l'activité « Suivi des thèses » qui suit l'activité, sinon l'activité
+ * « Gestion des thèses » elle-même (table these_setting, zone de fichiers « contracttemplate » de la
+ * portée).
  *
  * @package   mod_these
  * @copyright 2026 Sébastien Lefebvre

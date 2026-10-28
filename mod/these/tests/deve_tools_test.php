@@ -193,8 +193,8 @@ final class deve_tools_test extends these_testcase {
 
     /**
      * Comptes proposés dans les paramètres du circuit : agents DEVE parmi les membres de la DEVE,
-     * agents de la bibliothèque parmi les personnels inscrits ; jamais les étudiants ; un agent déjà désigné reste proposé. Un identifiant qui est
-     * une adresse désigne bien son compte.
+     * agents de la bibliothèque parmi les personnels inscrits ; jamais les étudiants ; un agent déjà
+     * désigné reste proposé. Un identifiant qui est une adresse désigne bien son compte.
      */
     public function test_agent_candidates(): void {
         $this->setup_activity();
