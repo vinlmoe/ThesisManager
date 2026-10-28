@@ -1,0 +1,20 @@
+# Comptes du serveur de test. role : deve, agent (agent DEVE signataire), library, director,
+# student, juror (enseignant extérieur, annuaire seulement, sans compte). status et title : pour
+# l'annuaire du jury (pr, premerite, mcfhdr, mcf, mcfemerite, mcfstag, prstag, ir ; Dr ou Pr).
+role;username;firstname;lastname;email;password;title;status;institution;discipline
+deve;sbonnet;Sylvie;Bonnet;sbonnet@example.org;;;;;
+agent;agarnier;Anne;Garnier;agarnier@example.org;;;;;
+library;blefort;Bruno;Lefort;blefort@example.org;;;;;
+director;hdurand;Hélène;Durand;hdurand@example.org;;Pr;pr;;Anatomie
+director;mleroy;Marc;Leroy;mleroy@example.org;;Pr;pr;;Chirurgie équine
+director;ncolin;Nadia;Colin;ncolin@example.org;;Dr;mcfhdr;;Parasitologie
+director;lpetit;Luc;Petit;lpetit@example.org;;Dr;mcf;;Médecine interne
+director;mbernard;Marie;Bernard;mbernard@example.org;;Dr;mcf;;Biochimie
+juror;;Claire;Léger;claire.leger@example.org;;Pr;pr;Faculté de médecine Lyon Est;Néphrologie
+juror;;Paul;Rousseau;paul.rousseau@example.org;;Dr;mcfhdr;ENVT;Pharmacologie
+student;etu01;Camille;Martin;etu01@example.org;;;;;
+student;etu02;Hugo;Lambert;etu02@example.org;;;;;
+student;etu03;Léa;Moreau;etu03@example.org;;;;;
+student;etu04;Nathan;Girard;etu04@example.org;;;;;
+student;etu05;Inès;Fournier;etu05@example.org;;;;;
+student;etu06;Tom;Mercier;etu06@example.org;;;;;
