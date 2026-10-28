@@ -218,4 +218,23 @@ final class prerequisites_test extends these_testcase {
         $this->expectException(\moodle_exception::class);
         \mod_these\local\refusal::refuse($this->these, $this->cm, $dossier, [], $agent->id, '');
     }
+
+    /**
+     * Liste des dossiers bloqués : seulement ceux à qui il manque une signature, par activité.
+     */
+    public function test_blocked_dossiers(): void {
+        $this->setup_activity();
+        $blocked = $this->generator->create_dossier($this->these, $this->student->id, [
+            'status' => THESE_STATUS_SUBJECT_APPROVED, 'directorid' => $this->director->id, 'title' => 'Sujet',
+        ]);
+        $this->generator->create_dossier($this->these, $this->getDataGenerator()->create_user()->id, [
+            'status' => THESE_STATUS_ACTIVE, 'directorid' => $this->director->id, 'title' => 'Autre',
+        ]);
+        $rows = prerequisites::blocked_dossiers($this->these->id);
+        $this->assertCount(1, $rows);
+        $this->assertEquals($blocked->id, $rows[0]->dossier->id);
+        $this->assertEquals($this->student->id, $rows[0]->student->id);
+        $this->assertSame(['student', 'director'], array_column($rows[0]->missing, 'slot'));
+        $this->assertSame([], prerequisites::blocked_dossiers($this->these->id + 1000));
+    }
 }

@@ -115,6 +115,37 @@ class prerequisites {
     }
 
     /**
+     * Dossiers bloqués par des signatures manquantes, toutes activités confondues (ou une seule) :
+     * pour préparer la mise en service du blocage, ou pour le suivi de la DEVE.
+     *
+     * @param int $theseid Activité, 0 pour toutes.
+     * @return array Liste de {dossier, these, student, missing (voir missing())}, par activité puis dossier.
+     */
+    public static function blocked_dossiers($theseid = 0) {
+        global $DB;
+
+        $conditions = $theseid ? ['theseid' => (int) $theseid] : [];
+        $blocked = [];
+        $activities = [];
+        foreach ($DB->get_records('these_dossier', $conditions, 'theseid ASC, id ASC') as $dossier) {
+            $missing = self::missing($dossier);
+            if (!$missing) {
+                continue;
+            }
+            if (!isset($activities[$dossier->theseid])) {
+                $activities[$dossier->theseid] = $DB->get_record('these', ['id' => $dossier->theseid]);
+            }
+            $blocked[] = (object) [
+                'dossier' => $dossier,
+                'these' => $activities[$dossier->theseid],
+                'student' => $DB->get_record('user', ['id' => $dossier->userid]) ?: null,
+                'missing' => $missing,
+            ];
+        }
+        return $blocked;
+    }
+
+    /**
      * Indique s'il ne manque, pour quitter le statut actuel, que des signatures de l'université.
      *
      * @param array $missing Voir missing().
