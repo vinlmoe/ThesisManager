@@ -60,7 +60,20 @@ if ($action === 'generate' && confirm_sesskey()) {
     these_generate_documents($these, $context, $dossier, $USER->id);
     redirect($PAGE->url, get_string('documentsgenerated', 'mod_these'), null, \core\output\notification::NOTIFY_SUCCESS);
 }
+// Documents des étapes précédentes encore à signer (hors université, signée au retour des pièces).
+$unsigned = (int) $dossier->status === THESE_STATUS_CONFORM ? \mod_these\local\prerequisites::missing($dossier) : [];
+if ($action === 'university' && confirm_sesskey()) {
+    // Pièces qui n'attendent plus que l'université : scellées puis téléchargées pour l'envoi.
+    [$zippath, $zipname] = \mod_these\local\university::package($these, $context, $dossier, $USER->id);
+    if ($zippath === null) {
+        redirect($PAGE->url, get_string('universitynothing', 'mod_these'), null, \core\output\notification::NOTIFY_INFO);
+    }
+    send_temp_file($zippath, $zipname);
+}
 if ($action === 'transmit' && confirm_sesskey()) {
+    if ($unsigned) {
+        redirect($PAGE->url, get_string('prerequisitesmissing', 'mod_these'), null, \core\output\notification::NOTIFY_WARNING);
+    }
     if (empty($dossier->documentstime) || !these_has_files($context, 'generated', $dossier->id)) {
         redirect($PAGE->url, get_string('generatefirst', 'mod_these'), null, \core\output\notification::NOTIFY_WARNING);
     }
@@ -115,11 +128,17 @@ if (trim((string) $these->universityemail) === '') {
     echo $OUTPUT->notification(get_string('nouniversityemail', 'mod_these'), 'info');
 }
 
+// Pièces à faire signer par l'université : scellées et téléchargées pour l'envoi, puis scans au retour.
+echo \mod_these\local\university::render_section($cm, $context, $dossier);
+
+if ($unsigned) {
+    echo \mod_these\local\prerequisites::render_missing($cm, $context, $dossier, $unsigned);
+}
 echo $OUTPUT->single_button(
     new moodle_url($PAGE->url, ['action' => 'generate', 'sesskey' => sesskey()]),
     get_string(!$files->is_empty() ? 'regeneratedocuments' : 'generatedocuments', 'mod_these')
 );
-if (!$files->is_empty() && !empty($dossier->documentstime)) {
+if (!$files->is_empty() && !empty($dossier->documentstime) && !$unsigned) {
     echo $OUTPUT->single_button(
         new moodle_url($PAGE->url, ['action' => 'transmit', 'sesskey' => sesskey()]),
         get_string(empty($dossier->senttime) ? 'transmitdocuments' : 'retransmitdocuments', 'mod_these')

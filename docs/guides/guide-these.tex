@@ -121,7 +121,9 @@ signataire : celui du compte Moodle (ou de l'invitation), saisi seulement par la
 DEVE (signature sur place, par délégation). Suivi des thèses : action attendue
 proposée dans \og À traiter\fg{} ; signatures à apposer et signatures attendues
 centralisées, avec le lien vers la page où agir. Validation de l'A6 sur une
-page à part. \\
+page à part. Signatures préalables à chaque étape ; pièces pour l'université
+scellées et téléchargées, scans au retour ; compte DEVE validateur des
+signatures par délégation ; scans ouverts depuis le suivi des signatures. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -1521,6 +1523,72 @@ chaque fichier.}
 Un scan déposé ne se supprime ni ne se remplace dans le module. Pour corriger un
 dépôt, joignez le bon scan : l'historique garde les deux empreintes.
 \end{attention}
+
+Dans le suivi des signatures, \bouton{PDF} donne toujours le document du module
+(scellé une fois toutes ses signatures réunies, avec la mention \og Signé à la
+main \ldots{}, scan joint au dossier\fg{}) ; le ou les scans du document
+s'ouvrent à côté, avec \bouton{Scan}.
+
+\subsection{Signatures préalables à chaque étape}\label{sec:prealables}
+
+Un dossier ne passe pas à l'étape suivante tant que les documents des étapes
+précédentes ne sont pas signés. La page de validation (et, pour la DEVE, la
+transmission des documents et le procès-verbal) affiche alors \og Étape
+bloquée\fg{} avec la liste des signatures manquantes et la date de leur
+demande ; le bouton de validation disparaît, le renvoi reste possible. La DEVE y
+trouve \bouton{Suivi des signatures} (relancer, faire signer sur place) et
+\bouton{Ajouter un scan signé}.
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}l X@{}}
+\toprule
+\textbf{Étape} & \textbf{Signatures exigées avant de valider} \\
+\midrule
+Validation du sujet (directeur) & dépôt de sujet : étudiant \\
+Enregistrement du sujet (DEVE) & dépôt de sujet : étudiant, directeur, directeur extérieur \\
+Enregistrement (bibliothèque) & dépôt de sujet : toutes (visa de la DEVE compris) \\
+Validation de la soutenance (directeur) & bordereau ; contrat : étudiant \\
+Validation du dossier (DEVE) & bordereau, rapport, grille ; agréments,
+contrat, conclusions : directeur \\
+Conformité (bibliothèque) & agréments, fiche signalétique, contrat,
+conclusions : toutes, sauf l'université \\
+Transmission des documents & idem, plus l'attestation de conformité \\
+Procès-verbal & toutes, université comprise \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Pièces pour l'université}\label{sec:universite}
+
+La présidence de l'université et le président du CCEM signent sur papier. Dès
+qu'un document n'attend plus que leurs signatures, la page
+\bouton{Documents de soutenance} (et celle du procès-verbal) le présente dans
+\og Pièces pour l'université\fg{}.
+
+\begin{procedure}{Envoyer les pièces à l'université et enregistrer leur retour}{Équipe DEVE}
+\begin{etapes}
+  \item Cliquez sur \bouton{Sceller et télécharger les pièces pour l'université} :
+        chaque document est scellé tel quel (empreinte SHA-256 à l'historique)
+        et l'archive des pièces est téléchargée, à envoyer à l'université.
+  \item Au retour des pièces signées, cliquez sur \bouton{Déposer les scans
+        revenus de l'université} (aussi proposé dans \og À traiter\fg{}) :
+        choisissez le document, cochez le signataire de l'université et déposez
+        le scan, comme à la section~\ref{sec:scans}.
+\end{etapes}
+\ensuite{la signature de l'université est inscrite \og à la main, scan joint au
+dossier\fg{}, le document est scellé définitivement et le procès-verbal peut
+être déposé.}
+\end{procedure}
+
+\subsection{Signatures par délégation : compte validateur}
+
+Quand des agents DEVE signent après la validation de l'équipe (visa de la DEVE,
+direction générale par délégation), le compte de l'équipe DEVE qui a validé
+l'étape est enregistré avec la demande. Il figure dans le courriel et dans
+\bouton{Mes signatures} de l'agent (\og validé par \ldots\fg{}), dans le suivi des
+signatures, à l'historique et sous la signature imprimée : \og documents validés
+par \ldots{} (DEVE)\fg{}. Une relance garde ce compte.
 
 \subsection{Intégrité}\label{sec:integrite}
 

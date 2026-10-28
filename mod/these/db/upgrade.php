@@ -268,5 +268,17 @@ function xmldb_these_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2026102800, 'these');
     }
 
+    if ($oldversion < 2026102802) {
+        // Signatures des agents DEVE (et de la direction générale par délégation) : compte qui a
+        // validé l'étape, et donc les documents qu'ils signent.
+        $dbman = $DB->get_manager();
+        $table = new xmldb_table('these_signature');
+        $field = new xmldb_field('validatedby', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'verifiedby');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        upgrade_mod_savepoint(true, 2026102802, 'these');
+    }
+
     return true;
 }

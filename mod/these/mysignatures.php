@@ -97,6 +97,11 @@ foreach ($pending as $signature) {
     // Signature d'agent DEVE (sans jeton) : « par délégation » à l'emplacement de la direction générale.
     $label = $signature->token === null ? signatureagent::document_label($signature->doctype, $signature->slot)
         : these_document_label($signature->doctype) . ' (' . these_slot_label($signature->slot) . ')';
+    // Compte de l'équipe DEVE qui a validé les documents que l'agent signe.
+    $validator = !empty($signature->validatedby) ? core_user::get_user($signature->validatedby) : null;
+    if ($validator) {
+        $label .= ' — ' . get_string('validatedbyname', 'mod_these', fullname($validator));
+    }
     $documents[$signature->id] = $renderer->render(new output\fragment([
         parts::text($label . ' — '),
         parts::link(

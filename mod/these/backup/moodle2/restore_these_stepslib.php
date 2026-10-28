@@ -285,6 +285,7 @@ class restore_these_activity_structure_step extends restore_activity_structure_s
         }
         $data->userid = $this->map_user($data->userid);
         $data->verifiedby = $this->map_user($data->verifiedby ?? 0);
+        $data->validatedby = $this->map_user($data->validatedby ?? 0);
         $data->token = null;
         $newid = $DB->insert_record('these_signature', $data);
         $this->set_mapping('these_signature', $oldid, $newid, true);
@@ -302,5 +303,6 @@ class restore_these_activity_structure_step extends restore_activity_structure_s
         }
         $this->add_related_files('mod_these', 'signature', 'these_signature');
         $this->add_related_files('mod_these', 'sealed', 'these_dossier');
+        $this->add_related_files('mod_these', 'universityseal', 'these_dossier');
     }
 }

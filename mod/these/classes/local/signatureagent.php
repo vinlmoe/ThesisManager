@@ -195,9 +195,17 @@ class signatureagent {
      * @param stdClass $cm
      * @param stdClass $dossier
      * @param string[] $doctypes
+     * @param int $validatorid Compte de l'équipe DEVE qui vient de valider l'étape (documents validés),
+     *                         0 pour une relance : le compte déjà inscrit est gardé.
      * @return int Nombre de documents en attente de sa signature.
      */
-    public static function request_agent_signatures(stdClass $these, stdClass $cm, stdClass $dossier, array $doctypes) {
+    public static function request_agent_signatures(
+        stdClass $these,
+        stdClass $cm,
+        stdClass $dossier,
+        array $doctypes,
+        $validatorid = 0
+    ) {
         global $DB;
 
         $agents = these_deve_agents($these);
@@ -227,6 +235,7 @@ class signatureagent {
                     'requesttime' => $now,
                     'timesigned' => 0,
                     'contenthash' => null,
+                    'validatedby' => (int) $validatorid ?: (int) ($signature->validatedby ?? 0),
                 ];
                 if ($signature) {
                     $record->id = $signature->id;
@@ -243,6 +252,11 @@ class signatureagent {
         }
         $vars = these_email_base_vars($these, $cm, $dossier);
         $vars['document'] = implode(', ', $labels);
+        $validator = $validatorid ? \core_user::get_user($validatorid) : null;
+        if ($validator) {
+            // Compte qui a validé les documents, donné aux agents avec la demande.
+            $vars['document'] .= ' — ' . get_string('validatedbyname', 'mod_these', fullname($validator));
+        }
         $vars['url'] = (new moodle_url('/mod/these/mysignatures.php'))->out(false);
         foreach ($agents as $agent) {
             $vars['name'] = fullname($agent);

@@ -99,7 +99,7 @@ class backup_these_activity_structure_step extends backup_activity_structure_ste
         $signatures = new backup_nested_element('signatures');
         $signature = new backup_nested_element('signature', ['id'], [
             'doctype', 'slot', 'userid', 'signername', 'signeremail', 'requesttime', 'timesigned', 'contenthash',
-            'ipaddress', 'method', 'delegated', 'verifiedby', 'timecreated',
+            'ipaddress', 'method', 'delegated', 'verifiedby', 'validatedby', 'timecreated',
         ]);
 
         $logs = new backup_nested_element('logs');
@@ -165,6 +165,7 @@ class backup_these_activity_structure_step extends backup_activity_structure_ste
         }
         // Documents scellés (voir these_seal_document()).
         $dossier->annotate_files('mod_these', 'sealed', 'id');
+        $dossier->annotate_files('mod_these', 'universityseal', 'id');
 
         return $this->prepare_activity_structure($these);
     }

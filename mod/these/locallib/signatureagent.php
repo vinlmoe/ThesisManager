@@ -106,10 +106,11 @@ function these_agent_document_due(stdClass $dossier, $doctype) {
  * @param stdClass $cm
  * @param stdClass $dossier
  * @param string[] $doctypes
+ * @param int $validatorid Compte DEVE qui a validé l'étape, 0 pour une relance.
  * @return int Nombre de documents en attente de sa signature.
  */
-function these_request_agent_signatures(stdClass $these, stdClass $cm, stdClass $dossier, array $doctypes) {
-    return \mod_these\local\signatureagent::request_agent_signatures($these, $cm, $dossier, $doctypes);
+function these_request_agent_signatures(stdClass $these, stdClass $cm, stdClass $dossier, array $doctypes, $validatorid = 0) {
+    return \mod_these\local\signatureagent::request_agent_signatures($these, $cm, $dossier, $doctypes, $validatorid);
 }
 
 /**
