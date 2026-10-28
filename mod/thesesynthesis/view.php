@@ -15,7 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Suivi des thèses, toutes promotions confondues : dossiers à traiter, mes jurys, puis la liste
+ * Suivi des thèses, toutes promotions confondues : dossiers à traiter (avec l'action attendue),
+ * signatures à apposer et, pour la DEVE, signatures attendues, mes jurys, puis la liste
  * des dossiers suivis (dirigés, ou tous pour la DEVE et la bibliothèque) avec filtres.
  *
  * @package   mod_thesesynthesis
@@ -68,7 +69,21 @@ if (!$links) {
 
 // À traiter.
 echo $OUTPUT->heading(get_string('todo', 'mod_these'), 3);
-echo $renderer->render(new output\dossier_table($alltodo, get_string('nothingtodo', 'mod_these')));
+echo $renderer->render(new output\dossier_table($alltodo, get_string('nothingtodo', 'mod_these'), true));
+
+// Signatures, centralisées : celles que l'utilisateur appose, puis, pour la DEVE, celles attendues
+// d'autres signataires.
+$signatures = thesesynthesis_get_signatures($links, $USER);
+echo $OUTPUT->heading(get_string('mysignaturestodo', 'mod_thesesynthesis'), 3, 'mt-4');
+echo $renderer->render(new output\signature_table($signatures['mine'], get_string('nosignaturestodo', 'mod_thesesynthesis')));
+$deve = array_filter($links, function ($link) {
+    return !empty($link->rights->deve);
+});
+if ($deve) {
+    echo $OUTPUT->heading(get_string('awaitedsignatures', 'mod_thesesynthesis'), 3, 'mt-4');
+    $empty = get_string('noawaitedsignatures', 'mod_thesesynthesis');
+    echo $renderer->render(new output\signature_table($signatures['awaited'], $empty));
+}
 
 // Mes jurys.
 echo $OUTPUT->heading(get_string('myjuries', 'mod_thesesynthesis'), 3, 'mt-4');

@@ -13,7 +13,7 @@ de version recalés sur la date. Les numéros entre parenthèses des sections de
 développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
 été étiquetée.
 
-## mod_these 0.20.0 (2026102800) — titre du directeur repris de l'annuaire, co-directeur interne ou extérieur, nom de signature imposé
+## mod_these 0.20.0 (2026102800) et mod_thesesynthesis 0.7.0 (2026102800) — titre du directeur repris de l'annuaire, co-directeur interne ou extérieur, nom de signature imposé, signatures centralisées dans le suivi
 
 - Dépôt du sujet : l'étudiant ne saisit plus le titre (Dr, Pr) d'un directeur
   présent dans l'annuaire des enseignants ; le champ n'apparaît que pour un
@@ -28,6 +28,15 @@ développement ne correspondent à aucune version installable ; 0.11.2 n'a jamai
   signataire sans compte), affiché sans pouvoir être modifié. Seule la DEVE le
   saisit : signature sur place, direction générale par délégation (validation
   d'une étape de la DEVE, « Mes signatures » d'un agent).
+- Suivi des thèses : dans « À traiter », chaque dossier propose directement
+  l'action attendue (validation de l'étape, documents de soutenance,
+  procès-verbal), à côté de « Ouvrir ». Signatures centralisées, toutes
+  promotions confondues : « Signatures à apposer » (documents qui attendent
+  l'utilisateur — agent DEVE signataire, bibliothèque, directeur, juré —, bouton
+  « Signer » vers « Mes signatures ») et, pour la DEVE, « Signatures attendues
+  d'autres signataires » (bouton « Suivi des signatures » du dossier, pour
+  relancer ou faire signer sur place). Une ligne par dossier, avec les
+  documents attendus et la date de la première demande.
 
 ## mod_these 0.19.0 (2026102708) — direction générale signée par délégation des agents DEVE, relance des agents, agents choisis parmi les inscrits, plus de rôles des services, matière des enseignants, annuaire pour les étudiants
 

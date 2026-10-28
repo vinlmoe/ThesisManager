@@ -197,6 +197,113 @@ function thesesynthesis_get_dossiers(array $links, $userid, array $filters = [])
 }
 
 /**
+ * Signatures en attente dans les activités liées, groupées par dossier, chacune avec la page où agir :
+ * - mine : documents que l'utilisateur signe lui-même (agent DEVE, bibliothèque, directeur, juré
+ *   ayant un compte...), à signer depuis « Mes signatures » ;
+ * - awaited : pour la DEVE, signatures demandées à d'autres et pas encore apposées, à relancer ou à
+ *   recueillir sur place depuis le suivi des signatures du dossier.
+ *
+ * @param array $links Voir thesesynthesis_get_active_links().
+ * @param stdClass $user
+ * @return array mine, awaited : listes d'objets {dossier, link, student, knowssubject, documents
+ *               (libellés), since (première demande), url, label}
+ */
+function thesesynthesis_get_signatures(array $links, stdClass $user) {
+    global $DB;
+
+    $bycmid = [];
+    foreach ($links as $link) {
+        $bycmid[(int) $link->cm->id] = $link;
+    }
+    $mine = [];
+    $mineids = [];
+    $mysignatures = new moodle_url('/mod/these/mysignatures.php');
+    foreach (these_get_user_pending_signatures($user) as $signature) {
+        $link = $bycmid[(int) $signature->cm->id] ?? null;
+        if (!$link) {
+            continue;
+        }
+        $mineids[(int) $signature->id] = true;
+        // Signature d'agent DEVE (sans jeton) : « par délégation » à l'emplacement de la direction générale.
+        $label = $signature->token === null
+            ? \mod_these\local\signatureagent::document_label($signature->doctype, $signature->slot)
+            : these_document_label($signature->doctype) . ' (' . these_slot_label($signature->slot) . ')';
+        $row = thesesynthesis_signature_row($mine, $signature->dossier, $link, $user->id, $signature->requesttime);
+        $row->documents[] = $label;
+        $row->url = $mysignatures;
+        $row->label = get_string('sign', 'mod_thesesynthesis');
+    }
+
+    $awaited = [];
+    foreach ($links as $link) {
+        if (empty($link->rights->deve)) {
+            continue;
+        }
+        $signatures = $DB->get_records_sql(
+            "SELECT s.*
+               FROM {these_signature} s
+               JOIN {these_dossier} d ON d.id = s.dossierid
+              WHERE d.theseid = :theseid AND s.timesigned = 0
+                AND d.status <> :cancelled AND d.status <> :closed
+           ORDER BY d.id, s.id",
+            ['theseid' => $link->these->id, 'cancelled' => THESE_STATUS_CANCELLED, 'closed' => THESE_STATUS_CLOSED]
+        );
+        $dossiers = [];
+        foreach ($signatures as $signature) {
+            if (isset($mineids[(int) $signature->id])) {
+                continue;
+            }
+            if (!isset($dossiers[$signature->dossierid])) {
+                $dossiers[$signature->dossierid] = $DB->get_record('these_dossier', ['id' => $signature->dossierid]);
+            }
+            $dossier = $dossiers[$signature->dossierid];
+            if (!these_document_available($dossier, $signature->doctype)) {
+                continue;
+            }
+            $row = thesesynthesis_signature_row($awaited, $dossier, $link, $user->id, $signature->requesttime);
+            $row->documents[] = these_document_label($signature->doctype) . ' (' . these_slot_label($signature->slot) . ')';
+            $row->url = new moodle_url('/mod/these/signatures.php', ['id' => $link->cm->id, 'dossierid' => $dossier->id]);
+            $row->label = get_string('managesignatures', 'mod_these');
+        }
+    }
+    return ['mine' => array_values($mine), 'awaited' => array_values($awaited)];
+}
+
+/**
+ * Ligne d'un dossier dans une liste de signatures (voir thesesynthesis_get_signatures()), créée au
+ * premier document ; la date retenue est celle de la plus ancienne demande.
+ *
+ * @param array $groups Lignes, indexées par dossier.
+ * @param stdClass $dossier
+ * @param stdClass $link
+ * @param int $userid
+ * @param int $requesttime
+ * @return stdClass La ligne du dossier.
+ */
+function thesesynthesis_signature_row(array &$groups, stdClass $dossier, stdClass $link, $userid, $requesttime) {
+    global $DB;
+
+    if (!isset($groups[$dossier->id])) {
+        $groups[$dossier->id] = (object) [
+            'dossier' => $dossier,
+            'link' => $link,
+            'student' => $DB->get_record('user', ['id' => $dossier->userid]),
+            'knowssubject' => these_user_knows_subject($dossier, $link->context, $userid),
+            'documents' => [],
+            'since' => 0,
+            'url' => null,
+            'label' => '',
+        ];
+    }
+    $row = $groups[$dossier->id];
+    $requesttime = (int) $requesttime;
+    if ($requesttime && (!$row->since || $requesttime < $row->since)) {
+        $row->since = $requesttime;
+    }
+    return $row;
+}
+
+/**
  * Jurys où siège l'utilisateur, dans les activités liées : membre retenu avec son adresse, ou
  * enseignant de l'annuaire portant son adresse.
  *
