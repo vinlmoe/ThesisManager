@@ -67,7 +67,9 @@ développement ne correspondent à aucune version installable ; 0.11.2 n'a jamai
   l'annuaire). Enseignants actifs internes et extérieurs : nom, statut,
   matière, établissement, présidence possible ; recherche (nom, matière,
   établissement, sans accents) et filtre « Seulement ceux pouvant présider un
-  jury ». Ni adresse ni modification ; lien vers la liste en PDF.
+  jury ». Adresse (lien de courriel) des seuls enseignants pouvant présider,
+  pour que l'étudiant les contacte ; aucune modification ; lien vers la liste
+  en PDF.
 
 ## mod_these 0.18.0 (2026102703) — directeur non votant, liste du corps enseignant, aides pour la DEVE
 

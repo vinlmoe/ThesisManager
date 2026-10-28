@@ -382,7 +382,7 @@ final class jury_directory_test extends these_testcase {
     /**
      * Annuaire en lecture seule : enseignants actifs internes et extérieurs, recherche sans accents
      * dans le nom, la matière et l'établissement, limitation à ceux qui peuvent présider ; ouvert aux
-     * étudiants, sans adresse.
+     * étudiants, avec l'adresse des seuls enseignants pouvant présider.
      */
     public function test_read_only_directory(): void {
         global $DB;
@@ -409,9 +409,14 @@ final class jury_directory_test extends these_testcase {
         $data = (new \mod_these\output\juror_directory($url, jurors::directory('', true), '', true))
             ->export_for_template($GLOBALS['PAGE']->get_renderer('mod_these'));
         $this->assertTrue($data['presidents']);
-        $json = json_encode($data, JSON_UNESCAPED_UNICODE);
+        $json = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         $this->assertStringContainsString('Faculté de médecine de Lyon', $json);
-        $this->assertStringNotContainsString('@example.org', $json);
+        $this->assertStringContainsString('mailto:curie@example.org', $json);
+        $data = (new \mod_these\output\juror_directory($url, jurors::directory()))
+            ->export_for_template($GLOBALS['PAGE']->get_renderer('mod_these'));
+        $json = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $this->assertStringContainsString('martin@example.org', $json);
+        $this->assertStringNotContainsString('bernard@example.org', $json);
 
         // Ouvert aux étudiants : lien dans la barre de navigation, sauf pour la DEVE qui tient l'annuaire.
         $this->setUser($this->student);

@@ -318,7 +318,7 @@ $string['jurorsnone'] = "L'annuaire est vide.";
 $string['jurordirectory'] = 'Annuaire des enseignants';
 $string['jurordirectory_desc'] = "Enseignants pouvant diriger une thèse ou siéger au jury, de l'établissement et extérieurs, avec "
     . "leur statut et leur matière. La colonne « Peut présider » indique ceux qui peuvent présider un jury : professeurs, "
-    . "professeurs émérites, maîtres de conférences HDR ou émérites.";
+    . "professeurs émérites, maîtres de conférences HDR ou émérites ; leur adresse est donnée pour les contacter.";
 $string['jurordirectorysearch'] = 'Nom, matière, établissement';
 $string['jurordirectorypresidents'] = 'Seulement ceux pouvant présider un jury';
 $string['jurordirectorycount'] = '{$a} enseignant(s)';

@@ -314,7 +314,7 @@ $string['jurorsnone'] = 'The directory is empty.';
 $string['jurordirectory'] = 'Teacher directory';
 $string['jurordirectory_desc'] = 'Teachers who may supervise a thesis or sit on a jury, from the institution and external, with '
     . 'their status and subject. The "May chair" column shows those who may chair a jury: professors, emeritus professors, '
-    . 'associate professors with HDR or emeritus.';
+    . 'associate professors with HDR or emeritus; their address is given so you can contact them.';
 $string['jurordirectorysearch'] = 'Name, subject, institution';
 $string['jurordirectorypresidents'] = 'Only those who may chair a jury';
 $string['jurordirectorycount'] = '{$a} teacher(s)';

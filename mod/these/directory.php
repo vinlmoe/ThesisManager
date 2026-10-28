@@ -17,8 +17,8 @@
 /**
  * Annuaire des enseignants en lecture seule, ouvert à quiconque peut consulter l'activité (étudiants
  * compris) : enseignants actifs internes et extérieurs, avec leur statut, leur matière, leur
- * établissement et la possibilité de présider un jury ; ni adresse ni modification (la DEVE tient
- * l'annuaire depuis jurors.php).
+ * établissement, la possibilité de présider un jury et, pour ceux qui le peuvent, leur adresse ;
+ * aucune modification (la DEVE tient l'annuaire depuis jurors.php).
  *
  * @package   mod_these
  * @copyright 2026 Sébastien Lefebvre

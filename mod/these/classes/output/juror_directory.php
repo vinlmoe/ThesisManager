@@ -21,8 +21,8 @@ use moodle_url;
 
 /**
  * Annuaire des enseignants en lecture seule, pour les étudiants : recherche, enseignants pouvant
- * présider, et pour chacun nom, statut, matière, établissement et présidence possible (ni adresse ni
- * action).
+ * présider, et pour chacun nom, statut, matière, établissement et présidence possible ; l'adresse de
+ * ceux qui peuvent présider, pour que l'étudiant les contacte. Aucune action.
  *
  * @package   mod_these
  * @copyright 2026 Sébastien Lefebvre
@@ -63,12 +63,16 @@ class juror_directory implements \renderable, \templatable {
     public function export_for_template(\renderer_base $output): array {
         $rows = [];
         foreach ($this->jurors as $juror) {
+            $canpreside = jurors::can_preside($juror->status);
+            // Adresse des seuls enseignants pouvant présider : l'étudiant les sollicite pour son jury.
+            $email = trim((string) ($juror->email ?? ''));
             $rows[] = [
                 [parts::text(jurors::name($juror))],
                 [parts::text(jurors::status_label($juror->status))],
                 [parts::text((string) ($juror->discipline ?? ''))],
                 [parts::text((string) ($juror->institution ?? ''))],
-                [parts::text(get_string(jurors::can_preside($juror->status) ? 'yes' : 'no'))],
+                [parts::text(get_string($canpreside ? 'yes' : 'no'))],
+                [$canpreside && $email !== '' ? parts::html(\html_writer::link('mailto:' . $email, s($email))) : parts::text('')],
             ];
         }
         $head = [
@@ -77,6 +81,7 @@ class juror_directory implements \renderable, \templatable {
             get_string('jurordiscipline', 'mod_these'),
             get_string('juryinstitution', 'mod_these'),
             get_string('jurorpresident', 'mod_these'),
+            get_string('email'),
         ];
         return [
             'action' => $this->url->out_omit_querystring(),
