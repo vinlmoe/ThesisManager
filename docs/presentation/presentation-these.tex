@@ -1,0 +1,356 @@
+% Présentation de ThesisManager (mod_these et mod_thesesynthesis).
+% Compilation : pdflatex presentation-these.tex (deux fois), depuis docs/presentation.
+\documentclass[aspectratio=169,11pt]{beamer}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[french]{babel}
+\usepackage{microtype}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric}
+
+\graphicspath{{../guides/images/}}
+
+% Couleurs : celles du guide (bleu Moodle).
+\definecolor{moodle}{HTML}{0F6CBF}
+\definecolor{orange}{HTML}{F98012}
+\definecolor{gris}{HTML}{5F6B76}
+\definecolor{fond}{HTML}{F3F6F9}
+
+\usetheme{default}
+\setbeamercolor{structure}{fg=moodle}
+\setbeamercolor{frametitle}{fg=moodle}
+\setbeamercolor{title}{fg=moodle}
+\setbeamercolor{alerted text}{fg=orange}
+\setbeamerfont{frametitle}{series=\bfseries,size=\Large}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{itemize items}{\color{moodle}$\blacktriangleright$}
+\setbeamertemplate{footline}{%
+  \hfill{\color{gris}\scriptsize ThesisManager \quad \insertframenumber/\inserttotalframenumber}\hspace*{1em}\vspace*{0.6em}}
+
+% Capture bordée, tronquée en bas (trim en pixels de l'image, à l'échelle 1px = 1bp).
+\newcommand{\capture}[3][0]{%
+  {\setlength{\fboxsep}{0pt}\color{gris!50}\fbox{\includegraphics[#2,trim=0 #1 0 0,clip]{#3}}}}
+
+% Étape du circuit.
+\tikzset{
+  etape/.style={rectangle,rounded corners=3pt,draw=moodle,fill=fond,thick,align=center,
+    font=\footnotesize,minimum height=1.1cm,text width=2.25cm},
+  acteur/.style={font=\scriptsize\bfseries,text=orange},
+  fleche/.style={-{Stealth[length=2.5mm]},thick,moodle},
+  retour/.style={-{Stealth[length=2mm]},gris,dashed},
+}
+
+\title{ThesisManager}
+\subtitle{La gestion des thèses d'exercice vétérinaire dans Moodle,\\du dépôt du sujet au procès-verbal}
+\author{Sébastien Lefebvre}
+\date{Version 0.19.0 -- octobre 2026}
+
+\begin{document}
+
+\begin{frame}[plain]
+  \titlepage
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{Pourquoi un module dédié ?}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \textbf{Aujourd'hui}
+      \begin{itemize}
+        \item Des formulaires PDF et Word qui circulent par courriel.
+        \item Des signatures manuscrites à recueillir une par une.
+        \item Un suivi dispersé entre l'étudiant, le directeur, la DEVE et la bibliothèque.
+        \item Des relances faites à la main.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \textbf{Avec ThesisManager}
+      \begin{itemize}
+        \item Un \alert{dossier unique} par étudiant, de la fiche de sujet au procès-verbal.
+        \item Chacun voit ce qui l'attend et agit au bon moment.
+        \item Les documents officiels sont \alert{générés et signés} dans Moodle.
+        \item Courriels, relances et historique sont automatiques.
+      \end{itemize}
+    \end{column}
+  \end{columns}
+  \vfill
+  \begin{center}
+    \small\color{gris}Il suit le document de travail « Circuit de dépôt du sujet et de la soutenance ».
+  \end{center}
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{Deux activités Moodle complémentaires}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \begin{block}{Gestion des thèses \texttt{(mod\_these)}}
+        Une activité par promotion.
+        \begin{itemize}
+          \item Dossier de l'étudiant : sujet, soutenance, jury.
+          \item Validations, renvois, signatures.
+          \item Documents de soutenance, procès-verbal, registre.
+        \end{itemize}
+      \end{block}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{block}{Suivi des thèses \texttt{(mod\_thesesynthesis)}}
+        Une seule activité pour toutes les promotions.
+        \begin{itemize}
+          \item Vue unique des dossiers pour directeurs, DEVE, bibliothèque et jurys.
+          \item Paramètres du circuit, modèles des documents, grille et questionnaire communs.
+          \item Annuaire du jury, recherche, planning.
+        \end{itemize}
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{Les acteurs, sans rôle à créer}
+  \small
+  \begin{tabularx}{\textwidth}{@{}llX@{}}
+    \toprule
+    \textbf{Acteur} & \textbf{Rôle Moodle} & \textbf{Ce qu'il fait} \\
+    \midrule
+    Étudiant & Étudiant & propose son sujet, dépose sa soutenance \\
+    Directeur de thèse & Enseignant non éditeur & valide, rédige son rapport, signe \\
+    DEVE & Enseignant & enregistre, valide, génère les documents \\
+    Agents DEVE signataires & Enseignant, désignés & signent pour la DEVE et, par délégation, pour la DG \\
+    Bibliothèque & inscrite, désignée agent & notice du sujet, conformité du manuscrit \\
+    Jury, signataires extérieurs & sans compte & accès et signature par lien personnel \\
+    \bottomrule
+  \end{tabularx}
+  \vfill
+  \small Les agents se \alert{choisissent dans une liste} des personnes inscrites : aucun rôle spécifique, aucune saisie d'identifiant.
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{Phase 1 : le sujet}
+  \centering
+  \begin{tikzpicture}[node distance=0.55cm,every node/.append style={}]
+    \tikzset{etape/.append style={text width=2.0cm}}
+    \node[etape] (e1) {Fiche de sujet\\signée};
+    \node[etape,right=of e1] (e2) {Validation\\du sujet};
+    \node[etape,right=of e2] (e3) {Enregistrement\\du sujet};
+    \node[etape,right=of e3] (e4) {Notice\\documentaire};
+    \node[etape,right=of e4,fill=moodle!15] (e5) {Dossier\\actif};
+    \node[acteur,above=0.15cm of e1] {Étudiant};
+    \node[acteur,above=0.15cm of e2] {Directeur};
+    \node[acteur,above=0.15cm of e3] {DEVE};
+    \node[acteur,above=0.15cm of e4] {Bibliothèque};
+    \draw[fleche] (e1) -- (e2);
+    \draw[fleche] (e2) -- (e3);
+    \draw[fleche] (e3) -- (e4);
+    \draw[fleche] (e4) -- (e5);
+    \draw[retour] (e3.south) to[bend left=25] node[below,font=\scriptsize] {renvoi motivé} (e1.south);
+  \end{tikzpicture}
+  \vfill
+  \begin{itemize}
+    \item Chaque étape peut \alert{renvoyer} le dossier avec un motif ; à sa nouvelle soumission, il revient directement à l'étape qui l'a renvoyé.
+    \item Le dossier reste ensuite actif, parfois plusieurs années ; un \alert{changement de sujet} archive l'ancien et relance la phase 1.
+  \end{itemize}
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{Phase 2 : la soutenance}
+  \centering
+  \begin{tikzpicture}[node distance=0.45cm]
+    \node[etape] (s1) {Questionnaire,\\manuscrit,\\date, jury};
+    \node[etape,right=of s1] (s2) {Rapport\\et grille,\\validation};
+    \node[etape,right=of s2] (s3) {Dossier complet,\\n° DEVE,\\jury vérifié};
+    \node[etape,right=of s3] (s4) {Conformité\\du manuscrit};
+    \node[etape,right=of s4] (s5) {Convocations,\\documents,\\transmission};
+    \node[etape,below=1.0cm of s5,fill=moodle!15] (s6) {Procès-verbal,\\dossier clos};
+    \node[acteur,above=0.15cm of s1] {Étudiant};
+    \node[acteur,above=0.15cm of s2] {Directeur};
+    \node[acteur,above=0.15cm of s3] {DEVE};
+    \node[acteur,above=0.15cm of s4] {Bibliothèque};
+    \node[acteur,above=0.15cm of s5] {DEVE};
+    \draw[fleche] (s1) -- (s2);
+    \draw[fleche] (s2) -- (s3);
+    \draw[fleche] (s3) -- (s4);
+    \draw[fleche] (s4) -- (s5);
+    \draw[fleche] (s5) -- (s6);
+    \node[etape,left=1.2cm of s6,text width=4.3cm,draw=gris] (c) {\textbf{Corrections demandées} : manuscrit corrigé, validé par le directeur, la bibliothèque et la DEVE};
+    \draw[retour] (s6) -- (c);
+  \end{tikzpicture}
+  \vfill
+  \small Le directeur \alert{rédige son rapport dans un formulaire} (non communiqué à l'étudiant). Une thèse \alert{ajournée} repart pour un nouveau dépôt complet.
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{L'étudiant suit son dossier}
+  \begin{columns}[c]
+    \begin{column}{0.66\textwidth}
+      \capture{width=\linewidth}{01_etudiant_accueil}
+      \vspace{0.4em}
+      \begin{itemize}
+        \item Une \alert{frise} indique l'étape atteinte et qui doit agir.
+        \item Les boutons bleus sont les actions qui l'attendent.
+        \item Brouillon possible avant chaque soumission.
+        \item \alert{Annuaire des enseignants} en lecture seule : statut, matière, présidents de jury possibles et leur adresse.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.28\textwidth}
+      \centering
+      \capture[300]{height=0.72\textheight}{104_frise_telephone}\\[0.3em]
+      {\scriptsize\color{gris} Sur téléphone}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{La DEVE pilote depuis un tableau de bord}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \capture[640]{width=\linewidth}{18_tableau_de_bord_deve}
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \begin{itemize}
+        \item \alert{« À traiter »} : chaque dossier avec le bouton de l'action attendue.
+        \item Actions groupées : relancer, générer les documents, prévenir le jury, enregistrer l'A6.
+        \item Planning des soutenances (semaine, mois, PDF) et calendrier Moodle.
+        \item Conflits de jury et de salle signalés.
+        \item Récapitulatif hebdomadaire par courriel.
+        \item Export du registre (CSV, Excel, ODS).
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{Des documents officiels générés et signés}
+  \begin{columns}[c]
+    \begin{column}{0.55\textwidth}
+      \capture{width=\linewidth}{42_documents_signes}
+    \end{column}
+    \begin{column}{0.41\textwidth}
+      \begin{itemize}
+        \item Fiche de sujet, agréments, fiche signalétique, bordereau ABES, rapport, grille, conclusions, contrat de diffusion, convocations, PV.
+        \item Mise en forme de l'établissement, \alert{remplis automatiquement}.
+        \item Chaque modèle est \alert{modifiable par la DEVE} (aperçu PDF, retour à l'original).
+        \item Liste du corps enseignant en PDF, sur trois colonnes, avec la matière.
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{Les signatures, sans papier}
+  \begin{columns}[T]
+    \begin{column}{0.47\textwidth}
+      \capture[520]{width=\linewidth}{64_agent_mes_signatures}
+    \end{column}
+    \begin{column}{0.49\textwidth}
+      \begin{itemize}
+        \item Signature tracée, \alert{enregistrée} et reprise d'office.
+        \item \alert{Mes signatures} : tous les documents en attente, toutes promotions.
+        \item Signataires sans compte : lien personnel par courriel.
+        \item Sur place, après vérification d'identité, ou par scan.
+        \item La \alert{direction générale} est toujours signée par délégation, par les agents DEVE.
+        \item Relances automatiques et bouton \og Relancer\fg{}.
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{Intégrité et confidentialité}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \textbf{Intégrité}
+      \begin{itemize}
+        \item Chaque signature garde l'\alert{empreinte} du contenu signé.
+        \item Un document modifié après signature est invalidé.
+        \item Document \alert{scellé} une fois toutes ses signatures réunies.
+        \item Historique complet de chaque dossier.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \textbf{Confidentialité}
+      \begin{itemize}
+        \item Thèse confidentielle : sujet masqué à qui n'a pas à le connaître.
+        \item Embargo sur la diffusion.
+        \item Liens à jeton : seule une empreinte est conservée, durée limitée.
+        \item API vie privée de Moodle (export, effacement), sauvegarde et restauration.
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{Jury et annuaire}
+  \begin{itemize}
+    \item \alert{Annuaire commun} à toutes les promotions : titre, statut, établissement, matière ; import CSV ou préremplissage depuis le cours.
+    \item Le jury se compose depuis l'annuaire ; seuls les statuts admis peuvent présider (Pr, émérites, MCF HDR).
+    \item Éligibilité des membres extérieurs vérifiée par la DEVE.
+    \item Directeur de thèse membre \alert{non votant} ; au moins deux membres votants.
+    \item Membres du jury : accès aux documents par lien ou depuis \og Mes jurys\fg{}.
+    \item Étudiants : annuaire en lecture seule, filtre \og pouvant présider un jury\fg{}, adresse des présidents possibles.
+  \end{itemize}
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{Paramétrage par la DEVE, sans réglage du site}
+  \begin{itemize}
+    \item \alert{Paramètres du circuit} dans l'activité de suivi : établissement, signataires, agents, salles, durée des soutenances, contrat type.
+    \item Encadré \og Réglages à compléter\fg{} tant qu'il manque quelque chose.
+    \item \alert{13 courriels personnalisables}, avec variables.
+    \item Modèles des documents, grille de conformité, questionnaire préalable au jury.
+    \item \alert{Transfert des paramètres} d'une activité à une autre, ou par fichier.
+    \item Import des dossiers et des validations de l'A6 (Excel, ODS, CSV).
+  \end{itemize}
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{Un logiciel libre, testé en continu}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \begin{itemize}
+        \item Moodle 4.0 et plus, PHP 8.
+        \item Licence \alert{GPL v3}.
+        \item Code au standard Moodle, vérifié à chaque modification.
+        \item Guide utilisateur PDF publié avec chaque version.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \textbf{Intégration continue}
+      \begin{itemize}
+        \item \alert{211 tests} PHPUnit et 4 scénarios Behat.
+        \item Moodle 4.1 (MariaDB) et 4.5 (PostgreSQL).
+        \item Mises à jour de base testées.
+        \item Publication automatique des versions.
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}{Mise en place}
+  \begin{enumerate}
+    \item Copier \texttt{mod/these} et \texttt{mod/thesesynthesis} dans Moodle, lancer la mise à jour.
+    \item Créer un cours par promotion avec une activité \og Gestion des thèses\fg{}, et un cours \og Suivi des thèses\fg{}.
+    \item Inscrire étudiants, directeurs (Enseignant non éditeur), DEVE (Enseignant), bibliothèque.
+    \item Renseigner les \alert{paramètres du circuit} et choisir les agents.
+    \item Remplir l'annuaire du jury (import CSV).
+  \end{enumerate}
+  \vfill
+  \small Serveur de test : \texttt{tools/testserver/seed.php} crée comptes, cours et annuaire à partir d'un fichier.
+\end{frame}
+
+% ---------------------------------------------------------------------------
+\begin{frame}[plain]
+  \centering
+  \vfill
+  {\Huge\bfseries\color{moodle} ThesisManager}\\[1em]
+  {\large Un dossier, un circuit, des documents signés}\\[2em]
+  {\small\color{gris} \url{https://github.com/vinlmoe/ThesisManager}}\\[0.5em]
+  {\small\color{gris} Guide détaillé : guide PDF publié avec chaque version}
+  \vfill
+\end{frame}
+
+\end{document}

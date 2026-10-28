@@ -10,6 +10,15 @@ docs/guides/*.fls
 docs/guides/*.fdb_latexmk
 docs/guides/*.synctex.gz
 
+# Présentation : PDF et fichiers de compilation non versionnés.
+docs/presentation/*.pdf
+docs/presentation/*.aux
+docs/presentation/*.log
+docs/presentation/*.out
+docs/presentation/*.nav
+docs/presentation/*.snm
+docs/presentation/*.toc
+
 # Éditeurs.
 .idea/
 .vscode/
