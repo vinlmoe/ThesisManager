@@ -97,6 +97,8 @@ $mform = new review_form($PAGE->url, [
     'roomconflicts' => $rights->viewall ? these_render_room_conflicts($dossier) : '',
     'signs' => implode(', ', $signs),
     'signername' => fullname($USER),
+    // Nom de signature saisi par la DEVE seulement ; les autres signent au nom de leur compte.
+    'editablename' => $step['actor'] === 'deve',
     'externaldirector' => !empty($dossier->externaldirector),
     'report' => (object) [
         'text' => (string) $dossier->reporttext,

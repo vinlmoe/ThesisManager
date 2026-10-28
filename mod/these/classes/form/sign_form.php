@@ -51,7 +51,8 @@ class sign_form extends \moodleform {
             $mform,
             $this->_customdata['signername'],
             get_string('signexternalintro', 'mod_these'),
-            !empty($this->_customdata['allowsaved'])
+            !empty($this->_customdata['allowsaved']),
+            !empty($this->_customdata['editablename'])
         );
         $this->add_action_buttons(false, get_string('signdocuments', 'mod_these'));
     }

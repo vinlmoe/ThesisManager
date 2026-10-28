@@ -156,7 +156,9 @@ class review_form extends \moodleform {
             these_add_signature_fields(
                 $mform,
                 $this->_customdata['signername'],
-                get_string('signreviewintro', 'mod_these', $this->_customdata['signs'])
+                get_string('signreviewintro', 'mod_these', $this->_customdata['signs']),
+                true,
+                !empty($this->_customdata['editablename'])
             );
         }
 
