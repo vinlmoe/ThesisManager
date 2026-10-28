@@ -838,6 +838,31 @@ $string['loguniversitydownloaded'] = 'Documents for the university downloaded';
 $string['prerequisitesmissing'] = 'Step blocked: documents of the previous steps are still waiting for these signatures.';
 $string['prerequisitesuniversity'] = 'Step blocked: the documents sent to the university have not come back signed. Upload their scans to continue.';
 $string['validatedbyname'] = 'validated by {$a}';
+$string['refusetitle'] = 'Refuse to sign';
+$string['refusesign'] = 'Refuse to sign…';
+$string['refuse_help'] = 'Refused documents are not signed: the file goes back, with your reason, to the step where they were created (the student for the subject form, the thesis record, the distribution contract and the conclusions; the registrar validation for the approval form). Several refused documents: the earliest of these steps. The registrar team and the account that validated are notified; the signatures will be requested from you again at the next validation.';
+$string['refusedocuments'] = 'Refused documents';
+$string['refusereason'] = 'Reason for refusal';
+$string['refusesubmit'] = 'Refuse and return the file';
+$string['refusereturntostudent'] = 'returned to the student';
+$string['refusereturntodeve'] = 'returned to the registrar validation';
+$string['refusedone'] = 'Signature refused: the file is now "{$a}".';
+$string['refusenothing'] = 'No document of this file can be refused: it no longer waits for your signature or the next step has already moved on.';
+$string['refusalremark'] = 'Signature refused by the registrar\'s signing officer: {$a->documents}. Reason: {$a->reason}';
+$string['logagentrefused'] = "Signature refused by the registrar's signing officer";
+$string['emailkeyagentrefused'] = "Signature refused by the registrar's signing officer";
+$string['emailagentrefusedsubject'] = 'Thesis of {$a->student}: signature refused';
+$string['emailagentrefusedbody'] = 'Hello,
+
+{$a->name} refused to sign, for the thesis file of {$a->student} ({$a->activity}): {$a->document}.
+
+Reason: {$a->comment}
+
+The file goes back to: {$a->target}.
+
+File: {$a->url}';
+$string['validatedbynameon'] = 'validated by {$a->name} on {$a->date}';
+$string['pdfvalidatedbyon'] = 'documents validated by {$a->name} (registrar) on {$a->date}';
 $string['pdfvalidatedby'] = 'documents validated by {$a} (registrar)';
 $string['universitypieces'] = 'Documents for the university';
 $string['universitypieces_help'] = 'These documents only wait for the university signatures. Download them: they are sealed as they are (fingerprint written to the history) to be sent to the university. When they come back, upload the signed scans: the minutes wait for these signatures.';

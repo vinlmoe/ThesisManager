@@ -300,6 +300,7 @@ class doctemplates {
                         'delegated' => !empty($signature->delegated),
                         'verifier' => $verifier ? fullname($verifier) : '',
                         'validator' => $validator ? fullname($validator) : '',
+                        'validatedtime' => (int) ($signature->validatedtime ?? 0),
                     ];
                 }
             }
@@ -752,7 +753,7 @@ class doctemplates {
      * Une signature d'agent DEVE (direction générale par délégation comprise) précise le compte de
      * l'équipe DEVE qui a validé les documents.
      *
-     * @param array $signature {name, time, hash, method?, delegated?, verifier?, validator?}
+     * @param array $signature {name, time, hash, method?, delegated?, verifier?, validator?, validatedtime?}
      * @return string
      */
     public static function signature_caption(array $signature) {
@@ -769,7 +770,12 @@ class doctemplates {
             'verifier' => ($signature['verifier'] ?? '') !== '' ? $signature['verifier'] : '-',
         ]);
         if (($signature['validator'] ?? '') !== '') {
-            $caption .= ' — ' . get_string('pdfvalidatedby', 'mod_these', $signature['validator']);
+            $caption .= ' — ' . (!empty($signature['validatedtime'])
+                ? get_string('pdfvalidatedbyon', 'mod_these', (object) [
+                    'name' => $signature['validator'],
+                    'date' => userdate($signature['validatedtime'], get_string('strftimedatetimeshort', 'langconfig')),
+                ])
+                : get_string('pdfvalidatedby', 'mod_these', $signature['validator']));
         }
         return $caption;
     }

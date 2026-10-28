@@ -656,9 +656,9 @@ class signatures {
         if ($record->delegated) {
             $remark .= ' (' . get_string('signeddelegated', 'mod_these') . ')';
         }
-        $validator = !empty($signature->validatedby) ? \core_user::get_user($signature->validatedby) : null;
-        if ($validator) {
-            $remark .= ' — ' . get_string('validatedbyname', 'mod_these', fullname($validator));
+        $validated = $signature ? signatureagent::validator_label($signature) : '';
+        if ($validated !== '') {
+            $remark .= ' — ' . $validated;
         }
         if ($method !== 'online') {
             $remark .= ' — ' . get_string('signedmethod' . $method, 'mod_these');

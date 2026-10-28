@@ -27,8 +27,8 @@ require_once($CFG->dirroot . '/mod/these/locallib.php');
  * case par document, décochée (le signataire coche ce qu'il a consulté), puis le bloc de signature
  * (signature enregistrée reprise d'office).
  *
- * customdata : documents (id de signature => libellé HTML), groups (liste de {heading, ids}),
- * signername.
+ * customdata : documents (id de signature => libellé HTML), groups (liste de {heading, ids,
+ * refuseurl : refus de signer d'un agent DEVE, ou null}), signername.
  *
  * @package   mod_these
  * @copyright 2026 Sébastien Lefebvre
@@ -55,6 +55,13 @@ class mysignatures_form extends \moodleform {
                 \html_writer::empty_tag('br'),
                 false
             );
+            if (!empty($group['refuseurl'])) {
+                $mform->addElement('static', 'refuse' . $i, '', \html_writer::link(
+                    $group['refuseurl'],
+                    get_string('refusesign', 'mod_these'),
+                    ['class' => 'btn btn-sm btn-outline-danger']
+                ));
+            }
         }
         these_add_signature_fields(
             $mform,

@@ -228,9 +228,9 @@ function thesesynthesis_get_signatures(array $links, stdClass $user) {
         $label = $signature->token === null
             ? \mod_these\local\signatureagent::document_label($signature->doctype, $signature->slot)
             : these_document_label($signature->doctype) . ' (' . these_slot_label($signature->slot) . ')';
-        $validator = !empty($signature->validatedby) ? core_user::get_user($signature->validatedby) : null;
-        if ($validator) {
-            $label .= ' — ' . get_string('validatedbyname', 'mod_these', fullname($validator));
+        $validated = \mod_these\local\signatureagent::validator_label($signature);
+        if ($validated !== '') {
+            $label .= ' — ' . $validated;
         }
         $row = thesesynthesis_signature_row($mine, $signature->dossier, $link, $user->id, $signature->requesttime);
         $row->documents[] = $label;

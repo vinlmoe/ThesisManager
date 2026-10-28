@@ -78,6 +78,11 @@ class notifications {
                 'bodystring' => 'emailagentsignaturebody',
                 'vars' => ['name', 'student', 'activity', 'title', 'document', 'url'],
             ],
+            'agentrefused' => [
+                'subjectstring' => 'emailagentrefusedsubject',
+                'bodystring' => 'emailagentrefusedbody',
+                'vars' => ['name', 'student', 'activity', 'title', 'document', 'comment', 'target', 'url'],
+            ],
             'subjectchanged' => [
                 'subjectstring' => 'emailsubjectchangedsubject',
                 'bodystring' => 'emailsubjectchangedbody',

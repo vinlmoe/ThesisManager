@@ -99,7 +99,7 @@ class backup_these_activity_structure_step extends backup_activity_structure_ste
         $signatures = new backup_nested_element('signatures');
         $signature = new backup_nested_element('signature', ['id'], [
             'doctype', 'slot', 'userid', 'signername', 'signeremail', 'requesttime', 'timesigned', 'contenthash',
-            'ipaddress', 'method', 'delegated', 'verifiedby', 'validatedby', 'timecreated',
+            'ipaddress', 'method', 'delegated', 'verifiedby', 'validatedby', 'validatedtime', 'timecreated',
         ]);
 
         $logs = new backup_nested_element('logs');

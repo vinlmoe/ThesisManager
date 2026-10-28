@@ -218,6 +218,8 @@
             COMMENT="Compte DEVE qui a vérifié l'identité du signataire (sur place) ou enregistré le scan"/>
         <FIELD NAME="validatedby" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
             COMMENT="Signature demandée aux agents DEVE : compte de l'équipe DEVE qui a validé l'étape (documents validés)"/>
+        <FIELD NAME="validatedtime" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
+            COMMENT="Date de cette validation"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>

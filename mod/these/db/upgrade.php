@@ -280,5 +280,16 @@ function xmldb_these_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2026102802, 'these');
     }
 
+    if ($oldversion < 2026102803) {
+        // Date de la validation de l'équipe DEVE, avec le compte validateur.
+        $dbman = $DB->get_manager();
+        $table = new xmldb_table('these_signature');
+        $field = new xmldb_field('validatedtime', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'validatedby');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        upgrade_mod_savepoint(true, 2026102803, 'these');
+    }
+
     return true;
 }

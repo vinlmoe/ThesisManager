@@ -118,6 +118,27 @@ class signatureagent {
     }
 
     /**
+     * « validé par … le … » : compte de l'équipe DEVE qui a validé l'étape dont un agent signe les
+     * documents, et date de cette validation.
+     *
+     * @param stdClass $signature Signature (validatedby, validatedtime).
+     * @return string Vide sans validateur connu.
+     */
+    public static function validator_label(stdClass $signature) {
+        $validator = !empty($signature->validatedby) ? \core_user::get_user($signature->validatedby) : null;
+        if (!$validator) {
+            return '';
+        }
+        if (empty($signature->validatedtime)) {
+            return get_string('validatedbyname', 'mod_these', fullname($validator));
+        }
+        return get_string('validatedbynameon', 'mod_these', (object) [
+            'name' => fullname($validator),
+            'date' => userdate($signature->validatedtime, get_string('strftimedatetimeshort', 'langconfig')),
+        ]);
+    }
+
+    /**
      * Libellé d'un document à signer par un agent : document, emplacement, et « par délégation »
      * pour la direction générale.
      *
@@ -236,6 +257,7 @@ class signatureagent {
                     'timesigned' => 0,
                     'contenthash' => null,
                     'validatedby' => (int) $validatorid ?: (int) ($signature->validatedby ?? 0),
+                    'validatedtime' => $validatorid ? $now : (int) ($signature->validatedtime ?? 0),
                 ];
                 if ($signature) {
                     $record->id = $signature->id;
@@ -252,10 +274,10 @@ class signatureagent {
         }
         $vars = these_email_base_vars($these, $cm, $dossier);
         $vars['document'] = implode(', ', $labels);
-        $validator = $validatorid ? \core_user::get_user($validatorid) : null;
-        if ($validator) {
-            // Compte qui a validé les documents, donné aux agents avec la demande.
-            $vars['document'] .= ' — ' . get_string('validatedbyname', 'mod_these', fullname($validator));
+        if ($validatorid) {
+            // Compte qui a validé les documents, et quand, donnés aux agents avec la demande.
+            $label = self::validator_label((object) ['validatedby' => $validatorid, 'validatedtime' => $now]);
+            $vars['document'] .= $label !== '' ? ' — ' . $label : '';
         }
         $vars['url'] = (new moodle_url('/mod/these/mysignatures.php'))->out(false);
         foreach ($agents as $agent) {

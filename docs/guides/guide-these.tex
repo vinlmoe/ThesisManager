@@ -123,7 +123,9 @@ proposée dans \og À traiter\fg{} ; signatures à apposer et signatures attendu
 centralisées, avec le lien vers la page où agir. Validation de l'A6 sur une
 page à part. Signatures préalables à chaque étape ; pièces pour l'université
 scellées et téléchargées, scans au retour ; compte DEVE validateur des
-signatures par délégation ; scans ouverts depuis le suivi des signatures. \\
+signatures par délégation, avec la date ; refus de signer d'un agent DEVE, avec
+motif et renvoi à l'étape de création des documents ; scans ouverts depuis le
+suivi des signatures. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -1585,10 +1587,30 @@ dossier\fg{}, le document est scellé définitivement et le procès-verbal peut
 
 Quand des agents DEVE signent après la validation de l'équipe (visa de la DEVE,
 direction générale par délégation), le compte de l'équipe DEVE qui a validé
-l'étape est enregistré avec la demande. Il figure dans le courriel et dans
-\bouton{Mes signatures} de l'agent (\og validé par \ldots\fg{}), dans le suivi des
-signatures, à l'historique et sous la signature imprimée : \og documents validés
-par \ldots{} (DEVE)\fg{}. Une relance garde ce compte.
+l'étape et la date de cette validation sont enregistrés avec la demande. Ils
+figurent dans le courriel et dans \bouton{Mes signatures} de l'agent
+(\og validé par \ldots{} le \ldots\fg{}), dans le suivi des signatures, à
+l'historique et sous la signature imprimée : \og documents validés par \ldots{}
+(DEVE) le \ldots\fg{}. Une relance les garde.
+
+\begin{procedure}{Refuser de signer}{Agent DEVE}
+\begin{etapes}
+  \item Dans \bouton{Mes signatures}, sous le dossier concerné, cliquez sur
+        \bouton{Refuser de signer\ldots}.
+  \item Les documents sont cochés d'office ; chacun indique où il renvoie le
+        dossier. Décochez ceux que vous acceptez de signer.
+  \item Saisissez le \textbf{motif} (obligatoire) et cliquez sur
+        \bouton{Refuser et renvoyer le dossier}.
+\end{etapes}
+\ensuite{le dossier revient à l'étape où les documents refusés ont été créés :
+l'étudiant pour le dépôt de sujet, la fiche signalétique, le contrat de diffusion
+et les conclusions (il soumet de nouveau à la DEVE) ; la validation du dossier
+par la DEVE pour la fiche d'agréments. Plusieurs documents : la première de ces
+étapes. Le motif est montré au destinataire, inscrit à l'historique et envoyé à
+l'équipe DEVE et au compte qui avait validé. Les demandes de signature de cette
+validation sont retirées et repartent à la validation suivante. Le refus n'est
+plus possible une fois l'étape suivante franchie.}
+\end{procedure}
 
 \subsection{Intégrité}\label{sec:integrite}
 

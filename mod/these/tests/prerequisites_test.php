@@ -162,4 +162,60 @@ final class prerequisites_test extends these_testcase {
             'hash' => 'abc', 'validator' => fullname($this->deve)]);
         $this->assertStringContainsString(get_string('pdfvalidatedby', 'mod_these', fullname($this->deve)), $caption);
     }
+
+    /**
+     * Refus de signer d'un agent DEVE : le dossier revient à l'étape de création des documents
+     * refusés (la première s'il y en a plusieurs), avec le motif ; les demandes de la même validation
+     * sont retirées, celles d'une étape antérieure restent.
+     */
+    public function test_agent_refusal(): void {
+        global $DB;
+        $this->setup_activity();
+        $agent = $this->getDataGenerator()->create_user(['username' => 'agentdeve', 'email' => 'agent@example.org']);
+        \mod_these\local\scopesettings::set(these_local_scope($this->these), ['deveagent' => 'agentdeve']);
+        $this->redirectEmails();
+        $make = function () {
+            return $this->generator->create_dossier($this->these, $this->getDataGenerator()->create_user()->id, [
+                'status' => THESE_STATUS_DEFENSE_VALIDATED, 'directorid' => $this->director->id, 'title' => 'Sujet',
+                'agreement' => json_encode(['defvdate' => time(), 'mobility' => 1]), 'conclusions' => 'Conclusions.',
+            ]);
+        };
+        $pending = function ($dossier) use ($agent) {
+            return array_values(array_filter(these_get_user_pending_signatures($agent), function ($signature) use ($dossier) {
+                return (int) $signature->dossierid === (int) $dossier->id;
+            }));
+        };
+
+        // Fiche d'agréments seule : retour à la validation de la DEVE.
+        $dossier = $make();
+        these_request_agent_signatures($this->these, $this->cm, $dossier, ['subject', 'agreement', 'conclusions'], $this->deve->id);
+        $signatures = $pending($dossier);
+        $this->assertNotEmpty($signatures);
+        foreach ($signatures as $signature) {
+            // Le visa du sujet (étape antérieure) ne se refuse plus depuis la phase de soutenance.
+            $refusable = \mod_these\local\refusal::refusable($signature, $dossier);
+            $this->assertSame($signature->doctype !== 'subject', $refusable, $signature->doctype);
+            $this->assertNotEmpty($signature->validatedtime);
+        }
+        $agreement = array_values(array_filter($signatures, function ($signature) {
+            return $signature->doctype === 'agreement';
+        }));
+        $dossier = \mod_these\local\refusal::refuse($this->these, $this->cm, $dossier, $agreement, $agent->id, 'DEFV erronée');
+        $this->assertEquals(THESE_STATUS_DEFENSE_APPROVED, $dossier->status);
+        $this->assertSame('DEFV erronée', $dossier->returncomment);
+        $this->assertSame(['subject'], array_column($pending($dossier), 'doctype'));
+        $this->assertTrue($DB->record_exists('these_log', ['dossierid' => $dossier->id, 'logaction' => 'agentrefused']));
+
+        // Fiche d'agréments et conclusions : la première étape, l'étudiant, qui revient ensuite à la DEVE.
+        $dossier = $make();
+        these_request_agent_signatures($this->these, $this->cm, $dossier, ['agreement', 'conclusions'], $this->deve->id);
+        $refused = $pending($dossier);
+        $dossier = \mod_these\local\refusal::refuse($this->these, $this->cm, $dossier, $refused, $agent->id, 'À reprendre');
+        $this->assertEquals(THESE_STATUS_DEFENSE_RETURNED, $dossier->status);
+        $this->assertEquals(THESE_STATUS_DEFENSE_APPROVED, $dossier->returnstatus);
+
+        // Plus rien à refuser une fois le dossier renvoyé ; motif obligatoire.
+        $this->expectException(\moodle_exception::class);
+        \mod_these\local\refusal::refuse($this->these, $this->cm, $dossier, [], $agent->id, '');
+    }
 }

@@ -842,6 +842,31 @@ $string['loguniversitydownloaded'] = "Pièces pour l'université téléchargées
 $string['prerequisitesmissing'] = "Étape bloquée : des documents des étapes précédentes attendent encore ces signatures.";
 $string['prerequisitesuniversity'] = "Étape bloquée : les pièces envoyées à l'université ne sont pas revenues signées. Déposez leurs scans pour continuer.";
 $string['validatedbyname'] = 'validé par {$a}';
+$string['refusetitle'] = 'Refuser de signer';
+$string['refusesign'] = 'Refuser de signer…';
+$string['refuse_help'] = "Les documents refusés ne sont pas signés : le dossier revient, avec votre motif, à l'étape où ils ont été créés (l'étudiant pour le dépôt de sujet, la fiche signalétique, le contrat de diffusion et les conclusions ; la validation de la DEVE pour la fiche d'agréments). Plusieurs documents refusés : la première de ces étapes. L'équipe DEVE et le compte qui avait validé sont prévenus ; les signatures vous seront demandées de nouveau à la prochaine validation.";
+$string['refusedocuments'] = 'Documents refusés';
+$string['refusereason'] = 'Motif du refus';
+$string['refusesubmit'] = 'Refuser et renvoyer le dossier';
+$string['refusereturntostudent'] = "renvoi à l'étudiant";
+$string['refusereturntodeve'] = 'renvoi à la validation de la DEVE';
+$string['refusedone'] = 'Signature refusée : le dossier est maintenant « {$a} ».';
+$string['refusenothing'] = "Aucun document de ce dossier ne peut être refusé : il n'attend plus votre signature ou l'étape suivante a déjà avancé.";
+$string['refusalremark'] = 'Signature refusée par l\'agent DEVE : {$a->documents}. Motif : {$a->reason}';
+$string['logagentrefused'] = "Signature refusée par l'agent DEVE";
+$string['emailkeyagentrefused'] = "Signature refusée par l'agent DEVE";
+$string['emailagentrefusedsubject'] = 'Thèse de {$a->student} : signature refusée';
+$string['emailagentrefusedbody'] = 'Bonjour,
+
+{$a->name} a refusé de signer, pour le dossier de thèse de {$a->student} ({$a->activity}) : {$a->document}.
+
+Motif : {$a->comment}
+
+Le dossier revient à : {$a->target}.
+
+Dossier : {$a->url}';
+$string['validatedbynameon'] = 'validé par {$a->name} le {$a->date}';
+$string['pdfvalidatedbyon'] = 'documents validés par {$a->name} (DEVE) le {$a->date}';
 $string['pdfvalidatedby'] = 'documents validés par {$a} (DEVE)';
 $string['universitypieces'] = "Pièces pour l'université";
 $string['universitypieces_help'] = "Ces documents n'attendent plus que les signatures de l'université. Téléchargez-les : ils sont scellés tels quels (empreinte inscrite à l'historique) pour être envoyés à l'université. À leur retour, déposez les scans signés : le procès-verbal attend ces signatures.";

@@ -96,8 +96,8 @@ class signed_documents implements \renderable, \templatable {
      * @return string « — validé par … », ou vide.
      */
     protected function validator(stdClass $signature): string {
-        $validator = !empty($signature->validatedby) ? \core_user::get_user($signature->validatedby) : null;
-        return $validator ? ' — ' . get_string('validatedbyname', 'mod_these', fullname($validator)) : '';
+        $label = \mod_these\local\signatureagent::validator_label($signature);
+        return $label !== '' ? ' — ' . $label : '';
     }
 
     /**
