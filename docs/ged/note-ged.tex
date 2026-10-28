@@ -1,0 +1,346 @@
+% Note technique pour l'équipe GED : versement des documents de la gestion des thèses.
+% Compilation : pdflatex note-ged.tex (deux fois), depuis docs/ged.
+\documentclass[11pt,a4paper]{article}
+
+\newcommand{\titreguide}{Note technique GED}
+\newcommand{\versionguide}{1.0}
+\newcommand{\dateguide}{28 octobre 2026}
+\newcommand{\versionthese}{0.19.0}
+
+\usepackage{../guides/guide-commun}
+\usepackage{fancyvrb}
+\fvset{fontsize=\footnotesize,frame=single,framesep=2mm,rulecolor=\color{cadre}}
+
+\begin{document}
+
+\begin{center}
+  {\LARGE\bfseries\color{moodle} Versement des documents des thèses dans la GED}\\[0.6em]
+  {\large Stockage des documents scellés et extraction}\\[0.8em]
+  {\small ThesisManager (\texttt{mod\_these}) \versionthese{} -- note \versionguide{} du \dateguide{} -- Sébastien Lefebvre}
+\end{center}
+
+\vspace{1em}
+
+\begin{astuce}
+\textbf{En bref.} Les documents signés sont figés (\og scellés\fg{}) dans la zone de fichiers
+\texttt{sealed} du module, gérée par l'API de fichiers de Moodle. Le connecteur lit la table
+\texttt{mdl\_files} et le dossier \texttt{moodledata}, \textbf{en lecture seule}, vérifie les empreintes
+SHA-1 et SHA-256, et identifie chaque version par \emph{dossier + document + empreinte}. Le script
+\texttt{docs/ged/extraction\_ged.py} fait tout cela et produit un manifeste CSV.
+\end{astuce}
+
+\tableofcontents
+
+% ===========================================================================
+\section{Objet et périmètre}
+
+La gestion des thèses d'exercice vétérinaire se fait dans Moodle, avec le module ThesisManager. Chaque
+étudiant a un \textbf{dossier} qui réunit son sujet, sa soutenance, son jury et ses documents. Les
+documents officiels sont produits et signés dans le module.
+
+Cette note décrit, pour l'équipe chargée de la GED :
+\begin{itemize}
+  \item comment un document est scellé et ce que garantit le scellé (section~\ref{sec:scellement}) ;
+  \item où et comment les fichiers sont stockés (section~\ref{sec:stockage}) ;
+  \item quels fichiers verser et avec quelles métadonnées (sections~\ref{sec:zones} et~\ref{sec:metadonnees}) ;
+  \item comment les extraire et vérifier leur intégrité (sections~\ref{sec:acces} à~\ref{sec:script}) ;
+  \item les règles que le connecteur doit respecter (section~\ref{sec:regles}).
+\end{itemize}
+
+% ===========================================================================
+\section{Le scellement}\label{sec:scellement}
+
+\paragraph{Documents concernés.} Neuf documents de l'établissement sont signés dans le module :
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}l X l@{}}
+\toprule
+\textbf{Fichier} & \textbf{Document} & \textbf{Signataires} \\
+\midrule
+\texttt{subject.pdf} & Dépôt de sujet (E01) & étudiant, directeur, DEVE \\
+\texttt{bordereau.pdf} & Bordereau de thèse (ABES) & étudiant \\
+\texttt{report.pdf} & Rapport du directeur & directeur \\
+\texttt{grid.pdf} & Grille de conformité & directeur \\
+\texttt{agreement.pdf} & Fiche d'agréments (E02) & DEVE, directeur, DG, CCEM \\
+\texttt{signaletique.pdf} & Fiche signalétique (E03) & président du jury, DG, CCEM \\
+\texttt{contract.pdf} & Contrat de diffusion électronique & étudiant, directeur, DG, université \\
+\texttt{conformity.pdf} & Attestation de conformité du manuscrit & bibliothèque \\
+\texttt{conclusions.pdf} & Conclusions de la thèse & directeur, président, DG, CCEM \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+La direction générale (DG) signe toujours par délégation, par un agent de la DEVE. Le directeur
+extérieur éventuel signe aussi le dépôt de sujet et la fiche d'agréments.
+
+\paragraph{Quand.} Dès que la \textbf{dernière signature attendue} d'un document est apposée, le module
+produit son PDF une dernière fois et le conserve tel quel : c'est le document \textbf{scellé}. Il ne
+dépend plus ensuite ni des modèles de mise en forme ni du contrat type.
+
+\paragraph{Ce qu'il contient.} Pour chaque signataire : le nom, la date, l'image de la signature,
+l'empreinte du contenu signé et, le cas échéant, la mention \og par délégation\fg{}, la vérification
+d'identité par la DEVE (signature sur place) ou la signature à la main (scan joint au dossier).
+
+\paragraph{Ce que garantit le module.}
+\begin{itemize}
+  \item Chaque signature conserve l'empreinte SHA-256 des données signées : si le contenu du dossier
+        change ensuite, la signature est invalidée et le document doit être signé de nouveau.
+  \item À la création du scellé, l'empreinte \textbf{SHA-256 du PDF}, calculée sur ses octets, est
+        inscrite à l'historique du dossier (table \texttt{mdl\_these\_log}, action
+        \texttt{documentsealed}, remarque \og \textit{Libellé du document} — SHA-256
+        \textit{empreinte}\fg{}).
+\end{itemize}
+
+\begin{attention}
+\textbf{Un scellé peut être levé.} Le fichier scellé est supprimé quand une de ses signatures disparaît :
+\begin{itemize}
+  \item invalidation d'une signature (données du dossier modifiées après signature) ;
+  \item ajournement de la thèse (toutes les signatures sauf celles du dépôt de sujet) ;
+  \item changement de sujet (signatures du dépôt de sujet ; l'ancien dépôt signé est d'abord archivé
+        dans la zone \texttt{subjectarchive}) ;
+  \item effacement des données d'un utilisateur au titre du RGPD.
+\end{itemize}
+Une fois toutes les signatures de nouveau réunies, le document est scellé à nouveau, \textbf{sous le
+même nom de fichier}, avec un autre contenu, une autre empreinte et une nouvelle ligne
+\texttt{documentsealed} à l'historique. La GED doit conserver les versions déjà versées.
+\end{attention}
+
+% ===========================================================================
+\section{Stockage dans Moodle}\label{sec:stockage}
+
+Les fichiers ne sont pas rangés dans une arborescence lisible : ils sont gérés par l'API de fichiers de
+Moodle. Chaque fichier est une ligne de la table \texttt{mdl\_files} (préfixe \texttt{mdl\_} par
+défaut, voir \texttt{\$CFG->prefix} dans \texttt{config.php}) :
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}l X@{}}
+\toprule
+\textbf{Champ} & \textbf{Valeur} \\
+\midrule
+\texttt{component} & \texttt{mod\_these} \\
+\texttt{filearea} & zone (section~\ref{sec:zones}) ; \texttt{sealed} pour les documents scellés \\
+\texttt{itemid} & identifiant du dossier, \texttt{mdl\_these\_dossier.id} \\
+\texttt{contextid} & contexte de l'activité : ligne de \texttt{mdl\_context} de niveau 70 dont
+\texttt{instanceid} est l'identifiant du module de cours \\
+\texttt{filepath}, \texttt{filename} & \texttt{/} puis le nom du fichier (\texttt{subject.pdf}\ldots) \\
+\texttt{contenthash} & empreinte \textbf{SHA-1} du contenu, qui donne l'emplacement physique \\
+\texttt{filesize}, \texttt{timecreated}, \texttt{timemodified} & taille en octets et dates (horodatage Unix) \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Le contenu se trouve dans
+\texttt{<moodledata>/filedir/\textit{ab}/\textit{cd}/\textit{abcd\ldots}}, où \textit{ab} et
+\textit{cd} sont les deux premiers, puis les deux caractères suivants du \texttt{contenthash}, et
+\textit{abcd\ldots} le \texttt{contenthash} complet. Deux fichiers identiques partagent le même contenu
+physique. Les lignes dont le nom est \og .\fg{} désignent des répertoires et s'ignorent.
+
+% ===========================================================================
+\section{Fichiers à verser}\label{sec:zones}
+
+Seules les zones dont le contenu ne change plus sont à verser :
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}l X X@{}}
+\toprule
+\textbf{Zone} & \textbf{Contenu} & \textbf{Nom des fichiers} \\
+\midrule
+\texttt{sealed} & Documents entièrement signés, figés & \texttt{<document>.pdf} (tableau
+section~\ref{sec:scellement}) \\
+\texttt{pv} & Procès-verbal signé par le jury, scanné & nom d'origine \\
+\texttt{pvadjourned} & Procès-verbaux d'ajournement archivés & \texttt{ajournement-AAAA-MM-JJ-<nom d'origine>} \\
+\texttt{subjectarchive} & Dépôt de sujet signé, archivé lors d'un changement de sujet &
+\texttt{sujet-AAAA-MM-JJ-<n>.pdf} \\
+\texttt{signedscan} & Documents signés hors module, scannés &
+\texttt{AAAA-MM-JJ-<document>-<signataires>-<nom d'origine>} \\
+\texttt{corrections} & Manuscrit corrigé (après corrections demandées par le jury) & nom d'origine \\
+\texttt{manuscript} & Manuscrit déposé pour la soutenance, à verser s'il n'y a pas de manuscrit corrigé & nom d'origine \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Les autres zones ne sont pas à verser : pièces de travail (\texttt{subjectdocs},
+\texttt{defensedocs}, \texttt{directorreport}), documents régénérés à chaque fois
+(\texttt{generated}) et images des signatures (\texttt{signature}), déjà incluses dans les PDF scellés.
+
+% ===========================================================================
+\section{Métadonnées}\label{sec:metadonnees}
+
+\paragraph{Le dossier} (\texttt{mdl\_these\_dossier}, clé \texttt{id} = \texttt{itemid} du fichier) :
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}l X@{}}
+\toprule
+\textbf{Champ} & \textbf{Contenu} \\
+\midrule
+\texttt{devenumber} & numéro d'enregistrement DEVE (\texttt{2026-042}), attribué à la validation du
+dossier de soutenance ; vide avant \\
+\texttt{userid} & étudiant (\texttt{mdl\_user} : \texttt{username}, \texttt{lastname},
+\texttt{firstname}, \texttt{idnumber}) \\
+\texttt{title}, \texttt{titleen} & titre de la thèse, en français et en anglais \\
+\texttt{directorid} & directeur de thèse (\texttt{mdl\_user}) \\
+\texttt{defensedate} & date de soutenance (horodatage Unix, 0 si non fixée) \\
+\texttt{defenseresult} & 0 : pas encore de décision, 1 : admis, 2 : ajourné \\
+\texttt{mention} & \texttt{honorable}, \texttt{treshonorable}, \texttt{felicitations} (vide sinon) \\
+\texttt{confidential} & 1 : thèse confidentielle (titre et contenu à ne pas divulguer) \\
+\texttt{bordereau} & JSON du bordereau ABES ; clés \texttt{embargo} et \texttt{embargountil} pour
+une diffusion différée \\
+\texttt{status} & étape du circuit : 100 clos, $-1$ abandonné (voir le guide) \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\paragraph{L'historique} (\texttt{mdl\_these\_log}) : une ligne par événement, avec
+\texttt{dossierid}, \texttt{logaction}, \texttt{remark} et \texttt{timecreated}. Les actions utiles à
+l'archivage sont \texttt{documentsealed} (empreinte du scellé), \texttt{signed} (chaque signature) et
+\texttt{closed} (clôture du dossier).
+
+% ===========================================================================
+\section{Deux façons d'accéder aux fichiers}\label{sec:acces}
+
+\paragraph{Par la base et \texttt{moodledata} (recommandé).} Le connecteur lit
+\texttt{mdl\_files} et les tables du module avec un compte de base de données \textbf{en lecture seule},
+et lit les fichiers dans \texttt{moodledata/filedir}. C'est la méthode du script fourni
+(section~\ref{sec:script}). Exemple de compte PostgreSQL :
+
+\begin{Verbatim}
+CREATE ROLE ged LOGIN PASSWORD '...';
+GRANT CONNECT ON DATABASE moodle TO ged;
+GRANT USAGE ON SCHEMA public TO ged;
+GRANT SELECT ON mdl_files, mdl_context, mdl_course_modules, mdl_modules,
+                mdl_these_dossier, mdl_these_log, mdl_user TO ged;
+\end{Verbatim}
+
+Le compte système qui exécute le connecteur n'a besoin que du droit de lecture sur
+\texttt{moodledata/filedir}.
+
+\paragraph{Par le site.} Un compte de service ayant les droits de la DEVE ou de la bibliothèque
+télécharge un document de l'établissement par
+\nolinkurl{https://<site>/mod/these/document.php?id=<module>&dossierid=<dossier>&type=<document>},
+\texttt{<document>} étant la clé du document (\texttt{subject}, \texttt{agreement}\ldots). Si le
+document est scellé, c'est le PDF scellé qui est renvoyé ; sinon, le document dans son état de signature
+du moment. Les autres zones se téléchargent par
+\nolinkurl{https://<site>/pluginfile.php/<contextid>/mod_these/<zone>/<dossier>/<fichier>} (la zone
+\texttt{sealed} ne passe pas par \texttt{pluginfile.php}). Cette voie convient à un versement ponctuel ;
+pour un versement régulier, préférer la première.
+
+% ===========================================================================
+\section{Requêtes}\label{sec:requetes}
+
+\paragraph{Documents scellés, avec leur dossier.} Requête valable pour PostgreSQL et MariaDB/MySQL
+(adapter le préfixe \texttt{mdl\_}) :
+
+\begin{Verbatim}
+SELECT d.id AS dossierid, d.devenumber, u.lastname, u.firstname, d.title,
+       f.filename, f.contenthash, f.filesize, f.timemodified
+  FROM mdl_files f
+  JOIN mdl_context c ON c.id = f.contextid AND c.contextlevel = 70
+  JOIN mdl_course_modules cm ON cm.id = c.instanceid
+  JOIN mdl_modules m ON m.id = cm.module AND m.name = 'these'
+  JOIN mdl_these_dossier d ON d.id = f.itemid AND d.theseid = cm.instance
+  JOIN mdl_user u ON u.id = d.userid
+ WHERE f.component = 'mod_these' AND f.filearea = 'sealed'
+   AND f.filename <> '.'
+ ORDER BY d.id, f.filename;
+\end{Verbatim}
+
+\paragraph{Toutes les zones à verser.} Remplacer la condition sur \texttt{filearea} par
+\texttt{f.filearea IN ('sealed', 'pv', 'pvadjourned', 'subjectarchive', 'signedscan',
+'corrections', 'manuscript')}. Pour un versement incrémental, ajouter
+\texttt{AND f.timemodified >= <horodatage du dernier passage>}.
+
+\paragraph{Empreintes SHA-256 des scellés.}
+
+\begin{Verbatim}
+SELECT dossierid, remark, timecreated
+  FROM mdl_these_log
+ WHERE logaction = 'documentsealed'
+ ORDER BY dossierid, timecreated;
+\end{Verbatim}
+
+La remarque a la forme \og Dépôt de sujet de thèse — SHA-256 f63cad99c472\ldots\fg{} : l'empreinte se
+retrouve avec l'expression régulière \verb|SHA-256 ([0-9a-f]{64})|. Un dossier peut avoir plusieurs
+lignes pour un même document : une par scellé successif.
+
+% ===========================================================================
+\section{Contrôles d'intégrité}\label{sec:integrite}
+
+\begin{enumerate}
+  \item \textbf{Fichier physique.} L'empreinte SHA-1 du fichier lu dans \texttt{filedir} doit être égale
+        à son \texttt{contenthash}. Sinon, le fichier est absent ou altéré : ne pas le verser, alerter.
+  \item \textbf{Document scellé.} L'empreinte SHA-256 du PDF doit figurer parmi celles inscrites à
+        l'historique du dossier (\texttt{documentsealed}). C'est la preuve que le fichier versé est
+        celui que le module a scellé.
+  \item \textbf{Identification d'une version.} Une version se repère par \emph{dossier + document +
+        empreinte SHA-256}, jamais par le nom seul (un scellé refait garde le même nom).
+\end{enumerate}
+
+Conserver l'empreinte SHA-256 dans les métadonnées de la GED permet de prouver plus tard que le
+document n'a pas changé depuis son versement.
+
+% ===========================================================================
+\section{Script d'extraction}\label{sec:script}
+
+Le script \texttt{docs/ged/extraction\_ged.py} (Python~3, bibliothèque standard seulement, client
+\texttt{psql}) applique les règles ci-dessus pour une base \textbf{PostgreSQL}. Pour MariaDB/MySQL,
+seule la fonction \texttt{psql()} est à adapter (client \texttt{mysql}).
+
+\begin{Verbatim}
+PGHOST=... PGUSER=ged PGPASSWORD=... PGDATABASE=moodle \
+python3 extraction_ged.py --moodledata /var/moodledata --dest /srv/export-ged \
+        [--prefix mdl_] [--since 2026-10-01]
+\end{Verbatim}
+
+\begin{itemize}
+  \item Il ouvre la base en \textbf{lecture seule} (\texttt{default\_transaction\_read\_only}) et ne
+        fait que lire \texttt{moodledata}.
+  \item Il copie chaque fichier à verser dans
+        \texttt{<dest>/<numéro DEVE>/<zone>/<fichier>} (\texttt{dossier-<id>} sans numéro DEVE). Le
+        manuscrit initial n'est copié que s'il n'y a pas de manuscrit corrigé.
+  \item Il vérifie la SHA-1 de chaque fichier et la SHA-256 de chaque scellé (colonne
+        \texttt{scelle\_verifie} : \texttt{oui} ou \texttt{NON}).
+  \item Il peut être relancé : un fichier déjà exporté avec la même empreinte est ignoré ; une nouvelle
+        version est exportée à côté, sous \texttt{<nom>.<12 premiers caractères de la SHA-256>.pdf},
+        jamais par-dessus.
+  \item Il complète \texttt{<dest>/manifeste.csv} : dossier, numéro DEVE, étudiant, titre, date de
+        soutenance, résultat, mention, zone, fichier, chemin d'export, taille, SHA-256, vérification du
+        scellé, date du fichier et date d'export. La GED s'appuie sur ce manifeste pour l'indexation.
+  \item Il se termine avec le code 1 si un fichier est absent ou altéré (message sur la sortie
+        d'erreur), 0 sinon.
+\end{itemize}
+
+\paragraph{Essai.} Sur un Moodle de test : premier passage, un dépôt de sujet scellé exporté et vérifié ;
+deuxième passage, rien de nouveau ; scellé levé puis refait, la nouvelle version est exportée à côté de
+la première, les deux vérifiées.
+
+% ===========================================================================
+\section{Règles pour le connecteur}\label{sec:regles}
+
+\begin{itemize}
+  \item \textbf{Lecture seule}, sans exception : ne jamais écrire dans \texttt{filedir} ni dans les
+        tables de Moodle, ne jamais supprimer un fichier.
+  \item \textbf{Ne jamais supprimer côté GED} une version déjà versée lorsqu'un scellé est refait :
+        la nouvelle version s'ajoute.
+  \item \textbf{Thèses confidentielles} (\texttt{confidential} = 1) : appliquer dans la GED une
+        restriction d'accès équivalente ; le titre ne doit pas être visible de tous.
+  \item \textbf{Embargo} (clé \texttt{embargo} du bordereau) : ne pas diffuser le manuscrit avant la
+        date \texttt{embargountil}.
+  \item \textbf{Données personnelles} : les documents contiennent nom, date et lieu de naissance,
+        adresse de l'étudiant et signatures ; les verser sous le régime de conservation prévu pour les
+        dossiers d'étudiants.
+  \item \textbf{Moment du versement} : de préférence à la clôture du dossier (\texttt{status} = 100),
+        quand tous les documents sont scellés ; un versement incrémental (\texttt{--since}) reste sans
+        risque grâce à la gestion des versions.
+\end{itemize}
+
+% ===========================================================================
+\appendix
+\section{Script \texttt{extraction\_ged.py}}
+
+\VerbatimInput[fontsize=\scriptsize,numbers=left,numbersep=4pt]{extraction_ged.py}
+
+\end{document}
