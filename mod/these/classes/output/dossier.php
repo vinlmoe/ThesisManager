@@ -268,7 +268,15 @@ class dossier implements \renderable, \templatable {
             'registration' => (new detail_section(get_string('registration', 'mod_these'), [
                 get_string('devenumber', 'mod_these') => self::text($dossier->devenumber),
                 get_string('libraryref', 'mod_these') => self::text($dossier->libraryref),
-                get_string('a6validation', 'mod_these') => self::text(\mod_these\local\a6::label($dossier)),
+                get_string('a6validation', 'mod_these') => array_merge(
+                    [parts::text(\mod_these\local\a6::label($dossier))],
+                    // La DEVE la saisit sur sa page à part.
+                    $rights->deve ? [parts::text(' '), parts::link(
+                        \mod_these\local\a6::url($this->cm, $dossier->userid),
+                        get_string('a6edit', 'mod_these'),
+                        'btn btn-sm btn-secondary ml-2'
+                    )] : []
+                ),
             ]))->export_for_template($output),
             'defense' => false,
             'corrections' => false,

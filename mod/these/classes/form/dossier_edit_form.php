@@ -58,12 +58,12 @@ class dossier_edit_form extends \moodleform {
         $mform->setType('devenumber', PARAM_TEXT);
         $mform->addElement('text', 'libraryref', get_string('libraryref', 'mod_these'), ['size' => 40]);
         $mform->setType('libraryref', PARAM_TEXT);
-        // Validation de l'A6, saisie par la DEVE (voir \mod_these\local\a6).
-        $mform->addElement('advcheckbox', 'aga6notyet', '', get_string('aga6notyet', 'mod_these'));
-        $mform->addElement('date_selector', 'aga6date', get_string('aga6date', 'mod_these'), ['optional' => true]);
-        $mform->hideIf('aga6date', 'aga6notyet', 'checked');
-        $mform->addElement('select', 'aga6school', get_string('bschool', 'mod_these'), these_school_options());
-        $mform->hideIf('aga6school', 'aga6notyet', 'checked');
+        // Validation de l'A6 : saisie sur sa page à part (voir \mod_these\local\a6), rappelée ici.
+        \mod_these\local\a6::add_status_field(
+            $mform,
+            $this->_customdata['a6label'] ?? '',
+            $this->_customdata['a6url'] ?? null
+        );
 
         $mform->addElement('header', 'defenseheader', get_string('defense', 'mod_these'));
         $mform->addElement(

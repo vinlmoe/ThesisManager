@@ -24,8 +24,8 @@ use stdClass;
  * Validation de l'A6 (année d'approfondissement) d'un étudiant, saisie par la DEVE. Elle est liée à
  * l'étudiant et non à son dossier de thèse (table these_a6, commune à toutes les activités) : elle
  * peut être enregistrée avant la création du dossier, et vaut pour chacun de ses dossiers. La DEVE la
- * saisit à la validation du dossier de soutenance, dans la modification d'un dossier, en lot depuis le
- * tableau de bord ou par import d'un fichier (Excel, OpenDocument ou CSV). L'agrément administratif et
+ * saisit sur sa page à part (a6.php) : étudiant par étudiant, en lot pour les étudiants cochés, ou par
+ * import d'un fichier (Excel, OpenDocument ou CSV). L'agrément administratif et
  * la fiche signalétique la reprennent. Faute de saisie, la valeur d'avant cette table : celle de
  * l'agrément du dossier, sinon celle que l'étudiant avait déclarée dans sa fiche.
  *
@@ -186,6 +186,113 @@ class a6 {
      */
     public static function label(stdClass $dossier) {
         return self::format(self::get($dossier));
+    }
+
+    /**
+     * Étudiants de l'activité, pour la page de validation de l'A6 : inscrits au cours pouvant déposer
+     * un sujet, et étudiants ayant un dossier dans l'activité, triés par nom.
+     *
+     * @param stdClass $these
+     * @param \context $context Contexte de l'activité.
+     * @param string $state '' (tous), 'validated' ou 'notvalidated'.
+     * @param string $search Texte cherché dans le nom, l'adresse et le numéro d'identification.
+     * @return stdClass[] {user, dossier (ou null), a6 (voir get_for_user()), label}
+     */
+    public static function students(stdClass $these, \context $context, $state = '', $search = '') {
+        global $DB;
+
+        $users = get_enrolled_users($context, 'mod/these:submit', 0, 'u.*');
+        $dossiers = [];
+        foreach ($DB->get_records('these_dossier', ['theseid' => $these->id]) as $dossier) {
+            $dossiers[(int) $dossier->userid] = $dossier;
+            if (!isset($users[$dossier->userid])) {
+                $user = $DB->get_record('user', ['id' => $dossier->userid, 'deleted' => 0]);
+                if ($user) {
+                    $users[$user->id] = $user;
+                }
+            }
+        }
+        $search = core_text::strtolower(trim((string) $search));
+        $rows = [];
+        foreach ($users as $user) {
+            if (
+                $search !== '' && strpos(core_text::strtolower(fullname($user) . ' ' . $user->email . ' '
+                    . $user->idnumber), $search) === false
+            ) {
+                continue;
+            }
+            $dossier = $dossiers[(int) $user->id] ?? null;
+            $a6 = self::get_for_user($user->id, $dossier);
+            $validated = !$a6['notyet'] && $a6['date'];
+            if (($state === 'validated' && !$validated) || ($state === 'notvalidated' && $validated)) {
+                continue;
+            }
+            $rows[] = (object) ['user' => $user, 'dossier' => $dossier, 'a6' => $a6, 'label' => self::format($a6)];
+        }
+        usort($rows, function ($a, $b) {
+            return [core_text::strtolower($a->user->lastname), core_text::strtolower($a->user->firstname)]
+                <=> [core_text::strtolower($b->user->lastname), core_text::strtolower($b->user->firstname)];
+        });
+        return $rows;
+    }
+
+    /**
+     * Enregistre la validation de l'A6 d'un étudiant de l'activité : depuis son dossier s'il en a un,
+     * pour garder l'école connue par le dossier quand aucune n'est choisie.
+     *
+     * @param stdClass $these
+     * @param int $userid
+     * @param int $date 0 : pas encore validée.
+     * @param string $school Vide pour garder celle connue.
+     * @param int $actorid
+     * @return void
+     */
+    public static function record(stdClass $these, $userid, $date, $school, $actorid) {
+        global $DB;
+
+        $dossier = $DB->get_record('these_dossier', ['theseid' => $these->id, 'userid' => (int) $userid]);
+        if ($dossier) {
+            self::set($dossier, $date, $school, $actorid);
+        } else {
+            self::set_for_user($userid, $date, $school, $actorid);
+        }
+    }
+
+    /**
+     * Page de validation de l'A6 de l'activité, ou de la saisie d'un étudiant.
+     *
+     * @param stdClass $cm
+     * @param int $userid Étudiant à saisir, 0 pour la liste.
+     * @param \moodle_url|null $returnurl Page où revenir après la saisie (dossier, validation...).
+     * @return \moodle_url
+     */
+    public static function url(stdClass $cm, $userid = 0, ?\moodle_url $returnurl = null) {
+        $params = ['id' => $cm->id];
+        if ($userid) {
+            $params['userid'] = (int) $userid;
+        }
+        if ($returnurl) {
+            $params['returnurl'] = $returnurl->out_as_local_url(false);
+        }
+        return new \moodle_url('/mod/these/a6.php', $params);
+    }
+
+    /**
+     * Rappel de la validation de l'A6 dans un formulaire de la DEVE (validation du dossier de
+     * soutenance, modification d'un dossier), avec le lien vers sa page à part où elle se saisit.
+     *
+     * @param \MoodleQuickForm $mform
+     * @param string $label Voir label().
+     * @param \moodle_url|null $url Voir url().
+     * @return void
+     */
+    public static function add_status_field(\MoodleQuickForm $mform, $label, ?\moodle_url $url = null) {
+        $html = s($label);
+        if ($url) {
+            $attributes = ['class' => 'btn btn-sm btn-secondary ml-2'];
+            $html .= ' ' . \html_writer::link($url, get_string('a6edit', 'mod_these'), $attributes);
+        }
+        $mform->addElement('static', 'a6status', get_string('a6validation', 'mod_these'), $html);
     }
 
     /**

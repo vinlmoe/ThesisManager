@@ -46,6 +46,7 @@ final class navlinks_test extends output_testcase {
         $this->assertTrue($has);
         $this->assertContains(get_string('createdossier', 'mod_these'), $deve);
         $this->assertContains(get_string('export', 'mod_these'), $deve);
+        $this->assertContains(get_string('a6validation', 'mod_these'), $deve);
         $this->assertNotContains(get_string('jurors', 'mod_these'), $deve);
         // Paramétrage : dans le menu « Paramètres », toutes les pages quand l'activité n'est pas suivie.
         $this->assertContains(get_string('jurors', 'mod_these'), $settings);

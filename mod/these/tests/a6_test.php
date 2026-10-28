@@ -151,24 +151,39 @@ final class a6_test extends these_testcase {
     }
 
     /**
-     * Action groupée : la date et l'école choisies, pour chaque dossier coché.
+     * Page de l'A6 : étudiants inscrits (avec ou sans dossier), filtrés par validation et par nom ;
+     * enregistrement depuis le dossier, qui garde l'école connue.
      */
-    public function test_bulk(): void {
+    public function test_students_and_record(): void {
         $this->setup_activity();
-        $dossier = $this->generator->create_dossier($this->these, $this->student->id, ['status' => THESE_STATUS_ACTIVE]);
+        $other = $this->getDataGenerator()->create_and_enrol($this->course, 'student', ['firstname' => 'Zoé',
+            'lastname' => 'Zola']);
+        $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
+            'bordereau' => json_encode(['a6date' => 0, 'a6school' => 'nantes', 'a6notyet' => 1]),
+        ]);
+
+        $rows = a6::students($this->these, $this->context);
+        $this->assertSame([(int) $this->student->id, (int) $other->id], array_map(function ($row) {
+            return (int) $row->user->id;
+        }, $rows));
+        $this->assertEquals($dossier->id, $rows[0]->dossier->id);
+        $this->assertNull($rows[1]->dossier);
+        $this->assertSame(get_string('a6notvalidated', 'mod_these'), $rows[1]->label);
+
         $date = make_timestamp(2025, 7, 1, 12);
-        $this->assertFalse(\mod_these\local\bulk::apply($this->these, $this->cm, $this->context, $dossier, 'a6', $this->deve->id));
-        $this->assertTrue(\mod_these\local\bulk::apply(
-            $this->these,
-            $this->cm,
-            $this->context,
-            $dossier,
-            'a6',
-            $this->deve->id,
-            ['a6date' => $date, 'a6school' => 'toulouse']
-        ));
-        $a6 = a6::get($this->reload($dossier->id));
-        $this->assertSame($date, $a6['date']);
-        $this->assertSame('toulouse', $a6['school']);
+        a6::record($this->these, $this->student->id, $date, '', $this->deve->id);
+        a6::record($this->these, $other->id, 0, 'lyon', $this->deve->id);
+        $this->assertSame('nantes', a6::get_for_user($this->student->id)['school']);
+        $this->assertSame('lyon', a6::get_for_user($other->id)['school']);
+
+        $validated = a6::students($this->these, $this->context, 'validated');
+        $this->assertCount(1, $validated);
+        $this->assertEquals($this->student->id, $validated[0]->user->id);
+        $this->assertCount(1, a6::students($this->these, $this->context, 'notvalidated', 'zol'));
+        $this->assertCount(0, a6::students($this->these, $this->context, 'validated', 'zol'));
+
+        $url = a6::url($this->cm, $other->id, new \moodle_url('/mod/these/edit.php', ['id' => $this->cm->id]));
+        $this->assertEquals($other->id, $url->get_param('userid'));
+        $this->assertStringStartsWith('/mod/these/edit.php', $url->get_param('returnurl'));
     }
 }

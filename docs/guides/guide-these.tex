@@ -120,7 +120,8 @@ co-directeur interne choisi dans l'annuaire, ou extérieur saisi. Nom du
 signataire : celui du compte Moodle (ou de l'invitation), saisi seulement par la
 DEVE (signature sur place, par délégation). Suivi des thèses : action attendue
 proposée dans \og À traiter\fg{} ; signatures à apposer et signatures attendues
-centralisées, avec le lien vers la page où agir. \\
+centralisées, avec le lien vers la page où agir. Validation de l'A6 sur une
+page à part. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -799,7 +800,9 @@ le dépôt de sujet. Le numéro d'enregistrement n'est pas encore attribué.}
         pour les enseignants de l'annuaire dont le statut convient. Pour changer
         un membre, cochez \bouton{Modifier la composition du jury} : la saisie
         complète s'ouvre.
-  \item Complétez l'agrément administratif (DEFV, mobilité, A6).
+  \item Complétez l'agrément administratif (DEFV, mobilité). La validation de
+        l'A6 y est rappelée : si elle manque, \bouton{Saisir l'A6} ouvre sa
+        page (section~\ref{sec:a6}) et vous ramène ensuite à la validation.
   \item Cliquez sur \bouton{Valider le dossier}.
 \end{etapes}
 \ensuite{le manuscrit passe à la bibliothèque ; les membres du jury reçoivent
@@ -927,17 +930,21 @@ La validation de l'A6 est saisie \textbf{par la DEVE}, plus par l'étudiant. Ell
 est liée à \textbf{l'étudiant}, pas à son dossier de thèse : elle peut être
 enregistrée avant que le dossier existe, et vaut pour tous ses dossiers. Elle
 figure dans le dossier (rubrique \og Enregistrements\fg{}), dans l'agrément
-administratif et dans la fiche signalétique. Trois façons de la saisir :
+administratif et dans la fiche signalétique. Elle se saisit sur sa page à
+part, \bouton{Validation de l'A6} dans la barre de navigation : tous les
+étudiants de l'activité, avec ou sans dossier, filtrables (A6 validée ou non,
+nom), avec leur validation. Le dossier, sa modification et la validation du
+dossier de soutenance la rappellent, avec le bouton \bouton{Saisir l'A6} qui
+mène à cette page. Trois façons de la saisir :
 \begin{etapes}
-  \item \textbf{Un dossier} : \bouton{Modifier le dossier}, rubrique
-        \og Enregistrements\fg{}, ou la validation du dossier de soutenance
-        (agrément administratif) : date, ou \og A6 pas encore validée\fg{}, et
-        école.
-  \item \textbf{Plusieurs dossiers à la même date} : cochez-les au tableau de
-        bord, choisissez \bouton{Enregistrer la validation de l'A6}, la date
-        et l'école, puis \bouton{Appliquer}.
+  \item \textbf{Un étudiant} : \bouton{Modifier} sur sa ligne (ou
+        \bouton{Saisir l'A6} depuis son dossier) : date, ou \og A6 pas encore
+        validée\fg{}, et école.
+  \item \textbf{Plusieurs étudiants à la même date} : cochez-les, indiquez
+        sous la liste la date et l'école (ou cochez \bouton{A6 pas encore
+        validée}), puis \bouton{Enregistrer la validation}.
   \item \textbf{Par fichier} : \bouton{Importer les validations de l'A6}
-        (sous la liste du tableau de bord, ou depuis l'import des dossiers).
+        (en tête de la page, ou depuis l'import des dossiers).
         Déposez un fichier Excel (.xlsx), OpenDocument (.ods) ou CSV, avec une
         ligne d'en-tête et une ligne par étudiant : \texttt{etudiant}
         (identifiant, adresse de courriel ou numéro d'étudiant),
@@ -965,9 +972,8 @@ DEVE ne l'a pas saisie.}
         signature est attendue), \bouton{Générer les documents de soutenance}
         (manuscrit conforme ou soutenance programmée) ou \bouton{Prévenir les
         membres du jury pas encore prévenus} (dossier validé, jusqu'à la
-        soutenance) ou \bouton{Enregistrer la validation de l'A6} : indiquez
-        alors, sur la ligne en dessous, la date (vide : non validée) et
-        l'école.
+        soutenance). La validation de l'A6 se saisit sur sa page à part
+        (section~\ref{sec:a6}).
   \item Cliquez sur \bouton{Appliquer}.
 \end{etapes}
 \ensuite{un message indique le nombre de dossiers traités et ignorés : une
