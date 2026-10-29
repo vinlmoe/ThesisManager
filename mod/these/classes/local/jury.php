@@ -343,10 +343,14 @@ class jury {
         }
     }
 
+    /** Rôles figés des premières lignes de saisie du jury, dans l'ordre. */
+    const FIXED_ROLES = ['president', 'director'];
+
     /**
      * Ajoute à un formulaire les lignes répétables de saisie du jury : chaque membre est choisi dans
      * l'annuaire des enseignants (titre, établissement, adresse et statut repris de l'annuaire) ou, pour
-     * un membre extérieur ou un invité, saisi.
+     * un membre extérieur ou un invité, saisi. Les deux premières lignes ont leur fonction figée :
+     * président, puis directeur de thèse ; les suivantes sont des membres du jury ou des invités.
      *
      * @param moodleform $form
      * @param MoodleQuickForm $mform
@@ -403,7 +407,7 @@ class jury {
         ];
         $form->repeat_elements(
             $repeat,
-            max(4, $count + 1),
+            max(4, $count + 1 + count(self::FIXED_ROLES)),
             $options,
             'juryrepeats',
             'juryaddfields',
@@ -411,6 +415,65 @@ class jury {
             get_string('juryaddmembers', 'mod_these'),
             true
         );
+        self::fix_roles($mform);
+    }
+
+    /**
+     * Fige la fonction des premières lignes du jury (voir FIXED_ROLES) : libellé affiché et valeur
+     * imposée ; les lignes suivantes ne proposent que membre du jury ou invité.
+     *
+     * @param MoodleQuickForm $mform
+     * @return void
+     */
+    protected static function fix_roles(MoodleQuickForm $mform) {
+        $roles = these_jury_role_options();
+        for ($i = 0; $mform->elementExists("juryrole[$i]"); $i++) {
+            $role = self::FIXED_ROLES[$i] ?? null;
+            if ($role === null) {
+                $select = $mform->getElement("juryrole[$i]");
+                $select->removeOptions();
+                $select->loadArray(['member' => $roles['member'], 'guest' => $roles['guest']]);
+                continue;
+            }
+            $mform->removeElement("juryrole[$i]");
+            $label = $mform->createElement(
+                'static',
+                "juryrolelabel[$i]",
+                get_string('juryrole', 'mod_these'),
+                html_writer::tag('strong', $roles[$role])
+            );
+            $mform->insertElementBefore($label, "jurorid[$i]");
+            // QuickForm garde une référence à la variable : la libérer avant la ligne suivante.
+            unset($label);
+            $mform->insertElementBefore($mform->createElement('hidden', "juryrole[$i]", $role), "jurorid[$i]");
+            $mform->setType("juryrole[$i]", PARAM_ALPHA);
+            $mform->setConstant("juryrole[$i]", $role);
+        }
+    }
+
+    /**
+     * Membres d'un jury rangés selon les lignes du formulaire : le président sur la première, le
+     * directeur de thèse sur la deuxième (lignes laissées vides s'ils manquent), les autres ensuite.
+     *
+     * @param array $members
+     * @return array Indice de ligne => membre.
+     */
+    public static function form_rows(array $members) {
+        $rows = [];
+        $others = [];
+        foreach (array_values($members) as $member) {
+            $fixed = array_search($member->juryrole, self::FIXED_ROLES, true);
+            if ($fixed !== false && !isset($rows[$fixed])) {
+                $rows[$fixed] = $member;
+            } else {
+                $others[] = $member;
+            }
+        }
+        foreach ($others as $n => $member) {
+            $rows[count(self::FIXED_ROLES) + $n] = $member;
+        }
+        ksort($rows);
+        return $rows;
     }
 
     /**
@@ -419,13 +482,14 @@ class jury {
      * complète. Sans jury enregistré, la saisie reste ouverte.
      *
      * @param MoodleQuickForm $mform Formulaire où these_add_jury_fields() a déjà ajouté la saisie.
-     * @param array $members Jury enregistré (voir these_get_jury()), dans l'ordre des lignes du formulaire.
+     * @param array $members Jury enregistré (voir these_get_jury()), rangé comme dans le formulaire (voir form_rows()).
      * @return void
      */
     public static function jury_readonly(MoodleQuickForm $mform, array $members) {
         if (!$members) {
             return;
         }
+        $rows = self::form_rows($members);
         $first = 'jurymemberlabel[0]';
         $summary = $mform->createElement('static', 'jurysummary', '', these_render_jury($members, true, false));
         $mform->insertElementBefore($summary, $first);
@@ -433,13 +497,15 @@ class jury {
         $mform->insertElementBefore($toggle, $first);
         $mform->hideIf('jurysummary', 'juryedit', 'checked');
 
-        $fields = ['jurymemberlabel', 'juryrole', 'jurorid', 'juryname', 'jurytitle', 'jurystatus', 'juryinstitution',
-            'juryemail'];
+        $fields = ['jurymemberlabel', 'juryrolelabel', 'juryrole', 'jurorid', 'juryname', 'jurytitle', 'jurystatus',
+            'juryinstitution', 'juryemail'];
         for ($i = 0; $mform->elementExists("juryrole[$i]"); $i++) {
             foreach ($fields as $field) {
-                $mform->hideIf("{$field}[$i]", 'juryedit', 'notchecked');
+                if ($mform->elementExists("{$field}[$i]")) {
+                    $mform->hideIf("{$field}[$i]", 'juryedit', 'notchecked');
+                }
             }
-            $member = $members[$i] ?? null;
+            $member = $rows[$i] ?? null;
             if ($member) {
                 // Case d'éligibilité nommée : elle reste seule visible en lecture.
                 $mform->getElement("juryeligible[$i]")->setText(
@@ -456,7 +522,8 @@ class jury {
     }
 
     /**
-     * Valeurs de formulaire correspondant à un jury enregistré (voir these_add_jury_fields()).
+     * Valeurs de formulaire correspondant à un jury enregistré (voir these_add_jury_fields()), rangé
+     * selon les lignes du formulaire (voir form_rows()).
      *
      * @param array $members
      * @return array
@@ -464,7 +531,7 @@ class jury {
     public static function jury_form_data(array $members) {
         $data = ['juryrole' => [], 'jurorid' => [], 'juryname' => [], 'jurytitle' => [], 'jurystatus' => [],
             'juryinstitution' => [], 'juryemail' => [], 'juryeligible' => []];
-        foreach (array_values($members) as $i => $member) {
+        foreach (self::form_rows($members) as $i => $member) {
             $data['juryrole'][$i] = $member->juryrole;
             $data['jurorid'][$i] = (int) ($member->jurorid ?? 0);
             $data['juryname'][$i] = $member->fullname;
@@ -497,6 +564,10 @@ class jury {
         foreach ($rows as $i) {
             $role = $data['juryrole'][$i] ?? 'member';
             $role = array_key_exists($role, these_jury_role_options()) ? $role : 'member';
+            // Président et directeur seulement sur leurs lignes : les suivantes sont membres ou invités.
+            if ($i >= count(self::FIXED_ROLES) && in_array($role, self::FIXED_ROLES, true)) {
+                $role = 'member';
+            }
             $juror = \mod_these\local\jurors::get((int) ($data['jurorid'][$i] ?? 0));
             if ($juror) {
                 $member = (object) [
@@ -563,7 +634,8 @@ class jury {
     }
 
     /**
-     * Vérifie la composition d'un jury : un et un seul président, éligible à la présidence, au moins
+     * Vérifie la composition d'un jury : un et un seul président, éligible à la présidence, un et un
+     * seul directeur de thèse, au moins
      * $minjury membres votants (le directeur de thèse et les invités ne votent pas), un statut déclaré pour chaque membre
      * extérieur votant, pas deux fois le même enseignant, et des adresses de courriel valides lorsqu'elles
      * sont données.
@@ -574,11 +646,15 @@ class jury {
      */
     public static function validate_jury(array $members, $minjury) {
         $presidents = 0;
+        $directors = 0;
         $voting = 0;
         $seen = [];
         foreach ($members as $member) {
             if ($member->juryrole === 'president') {
                 $presidents++;
+            }
+            if ($member->juryrole === 'director') {
+                $directors++;
             }
             if (self::is_voting($member)) {
                 $voting++;
@@ -601,6 +677,9 @@ class jury {
         }
         if ($presidents !== 1) {
             return get_string('juryonepresident', 'mod_these');
+        }
+        if ($directors !== 1) {
+            return get_string('juryonedirector', 'mod_these');
         }
         if ($voting < (int) $minjury) {
             return get_string('juryminmembers', 'mod_these', (int) $minjury);

@@ -156,7 +156,8 @@ final class helpers_test extends these_testcase {
 
     /**
      * Le formulaire rechargé conserve le rôle enregistré de chaque membre du jury (régression :
-     * une valeur par défaut posée sur les lignes répétées écrasait le président).
+     * une valeur par défaut posée sur les lignes répétées écrasait le président) ; président et
+     * directeur ont leur ligne figée, les autres lignes ne proposent que membre ou invité.
      */
     public function test_jury_form_keeps_saved_roles(): void {
         $this->setup_activity();
@@ -174,12 +175,24 @@ final class helpers_test extends these_testcase {
             $property->setAccessible(true);
         }
         $mform = $property->getValue($form);
-        foreach ($jury as $i => $member) {
-            $this->assertEquals([$member->juryrole], $mform->getElement("juryrole[$i]")->getValue());
+        // Président et directeur : fonctions figées sur les deux premières lignes.
+        $this->assertSame('hidden', $mform->getElement('juryrole[0]')->getType());
+        $this->assertSame('president', $mform->getElement('juryrole[0]')->getValue());
+        $this->assertSame('director', $mform->getElement('juryrole[1]')->getValue());
+        foreach (['juryrolepresident', 'juryroledirector'] as $i => $label) {
+            $this->assertStringContainsString(get_string($label, 'mod_these'), $mform->getElement("juryrolelabel[$i]")->_text);
         }
-        // Ligne vide supplémentaire : sans valeur, elle affiche la première option, « Membre du jury ».
-        $this->assertNull($mform->getElement('juryrole[' . count($jury) . ']')->getValue());
-        $this->assertEquals('member', array_key_first(these_jury_role_options()));
+        foreach ($jury as $i => $member) {
+            if ($i >= 2) {
+                $this->assertEquals([$member->juryrole], $mform->getElement("juryrole[$i]")->getValue());
+            }
+        }
+        // Lignes suivantes : membre du jury ou invité seulement ; une ligne vide affiche « Membre du jury ».
+        $extra = $mform->getElement('juryrole[' . count($jury) . ']');
+        $this->assertNull($extra->getValue());
+        $this->assertSame(['member', 'guest'], array_map(function ($option) {
+            return $option['attr']['value'];
+        }, $extra->_options));
     }
 
     /**

@@ -106,9 +106,14 @@ foreach ($bordereau as $field => $value) {
         $formdata->{'b' . $field} = $value;
     }
 }
-// Le directeur figure presque toujours au jury : il est proposé d'office au premier dépôt.
-if (empty($jury) && $dossier->directorid && ($director = $DB->get_record('user', ['id' => $dossier->directorid]))) {
-    $formdata->juryrole = [1 => 'director'];
+// Ligne du directeur de thèse (la deuxième, figée) préremplie au premier dépôt : le directeur extérieur
+// s'il y en a un, sinon le directeur du dossier.
+if (empty($jury) && !empty($dossier->externaldirector) && trim((string) $dossier->extdirectorname) !== '') {
+    $formdata->juryname = [1 => trim($dossier->extdirectorname)];
+    $formdata->jurytitle = [1 => (string) $dossier->extdirectorgrade];
+    $formdata->juryemail = [1 => (string) $dossier->extdirectoremail];
+    $formdata->juryinstitution = [1 => (string) $dossier->extdirectorinstitution];
+} else if (empty($jury) && $dossier->directorid && ($director = $DB->get_record('user', ['id' => $dossier->directorid]))) {
     $juror = \mod_these\local\jurors::find_by_email($director->email);
     if ($juror) {
         // Directeur présent dans l'annuaire du jury : choisi dans la liste.

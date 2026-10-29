@@ -236,9 +236,10 @@ $string['roomconflicts'] = 'Salle déjà occupée sur ce créneau (soutenances q
 $string['roomconflict'] = '{$a->location} : soutenance de {$a->student} le {$a->date} ({$a->activity}).';
 $string['roomconflictshort'] = 'Salle occupée : {$a->student}, {$a->time}';
 $string['juryhelpdeve'] = "Une ligne par membre, choisi de préférence dans l'annuaire du jury.";
-$string['juryhelp'] = "Une ligne par membre. Choisissez de préférence l'enseignant dans l'annuaire du jury : son titre, son "
-    . "statut, son établissement et son adresse en sont repris. Pour un membre extérieur ou un invité, choisissez « Membre extérieur "
-    . "ou invité » et renseignez la ligne (le statut est demandé pour un membre votant ; le directeur de thèse siège sans voter). Seuls les maîtres de conférences HDR, les "
+$string['juryhelp'] = "Une ligne par membre : la première est celle du président, la deuxième celle du directeur de thèse (il siège "
+    . "sans voter) ; les suivantes, des membres du jury ou des invités. Choisissez de préférence l'enseignant dans l'annuaire du jury : son "
+    . "titre, son statut, son établissement et son adresse en sont repris. Pour un membre extérieur ou un invité, choisissez « Membre extérieur "
+    . "ou invité » et renseignez la ligne (le statut est demandé pour un membre votant). Seuls les maîtres de conférences HDR, les "
     . "professeurs et les émérites peuvent présider. La DEVE valide ensuite l'éligibilité de chaque membre ; les membres sont alors "
     . "prévenus par courriel et reçoivent un lien d'accès aux documents du dossier.";
 $string['juryrole'] = 'Rôle';
@@ -1470,3 +1471,4 @@ Sujet : {$a->title}
 
 Accéder au dossier : {$a->url}';
 $string['logsignaturesrevoked'] = 'Signatures révoquées, à redemander';
+$string['juryonedirector'] = 'Le jury doit comporter le directeur de thèse (deuxième ligne).';

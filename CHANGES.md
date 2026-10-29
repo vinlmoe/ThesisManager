@@ -62,6 +62,11 @@ développement ne correspondent à aucune version installable ; 0.11.2 n'a jamai
   extérieur sur le dépôt de sujet) sont conservées. Un changement de sujet
   révoque tous les documents signés, soutenance comprise. Les corrections
   gardent le retour direct.
+- **Jury : président et directeur figés.** Dans la saisie du jury (dépôt de
+  l'étudiant, validation et modification par la DEVE), la première ligne est
+  celle du président, la deuxième celle du directeur de thèse (préremplie, le
+  directeur extérieur s'il y en a un) ; les suivantes ne proposent que membre
+  du jury ou invité. Un jury sans directeur de thèse est refusé.
 - `mod_thesesynthesis` : recherche sans le co-directeur, sauvegarde du modèle
   de rapport des paramètres partagés.
 

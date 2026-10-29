@@ -134,8 +134,23 @@ final class jury_directory_test extends these_testcase {
             these_validate_jury(these_extract_submitted_jury($data), 2)
         );
 
-        // Validation de l'éligibilité par la DEVE : chaque membre votant coché.
+        // Président et directeur figés sur les deux premières lignes : ailleurs, ce sont des membres ;
+        // sans directeur, le jury est refusé.
         $data['jurorid'][1] = $mcf;
+        $moved = $data;
+        $moved['juryrole'][2] = 'president';
+        $this->assertSame('member', these_extract_submitted_jury($moved)[2]->juryrole);
+        $nodirector = $data;
+        unset($nodirector['jurorid'][1]);
+        $this->assertSame(
+            get_string('juryonedirector', 'mod_these'),
+            these_validate_jury(these_extract_submitted_jury($nodirector), 2)
+        );
+        $this->assertSame([0, 1, 2], array_keys(\mod_these\local\jury::form_rows([
+            (object) ['juryrole' => 'member'], (object) ['juryrole' => 'director'], (object) ['juryrole' => 'president'],
+        ])));
+
+        // Validation de l'éligibilité par la DEVE : chaque membre votant coché.
         $data['juryeligible'] = [0 => 1, 1 => 1, 2 => 0, 3 => 0];
         $members = these_extract_submitted_jury($data, true);
         $this->assertStringContainsString('Claire Dupont', these_validate_jury_eligibility($members));

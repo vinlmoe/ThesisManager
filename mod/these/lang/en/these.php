@@ -233,9 +233,10 @@ $string['roomconflicts'] = 'Room already booked for this slot (overlapping defen
 $string['roomconflict'] = '{$a->location}: defence of {$a->student} on {$a->date} ({$a->activity}).';
 $string['roomconflictshort'] = 'Room booked: {$a->student}, {$a->time}';
 $string['juryhelpdeve'] = "One row per member, preferably chosen from the jury directory.";
-$string['juryhelp'] = 'One row per member. Preferably choose the teacher from the jury directory: title, status, institution '
+$string['juryhelp'] = 'One row per member: the first is the chair, the second the thesis director (who sits without voting); '
+    . 'the following ones are jury members or guests. Preferably choose the teacher from the jury directory: title, status, institution '
     . 'and address are taken from it. For an external member or a guest, choose "External member or guest" and fill in the row '
-    . '(the status is required for a voting member; the thesis director sits without voting). Only HDR associate professors, professors and emeriti may chair. The registrar '
+    . '(the status is required for a voting member). Only HDR associate professors, professors and emeriti may chair. The registrar '
     . 'then validates the eligibility of each member; members are then notified by email and receive a link to the file documents.';
 $string['juryrole'] = 'Role';
 $string['juryrolepresident'] = 'Chair';
@@ -1456,3 +1457,4 @@ Subject: {$a->title}
 
 Open the file: {$a->url}';
 $string['logsignaturesrevoked'] = 'Signatures revoked, to be requested again';
+$string['juryonedirector'] = 'The jury must include the thesis director (second row).';
