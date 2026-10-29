@@ -689,6 +689,58 @@ class signatures {
     }
 
     /**
+     * Révoque les signatures d'un dossier, apposées ou encore demandées (lien envoyé, demande à un
+     * agent) : elles seront redemandées quand le dossier repassera les étapes du circuit. Sert au
+     * renvoi d'un dossier et au changement de sujet. La révocation est inscrite à l'historique.
+     *
+     * @param context $context
+     * @param stdClass $dossier
+     * @param int $userid Auteur du renvoi ou du changement.
+     * @param string[]|null $doctypes Documents concernés ; null pour tous.
+     * @param string[] $keepslots Emplacements conservés (signataires des étapes qui ne sont pas refaites).
+     * @return string[] Signatures révoquées (« doctype:slot »).
+     */
+    public static function revoke_signatures(
+        context $context,
+        stdClass $dossier,
+        $userid,
+        ?array $doctypes = null,
+        array $keepslots = []
+    ) {
+        $revoked = [];
+        $labels = [];
+        foreach (these_get_signatures($dossier->id) as $key => $signature) {
+            if (
+                ($doctypes !== null && !in_array($signature->doctype, $doctypes, true))
+                || in_array($signature->slot, $keepslots, true)
+            ) {
+                continue;
+            }
+            these_delete_signature($context, $signature);
+            $revoked[] = $key;
+            if (!empty($signature->timesigned)) {
+                $labels[] = these_document_label($signature->doctype) . ' — ' . these_slot_label($signature->slot);
+            }
+        }
+        if ($labels) {
+            these_log($dossier->id, $userid, 'signaturesrevoked', $dossier->status, $dossier->status, implode(', ', $labels));
+        }
+        return $revoked;
+    }
+
+    /**
+     * Documents d'une phase du circuit : le dépôt de sujet en phase 1, les documents de la
+     * soutenance en phase 2.
+     *
+     * @param int $phase Voir these_phase().
+     * @return string[]
+     */
+    public static function phase_documents($phase) {
+        $doctypes = array_keys(these_document_definitions());
+        return (int) $phase === 1 ? ['subject'] : array_values(array_diff($doctypes, ['subject']));
+    }
+
+    /**
      * Invalide les signatures dont le document a changé depuis qu'elles ont été apposées : un
      * document signé ne peut pas être modifié en silence. Tant que le document n'est pas scellé
      * (voir these_seal_document()), un changement de son modèle compte aussi. Les signatures concernées sont supprimées

@@ -121,12 +121,9 @@ class subjectchange {
                 debugging('Archivage du dépôt de sujet impossible : ' . $e->getMessage(), DEBUG_DEVELOPER);
             }
 
-            // Le dépôt de sujet sera signé de nouveau par tous.
-            foreach (these_get_signatures($dossier->id) as $existing) {
-                if ($existing->doctype === 'subject') {
-                    these_delete_signature($context, $existing);
-                }
-            }
+            // Tous les documents signés (sujet, et soutenance d'un dossier abandonné relancé) sont
+            // révoqués : leurs signatures sont redemandées au fil du nouveau circuit.
+            signatures::revoke_signatures($context, $dossier, $userid);
 
             $oldtitle = (string) $dossier->title;
             $fields = [];

@@ -53,6 +53,15 @@ développement ne correspondent à aucune version installable ; 0.11.2 n'a jamai
   l'étudiant n'a pas proposé une autre date (`newdate.php`). Courriels
   personnalisables « Nouvelle date demandée » et « Nouvelle date proposée ».
   Champs `daterequested` et `daterequestcomment` ajoutés à `these_dossier`.
+- **Renvoi et changement de sujet révoquent les documents signés** et
+  redemandent les signatures (signatures apposées, liens envoyés et demandes
+  aux agents). Renvoyé à l'étudiant, par une étape de validation ou par le refus
+  d'un agent DEVE, le dossier refait toute sa phase (directeur, DEVE,
+  bibliothèque) au lieu de revenir directement à l'étape qui l'a renvoyé ;
+  renvoyé au directeur, seules les signatures de l'étudiant (et du directeur
+  extérieur sur le dépôt de sujet) sont conservées. Un changement de sujet
+  révoque tous les documents signés, soutenance comprise. Les corrections
+  gardent le retour direct.
 - `mod_thesesynthesis` : recherche sans le co-directeur, sauvegarde du modèle
   de rapport des paramètres partagés.
 

@@ -22,9 +22,9 @@ global $CFG;
 require_once(__DIR__ . '/these_testcase.php');
 
 /**
- * Renvois : un dossier renvoyé à l'étudiant revient, à sa nouvelle soumission, directement à
- * l'étape qui l'avait renvoyé ; un renvoi de la DEVE au directeur le ramène à l'étape du
- * directeur de la même phase.
+ * Renvois : les signatures de la phase sont révoquées ; un dossier renvoyé à l'étudiant refait, à
+ * sa nouvelle soumission, toute la phase ; un renvoi de la DEVE au directeur le ramène à l'étape du
+ * directeur de la même phase, en gardant les signatures de l'étudiant.
  *
  * @package    mod_these
  * @copyright  2026 Sébastien Lefebvre
@@ -46,7 +46,7 @@ final class return_test extends these_testcase {
         these_return_dossier($this->these, $this->cm, $dossier, $this->director->id, 'student', 'Préciser la problématique');
         $dossier = $this->reload($dossier->id);
         $this->assertEquals(THESE_STATUS_SUBJECT_RETURNED, $dossier->status);
-        $this->assertEquals(THESE_STATUS_SUBJECT_SUBMITTED, $dossier->returnstatus);
+        $this->assertEquals(0, $dossier->returnstatus);
         $this->assertEquals('Préciser la problématique', $dossier->returncomment);
         $this->assertTrue(these_subject_editable($dossier));
         $messages = $sink->get_messages();
@@ -63,22 +63,29 @@ final class return_test extends these_testcase {
     }
 
     /**
-     * La DEVE renvoie le dossier de soutenance à l'étudiant : il revient directement à la DEVE,
-     * sans repasser par le directeur.
+     * La DEVE renvoie le dossier de soutenance à l'étudiant : les documents signés de la soutenance
+     * sont révoqués (pas le dépôt de sujet), et le dossier resoumis repasse par le directeur.
      */
-    public function test_deve_return_to_student_comes_back_to_deve(): void {
+    public function test_deve_return_to_student_restarts_phase(): void {
+        global $DB;
         $this->setup_activity();
         $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
             'status' => THESE_STATUS_DEFENSE_APPROVED, 'directorid' => $this->director->id,
         ]);
+        $png = these_sample_signature_image();
+        these_sign_document($this->context, $dossier, 'subject', 'student', $this->student->id, 'Étudiant', $png);
+        these_sign_document($this->context, $dossier, 'conclusions', 'director', $this->director->id, 'Directeur', $png);
+        these_sign_document($this->context, $dossier, 'bordereau', 'student', $this->student->id, 'Étudiant', $png);
 
         these_return_dossier($this->these, $this->cm, $dossier, $this->deve->id, 'student', 'Annexe manquante');
         $dossier = $this->reload($dossier->id);
         $this->assertEquals(THESE_STATUS_DEFENSE_RETURNED, $dossier->status);
         $this->assertTrue(these_defense_editable($dossier));
+        $this->assertSame(['subject:student'], array_keys(these_get_signatures($dossier->id)));
+        $this->assertTrue($DB->record_exists('these_log', ['dossierid' => $dossier->id, 'logaction' => 'signaturesrevoked']));
 
         these_save_defense($this->these, $this->cm, $dossier, $this->defense_data(), true, $this->student->id);
-        $this->assertEquals(THESE_STATUS_DEFENSE_APPROVED, $this->reload($dossier->id)->status);
+        $this->assertEquals(THESE_STATUS_DEFENSE_SUBMITTED, $this->reload($dossier->id)->status);
     }
 
     /**
@@ -93,9 +100,14 @@ final class return_test extends these_testcase {
             'status' => THESE_STATUS_DEFENSE_APPROVED, 'directorid' => $this->director->id,
         ]);
 
+        $png = these_sample_signature_image();
+        these_sign_document($this->context, $dossier, 'bordereau', 'student', $this->student->id, 'Étudiant', $png);
+        these_sign_document($this->context, $dossier, 'conclusions', 'director', $this->director->id, 'Directeur', $png);
         these_return_dossier($this->these, $this->cm, $dossier, $this->deve->id, 'director', 'Rapport non signé');
         $dossier = $this->reload($dossier->id);
         $this->assertEquals(THESE_STATUS_DEFENSE_SUBMITTED, $dossier->status);
+        // Signature de l'étudiant conservée, celle du directeur redemandée.
+        $this->assertSame(['bordereau:student'], array_keys(these_get_signatures($dossier->id)));
         $this->assertEquals(0, $dossier->returnstatus);
         $this->assertEquals($this->director->email, $sink->get_messages()[0]->to);
 

@@ -865,7 +865,7 @@ $string['prerequisitesuniversity'] = "Étape bloquée : les pièces envoyées à
 $string['validatedbyname'] = 'validé par {$a}';
 $string['refusetitle'] = 'Refuser de signer';
 $string['refusesign'] = 'Refuser de signer…';
-$string['refuse_help'] = "Les documents refusés ne sont pas signés : le dossier revient, avec votre motif, à l'étape où ils ont été créés (l'étudiant pour le dépôt de sujet, la fiche signalétique, le contrat de diffusion et les conclusions ; la validation de la DEVE pour la fiche d'agréments). Plusieurs documents refusés : la première de ces étapes. L'équipe DEVE et le compte qui avait validé sont prévenus ; les signatures vous seront demandées de nouveau à la prochaine validation.";
+$string['refuse_help'] = "Les documents refusés ne sont pas signés : le dossier revient, avec votre motif, à l'étape où ils ont été créés (l'étudiant pour le dépôt de sujet, la fiche signalétique, le contrat de diffusion et les conclusions ; la validation de la DEVE pour la fiche d'agréments). Plusieurs documents refusés : la première de ces étapes. L'équipe DEVE et le compte qui avait validé sont prévenus. Les signatures des étapes refaites sont révoquées et redemandées au fil du circuit : renvoyé à l'étudiant, le dossier refait toute sa phase.";
 $string['refusedocuments'] = 'Documents refusés';
 $string['refusereason'] = 'Motif du refus';
 $string['refusesubmit'] = 'Refuser et renvoyer le dossier';
@@ -1469,3 +1469,4 @@ $string['emaildateproposedbody'] = 'Bonjour,
 Sujet : {$a->title}
 
 Accéder au dossier : {$a->url}';
+$string['logsignaturesrevoked'] = 'Signatures révoquées, à redemander';

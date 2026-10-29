@@ -150,7 +150,8 @@ questionnaire préalable au jury rempli dans le dépôt. Rapport du directeur
 déposé en fichier, modèle Word dans les paramètres du circuit ; grille du
 directeur non préremplie. DEFV et A6 saisis par la DEVE sur la page
 \og Validation des études\fg{} ; salle attribuée par la DEVE, qui peut demander
-une autre date sans renvoyer le dossier. \\
+une autre date sans renvoyer le dossier. Renvoi et changement de sujet
+révoquent les documents signés et redemandent les signatures. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -256,15 +257,22 @@ Chaque étape de validation propose, à côté du bouton de validation, un bouto
 \bouton{Renvoyer le dossier}, avec un motif obligatoire transmis par courriel :
 
 \begin{itemize}
-  \item renvoyé \textbf{à l'étudiant}, le dossier redevient modifiable ; à sa
-        nouvelle soumission, il revient \emph{directement à l'étape qui l'a
-        renvoyé} (un manuscrit jugé non conforme par la bibliothèque repart à la
-        bibliothèque, sans repasser par le directeur ni la DEVE) ;
+  \item renvoyé \textbf{à l'étudiant}, le dossier redevient modifiable ; les
+        documents signés de la phase (dépôt de sujet en phase 1, documents de la
+        soutenance en phase 2) sont \textbf{révoqués}. À sa nouvelle soumission,
+        le dossier refait toute la phase (directeur, DEVE, bibliothèque) et
+        chaque signature est redemandée à son étape ;
   \item renvoyé \textbf{au directeur} (possible pour la DEVE uniquement), le
         dossier revient à l'étape de validation du directeur de la même phase,
-        par exemple pour un rapport à reprendre. Ce motif n'est pas affiché à
-        l'étudiant.
+        par exemple pour un rapport à reprendre ; seules les signatures de
+        l'étudiant (et du directeur extérieur sur le dépôt de sujet) sont
+        conservées. Ce motif n'est pas affiché à l'étudiant.
 \end{itemize}
+
+La révocation est inscrite à l'historique (\og Signatures révoquées, à
+redemander\fg{}) ; les liens de signature déjà envoyés et les demandes aux
+agents DEVE ne valent plus. Pendant les corrections, sans document signé, le
+dépôt renvoyé revient directement à l'étape qui l'a renvoyé.
 
 \capture[0.85\linewidth]{68_directeur_renvoi}{Renvoi par le directeur : le motif est saisi dans \bouton{Commentaire}.}
 
@@ -544,8 +552,9 @@ accessibles.
   \item Corrigez ce qui est demandé, signez de nouveau (votre signature
         enregistrée est proposée) et soumettez.
 \end{etapes}
-\ensuite{le dossier revient \emph{directement} à la personne qui l'a renvoyé,
-sans repasser par les étapes déjà franchies.}
+\ensuite{les documents signés de la phase ont été révoqués au renvoi : le
+dossier refait la phase depuis la validation de votre directeur, et chacun signe
+de nouveau à son étape.}
 \end{procedure}
 
 \capture[0.85\linewidth]{61_etudiant_sujet_renvoye}{Sujet renvoyé : motif affiché en haut du dossier.}
@@ -564,7 +573,10 @@ sans repasser par les étapes déjà franchies.}
 \ensuite{l'ancien sujet est archivé dans le dossier (rubrique \og Sujets
 précédents\fg{} : date, titre, directeur, motif et PDF du dépôt de sujet
 signé) ; votre ancien directeur, la DEVE et la bibliothèque reçoivent un
-courriel avec l'ancien et le nouveau titre et le motif. Le nouveau sujet repasse
+courriel avec l'ancien et le nouveau titre et le motif. Tous les documents
+signés de l'ancien sujet sont révoqués (dépôt de sujet, et documents de
+soutenance d'un dossier abandonné) ; leurs signatures sont redemandées au fil du
+circuit. Le nouveau sujet repasse
 toute la phase~1 : validation par le directeur, enregistrement par la DEVE (visa
 de l'agent DEVE), notice de la bibliothèque. Le dossier redevient ensuite
 actif. Un dossier abandonné est ainsi relancé : il ne peut plus être rouvert
@@ -1294,7 +1306,9 @@ prévenus.}
   \item Conforme : cochez l'attestation, signez et cliquez sur
         \bouton{Attester la conformité}.
   \item Non conforme : écrivez le motif et cliquez sur \bouton{Renvoyer le
-        dossier} ; le nouveau dépôt de l'étudiant reviendra directement à vous.
+        dossier} ; les signatures de la soutenance sont révoquées, et le
+        nouveau dépôt de l'étudiant repassera par le directeur et la DEVE avant
+        de vous revenir.
 \end{etapes}
 \ensuite{l'attestation de conformité est disponible en PDF dans le dossier ; la
 DEVE génère les documents de soutenance.}

@@ -856,7 +856,7 @@ $string['prerequisitesuniversity'] = 'Step blocked: the documents sent to the un
 $string['validatedbyname'] = 'validated by {$a}';
 $string['refusetitle'] = 'Refuse to sign';
 $string['refusesign'] = 'Refuse to sign…';
-$string['refuse_help'] = 'Refused documents are not signed: the file goes back, with your reason, to the step where they were created (the student for the subject form, the thesis record, the distribution contract and the conclusions; the registrar validation for the approval form). Several refused documents: the earliest of these steps. The registrar team and the account that validated are notified; the signatures will be requested from you again at the next validation.';
+$string['refuse_help'] = 'Refused documents are not signed: the file goes back, with your reason, to the step where they were created (the student for the subject form, the thesis record, the distribution contract and the conclusions; the registrar validation for the approval form). Several refused documents: the earliest of these steps. The registrar team and the account that validated are notified. The signatures of the steps done again are revoked and requested again along the workflow: returned to the student, the file goes through its whole phase again.';
 $string['refusedocuments'] = 'Refused documents';
 $string['refusereason'] = 'Reason for refusal';
 $string['refusesubmit'] = 'Refuse and return the file';
@@ -1455,3 +1455,4 @@ $string['emaildateproposedbody'] = 'Hello,
 Subject: {$a->title}
 
 Open the file: {$a->url}';
+$string['logsignaturesrevoked'] = 'Signatures revoked, to be requested again';

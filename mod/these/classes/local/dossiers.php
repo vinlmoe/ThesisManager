@@ -630,9 +630,13 @@ class dossiers {
     /**
      * Renvoie le dossier, depuis l'étape de validation courante, à l'étudiant ou au directeur.
      *
-     * Renvoyé à l'étudiant, le dossier passe au statut « renvoyé » de sa phase et reviendra, à la
-     * nouvelle soumission, directement à l'étape qui l'a renvoyé. Renvoyé au directeur (par la DEVE),
-     * il revient à l'étape de validation du directeur de la même phase.
+     * Les documents signés de la phase sont révoqués, et leurs signatures redemandées quand le dossier
+     * repasse le circuit (voir signatures::revoke_signatures()) : renvoyé à l'étudiant, le dossier
+     * passe au statut « renvoyé » de sa phase et, à la nouvelle soumission, refait toute la phase
+     * (directeur, DEVE, bibliothèque) ; renvoyé au directeur (par la DEVE), il revient à l'étape de
+     * validation du directeur, et seules les signatures de l'étudiant (et du directeur extérieur sur le
+     * dépôt de sujet) sont conservées. Pendant les corrections, sans document signé, le dossier
+     * revient directement à l'étape qui l'a renvoyé.
      *
      * @param stdClass $these
      * @param stdClass $cm
@@ -656,15 +660,20 @@ class dossiers {
                 'returnedby' => $userid,
                 'returntime' => time(),
             ];
+            $context = context_module::instance($cm->id);
             if ($target === 'student' && these_in_corrections($dossier->status)) {
                 $tostatus = THESE_STATUS_CORRECTIONS;
                 $fields['returnstatus'] = (int) $dossier->status;
             } else if ($target === 'student') {
                 $tostatus = $phase === 1 ? THESE_STATUS_SUBJECT_RETURNED : THESE_STATUS_DEFENSE_RETURNED;
-                $fields['returnstatus'] = (int) $dossier->status;
+                // Toutes les signatures de la phase sont redemandées : la phase est refaite en entier.
+                $fields['returnstatus'] = 0;
+                signatures::revoke_signatures($context, $dossier, $userid, signatures::phase_documents($phase));
             } else {
                 $tostatus = $phase === 1 ? THESE_STATUS_SUBJECT_SUBMITTED : THESE_STATUS_DEFENSE_SUBMITTED;
                 $fields['returnstatus'] = 0;
+                $keep = $phase === 1 ? ['student', 'extdirector'] : ['student'];
+                signatures::revoke_signatures($context, $dossier, $userid, signatures::phase_documents($phase), $keep);
             }
 
             $dossier = these_set_status($dossier, $tostatus, $userid, 'returnedto' . $target, $comment, $fields);

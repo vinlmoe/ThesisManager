@@ -150,9 +150,10 @@ final class signature_test extends these_testcase {
     }
 
     /**
-     * Un renvoi sans modification du contenu signé revient directement à l'étape qui l'a renvoyé.
+     * Un renvoi révoque les signatures de la phase : même sans modification, le sujet resoumis
+     * repasse par le directeur, qui le signe de nouveau.
      */
-    public function test_unchanged_subject_returns_to_returning_step(): void {
+    public function test_return_revokes_signatures(): void {
         $this->setup_activity();
         $this->redirectEmails();
         $dossier = these_create_dossier($this->these->id, $this->student->id, $this->student->id);
@@ -167,6 +168,7 @@ final class signature_test extends these_testcase {
         );
         $dossier = these_validate_step($this->these, $this->cm, $dossier, $this->director->id, [], '', $this->signature());
         $dossier = these_return_dossier($this->these, $this->cm, $dossier, $this->deve->id, 'student', 'Pièce jointe manquante');
+        $this->assertSame([], these_get_signatures($dossier->id));
         $dossier = these_save_subject(
             $this->these,
             $this->cm,
@@ -176,7 +178,9 @@ final class signature_test extends these_testcase {
             $this->student->id,
             $this->signature()
         );
-        $this->assertEquals(THESE_STATUS_SUBJECT_APPROVED, $dossier->status);
+        $this->assertEquals(THESE_STATUS_SUBJECT_SUBMITTED, $dossier->status);
+        $this->assertSame(['subject:student'], array_keys(these_get_signatures($dossier->id)));
+        $dossier = these_validate_step($this->these, $this->cm, $dossier, $this->director->id, [], '', $this->signature());
         $this->assertArrayHasKey('subject:director', these_get_signatures($dossier->id));
     }
 
