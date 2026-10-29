@@ -263,7 +263,9 @@ function xmldb_these_upgrade($oldversion) {
             '0',
             'codirectorname'
         );
-        if (!$dbman->field_exists($table, $field)) {
+        // Co-directeur supprimé depuis (2026102901) : rien à ajouter sans la colonne du nom, après
+        // laquelle le champ se place.
+        if ($dbman->field_exists($table, 'codirectorname') && !$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
         upgrade_mod_savepoint(true, 2026102800, 'these');
