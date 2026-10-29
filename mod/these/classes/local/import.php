@@ -45,7 +45,7 @@ class import {
      * @return string[]
      */
     public static function import_columns() {
-        return ['student', 'title', 'titleen', 'summary', 'keywords', 'director', 'codirector', 'devenumber', 'libraryref',
+        return ['student', 'title', 'titleen', 'summary', 'keywords', 'director', 'devenumber', 'libraryref',
             'status', 'defensedate', 'defenselocation', 'mention', 'corrections'];
     }
 
@@ -186,30 +186,6 @@ class import {
     }
 
     /**
-     * Enseignant interne de l'annuaire désigné par un nom de co-directeur : « Dr MARTIN Claire »,
-     * « Claire Martin » ou « Martin Claire » (casse, accents et titre ignorés).
-     *
-     * @param stdClass $these
-     * @param string $name
-     * @return stdClass|null
-     */
-    public static function find_internal_codirector(stdClass $these, $name) {
-        $wanted = self::normalise(preg_replace('/^\s*(dr|pr)\.?\s+/i', '', (string) $name));
-        if ($wanted === '') {
-            return null;
-        }
-        $institution = (string) scopesettings::for_these($these)['institution'];
-        foreach (jurors::internal_members($institution) as $juror) {
-            $names = [self::normalise($juror->firstname . ' ' . $juror->lastname),
-                self::normalise($juror->lastname . ' ' . $juror->firstname)];
-            if (in_array($wanted, $names, true)) {
-                return $juror;
-            }
-        }
-        return null;
-    }
-
-    /**
      * Importe des dossiers existants depuis un fichier CSV (voir import_rows()).
      *
      * @param stdClass $these
@@ -321,7 +297,6 @@ class import {
                 if ($values['devenumber'] !== '') {
                     $numbers[$values['devenumber']] = true;
                 }
-                $codirector = $values['codirector'] !== '' ? self::find_internal_codirector($these, $values['codirector']) : null;
                 if (!$dryrun) {
                     $now = time();
                     $record = [
@@ -334,8 +309,6 @@ class import {
                         'summary' => $values['summary'],
                         'keywords' => $values['keywords'],
                         'directorid' => $director ? $director->id : 0,
-                        'codirectorname' => $codirector ? jurors::name($codirector) : $values['codirector'],
-                        'codirectorjurorid' => $codirector ? (int) $codirector->id : 0,
                         'devenumber' => $values['devenumber'],
                         'libraryref' => $values['libraryref'],
                         'defensedate' => (int) $defensedate,
@@ -355,8 +328,7 @@ class import {
                     these_log($dossierid, $userid, 'imported', $status, $status);
                 }
                 $result['message'] = get_string($dryrun ? 'importwouldcreate' : 'importcreated', 'mod_these')
-                    . ($status !== THESE_STATUS_ACTIVE ? ' — ' . these_status_label($status) : '')
-                    . ($codirector ? ' — ' . get_string('importcodirectorinternal', 'mod_these', jurors::name($codirector)) : '');
+                    . ($status !== THESE_STATUS_ACTIVE ? ' — ' . these_status_label($status) : '');
             }
             $report[] = $result;
         }

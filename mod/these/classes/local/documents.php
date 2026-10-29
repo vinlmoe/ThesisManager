@@ -52,7 +52,6 @@ class documents {
             'signatorytitle' => (string) $these->signatorytitle,
             'student' => $student ? fullname($student) : '',
             'director' => $director ? fullname($director) : '',
-            'codirector' => (string) $dossier->codirectorname,
             'title' => (string) $dossier->title,
             'titleen' => (string) $dossier->titleen,
             'summary' => (string) $dossier->summary,
@@ -157,9 +156,9 @@ class documents {
     }
 
     /**
-     * Fichiers de l'archive transmise à l'université : les documents générés, puis les documents de
-     * l'établissement réservés au personnel (rapport du directeur, grille de conformité), rendus à
-     * la demande dans leur état de signature courant.
+     * Fichiers de l'archive transmise à l'université : les documents générés, le rapport déposé par
+     * le directeur, puis les documents de l'établissement réservés au personnel (grille de
+     * conformité), rendus à la demande dans leur état de signature courant.
      *
      * @param stdClass $these
      * @param context $context
@@ -170,6 +169,9 @@ class documents {
         $files = [];
         foreach (these_get_files($context, 'generated', $dossier->id) as $file) {
             $files[$file->get_filename()] = $file;
+        }
+        foreach (these_get_files($context, 'directorreport', $dossier->id) as $file) {
+            $files['rapport-directeur-' . $file->get_filename()] = $file;
         }
         $directory = null;
         foreach (these_document_definitions() as $doctype => $definition) {

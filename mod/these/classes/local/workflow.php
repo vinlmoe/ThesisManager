@@ -210,7 +210,7 @@ class workflow {
             THESE_STATUS_DEFENSE_SUBMITTED => [
                 'key' => 'directordefense', 'actor' => 'director',
                 'next' => THESE_STATUS_DEFENSE_APPROVED, 'returnto' => ['student'],
-                'sign' => ['director' => ['report', 'grid', 'agreement', 'contract', 'conclusions']], 'request' => [],
+                'sign' => ['director' => ['grid', 'agreement', 'contract', 'conclusions']], 'request' => [],
             ],
             THESE_STATUS_DEFENSE_APPROVED => [
                 'key' => 'devedefense', 'actor' => 'deve',

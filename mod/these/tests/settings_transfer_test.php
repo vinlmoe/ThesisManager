@@ -55,7 +55,7 @@ final class settings_transfer_test extends these_testcase {
             'establishmentcity' => "Marcy-l'Étoile", 'minjury' => 4, 'reminderdays' => 21, 'deveemail' => 'deve@example.org']);
         $this->these = $DB->get_record('these', ['id' => $this->these->id]);
         these_save_email_template($this->these->id, 'returned', 'Dossier renvoyé', 'Corps {student}');
-        these_set_doctemplate(these_local_scope($this->these), 'report', '<p>Rapport de {{student.lastname}}</p>');
+        these_set_doctemplate(these_local_scope($this->these), 'conclusions', '<p>Conclusions de {{student.lastname}}</p>');
         get_file_storage()->create_file_from_string([
             'contextid' => $this->context->id, 'component' => 'mod_these', 'filearea' => 'docimages', 'itemid' => 0,
             'filepath' => '/', 'filename' => 'logo.png',
@@ -90,11 +90,14 @@ final class settings_transfer_test extends these_testcase {
         $this->assertSame('Dossier renvoyé', these_get_custom_email_template($target->id, 'returned')->subject);
         // Les personnalisations propres à la destination sont remplacées.
         $this->assertNull(these_get_custom_email_template($target->id, 'convocation'));
-        $this->assertSame('<p>Rapport de {{student.lastname}}</p>', these_get_doctemplate(these_local_scope($target), 'report'));
+        $this->assertSame(
+            '<p>Conclusions de {{student.lastname}}</p>',
+            these_get_doctemplate(these_local_scope($target), 'conclusions')
+        );
         $this->assertFalse(these_doctemplate_customised(these_local_scope($target), 'grid'));
         $this->assertArrayHasKey('logo', these_doctemplate_images(these_local_scope($target)));
         // La source ne change pas.
-        $this->assertTrue(these_doctemplate_customised(these_local_scope($this->these), 'report'));
+        $this->assertTrue(these_doctemplate_customised(these_local_scope($this->these), 'conclusions'));
     }
 
     /**
@@ -113,7 +116,7 @@ final class settings_transfer_test extends these_testcase {
         $this->assertFalse($result->activity);
         $this->assertSame('Autre', $DB->get_field('these', 'establishmentname', ['id' => $target->id]));
         $this->assertNull(these_get_custom_email_template($target->id, 'returned'));
-        $this->assertTrue(these_doctemplate_customised(these_local_scope($target), 'report'));
+        $this->assertTrue(these_doctemplate_customised(these_local_scope($target), 'conclusions'));
         $this->assertArrayNotHasKey('logo', these_doctemplate_images(these_local_scope($target)));
     }
 

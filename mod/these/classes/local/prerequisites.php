@@ -57,7 +57,6 @@ class prerequisites {
     public static function required($status) {
         $defense = [
             'bordereau' => self::ALL,
-            'report' => self::ALL,
             'grid' => self::ALL,
             'agreement' => self::BUT_UNIVERSITY,
             'signaletique' => self::BUT_UNIVERSITY,
@@ -74,7 +73,7 @@ class prerequisites {
             case THESE_STATUS_DEFENSE_SUBMITTED:
                 return ['bordereau' => self::ALL, 'contract' => ['student']];
             case THESE_STATUS_DEFENSE_APPROVED:
-                return ['bordereau' => self::ALL, 'report' => self::ALL, 'grid' => self::ALL,
+                return ['bordereau' => self::ALL, 'grid' => self::ALL,
                     'agreement' => ['director'], 'contract' => ['student', 'director'], 'conclusions' => ['director']];
             case THESE_STATUS_DEFENSE_VALIDATED:
                 return $defense;

@@ -69,14 +69,14 @@ class backup_these_activity_structure_step extends backup_activity_structure_ste
         $dossiers = new backup_nested_element('dossiers');
         $dossier = new backup_nested_element('dossier', ['id'], [
             'userid', 'status', 'statustime', 'title', 'titleen', 'summary', 'keywords',
-            'directorid', 'codirectorname', 'codirectorjurorid', 'devenumber', 'libraryref',
+            'directorid', 'devenumber', 'libraryref',
             'proposeddate', 'defensedate', 'defenselocation', 'defenseresult', 'mention',
             'prizeproposal', 'correctionsrequested', 'correctionsnote', 'correctionsdone',
             'studyyear', 'confidential', 'directortitle', 'externaldirector', 'extdirectorname', 'extdirectorgrade',
             'extdirectorinstitution', 'extdirectoremail', 'commitments', 'ethicsnumber', 'bordereau', 'conclusions',
-            'reporttext', 'reportfavorable', 'conformitygrid', 'agreement',
+            'reportfavorable', 'conformitygrid', 'agreement',
             'returnstatus', 'returncomment', 'returnedby', 'returntime', 'cancelledfromstatus',
-            'documentstime', 'senttime', 'remindertime', 'timecreated', 'timemodified',
+            'documentstime', 'senttime', 'remindertime', 'daterequested', 'daterequestcomment', 'timecreated', 'timemodified',
         ]);
 
         $jurymembers = new backup_nested_element('jurymembers');
@@ -88,7 +88,7 @@ class backup_these_activity_structure_step extends backup_activity_structure_ste
         $subjecthistory = new backup_nested_element('subjecthistory');
         $subject = new backup_nested_element('previoussubject', ['id'], [
             'title', 'titleen', 'summary', 'keywords', 'studyyear', 'confidential', 'directorid', 'directorname',
-            'codirectorname', 'libraryref', 'reason', 'changedby', 'timecreated',
+            'libraryref', 'reason', 'changedby', 'timecreated',
         ]);
 
         $answers = new backup_nested_element('answers');
@@ -160,6 +160,7 @@ class backup_these_activity_structure_step extends backup_activity_structure_ste
         $these->annotate_files('mod_these', 'intro', null);
         $these->annotate_files('mod_these', 'docimages', null);
         $these->annotate_files('mod_these', 'contracttemplate', null);
+        $these->annotate_files('mod_these', 'reporttemplate', null);
         foreach (THESE_FILEAREAS as $filearea) {
             $dossier->annotate_files('mod_these', $filearea, 'id');
         }

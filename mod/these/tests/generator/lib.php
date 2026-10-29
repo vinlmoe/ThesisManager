@@ -59,7 +59,7 @@ class mod_these_generator extends testing_module_generator {
             'summary' => 'Résumé de test',
             'keywords' => 'test',
             'directorid' => 0,
-            'codirectorname' => '',
+
             'timecreated' => $now,
             'timemodified' => $now,
         ], $record);

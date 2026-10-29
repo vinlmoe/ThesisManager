@@ -40,7 +40,7 @@ class signatures {
      * - subject : formulaire de dépôt de sujet (étudiant, directeur, directeur extérieur éventuel,
      *   visa de la DEVE) ;
      * - bordereau : bordereau de thèse d'exercice vétérinaire (ABES), signé par l'étudiant ;
-     * - report : rapport du directeur ; grid : grille de conformité, renseignée par le directeur ;
+     * - grid : grille de conformité, renseignée par le directeur (son rapport est un fichier déposé) ;
      * - agreement : fiche d'agréments administratif (DEVE) et scientifique (directeur, et directeur
      *   extérieur éventuel), visée par la direction générale (représentée par la DEVE) et le CCEM ;
      * - signaletique : fiche signalétique de l'étudiant, signée par le président du jury, la
@@ -59,7 +59,6 @@ class signatures {
         return [
             'subject' => ['slots' => ['student', 'director', 'extdirector', 'deve'], 'staffonly' => false],
             'bordereau' => ['slots' => ['student'], 'staffonly' => false],
-            'report' => ['slots' => ['director'], 'staffonly' => true],
             'grid' => ['slots' => ['director'], 'staffonly' => true],
             'agreement' => ['slots' => ['deve', 'director', 'extdirector', 'dgrep', 'ccem'], 'staffonly' => false],
             'signaletique' => ['slots' => ['president', 'dg', 'ccem'], 'staffonly' => false],
@@ -178,9 +177,6 @@ class signatures {
                 ];
             case 'bordereau':
                 return $common + ['titleen' => (string) $dossier->titleen, 'bordereau' => these_get_bordereau($dossier)];
-            case 'report':
-                return $common + ['reporttext' => (string) ($dossier->reporttext ?? ''),
-                    'reportfavorable' => (int) ($dossier->reportfavorable ?? 0)];
             case 'grid':
                 return $common + ['grid' => these_get_grid($dossier), 'ethicsnumber' => (string) ($dossier->ethicsnumber ?? '')];
             case 'agreement':
@@ -251,8 +247,6 @@ class signatures {
                 return trim((string) $dossier->title) !== '';
             case 'bordereau':
                 return !empty(these_get_bordereau($dossier));
-            case 'report':
-                return trim((string) ($dossier->reporttext ?? '')) !== '';
             case 'grid':
                 return !empty(these_get_grid($dossier));
             case 'agreement':
@@ -523,7 +517,8 @@ class signatures {
     }
 
     /**
-     * Signatures d'un dossier.
+     * Signatures d'un dossier, sur les documents que le module produit encore : celles d'un document
+     * retiré (rapport du directeur, désormais déposé en fichier) restent en base sans être reprises.
      *
      * @param int $dossierid
      * @return array « doctype:slot » => enregistrement these_signature
@@ -531,9 +526,12 @@ class signatures {
     public static function get_signatures($dossierid) {
         global $DB;
 
+        $definitions = these_document_definitions();
         $signatures = [];
         foreach ($DB->get_records('these_signature', ['dossierid' => $dossierid], 'id ASC') as $signature) {
-            $signatures[$signature->doctype . ':' . $signature->slot] = $signature;
+            if (isset($definitions[$signature->doctype])) {
+                $signatures[$signature->doctype . ':' . $signature->slot] = $signature;
+            }
         }
         return $signatures;
     }

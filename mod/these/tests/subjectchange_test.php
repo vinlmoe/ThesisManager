@@ -51,7 +51,7 @@ final class subjectchange_test extends these_testcase {
 
         $data = (object) ['title' => 'Nouveau sujet', 'titleen' => 'New subject', 'summary' => 'Résumé',
             'keywords' => 'x ; y ; z', 'studyyear' => 'A5', 'directorid' => $newdirector->id, 'confidential' => 0,
-            'externaldirector' => 0, 'codirectorname' => '', 'commitguide' => 1, 'commitduplicate' => 1, 'commitethics' => 0];
+            'externaldirector' => 0, 'commitguide' => 1, 'commitduplicate' => 1, 'commitethics' => 0];
         $dossier = these_change_subject(
             $this->these,
             $this->cm,
@@ -114,7 +114,7 @@ final class subjectchange_test extends these_testcase {
 
         $data = (object) ['title' => 'Nouveau sujet', 'titleen' => 'New subject', 'summary' => 'Résumé',
             'keywords' => 'x ; y ; z', 'studyyear' => 'A5', 'directorid' => $this->director->id, 'confidential' => 0,
-            'externaldirector' => 0, 'codirectorname' => ''];
+            'externaldirector' => 0];
         these_change_subject($this->these, $this->cm, $dossier, $data, $this->student->id, 'Nouveau départ.');
         $dossier = $this->reload($dossier->id);
 

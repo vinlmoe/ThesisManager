@@ -59,7 +59,7 @@ final class signature_test extends these_testcase {
     private function subject_data(): \stdClass {
         return (object) [
             'title' => 'Leptospirose canine', 'titleen' => '', 'summary' => 'Résumé', 'keywords' => 'chien ; rein ; zoonose',
-            'directorid' => $this->director->id, 'directortitle' => 'Pr', 'codirectorname' => '', 'studyyear' => 'A4',
+            'directorid' => $this->director->id, 'directortitle' => 'Pr', 'studyyear' => 'A4',
             'confidential' => 0, 'externaldirector' => 0, 'commitguide' => 1, 'commitduplicate' => 1, 'commitethics' => 0,
         ];
     }
@@ -284,10 +284,10 @@ final class signature_test extends these_testcase {
 
         $grid = array_fill_keys(array_merge(...array_map('array_keys', array_values(these_grid_items()))), 1);
         $dossier = these_validate_step($this->these, $this->cm, $dossier, $this->director->id, [
-            'reporttext' => 'Travail remarquable.', 'reportfavorable' => 1, 'conformitygrid' => json_encode($grid),
+            'reportfavorable' => 1, 'conformitygrid' => json_encode($grid),
         ], '', $this->signature());
         $signatures = these_get_signatures($dossier->id);
-        foreach (['report', 'grid', 'agreement', 'contract', 'conclusions'] as $doctype) {
+        foreach (['grid', 'agreement', 'contract', 'conclusions'] as $doctype) {
             $this->assertNotEmpty($signatures[$doctype . ':director']->timesigned, $doctype);
         }
 

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="mod/these/db" VERSION="20261024" COMMENT="XMLDB file for module mod_these"
+<XMLDB PATH="mod/these/db" VERSION="20261029" COMMENT="XMLDB file for module mod_these"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
@@ -54,10 +54,6 @@
         <FIELD NAME="summary" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="keywords" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="directorid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
-        <FIELD NAME="codirectorname" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"
-            COMMENT="Co-directeur éventuel : nom de l'enseignant interne choisi, ou du co-directeur extérieur saisi"/>
-        <FIELD NAME="codirectorjurorid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
-            COMMENT="Co-directeur interne : enseignant de l'annuaire (these_juror), 0 si extérieur ou aucun"/>
         <FIELD NAME="studyyear" TYPE="char" LENGTH="4" NOTNULL="false" SEQUENCE="false"
             COMMENT="Année d'études au dépôt du sujet (A2 à A6)"/>
         <FIELD NAME="confidential" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
@@ -78,8 +74,6 @@
             COMMENT="Bordereau de thèse (ABES) renseigné par l'étudiant, en JSON"/>
         <FIELD NAME="conclusions" TYPE="text" NOTNULL="false" SEQUENCE="false"
             COMMENT="Conclusions de la thèse, à signer par le directeur, le président et les autorités"/>
-        <FIELD NAME="reporttext" TYPE="text" NOTNULL="false" SEQUENCE="false"
-            COMMENT="Rapport du directeur de thèse"/>
         <FIELD NAME="reportfavorable" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="conformitygrid" TYPE="text" NOTNULL="false" SEQUENCE="false"
             COMMENT="Grille de conformité renseignée par le directeur, en JSON"/>
@@ -120,6 +114,10 @@
             COMMENT="Dernière transmission des documents au jury et à l'université"/>
         <FIELD NAME="remindertime" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
             COMMENT="Dernière relance envoyée pour le statut courant"/>
+        <FIELD NAME="daterequested" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
+            COMMENT="Nouvelle date de soutenance demandée par la DEVE, en attente de l'étudiant (0 : aucune demande)"/>
+        <FIELD NAME="daterequestcomment" TYPE="text" NOTNULL="false" SEQUENCE="false"
+            COMMENT="Motif de la demande de nouvelle date"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
       </FIELDS>
@@ -331,12 +329,14 @@
         <INDEX NAME="email" UNIQUE="false" FIELDS="email"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="these_a6" COMMENT="Validation de l'A6 d'un étudiant, saisie par la DEVE : liée à l'étudiant, commune à toutes les instances et indépendante de tout dossier">
+    <TABLE NAME="these_a6" COMMENT="Validation des études (DEFV, A6) d'un étudiant, saisie par la DEVE : liée à l'étudiant, commune à toutes les instances et indépendante de tout dossier">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="a6date" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Date de validation, 0 si l'A6 n'est pas validée"/>
         <FIELD NAME="a6school" TYPE="char" LENGTH="20" NOTNULL="false" SEQUENCE="false" COMMENT="École (voir these_school_options())"/>
+        <FIELD NAME="defvdate" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Date d'obtention du DEFV (0 si inconnue)"/>
+        <FIELD NAME="defvschool" TYPE="char" LENGTH="20" NOTNULL="false" SEQUENCE="false" COMMENT="École où le DEFV a été obtenu"/>
         <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Compte de la DEVE qui l'a saisie"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>
@@ -397,7 +397,6 @@
         <FIELD NAME="directorid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="directorname" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"
             COMMENT="Nom du directeur au moment du changement (directeur extérieur compris)"/>
-        <FIELD NAME="codirectorname" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="libraryref" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="reason" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Motif du changement"/>
         <FIELD NAME="changedby" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>

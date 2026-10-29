@@ -132,6 +132,11 @@ class dossier implements \renderable, \templatable {
             $masked = [parts::em(get_string('confidentialtitle', 'mod_these'))];
             $title = $titleen = $summary = $keywords = $masked;
         }
+        $extdirector = null;
+        if (!empty($dossier->externaldirector)) {
+            $institution = trim((string) $dossier->extdirectorinstitution);
+            $extdirector = trim((string) $dossier->extdirectorname) . ($institution !== '' ? ' (' . $institution . ')' : '');
+        }
         return new detail_section(get_string('subject', 'mod_these'), [
             get_string('student', 'mod_these') => [parts::text($student ? fullname($student) : '-')],
             get_string('subjecttitle', 'mod_these') => $title,
@@ -140,8 +145,11 @@ class dossier implements \renderable, \templatable {
             get_string('subjecttitleen', 'mod_these') => $titleen,
             get_string('subjectsummary', 'mod_these') => $summary,
             get_string('subjectkeywords', 'mod_these') => $keywords,
-            get_string('director', 'mod_these') => [parts::text($director ? fullname($director) : '-')],
-            get_string('codirector', 'mod_these') => self::text($dossier->codirectorname),
+            // Directeur extérieur : l'enseignant suivi dans le module est l'examinateur interne.
+            get_string('director', 'mod_these') => [parts::text($extdirector ?? ($director ? fullname($director) : '-'))],
+            get_string('internalexaminer', 'mod_these') => !empty($dossier->externaldirector)
+                ? [parts::text($director ? fullname($director) : '-')] : null,
+            // Pièces jointes des dépôts antérieurs : le dépôt n'en accepte plus, celles déposées restent consultables.
             get_string('subjectdocs', 'mod_these') => $this->files('subjectdocs', $output),
         ]);
     }
@@ -159,6 +167,11 @@ class dossier implements \renderable, \templatable {
         $rows = [
             get_string('proposeddate', 'mod_these') =>
                 $dossier->proposeddate ? [parts::text(userdate($dossier->proposeddate, $dateformat))] : null,
+            // Nouvelle date demandée par la DEVE : le dossier attend la proposition de l'étudiant.
+            get_string('daterequestedlabel', 'mod_these') => \mod_these\local\daterequest::pending($dossier) ? [
+                parts::badge(get_string('daterequestedbadge', 'mod_these'), 'badge badge-warning'),
+                parts::text(' ' . (string) $dossier->daterequestcomment),
+            ] : null,
             get_string('defensedate', 'mod_these') =>
                 $dossier->defensedate ? [parts::text(userdate($dossier->defensedate, $dateformat))] : null,
             get_string('defenselocation', 'mod_these') => self::text($dossier->defenselocation),
@@ -268,6 +281,7 @@ class dossier implements \renderable, \templatable {
             'registration' => (new detail_section(get_string('registration', 'mod_these'), [
                 get_string('devenumber', 'mod_these') => self::text($dossier->devenumber),
                 get_string('libraryref', 'mod_these') => self::text($dossier->libraryref),
+                get_string('defvvalidation', 'mod_these') => [parts::text(\mod_these\local\a6::defv_label($dossier))],
                 get_string('a6validation', 'mod_these') => array_merge(
                     [parts::text(\mod_these\local\a6::label($dossier))],
                     // La DEVE la saisit sur sa page à part.

@@ -102,7 +102,6 @@ class subjectchange {
                 'directorid' => (int) $dossier->directorid,
                 'directorname' => !empty($dossier->externaldirector) ? (string) $dossier->extdirectorname
                     : ($olddirector ? fullname($olddirector) : ''),
-                'codirectorname' => (string) $dossier->codirectorname,
                 'libraryref' => (string) $dossier->libraryref,
                 'reason' => trim((string) $reason),
                 'changedby' => (int) $userid,
@@ -132,7 +131,7 @@ class subjectchange {
             $oldtitle = (string) $dossier->title;
             $fields = [];
             foreach (
-                ['title', 'titleen', 'summary', 'keywords', 'codirectorname', 'studyyear', 'directortitle',
+                ['title', 'titleen', 'summary', 'keywords', 'studyyear', 'directortitle',
                     'extdirectorname', 'extdirectorgrade', 'extdirectorinstitution', 'extdirectoremail'] as $field
             ) {
                 $fields[$field] = (string) these_submitted_value($data, $dossier, $field);

@@ -63,6 +63,14 @@ class review_form extends \moodleform {
         if ($missing !== '') {
             $mform->addElement('static', 'missingsignatures', '', $missing);
         }
+        // Nouvelle date demandée à l'étudiant : pas de validation tant qu'il ne l'a pas proposée.
+        $datepending = !empty($this->_customdata['datepending']);
+        if ($datepending) {
+            $mform->addElement('static', 'datepending', '', \html_writer::div(
+                get_string('datepending', 'mod_these'),
+                'alert alert-warning mb-0'
+            ));
+        }
 
         switch ($stepkey) {
             case 'librarysubject':
@@ -70,22 +78,16 @@ class review_form extends \moodleform {
                 $mform->setType('libraryref', PARAM_TEXT);
                 break;
             case 'directordefense':
-                // Rapport du directeur, rédigé sur sa propre page (report.php) et signé ici.
+                // Rapport du directeur, déposé sur sa propre page (report.php).
                 $report = $this->_customdata['report'] ?? null;
-                $status = !$report || trim((string) $report->text) === ''
-                    ? get_string('reportnotwritten', 'mod_these')
-                    : get_string($report->favorable ? 'reportwrittenfavorable' : 'reportwrittennotfavorable', 'mod_these');
-                $mform->addElement('static', 'reportstatus', get_string('reporttext', 'mod_these'), $status . ' '
-                    . \html_writer::link($report->url ?? '#', get_string('writereport', 'mod_these')));
+                $status = !$report || empty($report->deposited)
+                    ? get_string('reportnotdeposited', 'mod_these')
+                    : get_string($report->favorable ? 'reportdepositedfavorable' : 'reportdepositednotfavorable', 'mod_these');
+                $mform->addElement('static', 'reportstatus', get_string('directorreport', 'mod_these'), $status . ' '
+                    . \html_writer::link($report->url ?? '#', get_string('depositreport', 'mod_these')));
                 // Grille de conformité du manuscrit.
                 $mform->addElement('header', 'gridheader', get_string('docgrid', 'mod_these'));
                 $mform->setExpanded('gridheader');
-                if (!empty($this->_customdata['gridprefilled'])) {
-                    $mform->addElement('static', 'gridprefilled', '', \html_writer::span(
-                        get_string('gridprefilledbystudent', 'mod_these'),
-                        'alert alert-info d-block'
-                    ));
-                }
                 $mform->addElement('text', 'ethicsnumber', get_string('ethicsnumber', 'mod_these'), ['size' => 20]);
                 $mform->setType('ethicsnumber', PARAM_TEXT);
                 // Éléments de la grille de l'activité (modifiables par la DEVE) : la grille signée
@@ -143,14 +145,14 @@ class review_form extends \moodleform {
                 // Agrément administratif.
                 $mform->addElement('header', 'adminheader', get_string('agreementadmin', 'mod_these'));
                 $mform->setExpanded('adminheader');
-                $mform->addElement('date_selector', 'agdefvdate', get_string('agdefvdate', 'mod_these'), ['optional' => true]);
-                $mform->addElement('advcheckbox', 'agmobility', '', get_string('agmobility', 'mod_these'));
-                // Validation de l'A6 : saisie sur sa page à part, rappelée ici avec le lien.
+                // Validation des études (DEFV, A6) : saisie sur sa page à part, rappelée ici avec le lien.
                 \mod_these\local\a6::add_status_field(
                     $mform,
                     $this->_customdata['a6label'] ?? '',
-                    $this->_customdata['a6url'] ?? null
+                    $this->_customdata['a6url'] ?? null,
+                    $this->_customdata['defvlabel'] ?? ''
                 );
+                $mform->addElement('advcheckbox', 'agmobility', '', get_string('agmobility', 'mod_these'));
                 $mform->addElement('static', 'agauthorized', '', get_string('agauthorized', 'mod_these'));
                 break;
             case 'libraryconformity':
@@ -187,7 +189,7 @@ class review_form extends \moodleform {
         }
 
         $buttons = [];
-        if ($missing === '') {
+        if ($missing === '' && !$datepending) {
             $buttons[] = $mform->createElement('submit', 'validatestep', get_string('validate' . $stepkey, 'mod_these'));
         }
         // Renvoi : bouton secondaire, d'alerte, pour ne pas le confondre avec la validation ; un
@@ -236,7 +238,7 @@ class review_form extends \moodleform {
                 break;
             case 'directordefense':
                 $report = $this->_customdata['report'] ?? null;
-                if (!$report || trim((string) $report->text) === '') {
+                if (!$report || empty($report->deposited)) {
                     $errors['reportstatus'] = get_string('directorreportrequired', 'mod_these');
                 } else if (empty($report->favorable)) {
                     $errors['reportstatus'] = get_string('reportfavorablerequired', 'mod_these');
@@ -259,8 +261,8 @@ class review_form extends \moodleform {
                 } else if (these_devenumber_taken($this->_customdata['theseid'], $number, $data['dossierid'])) {
                     $errors['devenumber'] = get_string('devenumbertaken', 'mod_these');
                 }
-                if (empty($data['agdefvdate'])) {
-                    $errors['agdefvdate'] = get_string('required');
+                if (empty($this->_customdata['defvrecorded'])) {
+                    $errors['defvstatus'] = get_string('defvrequired', 'mod_these');
                 }
                 if (trim((string) $data['defenselocation']) === '') {
                     $errors['defenselocation'] = get_string('required');

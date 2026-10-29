@@ -24,11 +24,12 @@ require_once($CFG->dirroot . '/mod/these/locallib.php');
 /**
  * Formulaire de dépôt de sujet de thèse (phase 1, étape 1), reprenant le formulaire papier de
  * l'établissement : identité et année d'études, titre (confidentiel ou non), mots-clés,
- * directeur de thèse (et directeur extérieur éventuel), co-directeur, engagements de l'étudiant et
- * signature.
+ * directeur de thèse, engagements de l'étudiant et signature.
  *
- * Le titre du directeur n'est demandé que s'il ne figure pas dans l'annuaire des enseignants ; un
- * co-directeur interne se choisit dans l'annuaire, un extérieur se saisit.
+ * Un directeur extérieur à l'établissement, sans compte, se saisit ; l'étudiant choisit alors un
+ * examinateur interne, enseignant de l'établissement qui fait les démarches dans le module à la place
+ * du directeur (il est enregistré comme directeur du dossier, voir get_data()). Le titre du directeur,
+ * ou de l'examinateur, n'est demandé que s'il ne figure pas dans l'annuaire des enseignants.
  *
  * L'étudiant peut l'enregistrer en brouillon ou le soumettre à son directeur ; les champs, les
  * engagements et la signature ne sont exigés qu'à la soumission.
@@ -105,32 +106,36 @@ class subject_form extends \moodleform {
         $mform->setExpanded('directorheader');
         $mform->addElement('advcheckbox', 'externaldirector', '', get_string('externaldirector', 'mod_these'));
         $mform->addHelpButton('externaldirector', 'externaldirector', 'mod_these');
-        $mform->addElement('select', 'directorid', get_string('director', 'mod_these'), $this->_customdata['directors']);
-        $mform->addHelpButton('directorid', 'director', 'mod_these');
-        $mform->addElement('text', 'directortitle', get_string('directortitle', 'mod_these'), ['size' => 10]);
-        $mform->setType('directortitle', PARAM_TEXT);
-        $mform->addHelpButton('directortitle', 'directortitle', 'mod_these');
         // Titre connu de l'annuaire : repris à l'enregistrement, l'étudiant n'a pas à le saisir.
         $directorids = array_keys($this->_customdata['directors']);
         $knowntitles = array_keys(\mod_these\local\jurors::titles_for_users($directorids));
+        // Directeur interne : il fait lui-même les démarches.
+        $mform->addElement('select', 'directorid', get_string('director', 'mod_these'), $this->_customdata['directors']);
+        $mform->addHelpButton('directorid', 'director', 'mod_these');
+        $mform->hideIf('directorid', 'externaldirector', 'checked');
+        $mform->addElement('text', 'directortitle', get_string('directortitle', 'mod_these'), ['size' => 10]);
+        $mform->setType('directortitle', PARAM_TEXT);
+        $mform->addHelpButton('directortitle', 'directortitle', 'mod_these');
+        $mform->hideIf('directortitle', 'externaldirector', 'checked');
         if ($knowntitles) {
             $mform->hideIf('directortitle', 'directorid', 'in', $knowntitles);
         }
+        // Directeur extérieur : saisi, et suppléé dans le module par un examinateur interne.
         foreach (['extdirectorname', 'extdirectorgrade', 'extdirectorinstitution', 'extdirectoremail'] as $field) {
             $mform->addElement('text', $field, get_string($field, 'mod_these'), ['size' => 64]);
             $mform->setType($field, $field === 'extdirectoremail' ? PARAM_RAW_TRIMMED : PARAM_TEXT);
             $mform->hideIf($field, 'externaldirector', 'notchecked');
         }
-        self::add_codirector_fields($mform, $this->_customdata['codirectors'] ?? []);
-
-        $mform->addElement(
-            'filemanager',
-            'subjectdocs',
-            get_string('subjectdocs', 'mod_these'),
-            null,
-            these_filemanager_options('subjectdocs')
-        );
-        $mform->addHelpButton('subjectdocs', 'subjectdocs', 'mod_these');
+        $mform->addElement('select', 'examinerid', get_string('internalexaminer', 'mod_these'), $this->_customdata['directors']);
+        $mform->addHelpButton('examinerid', 'internalexaminer', 'mod_these');
+        $mform->hideIf('examinerid', 'externaldirector', 'notchecked');
+        $mform->addElement('text', 'examinertitle', get_string('internalexaminertitle', 'mod_these'), ['size' => 10]);
+        $mform->setType('examinertitle', PARAM_TEXT);
+        $mform->addHelpButton('examinertitle', 'directortitle', 'mod_these');
+        $mform->hideIf('examinertitle', 'externaldirector', 'notchecked');
+        if ($knowntitles) {
+            $mform->hideIf('examinertitle', 'examinerid', 'in', $knowntitles);
+        }
 
         $mform->addElement('header', 'commitheader', get_string('commitments', 'mod_these'));
         $mform->setExpanded('commitheader');
@@ -158,60 +163,48 @@ class subject_form extends \moodleform {
     }
 
     /**
-     * Ajoute le choix du co-directeur : aucun, interne (choisi dans l'annuaire des enseignants) ou
-     * extérieur (nom et qualité en texte libre). Voir \mod_these\local\dossiers::codirector_fields().
+     * Préremplit l'examinateur interne avec le directeur du dossier quand le directeur est extérieur
+     * (voir get_data()).
      *
-     * @param \MoodleQuickForm $mform
-     * @param array $internal Enseignants internes, id => nom (voir jurors::internal_options()).
+     * @param \stdClass|array $defaultvalues
      * @return void
      */
-    public static function add_codirector_fields(\MoodleQuickForm $mform, array $internal) {
-        $mform->addElement('select', 'codirectortype', get_string('codirector', 'mod_these'), [
-            '' => get_string('codirectornone', 'mod_these'),
-            'internal' => get_string('codirectorinternal', 'mod_these'),
-            'external' => get_string('codirectorexternal', 'mod_these'),
-        ]);
-        $mform->addHelpButton('codirectortype', 'codirector', 'mod_these');
-        $mform->addElement(
-            'select',
-            'codirectorjurorid',
-            get_string('codirectorjuror', 'mod_these'),
-            [0 => get_string('choosedots')] + $internal
-        );
-        $mform->hideIf('codirectorjurorid', 'codirectortype', 'neq', 'internal');
-        $mform->addElement('text', 'codirectorname', get_string('codirectorname', 'mod_these'), ['size' => 64]);
-        $mform->setType('codirectorname', PARAM_TEXT);
-        $mform->hideIf('codirectorname', 'codirectortype', 'neq', 'external');
+    public function set_data($defaultvalues) {
+        $defaultvalues = (object) $defaultvalues;
+        if (!empty($defaultvalues->externaldirector)) {
+            $defaultvalues->examinerid = $defaultvalues->directorid ?? 0;
+            $defaultvalues->examinertitle = $defaultvalues->directortitle ?? '';
+        }
+        parent::set_data($defaultvalues);
     }
 
     /**
-     * Choix du co-directeur d'un dossier, pour préremplir add_codirector_fields().
+     * Données soumises ; si le directeur est extérieur, l'examinateur interne est enregistré comme
+     * directeur du dossier : c'est lui qui valide les étapes et signe dans le module.
      *
-     * @param \stdClass $dossier
-     * @return string '', 'internal' ou 'external'
+     * @return \stdClass|null
      */
-    public static function codirector_type(\stdClass $dossier) {
-        if (!empty($dossier->codirectorjurorid)) {
-            return 'internal';
+    public function get_data() {
+        $data = parent::get_data();
+        if ($data) {
+            self::apply_examiner($data);
         }
-        return trim((string) ($dossier->codirectorname ?? '')) !== '' ? 'external' : '';
+        return $data;
     }
 
     /**
-     * Co-directeur interne choisi, ou extérieur nommé.
+     * Reporte l'examinateur interne sur le directeur du dossier quand le directeur est extérieur.
      *
-     * @param array $data
-     * @return array Erreurs, indexées par champ.
+     * @param \stdClass $data Données du formulaire.
+     * @return \stdClass Les mêmes données.
      */
-    public static function codirector_errors(array $data) {
-        $type = (string) ($data['codirectortype'] ?? '');
-        if ($type === 'internal' && empty($data['codirectorjurorid'])) {
-            return ['codirectorjurorid' => get_string('required')];
+    public static function apply_examiner(\stdClass $data) {
+        if (!empty($data->externaldirector) && property_exists($data, 'examinerid')) {
+            $data->directorid = (int) $data->examinerid;
+            $data->directortitle = (string) ($data->examinertitle ?? '');
         }
-        if ($type === 'external' && trim((string) ($data['codirectorname'] ?? '')) === '') {
-            return ['codirectorname' => get_string('required')];
-        }
-        return [];
+        unset($data->examinerid, $data->examinertitle);
+        return $data;
     }
 
     /**
@@ -239,10 +232,13 @@ class subject_form extends \moodleform {
         if (!isset($errors['keywords']) && (count($keywords) < 3 || count($keywords) > 5)) {
             $errors['keywords'] = get_string('keywordscount', 'mod_these');
         }
-        if (empty($data['directorid'])) {
+        if (empty($data['externaldirector']) && empty($data['directorid'])) {
             $errors['directorid'] = get_string('required');
         }
         if (!empty($data['externaldirector'])) {
+            if (empty($data['examinerid'])) {
+                $errors['examinerid'] = get_string('required');
+            }
             foreach (['extdirectorname', 'extdirectorgrade', 'extdirectorinstitution', 'extdirectoremail'] as $field) {
                 if (trim((string) $data[$field]) === '') {
                     $errors[$field] = get_string('required');
@@ -252,7 +248,6 @@ class subject_form extends \moodleform {
                 $errors['extdirectoremail'] = get_string('invalidemail');
             }
         }
-        $errors = array_merge($errors, self::codirector_errors($data));
         foreach (['commitguide', 'commitduplicate'] as $field) {
             if (empty($data[$field])) {
                 $errors[$field] = get_string('commitrequired', 'mod_these');

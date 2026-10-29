@@ -220,10 +220,6 @@ class restore_these_activity_structure_step extends restore_activity_structure_s
             return;
         }
         $data->directorid = $this->map_user($data->directorid);
-        // Annuaire propre au site : un co-directeur absent de cet annuaire garde son nom, sans lien.
-        if (!empty($data->codirectorjurorid) && !$DB->record_exists('these_juror', ['id' => $data->codirectorjurorid])) {
-            $data->codirectorjurorid = 0;
-        }
         $data->returnedby = $this->map_user($data->returnedby);
         $newid = $DB->insert_record('these_dossier', $data);
         $this->set_mapping('these_dossier', $oldid, $newid, true);
@@ -298,6 +294,7 @@ class restore_these_activity_structure_step extends restore_activity_structure_s
         $this->add_related_files('mod_these', 'intro', null);
         $this->add_related_files('mod_these', 'docimages', null);
         $this->add_related_files('mod_these', 'contracttemplate', null);
+        $this->add_related_files('mod_these', 'reporttemplate', null);
         foreach (THESE_FILEAREAS as $filearea) {
             $this->add_related_files('mod_these', $filearea, 'these_dossier');
         }

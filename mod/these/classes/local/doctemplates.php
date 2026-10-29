@@ -44,7 +44,6 @@ class doctemplates {
             'agreement' => 'agreement',
             'signaletique' => 'signaletique',
             'bordereau' => 'bordereau',
-            'report' => 'report',
             'grid' => 'grid',
             'conclusions' => 'conclusions',
             'contractdata' => 'contract',
@@ -468,7 +467,6 @@ class doctemplates {
             'devenumber' => (string) $d->devenumber,
             'libraryref' => (string) $d->libraryref,
             'ethicsnumber' => trim((string) $d->ethicsnumber),
-            'codirector' => (string) $d->codirectorname,
         ];
         $summary = function ($field) use ($b) {
             return core_text::substr((string) ($b[$field] ?? ''), 0, THESE_BORDEREAU_SUMMARY_MAX);
@@ -503,20 +501,20 @@ class doctemplates {
             'correctionsnote' => (string) ($d->correctionsnote ?? ''),
         ];
 
-        // Cursus déclaré par l'étudiant (fiche signalétique) et agrément administratif de la DEVE. La
-        // validation de l'A6, liée à l'étudiant, est saisie par la DEVE (voir \mod_these\local\a6).
+        // Cursus (fiche signalétique) et agrément administratif de la DEVE. La validation des études
+        // (DEFV, A6), liée à l'étudiant, est saisie par la DEVE (voir \mod_these\local\a6).
         $a6 = a6::for_documents((int) ($d->userid ?? 0), $agreementdata, $b);
         $a6notyet = $a6['notyet'] || !$a6['date'];
         $cursus = [
-            'defvdate' => $day($b['defvdate'] ?? 0),
-            'defvschool' => $school($b['defvschool'] ?? ''),
+            'defvdate' => $day($a6['defvdate']),
+            'defvschool' => $school($a6['defvschool']),
             'a6notyet' => $a6notyet,
             'a6date' => $a6notyet ? '' : $day($a6['date']),
             'a6school' => $a6notyet ? '' : $school($a6['school']),
         ];
         $agreement = [
-            'defv' => !empty($agreementdata['defvdate']),
-            'defvdate' => $day($agreementdata['defvdate'] ?? 0),
+            'defv' => !empty($a6['defvdate']),
+            'defvdate' => $day($a6['defvdate']),
             'mobility' => !empty($agreementdata['mobility']),
             'a6notyet' => $a6notyet,
             'a6' => !$a6notyet,
@@ -573,8 +571,7 @@ class doctemplates {
             return !in_array($item['role'], ['director', 'guest'], true);
         }));
 
-        // Rapport, grille et conclusions du directeur.
-        $report = these_report_context($d->reporttext, !empty($d->reportfavorable));
+        // Grille et conclusions du directeur (son rapport est un fichier déposé, voir report.php).
         $grid = [];
         $mark = [];
         $gridsections = [];
@@ -666,7 +663,7 @@ class doctemplates {
             'noembargo' => !$embargo,
             'internet' => $contract['internet'],
             'restricted' => $contract['restricted'],
-            'favorable' => $report['favorable'],
+            'favorable' => !empty($d->reportfavorable),
             'emailconsent' => $student['emailconsent'],
             'commitguide' => (bool) ($commitments & THESE_COMMIT_GUIDE),
             'commitduplicate' => (bool) ($commitments & THESE_COMMIT_DUPLICATE),
@@ -725,7 +722,6 @@ class doctemplates {
             'juryguest1' => $guests[0] ?? $empty,
             'juryguest2' => $guests[1] ?? $empty,
             'juryguests' => $guests,
-            'report' => $report,
             'grid' => $grid,
             'mark' => $mark,
             'gridsections' => $gridsections,
@@ -819,46 +815,6 @@ class doctemplates {
             return null;
         }
         return $pages > 1 ? get_string('conclusionsonepage', 'mod_these') : null;
-    }
-
-    /**
-     * Vérifie que le rapport du directeur tient sur une page, signature comprise : longueur maximale,
-     * puis mise en page réelle avec le modèle en vigueur.
-     *
-     * @param stdClass $these
-     * @param string $text
-     * @param bool $favorable Avis favorable (imprimé sous le rapport).
-     * @return string|null Message d'erreur, ou null s'il tient.
-     */
-    public static function report_error(stdClass $these, $text, $favorable = true) {
-        $length = core_text::strlen(trim((string) $text));
-        if ($length > THESE_REPORT_MAX) {
-            return get_string('reporttoolong', 'mod_these', (object) ['max' => THESE_REPORT_MAX, 'length' => $length]);
-        }
-        $data = these_sample_document_context(these_settings_scope($these), $these);
-        $data['report'] = these_report_context($text, $favorable);
-        try {
-            $pages = \mod_these\pdf\html_document::page_count(these_render_doctemplate($these, 'report', $data));
-        } catch (\Throwable $e) {
-            return null;
-        }
-        return $pages > 1 ? get_string('reportonepage', 'mod_these') : null;
-    }
-
-    /**
-     * Données du rapport du directeur pour les modèles de documents.
-     *
-     * @param string|null $text
-     * @param bool $favorable
-     * @return array {text, html, favorable, favorabletext}
-     */
-    public static function report_context($text, $favorable) {
-        return [
-            'text' => trim((string) $text),
-            'html' => these_doctemplate_text($text),
-            'favorable' => (bool) $favorable,
-            'favorabletext' => get_string('pdfreportfavorable', 'mod_these'),
-        ];
     }
 
     /**
@@ -1042,14 +998,12 @@ class doctemplates {
             'title' => 'Prise en charge de la douleur chronique chez le chien âgé : enquête auprès des vétérinaires praticiens',
             'titleen' => 'Management of chronic pain in elderly dogs: a survey of veterinary practitioners',
             'summary' => 'Résumé du sujet.', 'keywords' => 'Chien ; Douleur chronique ; Gériatrie ; Analgésie',
-            'codirectorname' => '', 'studyyear' => 'A5', 'confidential' => 0, 'directortitle' => 'Pr',
+            'studyyear' => 'A5', 'confidential' => 0, 'directortitle' => 'Pr',
             'externaldirector' => 0, 'extdirectorname' => '', 'extdirectorgrade' => '', 'extdirectorinstitution' => '',
             'extdirectoremail' => '', 'commitments' => THESE_COMMIT_GUIDE | THESE_COMMIT_DUPLICATE, 'ethicsnumber' => '2526',
             'bordereau' => json_encode($bordereau),
             'conclusions' => "Premier paragraphe des conclusions.\n\n"
                 . "Dernier paragraphe des conclusions, qui reste avec les signatures.",
-            'reporttext' => "Camille Martin a conduit une enquête rigoureuse auprès de 250 praticiens.\n"
-                . "Le manuscrit est clair et bien construit.",
             'reportfavorable' => 1,
             'conformitygrid' => json_encode(array_fill_keys(
                 array_merge(...array_map('array_keys', array_values(these_get_grid_items($scope)))),

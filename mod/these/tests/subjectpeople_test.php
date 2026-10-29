@@ -17,7 +17,6 @@
 namespace mod_these;
 
 use mod_these\form\subject_form;
-use mod_these\local\dossiers;
 use mod_these\local\jurors;
 
 defined('MOODLE_INTERNAL') || die();
@@ -26,14 +25,15 @@ global $CFG;
 require_once(__DIR__ . '/these_testcase.php');
 
 /**
- * Personnes du sujet : titre du directeur repris de l'annuaire des enseignants, co-directeur
- * interne choisi dans l'annuaire ou extérieur saisi.
+ * Personnes du sujet : titre du directeur repris de l'annuaire des enseignants, examinateur interne
+ * enregistré comme directeur du dossier quand le directeur est extérieur.
  *
  * @package    mod_these
  * @copyright  2026 Sébastien Lefebvre
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_these\local\dossiers::people_fields
  * @covers     \mod_these\local\jurors::titles_for_users
+ * @covers     \mod_these\form\subject_form::apply_examiner
  */
 final class subjectpeople_test extends these_testcase {
     /**
@@ -59,41 +59,31 @@ final class subjectpeople_test extends these_testcase {
     }
 
     /**
-     * Co-directeur interne (nom repris de l'annuaire), extérieur, ou aucun.
+     * Directeur extérieur : l'examinateur interne choisi devient le directeur du dossier, avec son
+     * titre ; directeur interne : l'examinateur éventuellement choisi auparavant est ignoré.
      */
-    public function test_codirector(): void {
+    public function test_internal_examiner(): void {
         $this->setup_activity();
-        $jurorid = jurors::save((object) ['title' => 'Dr', 'lastname' => 'Martin', 'firstname' => 'Claire',
-            'email' => 'claire.martin@example.com', 'status' => 'mcf', 'institution' => 'École nationale vétérinaire',
-            'active' => 1]);
-        $this->assertSame([$jurorid => 'Dr MARTIN Claire'], jurors::internal_options($this->context));
+        $examiner = $this->getDataGenerator()->create_and_enrol($this->course, 'teacher');
+
+        $data = subject_form::apply_examiner((object) ['externaldirector' => 1, 'directorid' => $this->director->id,
+            'directortitle' => 'Pr', 'examinerid' => $examiner->id, 'examinertitle' => 'Dr',
+            'extdirectorname' => 'Pr Durand']);
+        $this->assertEquals($examiner->id, $data->directorid);
+        $this->assertSame('Dr', $data->directortitle);
+        $this->assertFalse(property_exists($data, 'examinerid'));
 
         $dossier = $this->generator->create_dossier($this->these, $this->student->id);
-        $save = function ($data) use (&$dossier) {
-            $dossier = these_save_subject($this->these, $this->cm, $dossier, (object) $data, false, $this->student->id);
-            return $this->reload($dossier->id);
-        };
+        $dossier = these_save_subject($this->these, $this->cm, $dossier, $data, false, $this->student->id);
+        $saved = $this->reload($dossier->id);
+        $this->assertEquals($examiner->id, $saved->directorid);
+        $this->assertEquals(1, $saved->externaldirector);
+        $this->assertSame('Pr Durand', $saved->extdirectorname);
 
-        $saved = $save(['codirectortype' => 'internal', 'codirectorjurorid' => $jurorid, 'codirectorname' => 'Saisi']);
-        $this->assertEquals($jurorid, $saved->codirectorjurorid);
-        $this->assertSame('Dr MARTIN Claire', $saved->codirectorname);
-        $this->assertSame('internal', subject_form::codirector_type($saved));
-
-        $saved = $save(['codirectortype' => 'external', 'codirectorjurorid' => $jurorid, 'codirectorname' => ' Pr Durand (Lyon) ']);
-        $this->assertEquals(0, $saved->codirectorjurorid);
-        $this->assertSame('Pr Durand (Lyon)', $saved->codirectorname);
-        $this->assertSame('external', subject_form::codirector_type($saved));
-
-        $saved = $save(['codirectortype' => '', 'codirectorjurorid' => $jurorid, 'codirectorname' => 'Pr Durand']);
-        $this->assertEquals(0, $saved->codirectorjurorid);
-        $this->assertSame('', $saved->codirectorname);
-        $this->assertSame('', subject_form::codirector_type($saved));
-
-        // Formulaire sans le choix (import, anciens appels) : co-directeur saisi tel quel.
-        $this->assertSame([], dossiers::codirector_fields((object) ['codirectorname' => 'X']));
-
-        $this->assertArrayHasKey('codirectorjurorid', subject_form::codirector_errors(['codirectortype' => 'internal']));
-        $this->assertArrayHasKey('codirectorname', subject_form::codirector_errors(['codirectortype' => 'external']));
-        $this->assertSame([], subject_form::codirector_errors(['codirectortype' => '']));
+        $data = subject_form::apply_examiner((object) ['externaldirector' => 0, 'directorid' => $this->director->id,
+            'directortitle' => 'Pr', 'examinerid' => $examiner->id, 'examinertitle' => 'Dr']);
+        $this->assertEquals($this->director->id, $data->directorid);
+        $this->assertSame('Pr', $data->directortitle);
+        $this->assertFalse(property_exists($data, 'examinerid'));
     }
 }

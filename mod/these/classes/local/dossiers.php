@@ -68,7 +68,6 @@ class dossiers {
             'summary' => '',
             'keywords' => '',
             'directorid' => 0,
-            'codirectorname' => '',
             'timecreated' => $now,
             'timemodified' => $now,
         ];
@@ -245,7 +244,7 @@ class dossiers {
     }
 
     /**
-     * Indique si le rapport du directeur peut être rédigé : tant que le directeur n'a pas validé la
+     * Indique si le rapport du directeur peut être déposé : tant que le directeur n'a pas validé la
      * soutenance.
      *
      * @param stdClass $dossier
@@ -256,24 +255,19 @@ class dossiers {
     }
 
     /**
-     * Enregistre le rapport du directeur (sans changer le statut du dossier). Les signatures déjà
-     * apposées sur un rapport modifié sont invalidées.
+     * Enregistre l'avis du directeur sur son rapport (sans changer le statut du dossier) ; le rapport
+     * lui-même est un fichier, déposé par l'appelant (zone directorreport).
      *
      * @param stdClass $dossier
      * @param int $userid
-     * @param string $text
      * @param bool $favorable
      * @return stdClass Le dossier à jour.
      */
-    public static function save_report(stdClass $dossier, $userid, $text, $favorable) {
-        return these_dossier_operation($dossier, function () use ($dossier, $userid, $text, $favorable) {
-            $dossier = these_set_status($dossier, $dossier->status, $userid, 'reportsaved', '', [
-                'reporttext' => trim((string) $text),
+    public static function save_report(stdClass $dossier, $userid, $favorable) {
+        return these_dossier_operation($dossier, function () use ($dossier, $userid, $favorable) {
+            return these_set_status($dossier, $dossier->status, $userid, 'reportsaved', '', [
                 'reportfavorable' => $favorable ? 1 : 0,
             ]);
-            $cm = get_coursemodule_from_instance('these', $dossier->theseid, 0, false, MUST_EXIST);
-            these_refresh_signatures(context_module::instance($cm->id), $dossier);
-            return $dossier;
         });
     }
 
@@ -325,38 +319,14 @@ class dossiers {
     }
 
     /**
-     * Co-directeur soumis par un formulaire (voir subject_form::add_codirector_fields()) : enseignant
-     * interne choisi dans l'annuaire, dont le nom est repris de l'annuaire, extérieur saisi en texte
-     * libre, ou aucun.
+     * Champs de sujet dépendant des personnes : titre du directeur, repris de l'annuaire quand il y
+     * figure (l'étudiant ne le saisit pas).
      *
-     * @param stdClass $data
-     * @return array codirectorjurorid, codirectorname ; vide si le formulaire ne contient pas le choix.
-     */
-    public static function codirector_fields(stdClass $data) {
-        if (!property_exists($data, 'codirectortype')) {
-            return [];
-        }
-        $type = (string) $data->codirectortype;
-        $juror = $type === 'internal' ? jurors::get((int) ($data->codirectorjurorid ?? 0)) : null;
-        if ($juror) {
-            return ['codirectorjurorid' => (int) $juror->id, 'codirectorname' => jurors::name($juror)];
-        }
-        return [
-            'codirectorjurorid' => 0,
-            'codirectorname' => $type === 'external' ? trim((string) ($data->codirectorname ?? '')) : '',
-        ];
-    }
-
-    /**
-     * Champs de sujet dépendant des personnes : co-directeur (voir codirector_fields()) et titre du
-     * directeur, repris de l'annuaire quand il y figure (l'étudiant ne le saisit pas).
-     *
-     * @param array $fields Champs du sujet déjà relevés (directorid, directortitle, codirectorname...).
+     * @param array $fields Champs du sujet déjà relevés (directorid, directortitle...).
      * @param stdClass $data Formulaire soumis.
      * @return array Les champs, complétés.
      */
     public static function people_fields(array $fields, stdClass $data) {
-        $fields = array_merge($fields, self::codirector_fields($data));
         $title = jurors::titles_for_users([(int) ($fields['directorid'] ?? 0)]);
         if ($title) {
             $fields['directortitle'] = reset($title);
@@ -414,7 +384,7 @@ class dossiers {
             $context = context_module::instance($cm->id);
             $fields = [];
             foreach (
-                ['title', 'titleen', 'summary', 'keywords', 'codirectorname', 'studyyear', 'directortitle',
+                ['title', 'titleen', 'summary', 'keywords', 'studyyear', 'directortitle',
                     'extdirectorname', 'extdirectorgrade', 'extdirectorinstitution', 'extdirectoremail'] as $field
             ) {
                 $fields[$field] = (string) these_submitted_value($data, $dossier, $field);
@@ -498,15 +468,15 @@ class dossiers {
     }
 
     /**
-     * Enregistre le dossier de soutenance (phase 2, étape 1) : date et lieu proposés, jury, données
-     * du bordereau, de la fiche signalétique et du contrat de diffusion, conclusions, et, si demandé,
-     * le soumet signé (bordereau et contrat de diffusion). Les fichiers (manuscrit, autres
-     * documents) sont enregistrés par l'appelant.
+     * Enregistre le dossier de soutenance (phase 2, étape 1) : date proposée, jury, données du
+     * bordereau, de la fiche signalétique et du contrat de diffusion, conclusions, et, si demandé, le
+     * soumet signé (bordereau et contrat de diffusion). Le manuscrit est enregistré par l'appelant ;
+     * la salle est attribuée par la DEVE à la validation du dossier.
      *
      * @param stdClass $these
      * @param stdClass $cm
      * @param stdClass $dossier Dossier actif ou renvoyé en phase 2.
-     * @param stdClass $data {proposeddate, defenselocation}, les champs de jury (voir
+     * @param stdClass $data {proposeddate}, les champs de jury (voir
      *                       these_extract_submitted_jury()) et, facultativement, titleen,
      *                       conclusions et les champs du bordereau (préfixés « b »).
      * @param bool $submit
@@ -529,7 +499,6 @@ class dossiers {
 
             $fields = [
                 'proposeddate' => (int) $data->proposeddate,
-                'defenselocation' => trim((string) $data->defenselocation),
                 'titleen' => (string) these_submitted_value($data, $dossier, 'titleen'),
                 'conclusions' => (string) these_submitted_value($data, $dossier, 'conclusions'),
                 'bordereau' => json_encode(these_extract_bordereau($data, these_get_bordereau($dossier)), JSON_UNESCAPED_UNICODE),

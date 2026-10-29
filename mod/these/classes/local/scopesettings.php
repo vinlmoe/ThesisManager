@@ -35,6 +35,9 @@ class scopesettings {
     /** @var string[] Paramètres contenant une adresse de courriel. */
     const EMAILS = ['ccememail', 'ucblemail'];
 
+    /** @var array Options du dépôt du modèle de rapport du directeur (document Word). */
+    const REPORT_TEMPLATE_OPTIONS = ['subdirs' => 0, 'maxfiles' => 1, 'accepted_types' => ['.docx']];
+
     /**
      * Cache des paramètres lus pendant la requête, par portée et par contexte (vidé entre deux tests).
      *
@@ -462,6 +465,21 @@ class scopesettings {
             'url' => $page('doctemplates.php'),
         ];
         return $list;
+    }
+
+    /**
+     * Modèle du rapport du directeur (document Word) déposé dans la portée : le directeur le
+     * télécharge, le remplit et dépose son rapport (voir report.php).
+     *
+     * @param stdClass $scope
+     * @return \stored_file|null
+     */
+    public static function report_template(stdClass $scope) {
+        if (empty($scope->contextid)) {
+            return null;
+        }
+        $files = get_file_storage()->get_area_files($scope->contextid, $scope->component, 'reporttemplate', 0, 'id', false);
+        return reset($files) ?: null;
     }
 
     /**

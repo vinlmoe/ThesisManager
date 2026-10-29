@@ -765,7 +765,7 @@ class jury {
     public static function jury_documents() {
         return [
             'areas' => ['manuscript', 'defensedocs', 'directorreport'],
-            'documents' => ['report', 'grid', 'conclusions', 'signaletique'],
+            'documents' => ['grid', 'conclusions', 'signaletique'],
         ];
     }
 }

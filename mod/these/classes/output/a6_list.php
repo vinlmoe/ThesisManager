@@ -71,6 +71,7 @@ class a6_list implements \renderable, \templatable {
                 [parts::text(fullname($row->user))],
                 [$row->dossier ? parts::status((new status_badge($row->dossier->status))->export_for_template($output))
                     : parts::muted(get_string('a6nodossier', 'mod_these'))],
+                [parts::badge($row->defvlabel, !empty($row->a6['defvdate']) ? 'badge-success' : 'badge-secondary')],
                 [parts::badge($row->label, $validated ? 'badge-success' : 'badge-secondary')],
                 [parts::link(
                     \mod_these\local\a6::url($this->cm, $row->user->id),
@@ -80,7 +81,7 @@ class a6_list implements \renderable, \templatable {
             ];
         }
         $head = [get_string('select'), get_string('student', 'mod_these'), get_string('status', 'mod_these'),
-            get_string('a6validation', 'mod_these'), ''];
+            get_string('defvvalidation', 'mod_these'), get_string('a6validation', 'mod_these'), ''];
         $states = [
             '' => get_string('a6stateall', 'mod_these'),
             'notvalidated' => get_string('a6statenotvalidated', 'mod_these'),

@@ -67,21 +67,21 @@ final class doctemplate_test extends \advanced_testcase {
         $this->resetAfterTest();
         [$these] = $this->activity();
         [$other] = $this->activity();
-        $this->assertFalse(these_doctemplate_customised(these_local_scope($these), 'report'));
+        $this->assertFalse(these_doctemplate_customised(these_local_scope($these), 'grid'));
 
-        these_set_doctemplate(these_local_scope($these), 'report', "<p>Rapport de {{student.lastname}}</p>\r\n");
-        $this->assertTrue(these_doctemplate_customised(these_local_scope($these), 'report'));
-        $this->assertSame("<p>Rapport de {{student.lastname}}</p>\n", these_get_doctemplate(these_local_scope($these), 'report'));
+        these_set_doctemplate(these_local_scope($these), 'grid', "<p>Grille de {{student.lastname}}</p>\r\n");
+        $this->assertTrue(these_doctemplate_customised(these_local_scope($these), 'grid'));
+        $this->assertSame("<p>Grille de {{student.lastname}}</p>\n", these_get_doctemplate(these_local_scope($these), 'grid'));
         // Les autres activités gardent leur modèle.
-        $this->assertFalse(these_doctemplate_customised(these_local_scope($other), 'report'));
-        $this->assertSame(these_doctemplate_default('report'), these_get_doctemplate(these_local_scope($other), 'report'));
+        $this->assertFalse(these_doctemplate_customised(these_local_scope($other), 'grid'));
+        $this->assertSame(these_doctemplate_default('grid'), these_get_doctemplate(these_local_scope($other), 'grid'));
 
-        these_set_doctemplate(these_local_scope($these), 'report', "<p>Autre</p>");
-        $this->assertSame('<p>Autre</p>', these_get_doctemplate(these_local_scope($these), 'report'));
+        these_set_doctemplate(these_local_scope($these), 'grid', "<p>Autre</p>");
+        $this->assertSame('<p>Autre</p>', these_get_doctemplate(these_local_scope($these), 'grid'));
 
-        these_set_doctemplate(these_local_scope($these), 'report', null);
-        $this->assertFalse(these_doctemplate_customised(these_local_scope($these), 'report'));
-        $this->assertSame(these_doctemplate_default('report'), these_get_doctemplate(these_local_scope($these), 'report'));
+        these_set_doctemplate(these_local_scope($these), 'grid', null);
+        $this->assertFalse(these_doctemplate_customised(these_local_scope($these), 'grid'));
+        $this->assertSame(these_doctemplate_default('grid'), these_get_doctemplate(these_local_scope($these), 'grid'));
 
         these_set_doctemplate(these_local_scope($these), 'grid', "  " . these_doctemplate_default('grid'));
         $this->assertFalse(these_doctemplate_customised(these_local_scope($these), 'grid'));
@@ -136,8 +136,8 @@ final class doctemplate_test extends \advanced_testcase {
         $this->resetAfterTest();
         [$these, $context] = $this->activity();
         $scope = these_local_scope($these);
-        $this->assertNotNull(these_doctemplate_error($scope, 'report', '<p>{{#student}}sans fin</p>', $these));
-        $this->assertNull(these_doctemplate_error($scope, 'report', '<p>{{#student}}{{lastname}}{{/student}}</p>', $these));
+        $this->assertNotNull(these_doctemplate_error($scope, 'grid', '<p>{{#student}}sans fin</p>', $these));
+        $this->assertNull(these_doctemplate_error($scope, 'grid', '<p>{{#student}}{{lastname}}{{/student}}</p>', $these));
     }
 
     /**

@@ -146,12 +146,11 @@ function these_report_editable(stdClass $dossier) {
  *
  * @param stdClass $dossier
  * @param int $userid
- * @param string $text
  * @param bool $favorable
  * @return stdClass Le dossier à jour.
  */
-function these_save_report(stdClass $dossier, $userid, $text, $favorable) {
-    return \mod_these\local\dossiers::save_report($dossier, $userid, $text, $favorable);
+function these_save_report(stdClass $dossier, $userid, $favorable) {
+    return \mod_these\local\dossiers::save_report($dossier, $userid, $favorable);
 }
 
 /**

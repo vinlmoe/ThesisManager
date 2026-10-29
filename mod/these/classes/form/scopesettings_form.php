@@ -106,6 +106,14 @@ class scopesettings_form extends \moodleform {
             $this->_customdata['fileoptions']
         );
         $mform->addHelpButton('contracttemplate', 'settingscontracttemplate', 'mod_these');
+        $mform->addElement(
+            'filemanager',
+            'reporttemplate',
+            get_string('settingsreporttemplate', 'mod_these'),
+            null,
+            scopesettings::REPORT_TEMPLATE_OPTIONS
+        );
+        $mform->addHelpButton('reporttemplate', 'settingsreporttemplate', 'mod_these');
 
         $this->add_action_buttons(false, get_string('savechanges'));
     }

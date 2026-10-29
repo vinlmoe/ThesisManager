@@ -66,7 +66,7 @@ class navlinks implements \renderable, \templatable {
         if ($rights->deve) {
             $links[get_string('createdossier', 'mod_these')] = new moodle_url('/mod/these/create.php', $id);
             $links[get_string('importdossiers', 'mod_these')] = new moodle_url('/mod/these/import.php', $id);
-            $links[get_string('a6validation', 'mod_these')] = new moodle_url('/mod/these/a6.php', $id);
+            $links[get_string('studiesvalidation', 'mod_these')] = new moodle_url('/mod/these/a6.php', $id);
         }
         if ($rights->viewall) {
             $links[get_string('export', 'mod_these')] = new moodle_url('/mod/these/export.php', $id);

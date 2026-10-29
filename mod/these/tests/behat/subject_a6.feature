@@ -1,8 +1,8 @@
 @mod @mod_these
-Feature: Subject people come from the teacher directory and the A6 validation has its own page
+Feature: An external director is backed by an internal examiner and the studies validation has its own page
   In order to avoid typing what the module already knows
   As a student and as the registrar
-  I need the director title and an internal co-director taken from the directory, and a page for the A6
+  I need an internal examiner to handle the procedure for an external director, and a page for the DEFV and the A6
 
   Background:
     Given the following "users" exist:
@@ -28,27 +28,30 @@ Feature: Subject people come from the teacher directory and the A6 validation ha
       | Pr    | Dora      | Director | director1@example.com | pr     |
       | Dr    | Claire    | Martin   | claire@example.com    | mcf    |
 
-  Scenario: The student chooses an internal co-director and signs under their account name
+  Scenario: The student declares an external director and an internal examiner, and signs under their account name
     Given I log in as "student1"
     And I am on "Theses" course homepage
     And I follow "Theses 2026"
     And I follow "Propose a thesis subject"
     And the field "Signatory name" matches value "Sam Student"
     And "//input[@name='signername'][@disabled]" "xpath_element" should exist
+    And I should not see "Co-director"
+    And I should not see "Subject attachments"
     When I set the following fields to these values:
-      | Title              | Canine leptospirosis        |
-      | Thesis director    | Dora Director               |
-      | Co-director        | Internal to the institution |
-      | Internal co-director | Dr MARTIN Claire          |
+      | Title                                               | Canine leptospirosis       |
+      | The thesis director is external to the institution | 1                          |
+      | External director: title, name                      | Pr Jean Durand             |
+      | Internal examiner                                   | Dora Director              |
     And I press "Save draft"
     Then I should see "Draft saved."
-    And I should see "Dr MARTIN Claire"
+    And I should see "Pr Jean Durand"
+    And I should see "Dora Director" in the "Internal examiner" "table_row"
 
-  Scenario: The registrar records the A6 validation of a student without a file
+  Scenario: The registrar records the studies validation of a student without a file
     Given I log in as "deve1"
     And I am on "Theses" course homepage
     And I follow "Theses 2026"
-    And I follow "A6 validation"
+    And I follow "Studies validation"
     And I should see "not validated" in the "Sam Student" "table_row"
     And I should see "No file" in the "Sacha Other" "table_row"
     When I set the field with xpath "//tr[contains(., 'Sacha Other')]//input[@name='userids[]']" to "1"
@@ -59,3 +62,8 @@ Feature: Subject people come from the teacher directory and the A6 validation ha
     And I should see "not validated" in the "Sam Student" "table_row"
     And I click on "Edit" "link" in the "Sacha Other" "table_row"
     And the field "aga6date[year]" matches value "2025"
+    And I set the field "defvdate[enabled]" to "1"
+    And I set the field "defvdate[year]" to "2023"
+    And I press "Save changes"
+    And I should see "Studies validation recorded."
+    And I should see "2023" in the "Sacha Other" "table_row"
