@@ -82,10 +82,11 @@ function these_render_actions(array $links, $class = 'btn btn-sm btn-secondary m
  *
  * @param stdClass $cm
  * @param context $context
+ * @param stdClass|null $back
  * @return string HTML
  */
-function these_render_navlinks(stdClass $cm, context $context) {
-    return \mod_these\local\rendering::render_navlinks($cm, $context);
+function these_render_navlinks(stdClass $cm, context $context, ?stdClass $back = null) {
+    return \mod_these\local\rendering::render_navlinks($cm, $context, $back);
 }
 
 /**

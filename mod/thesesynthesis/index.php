@@ -37,6 +37,7 @@ $PAGE->set_context($context);
 
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('modulenameplural', 'mod_thesesynthesis'));
+echo \mod_these\local\backlinks::render(\mod_these\local\backlinks::course($course->id));
 
 $instances = get_all_instances_in_course('thesesynthesis', $course);
 

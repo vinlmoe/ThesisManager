@@ -60,6 +60,9 @@ if (!$member) {
     $PAGE->set_context(context_system::instance());
     $PAGE->set_title(get_string('juryaccess', 'mod_these'));
     echo $OUTPUT->header();
+    if ($token === '') {
+        echo \mod_these\local\backlinks::render(\mod_these\local\backlinks::from_global());
+    }
     echo $OUTPUT->notification(get_string('juryaccessinvalid', 'mod_these'), 'info');
     echo $OUTPUT->footer();
     exit;
@@ -99,6 +102,11 @@ $date = (int) ($dossier->defensedate ?: $dossier->proposeddate);
 
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('juryaccess', 'mod_these'));
+// Membre du jury connecté (ouvert depuis « Mes jurys ») : retour à la page d'origine. L'accès par
+// lien, sans compte, n'a pas de page où revenir.
+if ($token === '') {
+    echo \mod_these\local\backlinks::render(\mod_these\local\backlinks::from_global());
+}
 $renderer = $PAGE->get_renderer('mod_these');
 echo $renderer->render(new output\message(get_string('juryaccessintro', 'mod_these', (object) [
     'name' => trim($member->jurytitle . ' ' . $member->fullname),

@@ -119,6 +119,8 @@ $string['dormantphase'] = 'dormant file';
 // Navigation and lists.
 $string['dashboard'] = 'Dashboard';
 $string['planning'] = 'Defence schedule';
+$string['backto'] = 'Back: {$a}';
+$string['previouspage'] = 'Previous page';
 $string['planningviewweek'] = 'By week';
 $string['planningviewmonth'] = 'By month';
 $string['planningweekof'] = 'Week of {$a->start} to {$a->end}';

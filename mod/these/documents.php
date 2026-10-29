@@ -28,6 +28,7 @@
 require(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/these/locallib.php');
 
+use mod_these\local\backlinks;
 use mod_these\output;
 
 $id = required_param('id', PARAM_INT);
@@ -93,7 +94,7 @@ if ($action === 'transmit' && confirm_sesskey()) {
 $renderer = $PAGE->get_renderer('mod_these');
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('documents', 'mod_these'));
-echo $renderer->render(new output\link($dossierurl, get_string('back')));
+echo backlinks::render(backlinks::to_dossier($cm, $dossier));
 echo $OUTPUT->box(get_string('dossierof', 'mod_these', $student ? fullname($student) : '-'), 'generalbox mb-3');
 echo $renderer->render(output\message::help(get_string('documentsintro', 'mod_these')));
 

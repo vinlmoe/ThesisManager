@@ -30,6 +30,7 @@
 require(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/these/locallib.php');
 
+use mod_these\local\backlinks;
 use mod_these\local\signatureagent;
 use mod_these\output;
 use mod_these\output\parts;
@@ -156,6 +157,7 @@ if ($documents && ($data = $mform->get_data())) {
 }
 
 echo $OUTPUT->header();
+echo backlinks::render(backlinks::from_global());
 echo $renderer->render(new output\message(get_string('mysignatures_desc', 'mod_these'), 'mb-3'));
 if ($documents) {
     $mform->display();

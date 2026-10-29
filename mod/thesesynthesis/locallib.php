@@ -352,16 +352,31 @@ function thesesynthesis_get_juries(array $links, stdClass $user) {
 }
 
 /**
- * Liens vers les pages de l'activité, selon les droits de l'utilisateur.
+ * Accueil de l'activité de suivi, cible du retour de ses autres pages (voir \mod_these\local\backlinks).
+ *
+ * @param stdClass $cm
+ * @return stdClass {url, label}
+ */
+function thesesynthesis_back_home(stdClass $cm) {
+    return \mod_these\local\backlinks::target(
+        new moodle_url('/mod/thesesynthesis/view.php', ['id' => $cm->id]),
+        get_string('modulename', 'mod_thesesynthesis')
+    );
+}
+
+/**
+ * Liens vers les pages de l'activité, selon les droits de l'utilisateur, précédés du lien de retour.
  *
  * @param stdClass $cm
  * @param context $context
+ * @param stdClass|null $back Cible du retour (voir \mod_these\local\backlinks::target()) ; null : l'accueil de l'activité.
  * @return string HTML
  */
-function thesesynthesis_render_navlinks(stdClass $cm, context $context) {
+function thesesynthesis_render_navlinks(stdClass $cm, context $context, ?stdClass $back = null) {
     global $PAGE;
 
-    return $PAGE->get_renderer('mod_thesesynthesis')->render(new \mod_thesesynthesis\output\navlinks($cm, $context));
+    return \mod_these\local\backlinks::render($back ?? thesesynthesis_back_home($cm))
+        . $PAGE->get_renderer('mod_thesesynthesis')->render(new \mod_thesesynthesis\output\navlinks($cm, $context));
 }
 
 /**

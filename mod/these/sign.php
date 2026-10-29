@@ -41,6 +41,7 @@
 require(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/these/locallib.php');
 
+use mod_these\local\backlinks;
 use mod_these\output;
 use mod_these\output\parts;
 
@@ -115,8 +116,8 @@ $PAGE->set_title(get_string('signpagetitle', 'mod_these'));
 $PAGE->set_heading(format_string($these->name));
 
 $signer = these_inperson_signer($dossier, $slot);
-$dossierurl = new moodle_url('/mod/these/dossier.php', ['id' => $cm->id, 'dossierid' => $dossier->id]);
 $signaturesurl = new moodle_url('/mod/these/signatures.php', ['id' => $cm->id, 'dossierid' => $dossier->id]);
+$signaturesback = backlinks::target($signaturesurl, get_string('managesignatures', 'mod_these'));
 $renderer = $PAGE->get_renderer('mod_these');
 $links = array_map(function ($doctype) use ($pageparams) {
     return [parts::link(
@@ -166,6 +167,7 @@ if ($inperson && $doctypes && empty($SESSION->$verifiedkey)) {
     }
     echo $OUTPUT->header();
     echo $OUTPUT->heading(get_string('signpagetitle', 'mod_these'));
+    echo backlinks::render($signaturesback);
     echo $renderer->render($info);
     $identityform->display();
     echo $OUTPUT->footer();
@@ -229,12 +231,13 @@ if ($doctypes && ($data = $mform->get_data())) {
 
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('signpagetitle', 'mod_these'));
+// Signature sur place : retour au suivi des signatures. Le signataire par lien n'a pas de page où revenir.
+if ($inperson) {
+    echo backlinks::render($signaturesback);
+}
 echo $renderer->render($info);
 if (!$doctypes) {
     echo $OUTPUT->notification(get_string('signnothingpending', 'mod_these'), 'success');
-    if ($inperson) {
-        echo $renderer->render(new output\link($signaturesurl, get_string('back')));
-    }
 } else {
     $mform->display();
 }

@@ -50,6 +50,14 @@ $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($context);
 
 $links = thesesynthesis_get_active_links($synthesis->id, $USER->id);
+// Page d'origine des dossiers ouverts depuis les résultats, critères compris (voir \mod_these\local\backlinks).
+\mod_these\local\backlinks::remember(
+    new moodle_url(qualified_me()),
+    get_string('searchtheses', 'mod_thesesynthesis'),
+    array_map(function ($link) {
+        return (int) $link->these->id;
+    }, $links)
+);
 $scope = these_synthesis_scope($synthesis->id);
 $questions = $scope ? these_get_questions($scope) : [];
 $answerfilters = [];

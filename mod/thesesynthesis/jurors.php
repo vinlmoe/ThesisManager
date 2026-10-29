@@ -42,13 +42,4 @@ $PAGE->set_title(format_string($synthesis->name) . ' - ' . get_string('jurors', 
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($context);
 
-\mod_these\local\jurors_page::output(
-    $baseurl,
-    $PAGE->get_renderer('mod_these')->render(new \mod_these\output\link(
-        new moodle_url('/mod/thesesynthesis/view.php', ['id' => $cm->id]),
-        get_string('back'),
-        '',
-        '',
-        'mb-3'
-    ))
-);
+\mod_these\local\jurors_page::output($baseurl, thesesynthesis_render_navlinks($cm, $context));

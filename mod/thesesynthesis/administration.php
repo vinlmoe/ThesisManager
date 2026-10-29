@@ -63,6 +63,7 @@ $linked = thesesynthesis_get_links($synthesis->id);
 echo $OUTPUT->header();
 echo $OUTPUT->heading(format_string($synthesis->name));
 echo $OUTPUT->heading(get_string('managelinks', 'mod_thesesynthesis'), 3);
+echo thesesynthesis_render_navlinks($cm, $context);
 $renderer = $PAGE->get_renderer('mod_thesesynthesis');
 echo $renderer->render(new \mod_these\output\message(get_string('managelinks_help', 'mod_thesesynthesis'), '', 'p'));
 

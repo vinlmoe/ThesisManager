@@ -51,7 +51,7 @@ $PAGE->set_context($context);
 $renderer = $PAGE->get_renderer('mod_these');
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('jurordirectory', 'mod_these'));
-echo $renderer->render(new output\link(new moodle_url('/mod/these/view.php', ['id' => $cm->id]), get_string('back')));
+echo \mod_these\local\backlinks::render(\mod_these\local\backlinks::activity_home($cm, $context));
 echo $renderer->render(new output\message(get_string('jurordirectory_desc', 'mod_these'), 'mb-3'));
 echo $renderer->render(new output\link(
     new moodle_url('/mod/these/teachinglist.php', ['cmid' => $cm->id]),

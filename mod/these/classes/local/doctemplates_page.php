@@ -124,8 +124,7 @@ class doctemplates_page {
             $renderer = $PAGE->get_renderer('mod_these');
             echo $OUTPUT->header();
             echo $OUTPUT->heading(get_string('doctemplates', 'mod_these') . ' : ' . these_doctemplate_label($type));
-            echo $navigation;
-            echo $renderer->render(new output\link($listurl, get_string('back')));
+            echo backlinks::render(backlinks::target($listurl, get_string('doctemplates', 'mod_these')));
             echo $renderer->render(new output\message(get_string('doctplintro', 'mod_these'), 'my-3'));
             $mform->display();
 

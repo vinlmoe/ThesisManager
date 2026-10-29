@@ -87,5 +87,6 @@ if ($mform->is_cancelled()) {
 }
 
 echo $OUTPUT->header();
+echo \mod_these\local\backlinks::render(\mod_these\local\backlinks::target($returnurl, get_string('mysignatures', 'mod_these')));
 $mform->display();
 echo $OUTPUT->footer();

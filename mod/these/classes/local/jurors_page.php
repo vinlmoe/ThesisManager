@@ -78,7 +78,7 @@ class jurors_page {
             }
             echo $OUTPUT->header();
             echo $OUTPUT->heading(get_string('jurorprefill', 'mod_these'));
-            echo $navigation;
+            echo backlinks::render(backlinks::target($baseurl, get_string('jurors', 'mod_these')));
             echo $OUTPUT->confirm(
                 get_string('jurorprefillconfirm', 'mod_these', count($missing))
                     . $PAGE->get_renderer('mod_these')->render(new output\bullet_list(array_map('fullname', $missing))),
@@ -105,7 +105,7 @@ class jurors_page {
             }
             echo $OUTPUT->header();
             echo $OUTPUT->heading(get_string($juror ? 'juroredit' : 'juroradd', 'mod_these'));
-            echo $navigation;
+            echo backlinks::render(backlinks::target($baseurl, get_string('jurors', 'mod_these')));
             $form->display();
             echo $OUTPUT->footer();
             exit;

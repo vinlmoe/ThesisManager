@@ -32,6 +32,7 @@
 require(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/these/locallib.php');
 
+use mod_these\local\backlinks;
 use mod_these\output;
 use mod_these\output\parts;
 
@@ -237,7 +238,7 @@ $summary = new output\detail_section(get_string('reviewsummary', 'mod_these'), [
 
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('review' . $step['key'], 'mod_these'));
-echo $renderer->render(new output\link($dossierurl, get_string('back')));
+echo backlinks::render(backlinks::to_dossier($cm, $dossier));
 if ($step['key'] !== 'devedefense') {
     echo $juryconflicts;
 }

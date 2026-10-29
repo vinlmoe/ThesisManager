@@ -62,6 +62,7 @@ $PAGE->set_context($context);
 echo $OUTPUT->header();
 
 echo $OUTPUT->heading(get_string('mydossier', 'mod_these'), 3);
+echo \mod_these\local\backlinks::render(\mod_these\local\backlinks::course($course->id));
 // Annuaire des enseignants en lecture seule : pour choisir un directeur ou proposer un jury.
 echo $PAGE->get_renderer('mod_these')->render(new output\link(
     new moodle_url('/mod/these/directory.php', ['id' => $cm->id]),

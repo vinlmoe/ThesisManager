@@ -160,16 +160,19 @@ class rendering {
     }
 
     /**
-     * Barre de navigation commune aux pages du personnel.
+     * Barre de navigation commune aux pages du personnel, précédée du lien de retour (voir
+     * \mod_these\local\backlinks).
      *
      * @param stdClass $cm
      * @param context $context
+     * @param stdClass|null $back Cible du retour (voir backlinks::target()) ; null : l'accueil de l'activité.
      * @return string HTML
      */
-    public static function render_navlinks(stdClass $cm, context $context) {
+    public static function render_navlinks(stdClass $cm, context $context, ?stdClass $back = null) {
         global $PAGE;
 
-        return $PAGE->get_renderer('mod_these')->render(new output\navlinks($cm, $context));
+        return backlinks::render($back ?? backlinks::activity_home($cm, $context))
+            . $PAGE->get_renderer('mod_these')->render(new output\navlinks($cm, $context));
     }
 
     /**

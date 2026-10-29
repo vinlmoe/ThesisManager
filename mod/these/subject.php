@@ -27,6 +27,7 @@
 require(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/these/locallib.php');
 
+use mod_these\local\backlinks;
 use mod_these\output;
 use mod_these\output\parts;
 
@@ -110,6 +111,7 @@ if ($mform->is_cancelled()) {
 $renderer = $PAGE->get_renderer('mod_these');
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('subject', 'mod_these'));
+echo backlinks::render(backlinks::student_dossier($cm));
 if ($returned && trim((string) $dossier->returncomment) !== '') {
     echo $renderer->render(new output\message([
         parts::strong(get_string('returncomment', 'mod_these')),

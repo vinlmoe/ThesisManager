@@ -121,6 +121,8 @@ $string['dormantphase'] = 'dossier dormant';
 // Navigation et listes.
 $string['dashboard'] = 'Tableau de bord';
 $string['planning'] = 'Planning des soutenances';
+$string['backto'] = 'Retour : {$a}';
+$string['previouspage'] = 'Page précédente';
 $string['planningviewweek'] = 'Par semaine';
 $string['planningviewmonth'] = 'Par mois';
 $string['planningweekof'] = 'Semaine du {$a->start} au {$a->end}';
