@@ -939,13 +939,13 @@ $string['contracttemplatemissing'] = 'The standard distribution contract has not
 $string['contracttemplateunreadable'] = 'The standard distribution contract uploaded in the workflow settings could not be read (unsupported PDF format): the contract only contains the module\'s pages and will not be sealed. Upload the contract saved in an older PDF format (PDF 1.4).';
 $string['bconfidentialuntil'] = 'Confidential until';
 $string['bconfidentialuntil_help'] = 'Only for theses declared confidential with the subject.';
-$string['bembargo'] = 'I request a {$a}-year distribution embargo from the defence date';
-$string['embargo_help'] = 'During the embargo, the thesis is registered and listed, but its full text is neither distributed online nor available for consultation until the end, 5 years after the defence date. The request must be justified (patent, publication in progress, sensitive data, partnership...). It is stated in the distribution contract, which the thesis director endorses.';
+$string['bembargo'] = 'I request a distribution embargo from the defence date ({$a} months at most)';
+$string['embargo_help'] = 'During the embargo, the thesis is registered and listed, but its full text is neither distributed online nor available for consultation until the end, at most one year after the defence date. The request must be justified (patent, publication in progress, sensitive data, partnership...). It is stated in the distribution contract, which the thesis director endorses.';
 $string['bembargoreason'] = 'Reason for the embargo request';
 $string['bembargoreasonrequired'] = 'Give the reason for the embargo request.';
 $string['embargo'] = 'Distribution embargo';
-$string['embargorequested'] = 'Requested: {$a->years} years after the defence, until {$a->until}';
-$string['embargorequestednodate'] = 'Requested: {$a} years after the defence (defence date to be set)';
+$string['embargorequested'] = 'Requested: {$a->months} months after the defence, until {$a->until}';
+$string['embargorequestednodate'] = 'Requested: {$a} months after the defence (defence date to be set)';
 $string['embargoreason'] = 'Embargo reason';
 $string['embargoexport'] = 'Embargo until';
 $string['exportmissingsignatures'] = 'Signatures missing to move to the next step';
@@ -1458,3 +1458,5 @@ Subject: {$a->title}
 Open the file: {$a->url}';
 $string['logsignaturesrevoked'] = 'Signatures revoked, to be requested again';
 $string['juryonedirector'] = 'The jury must include the thesis director (second row).';
+$string['bembargomonths'] = 'Embargo duration';
+$string['embargomonthsoption'] = '{$a} months';

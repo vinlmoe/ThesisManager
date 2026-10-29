@@ -196,7 +196,7 @@ signés.
   pour un document destiné à d'autres personnes. Les signataires extérieurs
   (direction générale, CCEM, université) voient les documents qu'ils signent.
 - **Embargo de diffusion** : au dépôt de la soutenance, l'étudiant peut demander
-  un embargo de 5 ans (`THESE_EMBARGO_YEARS`), motif obligatoire. La fin de
+  un embargo d'un à douze mois (au plus `THESE_EMBARGO_MAX_MONTHS`), motif obligatoire. La fin de
   l'embargo est calculée à partir de la date de soutenance (arrêtée, à défaut
   proposée) et reportée au contrat de diffusion, que le directeur vise ; elle
   figure au dossier (rubrique *Diffusion*) et dans l'export du registre. Le motif

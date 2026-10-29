@@ -456,13 +456,13 @@ class dossiers {
                 $bordereau[$field] = is_string($value) ? trim($value) : $value;
             }
         }
-        // L'embargo dure désormais THESE_EMBARGO_YEARS ans après la soutenance (voir these_embargo_until()) :
+        // L'embargo dure désormais la durée demandée après la soutenance (voir these_embargo_until()) :
         // une date saisie avec l'ancien formulaire ne vaut plus dès que l'étudiant enregistre le nouveau.
         if (property_exists($data, 'bembargo') && !property_exists($data, 'bembargountil')) {
             $bordereau['embargountil'] = 0;
         }
         if (empty($bordereau['embargo'])) {
-            unset($bordereau['embargoreason']);
+            unset($bordereau['embargoreason'], $bordereau['embargomonths']);
         }
         return $bordereau;
     }

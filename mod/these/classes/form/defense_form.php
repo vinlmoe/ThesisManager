@@ -176,9 +176,17 @@ class defense_form extends \moodleform {
             'optional' => true, 'startyear' => (int) date('Y'), 'stopyear' => (int) date('Y') + 30,
         ]);
         $mform->addHelpButton('bconfidentialuntil', 'bconfidentialuntil', 'mod_these');
-        // Embargo : diffusion différée de THESE_EMBARGO_YEARS ans après la soutenance, sur demande motivée.
-        $mform->addElement('advcheckbox', 'bembargo', '', get_string('bembargo', 'mod_these', THESE_EMBARGO_YEARS));
+        // Embargo : diffusion différée d'au plus THESE_EMBARGO_MAX_MONTHS mois après la soutenance, sur demande motivée.
+        $mform->addElement('advcheckbox', 'bembargo', '', get_string('bembargo', 'mod_these', THESE_EMBARGO_MAX_MONTHS));
         $mform->addHelpButton('bembargo', 'embargo', 'mod_these');
+        $months = [];
+        for ($n = 1; $n <= THESE_EMBARGO_MAX_MONTHS; $n++) {
+            $months[$n] = get_string('embargomonthsoption', 'mod_these', $n);
+        }
+        $mform->addElement('select', 'bembargomonths', get_string('bembargomonths', 'mod_these'), $months);
+        $mform->setType('bembargomonths', PARAM_INT);
+        $mform->setDefault('bembargomonths', THESE_EMBARGO_MAX_MONTHS);
+        $mform->hideIf('bembargomonths', 'bembargo', 'notchecked');
         $mform->addElement('textarea', 'bembargoreason', get_string('bembargoreason', 'mod_these'), ['rows' => 3, 'cols' => 80]);
         $mform->setType('bembargoreason', PARAM_TEXT);
         $mform->hideIf('bembargoreason', 'bembargo', 'notchecked');

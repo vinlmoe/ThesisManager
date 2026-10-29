@@ -209,7 +209,7 @@ class signatures {
             case 'contract':
                 $student = these_get_bordereau($dossier);
                 $keys = ['birthname', 'firstnames', 'birthdate', 'street', 'postcode', 'city', 'country', 'personalemail',
-                    'confidentialuntil', 'embargo', 'embargountil', 'embargoreason', 'diffusion'];
+                    'confidentialuntil', 'embargo', 'embargomonths', 'embargountil', 'embargoreason', 'diffusion'];
                 return $common + [
                     'student' => array_intersect_key($student, array_flip($keys)),
                     'confidential' => (int) ($dossier->confidential ?? 0),
@@ -356,15 +356,16 @@ class signatures {
             // Bordereau ABES.
             'nbvolumes', 'nbpages', 'nbrefs', 'summaryfr', 'summaryen', 'keywords',
             // Contrat de diffusion.
-            'confidentialuntil', 'embargo', 'embargountil', 'embargoreason', 'diffusion',
+            'confidentialuntil', 'embargo', 'embargomonths', 'embargountil', 'embargoreason', 'diffusion',
             // Soutenance.
             'visio',
         ];
     }
 
     /**
-     * Fin de l'embargo de diffusion d'une thèse : THESE_EMBARGO_YEARS ans après la soutenance (date
-     * arrêtée, à défaut date proposée). Un embargo enregistré avant cette règle garde sa date.
+     * Fin de l'embargo de diffusion d'une thèse : la durée demandée, en mois (THESE_EMBARGO_MAX_MONTHS
+     * au plus, et par défaut), après la soutenance (date arrêtée, à défaut date proposée). Un embargo
+     * enregistré avec une date garde sa date, sans dépasser un an après la soutenance.
      *
      * @param stdClass $dossier
      * @return int 0 sans embargo, ou tant que la soutenance n'a pas de date.
@@ -374,15 +375,45 @@ class signatures {
         if (empty($bordereau['embargo'])) {
             return 0;
         }
-        if (!empty($bordereau['embargountil'])) {
-            return (int) $bordereau['embargountil'];
-        }
         $defense = (int) ($dossier->defensedate ?: $dossier->proposeddate);
+        $max = $defense ? self::add_months($defense, THESE_EMBARGO_MAX_MONTHS) : 0;
+        if (!empty($bordereau['embargountil'])) {
+            $until = (int) $bordereau['embargountil'];
+            return $max ? min($until, $max) : $until;
+        }
         if (!$defense) {
             return 0;
         }
-        $date = usergetdate($defense);
-        return make_timestamp($date['year'] + THESE_EMBARGO_YEARS, $date['mon'], $date['mday']);
+        return self::add_months($defense, self::embargo_months($bordereau));
+    }
+
+    /**
+     * Durée de l'embargo demandée, en mois : de 1 à THESE_EMBARGO_MAX_MONTHS, cette durée maximale à
+     * défaut (demandes antérieures au choix de la durée).
+     *
+     * @param array $bordereau Voir these_get_bordereau().
+     * @return int
+     */
+    public static function embargo_months(array $bordereau) {
+        $months = (int) ($bordereau['embargomonths'] ?? 0);
+        return $months >= 1 && $months <= THESE_EMBARGO_MAX_MONTHS ? $months : THESE_EMBARGO_MAX_MONTHS;
+    }
+
+    /**
+     * Jour (à minuit) tombant un nombre de mois après une date, ramené au dernier jour du mois s'il
+     * n'existe pas (31 janvier plus un mois : 28 ou 29 février).
+     *
+     * @param int $time
+     * @param int $months
+     * @return int
+     */
+    protected static function add_months($time, $months) {
+        $date = usergetdate($time);
+        $month = $date['mon'] - 1 + (int) $months;
+        $year = $date['year'] + intdiv($month, 12);
+        $month = $month % 12 + 1;
+        $day = min($date['mday'], (int) date('t', make_timestamp($year, $month, 1, 12)));
+        return make_timestamp($year, $month, $day);
     }
 
     /**

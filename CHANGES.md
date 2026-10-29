@@ -67,6 +67,12 @@ développement ne correspondent à aucune version installable ; 0.11.2 n'a jamai
   celle du président, la deuxième celle du directeur de thèse (préremplie, le
   directeur extérieur s'il y en a un) ; les suivantes ne proposent que membre
   du jury ou invité. Un jury sans directeur de thèse est refusé.
+- **Embargo de diffusion d'un an au plus** (au lieu de 5 ans) : l'étudiant en
+  choisit la durée, d'un à douze mois (douze par défaut), reportée au contrat
+  de diffusion (variable `{{contract.embargomonths}}`, qui remplace
+  `{{contract.embargoyears}}`). Un embargo déjà demandé sans durée vaut un an ;
+  une date saisie avec l'ancien formulaire est ramenée à un an après la
+  soutenance au plus.
 - `mod_thesesynthesis` : recherche sans le co-directeur, sauvegarde du modèle
   de rapport des paramètres partagés.
 

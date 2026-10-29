@@ -601,7 +601,7 @@ class doctemplates {
             'confidentialuntil' => !empty($d->confidential) ? $day($b['confidentialuntil'] ?? 0) : '',
             'embargo' => $embargo,
             'embargountil' => $embargo ? $day(these_embargo_until($d)) : '',
-            'embargoyears' => THESE_EMBARGO_YEARS,
+            'embargomonths' => $embargo ? signatures::embargo_months($b) : 0,
             'embargoreason' => $embargo ? trim((string) ($b['embargoreason'] ?? '')) : '',
             'internet' => ($b['diffusion'] ?? '') === 'internet',
             'restricted' => ($b['diffusion'] ?? '') === 'restricted',

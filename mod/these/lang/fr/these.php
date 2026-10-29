@@ -948,13 +948,13 @@ $string['contracttemplatemissing'] = 'Le contrat type de diffusion n\'a pas ét�
 $string['contracttemplateunreadable'] = 'Le contrat type de diffusion déposé dans les paramètres du circuit n\'a pas pu être lu (format PDF non pris en charge) : le contrat produit ne contient que les pages du module et ne sera pas scellé. Déposez le contrat type enregistré dans un format PDF plus ancien (PDF 1.4).';
 $string['bconfidentialuntil'] = "Confidentialité jusqu'au";
 $string['bconfidentialuntil_help'] = 'Ne concerne que les thèses déclarées confidentielles au dépôt du sujet.';
-$string['bembargo'] = 'Je demande un embargo de diffusion de {$a} ans à compter de la soutenance';
-$string['embargo_help'] = 'Pendant l\'embargo, la thèse est enregistrée et signalée, mais son texte intégral n\'est ni diffusé sur internet ni communiqué à la consultation avant son terme, 5 ans après la date de soutenance. La demande doit être motivée (brevet, publication en cours, données sensibles, partenariat...). Elle figure dans le contrat de diffusion, que le directeur de thèse vise.';
+$string['bembargo'] = 'Je demande un embargo de diffusion à compter de la soutenance ({$a} mois au plus)';
+$string['embargo_help'] = 'Pendant l\'embargo, la thèse est enregistrée et signalée, mais son texte intégral n\'est ni diffusé sur internet ni communiqué à la consultation avant son terme, au plus un an après la date de soutenance. La demande doit être motivée (brevet, publication en cours, données sensibles, partenariat...). Elle figure dans le contrat de diffusion, que le directeur de thèse vise.';
 $string['bembargoreason'] = 'Motif de la demande d\'embargo';
 $string['bembargoreasonrequired'] = 'Indiquez le motif de la demande d\'embargo.';
 $string['embargo'] = 'Embargo de diffusion';
-$string['embargorequested'] = 'Demandé : {$a->years} ans après la soutenance, jusqu\'au {$a->until}';
-$string['embargorequestednodate'] = 'Demandé : {$a} ans après la soutenance (date de soutenance à fixer)';
+$string['embargorequested'] = 'Demandé : {$a->months} mois après la soutenance, jusqu\'au {$a->until}';
+$string['embargorequestednodate'] = 'Demandé : {$a} mois après la soutenance (date de soutenance à fixer)';
 $string['embargoreason'] = 'Motif de l\'embargo';
 $string['embargoexport'] = 'Embargo jusqu\'au';
 $string['exportmissingsignatures'] = "Signatures manquantes pour passer à l'étape suivante";
@@ -1472,3 +1472,5 @@ Sujet : {$a->title}
 Accéder au dossier : {$a->url}';
 $string['logsignaturesrevoked'] = 'Signatures révoquées, à redemander';
 $string['juryonedirector'] = 'Le jury doit comporter le directeur de thèse (deuxième ligne).';
+$string['bembargomonths'] = "Durée de l'embargo";
+$string['embargomonthsoption'] = '{$a} mois';

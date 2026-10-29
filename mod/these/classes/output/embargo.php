@@ -67,10 +67,10 @@ class embargo implements \renderable, \templatable {
             $until = these_embargo_until($this->dossier);
             $label = $until
                 ? get_string('embargorequested', 'mod_these', (object) [
-                    'years' => THESE_EMBARGO_YEARS,
+                    'months' => \mod_these\local\signatures::embargo_months($bordereau),
                     'until' => userdate($until, get_string('strftimedate', 'langconfig')),
                 ])
-                : get_string('embargorequestednodate', 'mod_these', THESE_EMBARGO_YEARS);
+                : get_string('embargorequestednodate', 'mod_these', \mod_these\local\signatures::embargo_months($bordereau));
             $section->add_row(parts::strong(get_string('embargo', 'mod_these')), [parts::badge($label, 'badge badge-warning')]);
             if ($this->rights->knowssubject && trim((string) ($bordereau['embargoreason'] ?? '')) !== '') {
                 $section->add_row(
