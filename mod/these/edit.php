@@ -74,7 +74,7 @@ $formdata->juryedit = empty($jury) ? 1 : 0;
 $mform->set_data($formdata);
 
 if ($mform->is_cancelled()) {
-    redirect($dossierurl);
+    redirect(backlinks::to_dossier($cm, $dossier)->url);
 } else if ($data = $mform->get_data()) {
     $fields = [];
     $textfields = ['title', 'titleen', 'summary', 'keywords', 'devenumber', 'libraryref', 'defenselocation'];
@@ -110,7 +110,12 @@ if ($mform->is_cancelled()) {
     }
 
     these_set_status($dossier, $dossier->status, $USER->id, 'edited', '', $fields);
-    redirect($dossierurl, get_string('dossiersaved', 'mod_these'), null, \core\output\notification::NOTIFY_SUCCESS);
+    redirect(
+        backlinks::after_action($cm, $dossierurl),
+        get_string('dossiersaved', 'mod_these'),
+        null,
+        \core\output\notification::NOTIFY_SUCCESS
+    );
 }
 
 $renderer = $PAGE->get_renderer('mod_these');

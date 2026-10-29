@@ -143,13 +143,13 @@ switch ($step['key']) {
 $mform->set_data($formdata);
 
 if ($mform->is_cancelled()) {
-    redirect($dossierurl);
+    redirect(backlinks::to_dossier($cm, $dossier)->url);
 } else if ($data = $mform->get_data()) {
     $remark = trim((string) $data->remark);
     if (!empty($data->returndossier)) {
         these_return_dossier($these, $cm, $dossier, $USER->id, $data->returntarget, $remark);
         redirect(
-            $dossierurl,
+            backlinks::after_action($cm, $dossierurl),
             get_string('dossierreturned', 'mod_these', these_actor_label($data->returntarget)),
             null,
             \core\output\notification::NOTIFY_SUCCESS
@@ -206,7 +206,7 @@ if ($mform->is_cancelled()) {
         $message .= ' ' . get_string('jurynotified', 'mod_these', $notified->sent)
             . ($notified->missing ? ' ' . get_string('jurynotifiedmissing', 'mod_these', implode(', ', $notified->missing)) : '');
     }
-    redirect($dossierurl, $message, null, \core\output\notification::NOTIFY_SUCCESS);
+    redirect(backlinks::after_action($cm, $dossierurl), $message, null, \core\output\notification::NOTIFY_SUCCESS);
 }
 
 $student = $DB->get_record('user', ['id' => $dossier->userid]);

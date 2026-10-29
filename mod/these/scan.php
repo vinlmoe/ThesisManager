@@ -62,7 +62,7 @@ $mform->set_data((object) [
 ]);
 
 if ($mform->is_cancelled()) {
-    redirect($dossierurl);
+    redirect(backlinks::to_dossier($cm, $dossier)->url);
 } else if ($data = $mform->get_data()) {
     // Emplacements cochés pour le document choisi (direction générale : toujours par délégation).
     $slots = [];
@@ -86,7 +86,7 @@ if ($mform->is_cancelled()) {
     if ($count && $slots) {
         $message .= ' ' . get_string('scansignaturesrecorded', 'mod_these', count($slots));
     }
-    redirect($dossierurl, $message, null, \core\output\notification::NOTIFY_SUCCESS);
+    redirect(backlinks::after_action($cm, $dossierurl), $message, null, \core\output\notification::NOTIFY_SUCCESS);
 }
 
 echo $OUTPUT->header();

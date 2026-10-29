@@ -77,7 +77,7 @@ $mform->set_data((object) [
 ]);
 
 if ($mform->is_cancelled()) {
-    redirect($dossierurl);
+    redirect(backlinks::to_dossier($cm, $dossier)->url);
 } else if ($data = $mform->get_data()) {
     file_save_draft_area_files($data->pv, $context->id, 'mod_these', 'pv', $dossier->id, these_filemanager_options('pv'));
     $dossier = these_record_minutes($these, $cm, $dossier, $USER->id, (object) [
@@ -88,7 +88,12 @@ if ($mform->is_cancelled()) {
         'correctionsnote' => (string) ($data->correctionsnote ?? ''),
     ], trim((string) $data->remark));
     $message = (int) $dossier->status === THESE_STATUS_CLOSED ? 'dossierclosed' : 'correctionsopened';
-    redirect($dossierurl, get_string($message, 'mod_these'), null, \core\output\notification::NOTIFY_SUCCESS);
+    redirect(
+        backlinks::after_action($cm, $dossierurl),
+        get_string($message, 'mod_these'),
+        null,
+        \core\output\notification::NOTIFY_SUCCESS
+    );
 }
 
 echo $OUTPUT->header();

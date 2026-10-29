@@ -77,10 +77,15 @@ foreach (these_get_answers($dossier->id) as $questionid => $answer) {
 $mform->set_data($formdata);
 
 if ($mform->is_cancelled()) {
-    redirect($returnurl);
+    redirect(backlinks::to_dossier($cm, $dossier, $rights)->url);
 } else if ($data = $mform->get_data()) {
     these_save_answers($dossier, $questions, $data);
-    redirect($returnurl, get_string('questionnairesaved', 'mod_these'), null, \core\output\notification::NOTIFY_SUCCESS);
+    redirect(
+        $rights->student ? $returnurl : backlinks::after_action($cm, $returnurl),
+        get_string('questionnairesaved', 'mod_these'),
+        null,
+        \core\output\notification::NOTIFY_SUCCESS
+    );
 }
 
 echo $OUTPUT->header();

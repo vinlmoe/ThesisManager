@@ -53,5 +53,5 @@ $PAGE->set_context($context);
     $these,
     false,
     get_string('planning', 'mod_these') . ' — ' . format_string($these->name),
-    these_render_navlinks($cm, $context)
+    these_render_navlinks($cm, $context, \mod_these\local\backlinks::activity_home($cm, $context))
 );

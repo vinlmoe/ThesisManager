@@ -49,6 +49,8 @@ $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($context);
 
 $student = $DB->get_record('user', ['id' => $dossier->userid]);
+// Les pages de ce dossier y reviendront (voir \mod_these\local\backlinks::to_dossier()).
+\mod_these\local\backlinks::dossier_viewed($dossier->id);
 
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('dossierof', 'mod_these', $student ? fullname($student) : '-'));
