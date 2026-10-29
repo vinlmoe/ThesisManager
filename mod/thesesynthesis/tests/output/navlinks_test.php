@@ -62,7 +62,7 @@ final class navlinks_test extends output_testcase {
     }
 
     /**
-     * Rendu : bloc these-navlinks, boutons collés.
+     * Rendu : lien de retour vers l'accueil du suivi, puis bloc these-navlinks, boutons collés.
      */
     public function test_render(): void {
         $this->setup_env();
@@ -71,6 +71,8 @@ final class navlinks_test extends output_testcase {
         $this->assertStringStartsWith('<div class="these-navlinks mb-3"><a href=', $html);
         $this->assertSame(3, substr_count($html, 'class="btn btn-secondary mr-1 mb-1"'));
         $this->assertStringNotContainsString("</a>\n", $html);
-        $this->assertSame($html, thesesynthesis_render_navlinks($this->env->cm, $this->env->context));
+        $back = \mod_these\local\backlinks::render(thesesynthesis_back_home($this->env->cm));
+        $this->assertStringContainsString('/mod/thesesynthesis/view.php', $back);
+        $this->assertSame($back . $html, thesesynthesis_render_navlinks($this->env->cm, $this->env->context));
     }
 }
