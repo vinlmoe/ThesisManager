@@ -17,16 +17,22 @@ développement ne correspondent à aucune version installable ; 0.11.2 n'a jamai
 
 - **Liens de retour** sur chaque page des deux modules (classe
   `\mod_these\local\backlinks`), sous le titre, avec le nom de la page où ils
-  mènent (« Retour : Dossier de thèse ») :
-  - une page d'un dossier revient au dossier (l'étudiant, à son dossier) ; la
-    signature sur place revient au suivi des signatures ;
-  - un dossier revient à la page d'où il a été ouvert, mémorisée dans la
-    session : tableau de bord ou planning de l'activité, accueil, recherche ou
-    planning d'une activité « Suivi des thèses » qui la suit (filtres et
-    critères compris). Sans origine valable pour l'activité (lien d'un
-    courriel), il revient au tableau de bord, ou au dossier de l'étudiant ;
-  - les pages de l'activité (création, import, export, paramètres, annuaire,
-    A6…) reviennent à son accueil, celles du suivi à l'accueil du suivi ; la
+  mènent (« Retour : Dossier de thèse »). La page d'origine est mémorisée dans
+  la session : tableau de bord ou planning de l'activité, accueil, recherche ou
+  planning d'une activité « Suivi des thèses » qui la suit (filtres et critères
+  compris). **Venu du suivi des thèses, on y revient** depuis toutes les pages
+  de l'activité :
+  - un dossier revient à la page d'origine ;
+  - une page d'un dossier (validation, documents, signatures…) revient au
+    dossier s'il a été ouvert d'abord, sinon (action ouverte directement depuis
+    « À traiter » ou le suivi des signatures) à la page d'origine ; le bouton
+    « Annuler » de ses formulaires fait de même. L'étudiant revient à son
+    dossier ; la signature sur place revient au suivi des signatures ;
+  - les autres pages de l'activité (création, import, export, paramètres,
+    annuaire, A6…) reviennent à la page d'origine ;
+  - sans origine valable pour l'activité (lien d'un courriel), à l'accueil de
+    l'activité : tableau de bord, ou dossier de l'étudiant ;
+  - les pages du suivi reviennent à l'accueil du suivi ; la
     page d'un modèle, d'une question ou d'un membre de l'annuaire revient à la
     liste ; la saisie de l'A6 à la page d'où elle a été ouverte ;
   - « Mes signatures » et la page d'un jury ouverte depuis « Mes jurys »

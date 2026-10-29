@@ -78,7 +78,9 @@ final class backlinks_test extends these_testcase {
      * Les pages d'un dossier reviennent au dossier, ou au dossier de l'étudiant sur la page d'accueil.
      */
     public function test_to_dossier(): void {
+        global $SESSION;
         $this->setup_activity();
+        unset($SESSION->{backlinks::SESSIONKEY});
         $dossier = $this->generator->create_dossier($this->these, $this->student->id, ['status' => THESE_STATUS_ACTIVE]);
 
         $target = backlinks::to_dossier($this->cm, $dossier);
@@ -88,5 +90,32 @@ final class backlinks_test extends these_testcase {
         $rights = these_get_rights($this->context, $dossier, $this->student->id);
         $target = backlinks::to_dossier($this->cm, $dossier, $rights);
         $this->assertStringStartsWith('/mod/these/view.php', $target->url->out_as_local_url(false));
+    }
+
+    /**
+     * Venu du suivi des thèses, on y revient : depuis le dossier, depuis une action ouverte directement
+     * (« À traiter », suivi des signatures) et depuis les autres pages de l'activité ; une page d'un
+     * dossier ouvert d'abord revient au dossier.
+     */
+    public function test_return_to_synthesis(): void {
+        $this->setup_activity();
+        $this->setUser($this->deve);
+        $dossier = $this->generator->create_dossier($this->these, $this->student->id, ['status' => THESE_STATUS_ACTIVE]);
+        $synthesis = new \moodle_url('/mod/thesesynthesis/view.php', ['id' => 42]);
+        backlinks::remember($synthesis, 'Suivi des thèses', [$this->these->id]);
+
+        // Action ouverte directement depuis le suivi : retour au suivi.
+        $this->assertSame($synthesis->out(false), backlinks::to_dossier($this->cm, $dossier)->url->out(false));
+        $this->assertSame($synthesis->out(false), backlinks::from_activity($this->cm, $this->context)->url->out(false));
+
+        // Dossier ouvert depuis le suivi : ses pages y reviennent, lui revient au suivi.
+        backlinks::dossier_viewed($dossier->id);
+        $target = backlinks::to_dossier($this->cm, $dossier);
+        $this->assertStringStartsWith('/mod/these/dossier.php', $target->url->out_as_local_url(false));
+        $this->assertSame($synthesis->out(false), backlinks::from_dossier($this->cm, $this->context)->url->out(false));
+
+        // Retour au suivi : une action ouverte ensuite directement y revient de nouveau.
+        backlinks::remember($synthesis, 'Suivi des thèses', [$this->these->id]);
+        $this->assertSame($synthesis->out(false), backlinks::to_dossier($this->cm, $dossier)->url->out(false));
     }
 }

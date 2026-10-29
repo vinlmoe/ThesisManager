@@ -74,7 +74,7 @@ $formdata->juryedit = empty($jury) ? 1 : 0;
 $mform->set_data($formdata);
 
 if ($mform->is_cancelled()) {
-    redirect($dossierurl);
+    redirect(backlinks::to_dossier($cm, $dossier)->url);
 } else if ($data = $mform->get_data()) {
     $fields = [];
     $textfields = ['title', 'titleen', 'summary', 'keywords', 'devenumber', 'libraryref', 'defenselocation'];

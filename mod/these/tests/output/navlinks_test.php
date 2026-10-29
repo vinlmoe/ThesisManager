@@ -62,8 +62,8 @@ final class navlinks_test extends output_testcase {
     }
 
     /**
-     * Rendu : lien de retour (accueil de l'activité) puis bloc these-navlinks ; pour l'étudiant, le
-     * seul lien vers l'annuaire, et le retour à son dossier.
+     * Rendu : lien de retour (sans page d'origine, l'accueil de l'activité) puis bloc these-navlinks ;
+     * pour l'étudiant, le seul lien vers l'annuaire, et le retour à son dossier.
      */
     public function test_render(): void {
         $this->setup_activity();

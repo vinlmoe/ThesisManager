@@ -62,7 +62,7 @@ $mform->set_data((object) [
 ]);
 
 if ($mform->is_cancelled()) {
-    redirect($dossierurl);
+    redirect(backlinks::to_dossier($cm, $dossier)->url);
 } else if ($data = $mform->get_data()) {
     // Emplacements cochés pour le document choisi (direction générale : toujours par délégation).
     $slots = [];

@@ -57,7 +57,7 @@ $mform = new \mod_these\form\cancel_form($PAGE->url, ['reopen' => $reopen]);
 $mform->set_data(['id' => $cm->id, 'dossierid' => $dossier->id]);
 
 if ($mform->is_cancelled()) {
-    redirect($dossierurl);
+    redirect(backlinks::to_dossier($cm, $dossier)->url);
 } else if ($data = $mform->get_data()) {
     if ($reopen) {
         these_reopen_dossier($dossier, $USER->id, trim((string) $data->remark));

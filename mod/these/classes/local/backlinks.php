@@ -24,14 +24,17 @@ use stdClass;
 /**
  * Liens de retour des pages des deux modules.
  *
- * Chaque page affiche un lien de retour vers la page logique qui la précède :
- * - une page d'un dossier (validation, documents, signatures...) revient au dossier ;
- * - un dossier revient à la page d'où l'utilisateur l'a ouvert : tableau de bord ou planning de
- *   l'activité « Gestion des thèses », ou accueil, recherche ou planning d'une activité « Suivi des
- *   thèses » qui suit cette activité. Ces pages d'origine se mémorisent dans la session (voir
- *   remember()) ; sans origine valable pour l'activité, le dossier revient à l'accueil de l'activité ;
- * - les autres pages de l'activité (création, import, paramètres...) reviennent à son accueil :
- *   le tableau de bord du personnel, le dossier de l'étudiant ;
+ * Chaque page affiche un lien de retour vers la page d'où l'utilisateur vient. Les pages d'origine
+ * (tableau de bord ou planning de l'activité « Gestion des thèses », accueil, recherche ou planning
+ * d'une activité « Suivi des thèses » qui suit cette activité) se mémorisent dans la session (voir
+ * remember()) ; venu du suivi des thèses, on y revient donc depuis toutes les pages de l'activité :
+ * - une page d'un dossier (validation, documents, signatures...) revient au dossier quand il a été
+ *   ouvert d'abord, sinon (action ouverte directement depuis « À traiter », suivi des signatures...)
+ *   à la page d'origine ;
+ * - un dossier revient à la page d'origine ;
+ * - les autres pages de l'activité (création, import, paramètres...) reviennent à la page d'origine ;
+ * - sans origine valable pour l'activité (lien d'un courriel), à l'accueil de l'activité : le tableau
+ *   de bord du personnel, le dossier de l'étudiant ;
  * - les pages d'accueil reviennent au cours ;
  * - les pages communes à toutes les activités (Mes signatures, accès d'un membre du jury connecté)
  *   reviennent à la dernière page d'origine, à défaut au tableau de bord Moodle.
@@ -43,6 +46,8 @@ use stdClass;
 class backlinks {
     /** Clé de la session où est mémorisée la page d'origine. */
     const SESSIONKEY = 'mod_these_origin';
+    /** Clé de la session où est mémorisé le dossier consulté depuis la page d'origine. */
+    const DOSSIERKEY = 'mod_these_origin_dossier';
 
     /**
      * Mémorise la page d'origine courante : une page d'accueil depuis laquelle l'utilisateur ouvre des
@@ -61,6 +66,20 @@ class backlinks {
             'label' => (string) $label,
             'theseids' => array_values(array_map('intval', $theseids)),
         ];
+        // De retour sur une page d'origine : aucun dossier n'est plus ouvert depuis elle.
+        unset($SESSION->{self::DOSSIERKEY});
+    }
+
+    /**
+     * Mémorise le dossier affiché : ses pages (validation, documents...) y reviennent ensuite.
+     *
+     * @param int $dossierid
+     * @return void
+     */
+    public static function dossier_viewed($dossierid) {
+        global $SESSION;
+
+        $SESSION->{self::DOSSIERKEY} = (int) $dossierid;
     }
 
     /**
@@ -137,11 +156,26 @@ class backlinks {
      * @return stdClass {url, label}
      */
     public static function from_dossier(stdClass $cm, context $context) {
+        return self::from_activity($cm, $context);
+    }
+
+    /**
+     * Retour d'une page de l'activité (création, import, export, paramètres, annuaire...) : la page
+     * d'origine si elle présente les dossiers de l'activité (suivi des thèses compris), sinon
+     * l'accueil de l'activité.
+     *
+     * @param stdClass $cm
+     * @param context $context
+     * @return stdClass {url, label}
+     */
+    public static function from_activity(stdClass $cm, context $context) {
         return self::origin((int) $cm->instance) ?? self::activity_home($cm, $context);
     }
 
     /**
-     * Retour d'une page d'un dossier : le dossier (pour l'étudiant, son dossier sur la page d'accueil).
+     * Retour d'une page d'un dossier : le dossier s'il a été ouvert depuis la page d'origine, sinon
+     * cette page (action ouverte directement depuis « À traiter » ou le suivi des signatures), à
+     * défaut le dossier. Pour l'étudiant, son dossier sur la page d'accueil.
      *
      * @param stdClass $cm
      * @param stdClass $dossier
@@ -149,8 +183,14 @@ class backlinks {
      * @return stdClass {url, label}
      */
     public static function to_dossier(stdClass $cm, stdClass $dossier, ?stdClass $rights = null) {
+        global $SESSION;
+
         if ($rights && $rights->student) {
             return self::student_dossier($cm);
+        }
+        $origin = self::origin((int) $cm->instance);
+        if ($origin && (int) ($SESSION->{self::DOSSIERKEY} ?? 0) !== (int) $dossier->id) {
+            return $origin;
         }
         return self::target(
             new moodle_url('/mod/these/dossier.php', ['id' => $cm->id, 'dossierid' => $dossier->id]),

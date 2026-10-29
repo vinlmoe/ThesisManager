@@ -75,7 +75,7 @@ $mform->set_data($params + [
 ]);
 
 if ($mform->is_cancelled()) {
-    redirect($dossierurl);
+    redirect(backlinks::to_dossier($cm, $dossier)->url);
 } else if ($data = $mform->get_data()) {
     if (!empty($data->previewbutton)) {
         // Aperçu du rapport tel qu'il sera imprimé, sans l'enregistrer.

@@ -165,13 +165,14 @@ class rendering {
      *
      * @param stdClass $cm
      * @param context $context
-     * @param stdClass|null $back Cible du retour (voir backlinks::target()) ; null : l'accueil de l'activité.
+     * @param stdClass|null $back Cible du retour (voir backlinks::target()) ; null : la page d'origine,
+     *     à défaut l'accueil de l'activité (voir backlinks::from_activity()).
      * @return string HTML
      */
     public static function render_navlinks(stdClass $cm, context $context, ?stdClass $back = null) {
         global $PAGE;
 
-        return backlinks::render($back ?? backlinks::activity_home($cm, $context))
+        return backlinks::render($back ?? backlinks::from_activity($cm, $context))
             . $PAGE->get_renderer('mod_these')->render(new output\navlinks($cm, $context));
     }
 

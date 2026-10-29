@@ -77,7 +77,7 @@ $mform->set_data((object) [
 ]);
 
 if ($mform->is_cancelled()) {
-    redirect($dossierurl);
+    redirect(backlinks::to_dossier($cm, $dossier)->url);
 } else if ($data = $mform->get_data()) {
     file_save_draft_area_files($data->pv, $context->id, 'mod_these', 'pv', $dossier->id, these_filemanager_options('pv'));
     $dossier = these_record_minutes($these, $cm, $dossier, $USER->id, (object) [
