@@ -287,7 +287,6 @@ const steps = {
     await p.selectOption('#id_proposeddate_year', '2026');
     await p.selectOption('#id_proposeddate_hour', '14');
     await p.selectOption('#id_proposeddate_minute', '00');
-    await p.fill('#id_defenselocation', 'Amphithéâtre Bourgelat');
     await only(p, ['Documents de soutenance', 'Proposition de soutenance', 'Signature']);
     await draw(p);
     await check(p, '#id_signatureconsent');
@@ -345,9 +344,7 @@ const steps = {
   },
   async '53_rapport_directeur'() {
     const p = await open(await as('hdurand'), these('report.php', { dossierid: ids.chloe }));
-    await p.fill('#id_reporttext', "Chloé Lambert a conduit une étude échocardiographique rigoureuse sur 150 chats.\n\n"
-      + "La méthode est bien décrite, les résultats sont clairement présentés et la discussion situe le travail par rapport "
-      + "à la littérature récente.\n\nJe donne un avis favorable à la soutenance de cette thèse.");
+    await upload(p, 'directorreport', samplePdf('rapport-directeur.pdf', 'Rapport du directeur'));
     await check(p, '#id_reportfavorable');
     await upto(p, '53_rapport_directeur', form);
     await Promise.all([p.waitForNavigation(), p.click('#id_submitbutton')]);

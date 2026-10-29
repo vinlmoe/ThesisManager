@@ -229,7 +229,7 @@ $advance = function (stdClass $student, array $spec, int $target) use (
     $dossier = these_create_dossier($these->id, $student->id, $student->id);
     $subject = (object) [
         'title' => $spec['title'], 'titleen' => $spec['titleen'] ?? '', 'summary' => $spec['summary'],
-        'keywords' => $spec['keywords'], 'studyyear' => 'A5', 'directorid' => $director->id, 'codirectorname' => '',
+        'keywords' => $spec['keywords'], 'studyyear' => 'A5', 'directorid' => $director->id,
         'confidential' => $spec['confidential'] ?? 0, 'externaldirector' => 0,
         'commitguide' => 1, 'commitduplicate' => 1, 'commitethics' => 1,
     ];
@@ -257,7 +257,7 @@ $advance = function (stdClass $student, array $spec, int $target) use (
             these_save_answers($d, $questions, $answers);
             $file('manuscript', $d->id, 'manuscrit.pdf', $pdf('Manuscrit', $spec['title']));
             $data = (object) array_merge(these_jury_form_data($jury($director, $diremail)), [
-                'proposeddate' => $spec['date'], 'defenselocation' => 'Amphithéâtre Bourgelat',
+                'proposeddate' => $spec['date'],
                 'titleen' => $spec['titleen'] ?? '',
                 'conclusions' => "Cette étude montre l'intérêt d'un suivi prolongé.\n\nElle ouvre des pistes pour la pratique.",
                 'bbirthname' => strtoupper($student->lastname), 'bfirstnames' => $student->firstname,
@@ -275,17 +275,22 @@ $advance = function (stdClass $student, array $spec, int $target) use (
             }
             these_save_defense($these, $cm, $d, $data, true, $student->id, $sig($student));
         },
-        THESE_STATUS_DEFENSE_APPROVED => function ($d) use ($these, $cm, $director, $sig, $reload) {
-            these_save_report($d, $director->id, "Travail rigoureux, bien conduit et clairement rédigé.\n\n"
-                . "La discussion situe les résultats par rapport à la littérature.", 1);
+        THESE_STATUS_DEFENSE_APPROVED => function ($d) use ($these, $cm, $director, $sig, $reload, $file, $pdf) {
+            // Rapport du directeur : fichier déposé, avec l'avis favorable.
+            $file('directorreport', $d->id, 'rapport-directeur.pdf', $pdf('Rapport du directeur',
+                'Travail rigoureux, bien conduit et clairement rédigé.'));
+            these_save_report($d, $director->id, true);
             these_validate_step($these, $cm, $reload($d), $director->id, ['directortitle' => 'Maître de conférences'], '',
                 $sig($director));
         },
         THESE_STATUS_DEFENSE_VALIDATED => function ($d) use ($these, $cm, $deve, $spec) {
             global $DB;
             $DB->set_field('these_jury', 'eligible', 1, ['dossierid' => $d->id]);
+            // Salle attribuée par la DEVE ; DEFV saisi sur la page de validation des études.
+            $a6 = \mod_these\local\a6::get($d);
+            \mod_these\local\a6::set($d, $a6['date'], '', $deve->id, ['date' => make_timestamp(2023, 7, 3, 12), 'school' => 'lyon']);
             these_validate_step($these, $cm, $d, $deve->id, ['defensedate' => $spec['date'],
-                'devenumber' => these_suggest_devenumber($these->id)]);
+                'defenselocation' => 'Amphithéâtre Bourgelat', 'devenumber' => these_suggest_devenumber($these->id)]);
         },
         THESE_STATUS_CONFORM => fn($d) => these_validate_step($these, $cm, $d, $library->id, [], '', $sig($library)),
         THESE_STATUS_SCHEDULED => function ($d) use ($these, $cm, $context, $deve, $reload) {
@@ -434,7 +439,7 @@ these_change_subject($these, $cm, $romain, (object) [
     'title' => 'Leptospirose canine en zone périurbaine lyonnaise : étude rétrospective et prospective',
     'titleen' => '', 'summary' => "Contexte, objectifs et démarche de l'étude.", 'keywords' => 'leptospirose ; chien',
     'studyyear' => 'A5', 'directorid' => $director->id, 'confidential' => 0, 'externaldirector' => 0,
-    'codirectorname' => '', 'commitguide' => 1, 'commitduplicate' => 1, 'commitethics' => 0,
+    'commitguide' => 1, 'commitduplicate' => 1, 'commitethics' => 0,
 ], $users['romain']->id, "Terrain d'étude élargi au suivi prospectif des cas, en accord avec la directrice.", $sig($users['romain']));
 $romain = $DB->get_record('these_dossier', ['id' => $ids['romain']]);
 these_validate_step($these, $cm, $romain, $director->id, [], '', $sig($director));

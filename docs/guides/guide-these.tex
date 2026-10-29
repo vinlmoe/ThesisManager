@@ -142,6 +142,15 @@ délégation depuis \bouton{Mes signatures}. Capture de l'import refaite. \\
 l'on vient (tableau de bord, planning, suivi des thèses, recherche) ;
 changement de sujet d'un dossier abandonné ; date du scellement dans le nom des
 documents scellés. \\
+2.18 & 29 octobre 2026 & Plus de co-directeur : un directeur extérieur est
+suppléé par un examinateur interne, qui fait les démarches. Plus de pièces
+jointes au sujet ni de documents complémentaires à la soutenance (le manuscrit
+seul), rappel de la liste du corps enseignant avant le dépôt du manuscrit ;
+questionnaire préalable au jury rempli dans le dépôt. Rapport du directeur
+déposé en fichier, modèle Word dans les paramètres du circuit ; grille du
+directeur non préremplie. DEFV et A6 saisis par la DEVE sur la page
+\og Validation des études\fg{} ; salle attribuée par la DEVE, qui peut demander
+une autre date sans renvoyer le dossier. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -338,6 +347,10 @@ bibliothèque et le questionnaire sont facultatifs.
 \capture[0.85\linewidth]{114_signatures_universite}{Signatures de l'université : tout sur papier ou en ligne, délégataires internes.}
 
 \begin{description}
+  \item[Modèle du rapport du directeur] document Word (.docx) proposé au
+        directeur sur la page de dépôt de son rapport : il le télécharge, le
+        remplit et dépose son rapport (PDF ou Word). Facultatif ; sans modèle,
+        le directeur dépose son propre document.
   \item[Contrat type de diffusion électronique] le PDF officiel
         (ENS-INI-P308-E04), déposé tel quel. Le module le fait précéder d'une
         page de données et de choix de l'auteur et suivre d'une page de
@@ -370,8 +383,8 @@ bibliothèque et le questionnaire sont facultatifs.
         signatures}, quel que soit le mode (section~\ref{sec:universite}).
   \item[Soutenances] durée d'une soutenance, en minutes (60 par défaut), pour
         détecter les conflits de jury ; \textbf{salles de soutenance}, une par
-        ligne, proposées à la saisie du lieu (dépôt de l'étudiant, validation et
-        modification par la DEVE), la première par défaut. Elles remplacent
+        ligne, proposées à la DEVE quand elle attribue la salle (validation et
+        modification du dossier ; l'étudiant ne choisit pas la salle). Elles remplacent
         l'ancien \og lieu de soutenance proposé par défaut\fg{} des réglages
         de l'activité, repris tant qu'aucune salle n'est saisie.
   \item[Agents de la bibliothèque] agents de la bibliothèque, choisis parmi
@@ -427,9 +440,6 @@ servent qu'aux fichiers CSV.
 \texttt{student} & Obligatoire. Identifiant de connexion, courriel ou numéro d'identification. \\
 \texttt{title} & Obligatoire. Titre du sujet. \\
 \texttt{director} & Directeur (même identification que l'étudiant). \\
-\texttt{codirector} & Nom du co-directeur. S'il est celui d'un enseignant interne
-de l'annuaire (\og Claire Martin\fg{}, \og Dr MARTIN Claire\fg{}), le dossier y
-est rattaché ; sinon le co-directeur est noté comme extérieur. \\
 \texttt{devenumber}, \texttt{libraryref} & Numéro DEVE et référence de notice. \\
 \texttt{titleen}, \texttt{summary}, \texttt{keywords} & Facultatifs. \\
 \texttt{status} & Vide ou \texttt{active} : \statut{Dossier actif} ;
@@ -488,15 +498,15 @@ liste du corps enseignant en PDF (enseignants de l'établissement seulement).
         confidentialité éventuelle, résumé, 3 à 5 mots-clés (liens vers HeTOP).
         Cochez \bouton{Thèse confidentielle} si le sujet ne doit pas être
         divulgué (voir l'encadré ci-dessous).
-  \item Choisissez votre directeur de thèse dans la liste ou, s'il est
-        extérieur à l'école, cochez \bouton{Le directeur de thèse est extérieur à l'établissement} et saisissez
-        ses coordonnées. Le titre du directeur (Dr, Pr) est repris de
-        l'annuaire des enseignants : il n'est demandé que si votre directeur n'y
-        figure pas.
-  \item Ajoutez au besoin un co-directeur : \bouton{Interne à l'établissement},
-        choisi dans la liste des enseignants, ou \bouton{Extérieur à
-        l'établissement}, dont vous saisissez le titre, le nom et la qualité.
-        Joignez au besoin des pièces.
+  \item Choisissez votre directeur de thèse dans la liste. Le titre du
+        directeur (Dr, Pr) est repris de l'annuaire des enseignants : il n'est
+        demandé que si votre directeur n'y figure pas.
+  \item Si votre directeur est extérieur à l'école, cochez \bouton{Le
+        directeur de thèse est extérieur à l'établissement}, saisissez ses
+        coordonnées et choisissez un \textbf{examinateur interne}, enseignant de
+        l'établissement : c'est lui qui fera les démarches dans le module
+        (validations, rapport, signatures en qualité de membre). Le directeur
+        extérieur signe le formulaire depuis un lien reçu par courriel.
   \item Cochez les engagements du formulaire E01.
   \item Signez : tracez votre signature à la souris ou au doigt. Laissez
         cochée \bouton{Enregistrer cette signature pour mes prochaines
@@ -563,19 +573,20 @@ dans le statut atteint lors de son abandon.}
 
 \capture[0.85\linewidth]{84_changement_sujet}{Changement de sujet : motif, nouveau sujet et signature.}
 
-\begin{procedure}{Remplir le questionnaire préalable au jury}{Étudiant, avant le dépôt de la soutenance}
+\begin{procedure}{Remplir le questionnaire préalable au jury}{Étudiant, au dépôt de la soutenance}
 \begin{etapes}
-  \item Dans votre dossier (statut \statut{Dossier actif}), cliquez sur
-        \bouton{Questionnaire préalable au jury}.
+  \item Les questions figurent dans le formulaire de dépôt de la soutenance,
+        rubrique \og Questionnaire préalable au jury\fg{} (elles restent aussi
+        accessibles depuis votre dossier par \bouton{Questionnaire préalable
+        au jury}).
   \item Répondez aux questions : réponse courte ou longue, choix dans une
         liste, une ou plusieurs cases pour un QCM. Les questions obligatoires
         sont signalées.
-  \item Cliquez sur \bouton{Enregistrer}. Vous pouvez revenir modifier vos
-        réponses tant que la soutenance n'est pas déposée.
+  \item Vos réponses sont enregistrées avec le brouillon du dépôt ; vous
+        pouvez les modifier tant que la soutenance n'est pas déposée.
 \end{etapes}
-\ensuite{le formulaire de dépôt de la soutenance indique \og Questionnaire
-rempli\fg{} ; tant qu'une question obligatoire est sans réponse, le dépôt est
-refusé.}
+\ensuite{tant qu'une question obligatoire est sans réponse, la rubrique est
+comptée à compléter dans l'avancement du dépôt, et la soumission est refusée.}
 \end{procedure}
 
 \capture[0.8\linewidth]{52_questionnaire_etudiant}{Questionnaire préalable au jury.}
@@ -587,13 +598,14 @@ refusé.}
         qui restent à compléter ; les rubriques complètes sont repliées, les
         autres dépliées. Il se met à jour à chaque \bouton{Enregistrer le
         brouillon}.
-  \item Déposez le \textbf{manuscrit} (PDF, obligatoire) et, au besoin, les
-        autres documents.
+  \item Lisez le rappel en tête de la rubrique : votre manuscrit doit inclure
+        la page de la \textbf{liste à jour du corps enseignant}, à télécharger
+        par le lien proposé.
+  \item Déposez le \textbf{manuscrit} (PDF, obligatoire) : c'est le seul
+        document déposé.
   \item Proposez la date et l'heure de la soutenance (cochez
         \bouton{Activer}, puis choisissez-les : aucune date n'est proposée
-        d'office) et le lieu : les salles des paramètres du circuit sont
-        proposées à la saisie, la première par défaut, mais un autre lieu reste
-        possible.
+        d'office). La salle est attribuée par la DEVE.
   \item Composez le jury : au moins le nombre de membres votants fixé par
         l'activité (deux par défaut), président compris. Votre directeur siège
         au jury \textbf{sans voter} : il ne compte pas parmi les membres
@@ -601,10 +613,10 @@ refusé.}
         l'annuaire ; pour un membre extérieur ou un invité, choisissez
         \og Membre extérieur ou invité\fg{} et saisissez nom, titre, statut,
         établissement et adresse. Votre directeur est proposé d'office.
-  \item Remplissez les données du bordereau ABES (identité, cursus, mots-clés,
+  \item Remplissez les données du bordereau ABES (identité, mots-clés,
         résumés), le titre anglais et les \textbf{conclusions} (une page au plus
-        avec les signatures). La validation de l'A6 n'est pas à saisir : la DEVE
-        l'enregistre, et le formulaire la rappelle.
+        avec les signatures). Le cursus (obtention du DEFV, validation de l'A6)
+        n'est pas à saisir : la DEVE l'enregistre, et le formulaire le rappelle.
   \item Indiquez vos choix pour le contrat de diffusion (confidentialité,
         diffusion sur internet). Pour différer la diffusion, cochez
         \bouton{Je demande un embargo de diffusion de 5 ans à compter de la
@@ -615,13 +627,13 @@ refusé.}
         d'éthique s'il existe, puis cochez chaque élément respecté par le
         manuscrit (les éléments \og selon la thèse\fg{} peuvent rester non
         cochés). Cochez enfin \og J'atteste que mon manuscrit respecte les points
-        cochés de la grille de conformité\fg{}. Votre directeur la reçoit
-        préremplie, la vérifie et la signe.
-  \item Vérifiez que le questionnaire est rempli, signez, puis cliquez sur
+        cochés de la grille de conformité\fg{}. Votre directeur remplit sa
+        propre grille (non préremplie) et la signe.
+  \item Répondez au questionnaire préalable au jury, signez, puis cliquez sur
         \bouton{Soumettre au directeur de thèse}.
 \end{etapes}
 \ensuite{le dossier passe en \statut{Soutenance proposée au directeur} ; votre
-directeur rédige son rapport puis valide.}
+directeur dépose son rapport puis valide.}
 \end{procedure}
 
 \capture[0.85\linewidth]{102_avancement_depot}{Avancement du dépôt : rubriques complètes et champs à compléter.}
@@ -637,8 +649,7 @@ directeur rédige son rapport puis valide.}
 \begin{attention}
 Des conclusions trop longues pour tenir sur une page avec les signatures sont
 refusées au dépôt. Le rapport de votre directeur ne vous est pas communiqué ;
-la grille de conformité que vous avez remplie peut être corrigée par votre
-directeur avant sa signature. Toute modification d'un document déjà signé annule
+votre directeur remplit sa propre grille de conformité. Toute modification d'un document déjà signé annule
 les signatures concernées.
 \end{attention}
 
@@ -717,34 +728,36 @@ l'étudiant, selon la même procédure. Les sujets précédents restent consulta
 dans le dossier.
 \end{astuce}
 
-\begin{procedure}{Rédiger le rapport sur le manuscrit (phase 2)}{Directeur}
+\begin{procedure}{Déposer le rapport sur le manuscrit (phase 2)}{Directeur (ou examinateur interne)}
 \begin{etapes}
   \item Ouvrez le dossier (statut \statut{Soutenance proposée au directeur})
-        et cliquez sur \bouton{Rédiger le rapport}.
-  \item Écrivez le rapport (une page au plus avec la signature, 4\,000
-        caractères au plus ; paragraphes séparés par une ligne vide).
-  \item Cochez l'avis favorable ; joignez au besoin des pièces.
-  \item \bouton{Aperçu PDF} montre le rapport tel qu'il sera imprimé ;
-        \bouton{Enregistrer le rapport} le conserve. Vous pouvez y revenir
-        autant de fois que nécessaire avant de valider.
+        et cliquez sur \bouton{Déposer le rapport}.
+  \item Si la DEVE a déposé un modèle, cliquez sur \bouton{Télécharger le
+        modèle (Word)} et rédigez votre rapport à partir de ce document.
+  \item Déposez le rapport (PDF ou document Word, obligatoire) : le rapport
+        ne se rédige pas dans le module, il est seulement déposé.
+  \item Cochez l'avis favorable et cliquez sur \bouton{Enregistrer le
+        rapport}. Vous pouvez remplacer le fichier tant que vous n'avez pas
+        validé la soutenance.
 \end{etapes}
-\ensuite{le formulaire de validation indique \og Rapport rédigé, avis
+\ensuite{le formulaire de validation indique \og Rapport déposé, avis
 favorable\fg{}.}
 \end{procedure}
 
-\capture[0.85\linewidth]{53_rapport_directeur}{Rédaction du rapport du directeur.}
+\capture[0.85\linewidth]{53_rapport_directeur}{Dépôt du rapport du directeur, avec le modèle à télécharger.}
 
 \begin{procedure}{Valider la soutenance (phase 2)}{Directeur}
 \begin{etapes}
   \item Cliquez sur \bouton{Valider la soutenance et déposer le rapport}.
-  \item Vérifiez la ligne \og Rapport du directeur\fg{} : un rapport rédigé
+  \item Vérifiez la ligne \og Rapport du directeur\fg{} : un rapport déposé
         avec avis favorable est exigé.
-  \item Vérifiez la \textbf{grille de conformité}, préremplie par
-        l'étudiant à son dépôt (numéro d'avis du comité d'éthique et éléments
-        cochés) ; corrigez-la au besoin.
+  \item Remplissez la \textbf{grille de conformité} : elle n'est pas
+        préremplie, cochez vous-même chaque élément que respecte le manuscrit
+        (le numéro d'avis du comité d'éthique indiqué par l'étudiant est
+        repris).
   \item Indiquez votre fonction (agrément scientifique).
-  \item Signez une fois : la signature vaut pour le rapport, la grille, les
-        conclusions, l'agrément scientifique et le contrat de diffusion.
+  \item Signez une fois : la signature vaut pour la grille, les conclusions,
+        l'agrément scientifique et le contrat de diffusion.
   \item Cliquez sur \bouton{Valider la soutenance}. Pour renvoyer le dossier à
         l'étudiant, écrivez le motif et cliquez sur \bouton{Renvoyer le dossier}.
 \end{etapes}
@@ -785,7 +798,7 @@ activité de suivi ne suit, paramètres du circuit, modèles des documents
 \og Suivi des thèses\fg{} porte ces paramètres, un seul lien y mène.
 
 L'export du registre donne un dossier par ligne : numéro, étudiant, sujet,
-directeur et son titre, co-directeur (interne ou extérieur), statut,
+directeur et son titre, directeur extérieur, statut,
 soutenance, jury, résultat, mention, embargo, validation de l'A6, signatures
 qui manquent pour passer à l'étape suivante, pièces pour l'université (scellées
 le \ldots{} ou à sceller) et dernier refus de signer d'un agent DEVE (date et
@@ -882,18 +895,21 @@ le dépôt de sujet. Le numéro d'enregistrement n'est pas encore attribué.}
         directeur, les réponses au questionnaire.
   \item Contrôlez le \textbf{numéro d'enregistrement DEVE} proposé (le
         suivant de l'année, modifiable mais unique).
-  \item Arrêtez la date, l'heure et le lieu : la date et le lieu proposés par
-        l'étudiant sont repris, les salles des paramètres proposées. Un conflit
-        de salle s'affiche sous le lieu.
+  \item Arrêtez la date et l'heure (celles proposées par l'étudiant sont
+        reprises) et \textbf{attribuez la salle} : l'étudiant ne la choisit
+        pas, les salles des paramètres sont proposées. Un conflit de salle
+        s'affiche sous le lieu.
   \item Vérifiez le jury, présenté en tableau. Seuls les membres dont
         l'éligibilité est à vérifier (membres extérieurs votants) ont leur case
         \bouton{Éligibilité de \ldots{} vérifiée (DEVE)} ; elle est déjà validée
         pour les enseignants de l'annuaire dont le statut convient. Pour changer
         un membre, cochez \bouton{Modifier la composition du jury} : la saisie
         complète s'ouvre.
-  \item Complétez l'agrément administratif (DEFV, mobilité). La validation de
-        l'A6 y est rappelée : si elle manque, \bouton{Saisir l'A6} ouvre sa
-        page (section~\ref{sec:a6}) et vous ramène ensuite à la validation.
+  \item Complétez l'agrément administratif (mobilité). L'obtention du DEFV et
+        la validation de l'A6 y sont rappelées : elles se saisissent sur la page
+        \og Validation des études\fg{} (section~\ref{sec:a6}), que
+        \bouton{Saisir l'A6} ouvre avant de vous ramener à la validation. Le
+        DEFV est exigé pour valider.
   \item Cliquez sur \bouton{Valider le dossier}.
 \end{etapes}
 \ensuite{le manuscrit passe à la bibliothèque ; les membres du jury reçoivent
@@ -903,6 +919,24 @@ générale, reçoivent leur demande de signature.}
 \end{procedure}
 
 \capture[0.85\linewidth]{71_deve_valide_soutenance}{Validation du dossier de soutenance : numéro, date, jury et éligibilité.}
+
+\begin{procedure}{Demander une autre date de soutenance}{Équipe DEVE, si l'horaire proposé n'est pas disponible}
+\begin{etapes}
+  \item Ouvrez le dossier (statut \statut{Soutenance proposée au directeur}
+        ou \statut{Soutenance validée par le directeur}) et cliquez sur
+        \bouton{Demander une autre date}.
+  \item Indiquez le motif (aucune salle libre sur ce créneau\ldots), communiqué
+        à l'étudiant, puis cliquez sur \bouton{Demander une autre date}.
+\end{etapes}
+\ensuite{seule la date est remise en cause : le dossier n'est \emph{pas} renvoyé,
+il garde son statut, ses documents et leurs signatures. L'étudiant reçoit un
+courriel et propose une nouvelle date depuis son dossier (\bouton{Proposer une
+nouvelle date}) ; le dossier affiche \og Nouvelle date : demandée par la DEVE,
+en attente de l'étudiant\fg{}. Tant qu'elle n'est pas proposée, le dossier ne
+peut pas être validé : le bouton de validation n'apparaît pas. La nouvelle date
+proposée est reprise dans la validation, et la DEVE en est prévenue par
+courriel.}
+\end{procedure}
 
 \capture[0.85\linewidth]{46_jury_eligibilite}{Jury présenté en lecture à la validation : seules les éligibilités à vérifier restent à cocher.}
 
@@ -986,7 +1020,7 @@ suivante).}
   \item Enregistrez le procès-verbal avec \bouton{Ajourné} : aucune mention,
         aucun prix ni correction n'est retenu.
   \item Le dossier revient en \statut{Dossier actif} ; sujet, enregistrements,
-        numéro DEVE et texte du rapport sont conservés.
+        numéro DEVE et rapport déposé sont conservés.
   \item Le procès-verbal d'ajournement est archivé (\og Procès-verbaux
         d'ajournement\fg{}) ; les documents générés et les signatures des
         documents de soutenance sont supprimés, les accès du jury révoqués.
@@ -1014,40 +1048,43 @@ décisions du jury.}
 
 \capture[0.85\linewidth]{78_dossier_clos}{Dossier clos après validation des corrections.}
 
-\subsection{Validation de l'A6}\label{sec:a6}
+\subsection{Validation des études (DEFV et A6)}\label{sec:a6}
 
-\begin{procedure}{Enregistrer les validations de l'A6}{Équipe DEVE}
-La validation de l'A6 est saisie \textbf{par la DEVE}, plus par l'étudiant. Elle
-est liée à \textbf{l'étudiant}, pas à son dossier de thèse : elle peut être
-enregistrée avant que le dossier existe, et vaut pour tous ses dossiers. Elle
-figure dans le dossier (rubrique \og Enregistrements\fg{}), dans l'agrément
-administratif et dans la fiche signalétique. Elle se saisit sur sa page à
-part, \bouton{Validation de l'A6} dans la barre de navigation : tous les
+\begin{procedure}{Enregistrer les validations des études}{Équipe DEVE}
+L'obtention du DEFV et la validation de l'A6 sont saisies \textbf{par la DEVE},
+plus par l'étudiant. Elles sont liées à \textbf{l'étudiant}, pas à son dossier
+de thèse : elles peuvent être enregistrées avant que le dossier existe, et
+valent pour tous ses dossiers. Elles figurent dans le dossier (rubrique
+\og Enregistrements\fg{}), dans l'agrément administratif et dans la fiche
+signalétique. Elles se saisissent sur leur page à part, \bouton{Validation des
+études} dans la barre de navigation : tous les
 étudiants de l'activité, avec ou sans dossier, filtrables (A6 validée ou non,
 nom), avec leur validation. Le dossier, sa modification et la validation du
 dossier de soutenance la rappellent, avec le bouton \bouton{Saisir l'A6} qui
 mène à cette page. Trois façons de la saisir :
 \begin{etapes}
   \item \textbf{Un étudiant} : \bouton{Modifier} sur sa ligne (ou
-        \bouton{Saisir l'A6} depuis son dossier) : date, ou \og A6 pas encore
-        validée\fg{}, et école.
-  \item \textbf{Plusieurs étudiants à la même date} : cochez-les, indiquez
-        sous la liste la date et l'école (ou cochez \bouton{A6 pas encore
-        validée}), puis \bouton{Enregistrer la validation}.
-  \item \textbf{Par fichier} : \bouton{Importer les validations de l'A6}
+        \bouton{Saisir l'A6} depuis son dossier) : date et école du DEFV ;
+        date de l'A6, ou \og A6 pas encore validée\fg{}, et école.
+  \item \textbf{Plusieurs étudiants à la même date d'A6} : cochez-les,
+        indiquez sous la liste la date et l'école (ou cochez \bouton{A6 pas
+        encore validée}), puis \bouton{Enregistrer la validation}.
+  \item \textbf{Par fichier} : \bouton{Importer les validations des études}
         (en tête de la page, ou depuis l'import des dossiers).
         Déposez un fichier Excel (.xlsx), OpenDocument (.ods) ou CSV, avec une
         ligne d'en-tête et une ligne par étudiant : \texttt{etudiant}
         (identifiant, adresse de courriel ou numéro d'étudiant),
-        \texttt{date} (jj/mm/aaaa, ou \og non\fg{}) et, facultative,
-        \texttt{ecole} (Lyon, Alfort, Nantes, Toulouse, Rouen). Tout étudiant
+        \texttt{date} (A6, jj/mm/aaaa, ou \og non\fg{}) et, facultatives,
+        \texttt{ecole} (Lyon, Alfort, Nantes, Toulouse, Rouen),
+        \texttt{defv} (date d'obtention du DEFV) et \texttt{ecole defv}.
+        Tout étudiant
         inscrit au cours peut figurer, avec ou sans dossier. Lancez d'abord
         la simulation, qui vérifie chaque ligne sans rien enregistrer.
 \end{etapes}
 \ensuite{chaque saisie est inscrite à l'historique des dossiers de l'étudiant
-(\og Validation de l'A6 enregistrée\fg{}). Pour les dossiers où l'étudiant
-l'avait déclarée avant cette version, sa déclaration est reprise tant que la
-DEVE ne l'a pas saisie.}
+(\og Validation des études enregistrée\fg{}). Pour les dossiers où l'étudiant
+avait déclaré son DEFV ou son A6 avant cette version, sa déclaration est
+reprise tant que la DEVE ne les a pas saisis.}
 \end{procedure}
 
 \capture[0.85\linewidth]{109_page_a6}{Page de validation de l'A6 : étudiants de l'activité, filtres, saisie et enregistrement groupé.}
@@ -1065,8 +1102,8 @@ DEVE ne l'a pas saisie.}
         signature est attendue), \bouton{Générer les documents de soutenance}
         (manuscrit conforme ou soutenance programmée) ou \bouton{Prévenir les
         membres du jury pas encore prévenus} (dossier validé, jusqu'à la
-        soutenance). La validation de l'A6 se saisit sur sa page à part
-        (section~\ref{sec:a6}).
+        soutenance). La validation des études (DEFV, A6) se saisit sur sa page à
+        part (section~\ref{sec:a6}).
   \item Cliquez sur \bouton{Appliquer}.
 \end{etapes}
 \ensuite{un message indique le nombre de dossiers traités et ignorés : une
@@ -1320,7 +1357,7 @@ signature dans le suivi des signatures.}
 Les formulaires de l'établissement sont remplis dans le module, au fil du
 circuit, puis produits en PDF \textbf{dans la mise en forme des documents
 d'origine} : chaque formulaire (E01 V9, E02 V8, E03 V8, bordereau ABES 2022,
-rapport, grille 08-2024, conclusions 09-2026) a été reconstitué à l'identique,
+grille 08-2024, conclusions 09-2026) a été reconstitué à l'identique,
 logos, cadres, libellés et cases à cocher compris, et les données du dossier
 viennent s'insérer à leur place. Chaque emplacement de signature reçoit la
 signature tracée à l'écran (souris, doigt ou stylet), avec la mention
@@ -1342,12 +1379,11 @@ procès-verbal reprennent la même présentation.
 Dépôt de sujet (E01) & Étudiant & Étudiant (soumission), directeur (validation),
 DEVE (visa), directeur extérieur éventuel (lien) \\
 Bordereau de thèse (ABES) & Étudiant & Étudiant (dépôt de soutenance) \\
-Rapport du directeur & Directeur & Directeur \\
-Grille de conformité & Étudiant, vérifiée par le directeur & Directeur \\
+Grille de conformité & Étudiant ; directeur (sa propre grille, non préremplie) & Directeur \\
 Fiche d'agréments (E02) & DEVE (administratif), directeur (scientifique) &
-DEVE, directeur (ou membre si directeur extérieur), direction générale
+DEVE, directeur (ou examinateur interne si directeur extérieur), direction générale
 représentée par la DEVE, CCEM \\
-Fiche signalétique (E03) & Étudiant (validation de l'A6 : DEVE) & Président du jury, direction générale,
+Fiche signalétique (E03) & Étudiant (DEFV et A6 : DEVE) & Président du jury, direction générale,
 CCEM \\
 Contrat de diffusion (E04) & Étudiant (choix des articles 2 et 4) & Auteur,
 visa du directeur, direction générale, présidence de l'université \\
@@ -1642,7 +1678,7 @@ Validation du sujet (directeur) & dépôt de sujet : étudiant \\
 Enregistrement du sujet (DEVE) & dépôt de sujet : étudiant, directeur, directeur extérieur \\
 Enregistrement (bibliothèque) & dépôt de sujet : toutes (visa de la DEVE compris) \\
 Validation de la soutenance (directeur) & bordereau ; contrat : étudiant \\
-Validation du dossier (DEVE) & bordereau, rapport, grille ; agréments,
+Validation du dossier (DEVE) & bordereau, grille ; agréments,
 contrat, conclusions : directeur \\
 Conformité (bibliothèque) & agréments, fiche signalétique, contrat,
 conclusions : toutes, sauf l'université \\
@@ -1997,7 +2033,7 @@ désactive dans les \bouton{Paramètres du circuit}, rubrique
 \section{Données personnelles et sauvegarde}
 
 Le module implémente l'API de confidentialité de Moodle : l'étudiant peut
-exporter son dossier (sans le rapport du directeur) et sa validation de l'A6,
+exporter son dossier (sans le rapport du directeur) et sa validation des études,
 et en demander l'effacement ; un membre du personnel supprimé est dissocié des dossiers qu'il a
 traités, sans que ceux-ci disparaissent. La sauvegarde et la restauration de
 cours recopient le paramétrage (réglages, courriels, modèles et images, grille,
@@ -2094,12 +2130,15 @@ de la DEVE ou de la bibliothèque télécharge :
 \toprule
 \textbf{Zone} & \textbf{Contenu} & \textbf{Nom des fichiers} \\
 \midrule
-\texttt{subjectdocs} & Pièces jointes au sujet par l'étudiant & nom d'origine \\
+\texttt{subjectdocs} & Pièces jointes au sujet des versions précédentes (le dépôt n'en accepte plus) & nom d'origine \\
 \texttt{subjectarchive} & Dépôt de sujet signé, archivé à un changement de sujet
 & \texttt{sujet-AAAA-MM-JJ-<n>.pdf} \\
 \texttt{manuscript} & Manuscrit déposé pour la soutenance (un PDF) & nom d'origine \\
-\texttt{defensedocs} & Autres documents de soutenance & nom d'origine \\
-\texttt{directorreport} & Pièces jointes au rapport du directeur & nom d'origine \\
+\texttt{defensedocs} & Autres documents de soutenance des versions précédentes (le dépôt n'en accepte plus) & nom d'origine \\
+\texttt{directorreport} & Rapport du directeur, déposé (PDF ou Word) ; joint
+à l'archive de l'université sous \texttt{rapport-directeur-<nom d'origine>} & nom d'origine \\
+\texttt{reporttemplate} & Modèle Word du rapport du directeur, dans les
+paramètres du circuit (\texttt{itemid} 0) & nom d'origine \\
 \texttt{generated} & Documents de soutenance générés, remplacés à chaque
 génération et supprimés à un ajournement : convocations, feuille de jury,
 procès-verbal à remplir, documents de l'établissement dans leur état de
