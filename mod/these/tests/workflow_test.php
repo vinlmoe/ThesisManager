@@ -467,4 +467,37 @@ final class workflow_test extends these_testcase {
         $this->assertSame(0, $data['q' . $optional . '_0']);
         $this->assertSame(1, $data['q' . $optional . '_1']);
     }
+
+    /**
+     * Délai minimal entre le dépôt et la soutenance (paramètres du circuit, 4 semaines par défaut) :
+     * une date plus proche est refusée au dépôt et à la nouvelle date demandée par la DEVE.
+     */
+    public function test_minimum_defense_delay(): void {
+        global $PAGE;
+        $this->setup_activity();
+        $this->setUser($this->student);
+        $PAGE->set_url('/mod/these/defense.php', ['id' => $this->cm->id]);
+        $now = time();
+        $this->assertSame($now + 4 * WEEKSECS, \mod_these\local\scopesettings::earliest_defense($this->context, $now));
+        \mod_these\local\scopesettings::set(these_settings_scope($this->these), ['mindelayweeks' => 6]);
+        $earliest = \mod_these\local\scopesettings::earliest_defense($this->context);
+        $this->assertGreaterThanOrEqual($now + 6 * WEEKSECS, $earliest);
+        \mod_these\local\scopesettings::set(these_settings_scope($this->these), ['mindelayweeks' => -2]);
+        $this->assertSame(0, (int) \mod_these\local\scopesettings::for_context($this->context)['mindelayweeks']);
+        \mod_these\local\scopesettings::set(these_settings_scope($this->these), ['mindelayweeks' => 6]);
+
+        $customdata = ['minjury' => $this->these->minjury, 'these' => $this->these, 'context' => $this->context,
+            'submitlabel' => 'submitdefense', 'signername' => fullname($this->student), 'mindelayweeks' => 6,
+            'earliestdate' => $earliest];
+        $form = new \mod_these\form\defense_form(null, $customdata);
+        $errors = $form->validation(['submitdefense' => 1, 'manuscript' => 0, 'proposeddate' => $now + 2 * WEEKSECS], []);
+        $this->assertSame(\mod_these\form\defense_form::too_soon_error($customdata), $errors['proposeddate']);
+        $errors = $form->validation(['submitdefense' => 1, 'manuscript' => 0, 'proposeddate' => $earliest + DAYSECS], []);
+        $this->assertArrayNotHasKey('proposeddate', $errors);
+        $this->assertStringContainsString('6', \mod_these\form\defense_form::date_help($customdata));
+
+        $newdate = new \mod_these\form\newdate_form(null, ['refuseddate' => 0, 'mindelayweeks' => 6, 'earliestdate' => $earliest]);
+        $this->assertArrayHasKey('proposeddate', $newdate->validation(['proposeddate' => $now + WEEKSECS], []));
+        $this->assertArrayNotHasKey('proposeddate', $newdate->validation(['proposeddate' => $earliest + DAYSECS], []));
+    }
 }

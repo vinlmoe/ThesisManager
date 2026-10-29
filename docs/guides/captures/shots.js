@@ -282,8 +282,8 @@ const steps = {
     const p = await open(await as('lucas'), these('defense.php', { dossierid: ids.lucas }));
     await upload(p, 'manuscript', samplePdf('manuscrit.pdf', 'Manuscrit de thèse'));
     await check(p, '#id_proposeddate_enabled');
-    await p.selectOption('#id_proposeddate_day', '19');
-    await p.selectOption('#id_proposeddate_month', '11');
+    await p.selectOption('#id_proposeddate_day', '10');
+    await p.selectOption('#id_proposeddate_month', '12');
     await p.selectOption('#id_proposeddate_year', '2026');
     await p.selectOption('#id_proposeddate_hour', '14');
     await p.selectOption('#id_proposeddate_minute', '00');
@@ -706,6 +706,23 @@ const steps = {
       p.getByRole('button', { name: "Sceller et télécharger les pièces pour l'université" }).click()]);
     await open(p, these('documents.php', { dossierid: ids.clara }));
     await upto(p, '112_pieces_universite_envoyees');
+  },
+  async '115_jury_depot'() {
+    // Jury du dépôt : président et directeur de thèse sur leurs lignes figées.
+    const p = await open(await as('lucas'), these('defense.php'));
+    await only(p, ['Jury']);
+    await region(p, '115_jury_depot', fieldset('Jury'));
+  },
+  async '116_deve_autre_date'() {
+    // Nouvelle date demandée par la DEVE au dossier de Zoé ; la demande est enregistrée pour la capture suivante.
+    const p = await open(await as('sbonnet'), these('daterequest.php', { dossierid: ids.zoe }));
+    await p.fill('#id_reason', 'Aucune salle libre ce jour-là : proposez une autre date, convenue avec le jury.');
+    await upto(p, '116_deve_autre_date', form);
+    await Promise.all([p.waitForNavigation(), p.click('#id_submitbutton')]);
+  },
+  async '117_etudiant_nouvelle_date'() {
+    const p = await open(await as('zoe'), these('newdate.php'));
+    await upto(p, '117_etudiant_nouvelle_date', form);
   },
 };
 

@@ -53,7 +53,11 @@ $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($context);
 
 $refused = (int) ($dossier->defensedate ?: $dossier->proposeddate);
-$mform = new \mod_these\form\newdate_form($PAGE->url, ['refuseddate' => $refused]);
+$mform = new \mod_these\form\newdate_form($PAGE->url, [
+    'refuseddate' => $refused,
+    'mindelayweeks' => (int) \mod_these\local\scopesettings::for_context($context)['mindelayweeks'],
+    'earliestdate' => \mod_these\local\scopesettings::earliest_defense($context),
+]);
 $mform->set_data(['id' => $cm->id, 'proposeddate' => $refused ?: time()]);
 
 if ($mform->is_cancelled()) {

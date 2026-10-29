@@ -68,6 +68,9 @@ $mform = new defense_form($PAGE->url, [
     'context' => $context,
     'submitlabel' => $returned ? 'resubmitdefense' : 'submitdefense',
     'signername' => fullname($USER),
+    // Délai minimal entre le dépôt et la soutenance (paramètres du circuit).
+    'mindelayweeks' => (int) \mod_these\local\scopesettings::for_context($context)['mindelayweeks'],
+    'earliestdate' => \mod_these\local\scopesettings::earliest_defense($context),
     // Questionnaire préalable au jury : rempli dans le dépôt.
     'questions' => $questions,
 ]);

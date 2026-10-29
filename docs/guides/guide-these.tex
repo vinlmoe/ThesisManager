@@ -153,7 +153,10 @@ directeur non préremplie. DEFV et A6 saisis par la DEVE sur la page
 une autre date sans renvoyer le dossier. Renvoi et changement de sujet
 révoquent les documents signés et redemandent les signatures. Jury : président
 et directeur de thèse sur deux lignes figées, membres du jury ou invités
-ensuite. Embargo de diffusion d'un an au plus, durée choisie par l'étudiant. \\
+ensuite. Embargo de diffusion d'un an au plus, durée choisie par l'étudiant.
+Délai minimal entre le dépôt et la soutenance dans les paramètres du circuit ;
+date et heure convenues au préalable avec le jury et la DEVE. Captures
+refaites. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -392,7 +395,10 @@ bibliothèque et le questionnaire sont facultatifs.
         s'il y en a, ils signent par délégation depuis \bouton{Mes
         signatures}, quel que soit le mode (section~\ref{sec:universite}).
   \item[Soutenances] durée d'une soutenance, en minutes (60 par défaut), pour
-        détecter les conflits de jury ; \textbf{salles de soutenance}, une par
+        détecter les conflits de jury ; \textbf{délai minimal entre le dépôt et
+        la soutenance}, en semaines (4 par défaut, 0 pour aucun délai) : la date
+        proposée par l'étudiant, au dépôt comme quand la DEVE en demande une
+        autre, ne peut pas être plus proche ; \textbf{salles de soutenance}, une par
         ligne, proposées à la DEVE quand elle attribue la salle (validation et
         modification du dossier ; l'étudiant ne choisit pas la salle). Elles remplacent
         l'ancien \og lieu de soutenance proposé par défaut\fg{} des réglages
@@ -619,7 +625,10 @@ comptée à compléter dans l'avancement du dépôt, et la soumission est refus�
         document déposé.
   \item Proposez la date et l'heure de la soutenance (cochez
         \bouton{Activer}, puis choisissez-les : aucune date n'est proposée
-        d'office). La salle est attribuée par la DEVE.
+        d'office). Elles doivent avoir été \textbf{convenues au préalable avec
+        les membres du jury et la DEVE}, et se situer au moins le délai minimal
+        des paramètres du circuit après le dépôt (4 semaines par défaut) : une
+        date plus proche est refusée. La salle est attribuée par la DEVE.
   \item Composez le jury : au moins le nombre de membres votants fixé par
         l'activité (deux par défaut), président compris. Les deux premières
         lignes ont leur fonction \textbf{figée} : la première est celle du
@@ -659,6 +668,8 @@ directeur dépose son rapport puis valide.}
 \capture[0.85\linewidth]{102_avancement_depot}{Avancement du dépôt : rubriques complètes et champs à compléter.}
 
 \capture[0.85\linewidth]{67_etudiant_soutenance_signature}{Dépôt de la soutenance : documents, jury, bordereau, signature.}
+
+\capture[0.85\linewidth]{115_jury_depot}{Jury du dépôt : président et directeur de thèse sur leurs lignes figées, puis membres du jury ou invités.}
 
 \capture[0.85\linewidth]{101_etudiant_grille_conformite}{Grille de conformité remplie par l'étudiant au dépôt, avec son attestation.}
 
@@ -957,6 +968,10 @@ peut pas être validé : le bouton de validation n'apparaît pas. La nouvelle da
 proposée est reprise dans la validation, et la DEVE en est prévenue par
 courriel.}
 \end{procedure}
+
+\capture[0.85\linewidth]{116_deve_autre_date}{Demande d'une autre date par la DEVE, motif à l'appui, sans renvoyer le dossier.}
+
+\capture[0.85\linewidth]{117_etudiant_nouvelle_date}{Nouvelle date proposée par l'étudiant : motif de la DEVE et rappel du délai minimal.}
 
 \capture[0.85\linewidth]{46_jury_eligibilite}{Jury présenté en lecture à la validation : seules les éligibilités à vérifier restent à cocher.}
 

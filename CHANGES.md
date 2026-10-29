@@ -73,6 +73,11 @@ développement ne correspondent à aucune version installable ; 0.11.2 n'a jamai
   `{{contract.embargoyears}}`). Un embargo déjà demandé sans durée vaut un an ;
   une date saisie avec l'ancien formulaire est ramenée à un an après la
   soutenance au plus.
+- **Délai minimal entre le dépôt et la soutenance**, en semaines, dans les
+  paramètres du circuit (`mindelayweeks`, 4 par défaut, 0 pour aucun délai) :
+  une date proposée plus proche est refusée, au dépôt comme à la nouvelle date
+  demandée par la DEVE. Un rappel indique que la date et l'heure doivent être
+  convenues au préalable avec le jury et la DEVE.
 - `mod_thesesynthesis` : recherche sans le co-directeur, sauvegarde du modèle
   de rapport des paramètres partagés.
 

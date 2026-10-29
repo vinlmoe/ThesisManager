@@ -83,9 +83,23 @@ class scopesettings {
             'ccemagent' => '',
             'ucblagent' => '',
             'defenseduration' => 60,
+            'mindelayweeks' => 4,
             'defenserooms' => '',
             'weeklydigest' => 1,
         ] + self::text_defaults();
+    }
+
+    /**
+     * Date de soutenance la plus proche que l'étudiant peut proposer : le délai minimal des paramètres
+     * du circuit (en semaines) après le dépôt.
+     *
+     * @param \context $context Contexte de l'activité.
+     * @param int|null $now Instant du dépôt, maintenant par défaut.
+     * @return int
+     */
+    public static function earliest_defense(\context $context, $now = null) {
+        $weeks = max(0, (int) self::for_context($context)['mindelayweeks']);
+        return (int) ($now ?? time()) + $weeks * WEEKSECS;
     }
 
     /**
@@ -380,6 +394,9 @@ class scopesettings {
             $value = is_int($defaults[$name]) ? (string) (int) $value : trim((string) $value);
             if ($name === 'defenseduration' && (int) $value < 1) {
                 $value = (string) $defaults[$name];
+            }
+            if ($name === 'mindelayweeks' && (int) $value < 0) {
+                $value = '0';
             }
             $conditions = self::conditions($scope) + ['name' => $name];
             if ($id = $DB->get_field('these_setting', 'id', $conditions)) {

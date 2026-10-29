@@ -67,6 +67,12 @@ class defense_form extends \moodleform {
 
         $mform->addElement('header', 'dateheader', get_string('defenseproposal', 'mod_these'));
         $mform->setExpanded('dateheader');
+        // Date et heure convenues au préalable avec le jury et la DEVE, au moins le délai minimal des
+        // paramètres après le dépôt.
+        $mform->addElement('static', 'datehelp', '', \html_writer::div(
+            self::date_help($this->_customdata),
+            'alert alert-info mb-0'
+        ));
         // Pas de date préremplie (l'heure courante serait refusée) : l'étudiant l'active et la choisit.
         $mform->addElement('date_time_selector', 'proposeddate', get_string('proposeddate', 'mod_these'), ['optional' => true]);
         $mform->addElement(
@@ -236,6 +242,8 @@ class defense_form extends \moodleform {
             $errors['proposeddate'] = get_string('proposeddaterequired', 'mod_these');
         } else if ((int) $data['proposeddate'] <= time()) {
             $errors['proposeddate'] = get_string('datemustbefuture', 'mod_these');
+        } else if (!empty($this->_customdata['earliestdate']) && (int) $data['proposeddate'] < $this->_customdata['earliestdate']) {
+            $errors['proposeddate'] = self::too_soon_error($this->_customdata);
         }
         // Grille de conformité : éléments obligatoires cochés et attestation de l'étudiant.
         foreach (these_get_grid_items(these_settings_scope($this->_customdata['these'])) as $items) {
@@ -287,6 +295,34 @@ class defense_form extends \moodleform {
         }
         $errors = array_merge($errors, questionnaire_form::question_errors($this->_customdata['questions'] ?? [], $data));
         return array_merge($errors, these_signature_errors($data));
+    }
+
+    /**
+     * Rappel affiché avant la date proposée : date et heure convenues avec le jury et la DEVE, délai
+     * minimal après le dépôt.
+     *
+     * @param array $customdata mindelayweeks.
+     * @return string
+     */
+    public static function date_help(array $customdata) {
+        $weeks = (int) ($customdata['mindelayweeks'] ?? 0);
+        if ($weeks > 0) {
+            return get_string('proposeddatehelp', 'mod_these', $weeks);
+        }
+        return get_string('proposeddatehelpnodelay', 'mod_these');
+    }
+
+    /**
+     * Message d'une date proposée trop proche du dépôt.
+     *
+     * @param array $customdata mindelayweeks, earliestdate.
+     * @return string
+     */
+    public static function too_soon_error(array $customdata) {
+        return get_string('proposeddatetoosoon', 'mod_these', (object) [
+            'weeks' => (int) ($customdata['mindelayweeks'] ?? 0),
+            'date' => userdate((int) $customdata['earliestdate'], get_string('strftimedate', 'langconfig')),
+        ]);
     }
 
     /**
