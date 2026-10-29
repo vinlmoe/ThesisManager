@@ -88,7 +88,12 @@ if ($mform->is_cancelled()) {
         'correctionsnote' => (string) ($data->correctionsnote ?? ''),
     ], trim((string) $data->remark));
     $message = (int) $dossier->status === THESE_STATUS_CLOSED ? 'dossierclosed' : 'correctionsopened';
-    redirect($dossierurl, get_string($message, 'mod_these'), null, \core\output\notification::NOTIFY_SUCCESS);
+    redirect(
+        backlinks::after_action($cm, $dossierurl),
+        get_string($message, 'mod_these'),
+        null,
+        \core\output\notification::NOTIFY_SUCCESS
+    );
 }
 
 echo $OUTPUT->header();

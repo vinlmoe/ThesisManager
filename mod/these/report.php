@@ -101,7 +101,12 @@ if ($mform->is_cancelled()) {
         these_filemanager_options('directorreport')
     );
     these_save_report($dossier, $USER->id, (string) $data->reporttext, !empty($data->reportfavorable));
-    redirect($dossierurl, get_string('reportsaved', 'mod_these'), null, \core\output\notification::NOTIFY_SUCCESS);
+    redirect(
+        backlinks::after_action($cm, $dossierurl),
+        get_string('reportsaved', 'mod_these'),
+        null,
+        \core\output\notification::NOTIFY_SUCCESS
+    );
 }
 
 $student = $DB->get_record('user', ['id' => $dossier->userid]);

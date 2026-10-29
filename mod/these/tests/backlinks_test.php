@@ -117,5 +117,12 @@ final class backlinks_test extends these_testcase {
         // Retour au suivi : une action ouverte ensuite directement y revient de nouveau.
         backlinks::remember($synthesis, 'Suivi des thèses', [$this->these->id]);
         $this->assertSame($synthesis->out(false), backlinks::to_dossier($this->cm, $dossier)->url->out(false));
+
+        // Après une action enregistrée : directement au suivi ; venu du tableau de bord, au dossier.
+        $dossierurl = new \moodle_url('/mod/these/dossier.php', ['id' => $this->cm->id, 'dossierid' => $dossier->id]);
+        $this->assertSame($synthesis->out(false), backlinks::after_action($this->cm, $dossierurl)->out(false));
+        $dashboard = new \moodle_url('/mod/these/dashboard.php', ['id' => $this->cm->id]);
+        backlinks::remember($dashboard, 'Tableau de bord', [$this->these->id]);
+        $this->assertSame($dossierurl->out(false), backlinks::after_action($this->cm, $dossierurl)->out(false));
     }
 }

@@ -35,6 +35,8 @@ use stdClass;
  * - les autres pages de l'activité (création, import, paramètres...) reviennent à la page d'origine ;
  * - sans origine valable pour l'activité (lien d'un courriel), à l'accueil de l'activité : le tableau
  *   de bord du personnel, le dossier de l'étudiant ;
+ * - après une action enregistrée sur une page d'un dossier, venu du suivi des thèses, on y revient
+ *   directement (voir after_action()) ;
  * - les pages d'accueil reviennent au cours ;
  * - les pages communes à toutes les activités (Mes signatures, accès d'un membre du jury connecté)
  *   reviennent à la dernière page d'origine, à défaut au tableau de bord Moodle.
@@ -196,6 +198,23 @@ class backlinks {
             new moodle_url('/mod/these/dossier.php', ['id' => $cm->id, 'dossierid' => $dossier->id]),
             get_string('dossier', 'mod_these')
         );
+    }
+
+    /**
+     * Page où mener l'utilisateur après une action enregistrée sur une page d'un dossier (validation,
+     * renvoi, procès-verbal...) : venu du suivi des thèses, directement le suivi ; sinon la page
+     * prévue (le dossier, qui affiche le résultat).
+     *
+     * @param stdClass $cm
+     * @param moodle_url $default Page prévue sans suivi des thèses d'origine.
+     * @return moodle_url
+     */
+    public static function after_action(stdClass $cm, moodle_url $default) {
+        $origin = self::origin((int) $cm->instance);
+        if ($origin && strpos($origin->url->out_as_local_url(false), '/mod/thesesynthesis/') === 0) {
+            return $origin->url;
+        }
+        return $default;
     }
 
     /**

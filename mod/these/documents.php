@@ -84,7 +84,7 @@ if ($action === 'transmit' && confirm_sesskey()) {
         $message .= ' ' . get_string('transmitmissing', 'mod_these', implode(', ', $result->missing));
     }
     redirect(
-        $dossierurl,
+        backlinks::after_action($cm, $dossierurl),
         $message,
         null,
         $result->failed || $result->missing ? \core\output\notification::NOTIFY_WARNING : \core\output\notification::NOTIFY_SUCCESS

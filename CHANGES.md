@@ -26,7 +26,10 @@ développement ne correspondent à aucune version installable ; 0.11.2 n'a jamai
   - une page d'un dossier (validation, documents, signatures…) revient au
     dossier s'il a été ouvert d'abord, sinon (action ouverte directement depuis
     « À traiter » ou le suivi des signatures) à la page d'origine ; le bouton
-    « Annuler » de ses formulaires fait de même. L'étudiant revient à son
+    « Annuler » de ses formulaires fait de même. Après une action enregistrée
+    (validation, renvoi, procès-verbal, scan, modification, abandon ou
+    réouverture, transmission des documents, rapport, questionnaire), on revient
+    directement au suivi, qui affiche le message ; venu d'ailleurs, au dossier. L'étudiant revient à son
     dossier ; la signature sur place revient au suivi des signatures ;
   - les autres pages de l'activité (création, import, export, paramètres,
     annuaire, A6…) reviennent à la page d'origine ;

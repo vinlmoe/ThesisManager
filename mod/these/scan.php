@@ -86,7 +86,7 @@ if ($mform->is_cancelled()) {
     if ($count && $slots) {
         $message .= ' ' . get_string('scansignaturesrecorded', 'mod_these', count($slots));
     }
-    redirect($dossierurl, $message, null, \core\output\notification::NOTIFY_SUCCESS);
+    redirect(backlinks::after_action($cm, $dossierurl), $message, null, \core\output\notification::NOTIFY_SUCCESS);
 }
 
 echo $OUTPUT->header();

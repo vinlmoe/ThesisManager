@@ -65,7 +65,7 @@ if ($mform->is_cancelled()) {
         these_cancel_dossier($dossier, $USER->id, trim((string) $data->remark));
     }
     redirect(
-        $dossierurl,
+        backlinks::after_action($cm, $dossierurl),
         get_string($reopen ? 'dossierreopened' : 'dossiercancelled', 'mod_these'),
         null,
         \core\output\notification::NOTIFY_SUCCESS
