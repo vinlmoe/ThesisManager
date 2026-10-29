@@ -27,6 +27,7 @@
 require(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/these/locallib.php');
 
+use mod_these\local\backlinks;
 use mod_these\output;
 
 $id = required_param('id', PARAM_INT);
@@ -80,7 +81,7 @@ $student = $DB->get_record('user', ['id' => $dossier->userid]);
 $renderer = $PAGE->get_renderer('mod_these');
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('managesignatures', 'mod_these'));
-echo $renderer->render(new output\link($dossierurl, get_string('back')));
+echo backlinks::render(backlinks::to_dossier($cm, $dossier));
 echo $OUTPUT->box(get_string('dossierof', 'mod_these', $student ? fullname($student) : '-'), 'generalbox mb-3');
 echo these_render_signed_documents($cm, $context, $dossier, $rights);
 

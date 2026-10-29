@@ -58,11 +58,13 @@ $PAGE->set_url('/mod/these/dashboard.php', $baseparams);
 $PAGE->set_title(format_string($these->name) . ' - ' . get_string('dashboard', 'mod_these'));
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($context);
+// Page d'origine des dossiers ouverts d'ici (voir \mod_these\local\backlinks).
+\mod_these\local\backlinks::remember($PAGE->url, get_string('dashboard', 'mod_these'), [$these->id]);
 
 $renderer = $PAGE->get_renderer('mod_these');
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('dashboard', 'mod_these'));
-echo these_render_navlinks($cm, $context);
+echo these_render_navlinks($cm, $context, \mod_these\local\backlinks::course($course->id));
 // Réglages du circuit encore à compléter : rappel à la DEVE, avec le lien vers les paramètres.
 if ($rights->deve) {
     $scope = these_settings_scope($these);

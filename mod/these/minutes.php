@@ -27,7 +27,7 @@
 require(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/these/locallib.php');
 
-use mod_these\output;
+use mod_these\local\backlinks;
 
 $id = required_param('id', PARAM_INT);
 $dossierid = required_param('dossierid', PARAM_INT);
@@ -56,10 +56,9 @@ $PAGE->set_context($context);
 // Toutes les signatures, université comprise (scans des pièces revenues), avant le procès-verbal.
 $missing = \mod_these\local\prerequisites::missing($dossier);
 if ($missing) {
-    $renderer = $PAGE->get_renderer('mod_these');
     echo $OUTPUT->header();
     echo $OUTPUT->heading(get_string('depositminutes', 'mod_these'));
-    echo $renderer->render(new output\link($dossierurl, get_string('back')));
+    echo backlinks::render(backlinks::to_dossier($cm, $dossier));
     echo \mod_these\local\university::render_section($cm, $context, $dossier);
     echo \mod_these\local\prerequisites::render_missing($cm, $context, $dossier, $missing);
     echo $OUTPUT->footer();
@@ -92,10 +91,9 @@ if ($mform->is_cancelled()) {
     redirect($dossierurl, get_string($message, 'mod_these'), null, \core\output\notification::NOTIFY_SUCCESS);
 }
 
-$renderer = $PAGE->get_renderer('mod_these');
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('depositminutes', 'mod_these'));
-echo $renderer->render(new output\link($dossierurl, get_string('back')));
+echo backlinks::render(backlinks::to_dossier($cm, $dossier));
 echo $OUTPUT->box(get_string('dossierof', 'mod_these', $student ? fullname($student) : '-'), 'generalbox mb-3');
 $mform->display();
 echo $OUTPUT->footer();

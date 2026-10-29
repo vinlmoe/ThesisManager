@@ -27,6 +27,7 @@
 require(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/these/locallib.php');
 
+use mod_these\local\backlinks;
 use mod_these\output;
 
 use mod_these\form\subject_form;
@@ -108,7 +109,11 @@ if ($mform->is_cancelled()) {
 $renderer = $PAGE->get_renderer('mod_these');
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('subjectchange', 'mod_these'));
+echo backlinks::render(backlinks::student_dossier($cm));
 $current = get_string('subjectchangecurrent', 'mod_these', format_string($dossier->title, true, ['escape' => false]));
 echo $renderer->render(new output\message($current, 'alert alert-info'));
+if ((int) $dossier->status === THESE_STATUS_CANCELLED) {
+    echo $renderer->render(new output\message(get_string('subjectchangecancelled', 'mod_these'), 'alert alert-warning'));
+}
 $mform->display();
 echo $OUTPUT->footer();

@@ -230,7 +230,8 @@ class university {
         foreach (array_keys(self::pending($dossier)) as $doctype) {
             $file = self::seal($these, $context, $dossier, $doctype, $userid);
             if ($file) {
-                $files[these_document_filename($doctype)] = $file;
+                // Pièce scellée : la date du scellement s'ajoute à son nom.
+                $files[these_document_filename($doctype, '', (int) $file->get_timecreated())] = $file;
                 $labels[] = these_document_label($doctype);
             }
         }

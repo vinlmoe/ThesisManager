@@ -79,7 +79,11 @@ if ($userid) {
     }
     echo $OUTPUT->header();
     echo $OUTPUT->heading(get_string('a6validation', 'mod_these'));
-    echo these_render_navlinks($cm, $context);
+    // Retour à la page d'où la saisie a été ouverte (dossier, validation...), à défaut à la liste.
+    echo \mod_these\local\backlinks::render(\mod_these\local\backlinks::target(
+        $backurl,
+        get_string($returnurl !== '' ? 'previouspage' : 'a6validation', 'mod_these')
+    ));
     $mform->display();
     echo $OUTPUT->footer();
     exit;

@@ -60,6 +60,9 @@ if (!$member) {
     $PAGE->set_context(context_system::instance());
     $PAGE->set_title(get_string('juryaccess', 'mod_these'));
     echo $OUTPUT->header();
+    if ($token === '') {
+        echo \mod_these\local\backlinks::render(\mod_these\local\backlinks::from_global());
+    }
     echo $OUTPUT->notification(get_string('juryaccessinvalid', 'mod_these'), 'info');
     echo $OUTPUT->footer();
     exit;
@@ -82,9 +85,10 @@ if ($area !== '' && in_array($area, $allowed['areas'], true)) {
     send_stored_file($file, 0, 0, true);
 }
 if ($doc !== '' && in_array($doc, $allowed['documents'], true) && these_document_available($dossier, $doc)) {
+    $pdf = these_signed_document_pdf($these, $context, $dossier, $doc);
     send_file(
-        these_signed_document_pdf($these, $context, $dossier, $doc),
-        these_document_filename($doc),
+        $pdf,
+        \mod_these\local\documents::signed_document_filename($context, $dossier, $doc),
         0,
         0,
         true,
@@ -99,6 +103,11 @@ $date = (int) ($dossier->defensedate ?: $dossier->proposeddate);
 
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('juryaccess', 'mod_these'));
+// Membre du jury connecté (ouvert depuis « Mes jurys ») : retour à la page d'origine. L'accès par
+// lien, sans compte, n'a pas de page où revenir.
+if ($token === '') {
+    echo \mod_these\local\backlinks::render(\mod_these\local\backlinks::from_global());
+}
 $renderer = $PAGE->get_renderer('mod_these');
 echo $renderer->render(new output\message(get_string('juryaccessintro', 'mod_these', (object) [
     'name' => trim($member->jurytitle . ' ' . $member->fullname),

@@ -62,14 +62,17 @@ final class navlinks_test extends output_testcase {
     }
 
     /**
-     * Rendu : bloc these-navlinks ; pour l'étudiant, le seul lien vers l'annuaire.
+     * Rendu : lien de retour (accueil de l'activité) puis bloc these-navlinks ; pour l'étudiant, le
+     * seul lien vers l'annuaire, et le retour à son dossier.
      */
     public function test_render(): void {
         $this->setup_activity();
         $this->setUser($this->director);
         $html = $this->renderer()->render(new navlinks($this->cm, $this->context));
         $this->assertStringStartsWith('<div class="these-navlinks mb-3"><a href=', $html);
-        $this->assertSame($html, these_render_navlinks($this->cm, $this->context));
+        $back = \mod_these\local\backlinks::render(\mod_these\local\backlinks::activity_home($this->cm, $this->context));
+        $this->assertStringContainsString('dashboard.php', $back);
+        $this->assertSame($back . $html, these_render_navlinks($this->cm, $this->context));
         $this->setUser($this->student);
         $html = these_render_navlinks($this->cm, $this->context);
         $this->assertStringContainsString('directory.php', $html);

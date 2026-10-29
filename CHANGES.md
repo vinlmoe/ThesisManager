@@ -13,6 +13,42 @@ de version recalés sur la date. Les numéros entre parenthèses des sections de
 développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
 été étiquetée.
 
+## mod_these 0.22.0 (2026102900) et mod_thesesynthesis 0.7.1 (2026102900) — liens de retour revus, changement de sujet d'un dossier abandonné, date dans le nom des documents scellés
+
+- **Liens de retour** sur chaque page des deux modules (classe
+  `\mod_these\local\backlinks`), sous le titre, avec le nom de la page où ils
+  mènent (« Retour : Dossier de thèse ») :
+  - une page d'un dossier revient au dossier (l'étudiant, à son dossier) ; la
+    signature sur place revient au suivi des signatures ;
+  - un dossier revient à la page d'où il a été ouvert, mémorisée dans la
+    session : tableau de bord ou planning de l'activité, accueil, recherche ou
+    planning d'une activité « Suivi des thèses » qui la suit (filtres et
+    critères compris). Sans origine valable pour l'activité (lien d'un
+    courriel), il revient au tableau de bord, ou au dossier de l'étudiant ;
+  - les pages de l'activité (création, import, export, paramètres, annuaire,
+    A6…) reviennent à son accueil, celles du suivi à l'accueil du suivi ; la
+    page d'un modèle, d'une question ou d'un membre de l'annuaire revient à la
+    liste ; la saisie de l'A6 à la page d'où elle a été ouverte ;
+  - « Mes signatures » et la page d'un jury ouverte depuis « Mes jurys »
+    reviennent à la dernière page d'origine, à défaut au tableau de bord
+    Moodle ; le refus de signer revient à « Mes signatures » ;
+  - les pages d'accueil (dossier de l'étudiant, tableau de bord, accueil du
+    suivi, listes des activités du cours) reviennent au cours ;
+  - corrigés : l'annuaire revenait toujours à la page de l'étudiant, la gestion
+    des activités suivies et les pages de l'étudiant (sujet, changement de
+    sujet, soutenance, corrections, questionnaire) n'avaient pas de retour,
+    l'annuaire du suivi n'avait pas sa barre de navigation, la signature sur
+    place n'avait de retour qu'une fois tout signé.
+- **Changement de sujet d'un dossier abandonné** : l'étudiant peut changer le
+  sujet d'un dossier abandonné ; le nouveau sujet relance le dossier en phase 1
+  (directeur, DEVE, bibliothèque), qui ne peut plus être rouvert dans le statut
+  atteint lors de son abandon.
+- **Documents scellés** : le nom du PDF porte la date du scellement
+  (`report-2026-10-29.pdf`), au téléchargement, dans les documents générés,
+  dans l'archive transmise à l'université et dans celle des pièces scellées
+  pour l'université.
+- Guide 2.17.
+
 ## mod_these 0.21.0 (2026102806) — signatures de l'université au choix (papier, en ligne, délégataires internes), liste des dossiers bloqués, captures du guide refaites, scénarios Behat, import et export complétés
 
 Les modifications prévues pour 0.20.1, jamais publiée, sont reprises dans cette version.

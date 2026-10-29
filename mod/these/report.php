@@ -27,6 +27,7 @@
 require(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/these/locallib.php');
 
+use mod_these\local\backlinks;
 use mod_these\output;
 use mod_these\output\parts;
 
@@ -107,7 +108,7 @@ $student = $DB->get_record('user', ['id' => $dossier->userid]);
 $renderer = $PAGE->get_renderer('mod_these');
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('writereport', 'mod_these'));
-echo $renderer->render(new output\link($dossierurl, get_string('back')));
+echo backlinks::render(backlinks::to_dossier($cm, $dossier));
 echo $OUTPUT->box($renderer->render(new output\fragment([
     parts::text(get_string('dossierof', 'mod_these', $student ? fullname($student) : '-')),
     parts::br(),

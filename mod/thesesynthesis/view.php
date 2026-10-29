@@ -50,6 +50,24 @@ $PAGE->set_context($context);
 
 $links = thesesynthesis_get_active_links($synthesis->id, $USER->id);
 $filters = ['status' => $status === -999 ? null : $status, 'search' => $search, 'cmid' => $filtercmid];
+// Page d'origine des dossiers ouverts d'ici, filtres compris (voir \mod_these\local\backlinks).
+$originparams = [];
+if ($status !== -999) {
+    $originparams['status'] = $status;
+}
+if ($search !== '') {
+    $originparams['search'] = $search;
+}
+if ($filtercmid) {
+    $originparams['cmid'] = $filtercmid;
+}
+\mod_these\local\backlinks::remember(
+    new moodle_url($baseurl, $originparams),
+    get_string('modulename', 'mod_thesesynthesis'),
+    array_map(function ($link) {
+        return (int) $link->these->id;
+    }, $links)
+);
 $rows = thesesynthesis_get_dossiers($links, $USER->id, $filters);
 $alltodo = array_filter(thesesynthesis_get_dossiers($links, $USER->id), function ($row) {
     return $row->todo;
@@ -60,7 +78,7 @@ $renderer = $PAGE->get_renderer('mod_thesesynthesis');
 echo $OUTPUT->header();
 echo $OUTPUT->heading(format_string($synthesis->name));
 
-echo thesesynthesis_render_navlinks($cm, $context);
+echo thesesynthesis_render_navlinks($cm, $context, \mod_these\local\backlinks::course($course->id));
 if (!$links) {
     echo $OUTPUT->notification(get_string('nolinks', 'mod_thesesynthesis'), 'info');
     echo $OUTPUT->footer();

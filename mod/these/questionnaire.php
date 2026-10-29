@@ -28,6 +28,7 @@ require(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/these/locallib.php');
 
 use mod_these\form\questionnaire_form;
+use mod_these\local\backlinks;
 
 $id = required_param('id', PARAM_INT);
 $dossierid = required_param('dossierid', PARAM_INT);
@@ -84,6 +85,7 @@ if ($mform->is_cancelled()) {
 
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('questionnaire', 'mod_these'));
+echo backlinks::render(backlinks::to_dossier($cm, $dossier, $rights));
 if (!$rights->student) {
     echo $OUTPUT->heading(fullname($DB->get_record('user', ['id' => $dossier->userid])), 4);
 }

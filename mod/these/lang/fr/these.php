@@ -121,6 +121,8 @@ $string['dormantphase'] = 'dossier dormant';
 // Navigation et listes.
 $string['dashboard'] = 'Tableau de bord';
 $string['planning'] = 'Planning des soutenances';
+$string['backto'] = 'Retour : {$a}';
+$string['previouspage'] = 'Page précédente';
 $string['planningviewweek'] = 'Par semaine';
 $string['planningviewmonth'] = 'Par mois';
 $string['planningweekof'] = 'Semaine du {$a->start} au {$a->end}';
@@ -1401,7 +1403,9 @@ $string['subjectchangereason'] = 'Motif du changement';
 $string['subjectchangesubmit'] = 'Soumettre le nouveau sujet';
 $string['subjectchangecurrent'] = 'Sujet actuel : {$a}';
 $string['subjectchangenotallowed'] = "Le sujet ne peut être changé que lorsque le dossier est actif (sujet enregistré, soutenance non "
-    . 'déposée).';
+    . 'déposée) ou abandonné.';
+$string['subjectchangecancelled'] = "Votre dossier a été abandonné : le nouveau sujet le relance et repasse toute la validation du "
+    . 'sujet (directeur, DEVE, bibliothèque).';
 $string['subjectchangedmsg'] = 'Nouveau sujet soumis : votre directeur de thèse est prévenu, ainsi que la DEVE et la bibliothèque.';
 $string['subjectchangelog'] = 'Ancien sujet : {$a->old}. Motif : {$a->reason}';
 $string['subjecthistory'] = 'Sujets précédents';

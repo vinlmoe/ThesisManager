@@ -52,6 +52,6 @@ $student = $DB->get_record('user', ['id' => $dossier->userid]);
 
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('dossierof', 'mod_these', $student ? fullname($student) : '-'));
-echo these_render_navlinks($cm, $context);
+echo these_render_navlinks($cm, $context, \mod_these\local\backlinks::from_dossier($cm, $context));
 echo these_render_dossier($these, $cm, $context, $dossier, $rights);
 echo $OUTPUT->footer();

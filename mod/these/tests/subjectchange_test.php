@@ -94,4 +94,35 @@ final class subjectchange_test extends these_testcase {
         $this->expectException(\coding_exception::class);
         these_change_subject($this->these, $this->cm, $dossier, $data, $this->student->id, 'Encore.');
     }
+
+    /**
+     * Un dossier abandonné peut changer de sujet : le nouveau sujet le relance en phase 1 et le statut
+     * atteint lors de l'abandon ne vaut plus.
+     */
+    public function test_change_subject_of_cancelled_dossier(): void {
+        $this->setup_activity();
+        $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
+            'status' => THESE_STATUS_DEFENSE_SUBMITTED, 'directorid' => $this->director->id, 'title' => 'Sujet abandonné',
+        ]);
+        $dossier = these_cancel_dossier($dossier, $this->deve->id, 'Abandon.');
+        $this->assertTrue(these_subject_changeable($dossier));
+        $student = these_get_rights($this->context, $dossier, $this->student->id);
+        $this->assertArrayHasKey(
+            get_string('subjectchange', 'mod_these'),
+            these_get_dossier_actions($this->cm, $dossier, $student)
+        );
+
+        $data = (object) ['title' => 'Nouveau sujet', 'titleen' => 'New subject', 'summary' => 'Résumé',
+            'keywords' => 'x ; y ; z', 'studyyear' => 'A5', 'directorid' => $this->director->id, 'confidential' => 0,
+            'externaldirector' => 0, 'codirectorname' => ''];
+        these_change_subject($this->these, $this->cm, $dossier, $data, $this->student->id, 'Nouveau départ.');
+        $dossier = $this->reload($dossier->id);
+
+        $this->assertEquals(THESE_STATUS_SUBJECT_SUBMITTED, $dossier->status);
+        $this->assertEquals(0, $dossier->cancelledfromstatus);
+        $this->assertSame('Nouveau sujet', $dossier->title);
+        $history = array_values(these_get_subject_history($dossier->id));
+        $this->assertCount(1, $history);
+        $this->assertSame('Sujet abandonné', $history[0]->title);
+    }
 }

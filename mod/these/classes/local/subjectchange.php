@@ -35,13 +35,13 @@ use stdClass;
 class subjectchange {
     /**
      * Indique si l'étudiant peut changer de sujet : dossier actif (sujet enregistré, soutenance pas
-     * encore déposée, y compris après un ajournement).
+     * encore déposée, y compris après un ajournement) ou abandonné, que le nouveau sujet relance.
      *
      * @param stdClass $dossier
      * @return bool
      */
     public static function subject_changeable(stdClass $dossier) {
-        return (int) $dossier->status === THESE_STATUS_ACTIVE;
+        return in_array((int) $dossier->status, [THESE_STATUS_ACTIVE, THESE_STATUS_CANCELLED], true);
     }
 
     /**
@@ -56,10 +56,11 @@ class subjectchange {
     }
 
     /**
-     * Change le sujet d'un dossier actif. L'ancien sujet est archivé (historique et PDF du dépôt de
+     * Change le sujet d'un dossier actif ou abandonné. L'ancien sujet est archivé (historique et PDF du dépôt de
      * sujet signé, zone subjectarchive) ; l'ancien directeur, la DEVE et la bibliothèque sont
      * prévenus ; le nouveau sujet, signé par l'étudiant, repasse toute la phase 1 : directeur
-     * (éventuellement nouveau), DEVE, bibliothèque.
+     * (éventuellement nouveau), DEVE, bibliothèque. Un dossier abandonné est ainsi relancé : il ne
+     * pourra plus être rouvert dans le statut atteint lors de son abandon.
      *
      * @param stdClass $these
      * @param stdClass $cm
@@ -140,6 +141,8 @@ class subjectchange {
                 $fields[$field] = (int) these_submitted_value($data, $dossier, $field);
             }
             $fields = dossiers::people_fields($fields, $data);
+            // Dossier abandonné relancé par le nouveau sujet : le statut atteint lors de l'abandon ne vaut plus.
+            $fields['cancelledfromstatus'] = 0;
             if (property_exists($data, 'commitguide')) {
                 $fields['commitments'] = (!empty($data->commitguide) ? THESE_COMMIT_GUIDE : 0)
                     | (!empty($data->commitduplicate) ? THESE_COMMIT_DUPLICATE : 0)

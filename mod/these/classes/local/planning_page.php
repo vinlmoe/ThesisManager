@@ -122,6 +122,15 @@ class planning_page {
             die();
         }
 
+        // Page d'origine des dossiers ouverts d'ici, à la période affichée (voir backlinks).
+        backlinks::remember(
+            new moodle_url($baseurl, ['view' => $view, 'date' => $from]),
+            get_string('planning', 'mod_these'),
+            array_map(function ($source) {
+                return (int) $source->these->id;
+            }, $sources)
+        );
+
         $renderer = $PAGE->get_renderer('mod_these');
         echo $OUTPUT->header();
         echo $OUTPUT->heading($heading);

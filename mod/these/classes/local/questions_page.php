@@ -93,6 +93,7 @@ class questions_page {
             }
             echo $OUTPUT->header();
             echo $OUTPUT->heading(get_string($questionid ? 'questionedit' : 'questionadd', 'mod_these'));
+            echo backlinks::render(backlinks::target($listurl, get_string('questions', 'mod_these')));
             $mform->display();
             echo $OUTPUT->footer();
             exit;

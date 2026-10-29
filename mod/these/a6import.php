@@ -68,8 +68,7 @@ if ($mform->is_cancelled()) {
 $renderer = $PAGE->get_renderer('mod_these');
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('a6import', 'mod_these'));
-echo these_render_navlinks($cm, $context);
-echo $renderer->render(new output\link($a6url, get_string('back')));
+echo these_render_navlinks($cm, $context, \mod_these\local\backlinks::target($a6url, get_string('a6validation', 'mod_these')));
 echo $renderer->render(output\message::help(get_string('a6import_desc', 'mod_these')));
 
 if ($error !== null) {
