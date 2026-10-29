@@ -4,7 +4,7 @@
 
 % Version du guide : à mettre à jour à chaque modification, avec une ligne dans l'historique.
 \newcommand{\titreguide}{Guide de la gestion des thèses}
-\newcommand{\versionguide}{2.16}
+\newcommand{\versionguide}{2.17}
 \newcommand{\dateguide}{28 octobre 2026}
 \newcommand{\versionthese}{0.21.0}
 
@@ -138,6 +138,10 @@ refus). \\
 circuit : tout sur papier (par défaut) ou en ligne, et délégataires internes du
 président du CCEM et de la présidence de l'université, qui signent par
 délégation depuis \bouton{Mes signatures}. Capture de l'import refaite. \\
+2.17 & 29 octobre 2026 & Lien de retour sur chaque page, vers la page d'où
+l'on vient (tableau de bord, planning, suivi des thèses, recherche) ;
+changement de sujet d'un dossier abandonné ; date du scellement dans le nom des
+documents scellés. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -539,8 +543,8 @@ sans repasser par les étapes déjà franchies.}
 \begin{procedure}{Changer de sujet de thèse}{Étudiant, dossier actif}
 \begin{etapes}
   \item Dans votre dossier (statut \statut{Dossier actif} : sujet enregistré,
-        soutenance pas encore déposée), cliquez sur \bouton{Changer de sujet de
-        thèse}.
+        soutenance pas encore déposée, ou \statut{Dossier abandonné}), cliquez
+        sur \bouton{Changer de sujet de thèse}.
   \item Expliquez le \textbf{motif du changement} (obligatoire).
   \item Saisissez le nouveau sujet : titre, résumé, mots-clés, année d'études ;
         choisissez au besoin un autre directeur de thèse.
@@ -553,7 +557,8 @@ signé) ; votre ancien directeur, la DEVE et la bibliothèque reçoivent un
 courriel avec l'ancien et le nouveau titre et le motif. Le nouveau sujet repasse
 toute la phase~1 : validation par le directeur, enregistrement par la DEVE (visa
 de l'agent DEVE), notice de la bibliothèque. Le dossier redevient ensuite
-actif.}
+actif. Un dossier abandonné est ainsi relancé : il ne peut plus être rouvert
+dans le statut atteint lors de son abandon.}
 \end{procedure}
 
 \capture[0.85\linewidth]{84_changement_sujet}{Changement de sujet : motif, nouveau sujet et signature.}
@@ -791,6 +796,30 @@ repliées sous \bouton{Aide} en tête des pages (paramètres, modèles, grille,
 questionnaire, annuaire, transfert, modification d'un dossier, documents,
 export), et celles des champs des paramètres du circuit derrière l'icône
 d'aide \og ?\fg{}.
+
+\paragraph{Liens de retour.} Chaque page porte, sous son titre, un lien
+\bouton{Retour : \ldots} qui nomme la page où il mène :
+\begin{itemize}
+  \item une page d'un dossier (validation, documents, signatures, procès-verbal,
+        modification\ldots) revient au dossier ; la signature sur place revient
+        au suivi des signatures ;
+  \item un dossier revient à la page d'où vous l'avez ouvert : tableau de bord
+        ou planning de l'activité, ou accueil, recherche ou planning de
+        l'activité \og Suivi des thèses\fg{}, filtres compris. Ouvert depuis un
+        courriel, il revient au tableau de bord de l'activité ;
+  \item les autres pages de l'activité (création, import, export, paramètres,
+        annuaire\ldots) reviennent au tableau de bord, celles de l'activité
+        \og Suivi des thèses\fg{} à son accueil ; la page d'un modèle, d'une
+        question ou d'un membre de l'annuaire revient à la liste ;
+  \item \bouton{Mes signatures} et la page d'un jury ouverte depuis \og Mes
+        jurys\fg{} reviennent à la dernière de ces pages d'origine ;
+  \item les pages de l'étudiant reviennent à son dossier, et les pages
+        d'accueil (dossier de l'étudiant, tableau de bord, accueil du suivi) au
+        cours.
+\end{itemize}
+Seules les pages ouvertes par un lien reçu par courriel (signature en ligne,
+accès d'un membre du jury sans compte) n'en ont pas : elles ne font partie
+d'aucune navigation.
 
 \capture[0.6\linewidth]{103_menu_parametres}{Barre de navigation de la DEVE : pages de travail et menu \bouton{Paramètres} (activité suivie).}
 
@@ -1118,7 +1147,7 @@ le logo.
   \item[Créer un dossier] pour un étudiant inscrit qui n'en a pas encore.
   \item[Questionnaire] corriger les réponses d'un étudiant.
   \item[Changement de sujet] à l'initiative de l'étudiant, depuis un dossier
-        actif : la DEVE est prévenue par courriel, enregistre le nouveau sujet
+        actif ou abandonné (qu'il relance) : la DEVE est prévenue par courriel, enregistre le nouveau sujet
         comme un premier sujet, et retrouve dans le dossier la rubrique
         \og Sujets précédents\fg{} (motif, ancien titre, ancien directeur, PDF
         archivé) ainsi que l'entrée \og Changement de sujet\fg{} de
@@ -1720,7 +1749,11 @@ et conservé tel quel, et son empreinte SHA-256 est inscrite à l'historique du
 dossier (\og Document scellé\fg{}). Une modification ultérieure d'un modèle,
 d'une image ou du contrat type ne le change plus. Si une signature disparaît
 (contenu modifié, ajournement), le scellé est levé et le document sera scellé de
-nouveau une fois toutes ses signatures apposées.
+nouveau une fois toutes ses signatures apposées. Le nom du PDF d'un document
+scellé porte la \textbf{date du scellement} (par exemple
+\texttt{report-2026-10-29.pdf}), y compris dans l'archive transmise à
+l'université et, pour les pièces scellées pour l'université, dans l'archive de
+leur envoi.
 
 \capture[0.85\linewidth]{93_document_scelle}{Historique du dossier : document signé puis scellé, avec son empreinte SHA-256.}
 
