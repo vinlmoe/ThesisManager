@@ -1391,7 +1391,9 @@ $string['subjectchangereason'] = 'Reason for the change';
 $string['subjectchangesubmit'] = 'Submit the new subject';
 $string['subjectchangecurrent'] = 'Current subject: {$a}';
 $string['subjectchangenotallowed'] = 'The subject can only be changed while the file is active (subject registered, defence not '
-    . 'submitted).';
+    . 'submitted) or abandoned.';
+$string['subjectchangecancelled'] = 'Your file was abandoned: the new subject restarts it and goes through the whole subject '
+    . 'approval again (director, registrar, library).';
 $string['subjectchangedmsg'] = 'New subject submitted: your thesis director, the registrar and the library have been notified.';
 $string['subjectchangelog'] = 'Former subject: {$a->old}. Reason: {$a->reason}';
 $string['subjecthistory'] = 'Previous subjects';
