@@ -74,13 +74,31 @@ class documents {
      *
      * @param string $prefix
      * @param string $name
+     * @param int $sealtime Date du scellement d'un document scellé, ajoutée au nom (AAAA-MM-JJ) ; 0 sans scellé.
      * @return string
      */
-    public static function document_filename($prefix, $name = '') {
+    public static function document_filename($prefix, $name = '', $sealtime = 0) {
         $slug = $name !== '' ? '-' . trim(preg_replace('/[^a-z0-9]+/', '-', core_text::strtolower(
             core_text::specialtoascii($name)
         )), '-') : '';
-        return clean_filename($prefix . $slug . '.pdf');
+        $date = $sealtime ? '-' . userdate($sealtime, '%Y-%m-%d', 99, false) : '';
+        return clean_filename($prefix . $slug . $date . '.pdf');
+    }
+
+    /**
+     * Nom de fichier d'un document de l'établissement (voir these_document_definitions()) : la date
+     * du scellement s'y ajoute une fois le document scellé. À appeler après la production du PDF, qui
+     * scelle le document entièrement signé (voir these_signed_document_pdf()).
+     *
+     * @param context $context
+     * @param stdClass $dossier
+     * @param string $doctype
+     * @param string $name Nom ajouté au nom du fichier (étudiant), vide par défaut.
+     * @return string
+     */
+    public static function signed_document_filename(context $context, stdClass $dossier, $doctype, $name = '') {
+        $sealed = these_get_sealed_document($context, $dossier->id, $doctype);
+        return self::document_filename($doctype, $name, $sealed ? (int) $sealed->get_timecreated() : 0);
     }
 
     /**
@@ -111,7 +129,8 @@ class documents {
         // l'étudiant consulte : ils ne sont joints qu'à l'archive transmise à l'université.
         foreach (these_document_definitions() as $doctype => $definition) {
             if (!$definition['staffonly'] && these_document_available($dossier, $doctype)) {
-                $documents[these_document_filename($doctype)] = these_signed_document_pdf($these, $context, $dossier, $doctype);
+                $pdf = these_signed_document_pdf($these, $context, $dossier, $doctype);
+                $documents[self::signed_document_filename($context, $dossier, $doctype)] = $pdf;
             }
         }
 
@@ -158,9 +177,10 @@ class documents {
                 continue;
             }
             $directory = $directory ?? make_request_directory();
-            $filename = these_document_filename($doctype);
+            $pdf = these_signed_document_pdf($these, $context, $dossier, $doctype);
+            $filename = self::signed_document_filename($context, $dossier, $doctype);
             $path = $directory . '/' . $filename;
-            file_put_contents($path, these_signed_document_pdf($these, $context, $dossier, $doctype));
+            file_put_contents($path, $pdf);
             $files[$filename] = $path;
         }
         return $files;

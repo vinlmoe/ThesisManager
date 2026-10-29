@@ -42,10 +42,11 @@ function these_document_data(stdClass $these, stdClass $dossier) {
  *
  * @param string $prefix
  * @param string $name
+ * @param int $sealtime
  * @return string
  */
-function these_document_filename($prefix, $name = '') {
-    return \mod_these\local\documents::document_filename($prefix, $name);
+function these_document_filename($prefix, $name = '', $sealtime = 0) {
+    return \mod_these\local\documents::document_filename($prefix, $name, $sealtime);
 }
 
 /**

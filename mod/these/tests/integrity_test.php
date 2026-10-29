@@ -68,6 +68,11 @@ final class integrity_test extends these_testcase {
         $pdf = $sealed->get_content();
         $log = $DB->get_record('these_log', ['dossierid' => $dossier->id, 'logaction' => 'documentsealed']);
         $this->assertStringContainsString(hash('sha256', $pdf), $log->remark);
+        // Le nom du document scellé porte la date du scellement.
+        $this->assertSame(
+            'report-' . userdate($sealed->get_timecreated(), '%Y-%m-%d', 99, false) . '.pdf',
+            \mod_these\local\documents::signed_document_filename($this->context, $dossier, 'report')
+        );
 
         // Modèle modifié après la signature : le document signé reste celui qui a été signé.
         these_set_doctemplate(these_local_scope($this->these), 'report', $this->changed_template('report', 'Ajout'));
@@ -78,6 +83,7 @@ final class integrity_test extends these_testcase {
         $dossier->reporttext = 'Rapport réécrit.';
         $this->assertSame(['report:director'], these_refresh_signatures($this->context, $dossier));
         $this->assertNull(these_get_sealed_document($this->context, $dossier->id, 'report'));
+        $this->assertSame('report.pdf', \mod_these\local\documents::signed_document_filename($this->context, $dossier, 'report'));
     }
 
     /**

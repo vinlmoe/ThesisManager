@@ -85,9 +85,10 @@ if ($area !== '' && in_array($area, $allowed['areas'], true)) {
     send_stored_file($file, 0, 0, true);
 }
 if ($doc !== '' && in_array($doc, $allowed['documents'], true) && these_document_available($dossier, $doc)) {
+    $pdf = these_signed_document_pdf($these, $context, $dossier, $doc);
     send_file(
-        these_signed_document_pdf($these, $context, $dossier, $doc),
-        these_document_filename($doc),
+        $pdf,
+        \mod_these\local\documents::signed_document_filename($context, $dossier, $doc),
         0,
         0,
         true,

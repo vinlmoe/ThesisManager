@@ -53,9 +53,11 @@ if (
 }
 
 $student = $DB->get_record('user', ['id' => $dossier->userid]);
+// Le PDF d'abord : il scelle le document entièrement signé, dont le nom porte alors la date du scellement.
+$pdf = these_signed_document_pdf($these, $context, $dossier, $type);
 send_file(
-    these_signed_document_pdf($these, $context, $dossier, $type),
-    these_document_filename($type, $student ? fullname($student) : ''),
+    $pdf,
+    \mod_these\local\documents::signed_document_filename($context, $dossier, $type, $student ? fullname($student) : ''),
     0,
     0,
     true,
