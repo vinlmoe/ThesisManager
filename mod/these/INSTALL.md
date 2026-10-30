@@ -72,6 +72,26 @@ l'étudiant comme directeurs.
    importés sont créés « actifs ». Une simulation est proposée par défaut.
 4. Personnaliser au besoin les courriels (*Courriels*).
 
+### Notifications et préférences de messagerie
+
+Les utilisateurs qui ont un compte Moodle (étudiant, directeur, DEVE,
+bibliothèque, agents signataires) reçoivent les courriels du module par la
+**messagerie de Moodle** : chacun règle, dans ses *Préférences* →
+*Préférences de notification*, rubrique *Gestion des thèses*, s'il les reçoit
+par courriel, par notification à l'écran, ou les deux (courriel et notification
+activés par défaut). Les cinq familles sont : dossier en attente et relances ;
+dossier renvoyé, enregistré, clôturé ou ajourné, sujet ou date modifiés ;
+signature demandée ou refusée ; convocations et désignation du jury ;
+récapitulatif hebdomadaire. L'administrateur peut imposer ou interdire chaque
+canal (*Administration du site* → *Messagerie* → *Paramètres de notification*).
+Le texte reste celui des courriels, personnalisés ou non, et la notification
+renvoie vers le dossier.
+
+Les destinataires **sans compte** (boîtes de service, université, membres du
+jury, signataires extérieurs) et les envois **avec pièce jointe**
+(convocations, archive de l'université) partent toujours par courriel direct,
+quelles que soient les préférences.
+
 ## 3 bis. Documents officiels et signatures électroniques
 
 *Paramètres du circuit* de l'activité *Suivi des thèses* (ou de l'activité

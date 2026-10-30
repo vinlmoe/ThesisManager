@@ -19,7 +19,6 @@ namespace mod_these\local;
 use context;
 use context_module;
 use core_text;
-use core_user;
 use moodle_url;
 use stdClass;
 
@@ -317,7 +316,8 @@ class notifications {
     }
 
     /**
-     * Envoie un courriel à une liste de destinataires.
+     * Envoie un courriel à une liste de destinataires : par la messagerie de Moodle pour les comptes,
+     * par courriel direct pour les destinataires sans compte (voir messaging::deliver()).
      *
      * Pour une thèse confidentielle, les destinataires qui ne doivent pas connaître le sujet (voir
      * these_user_knows_subject()) reçoivent « Thèse confidentielle » à la place du titre.
@@ -340,10 +340,10 @@ class notifications {
         $attachname = '',
         ?stdClass $dossier = null
     ) {
-        $noreply = core_user::get_noreply_user();
         $text = self::resolve_email_text($these->id, $emailkey, $vars);
         $masked = null;
         $sent = 0;
+        $contexturl = (string) ($vars['url'] ?? '');
         foreach ($recipients as $recipient) {
             $message = $text;
             if ($dossier !== null && !self::recipient_knows_subject($these, $dossier, $recipient)) {
@@ -356,7 +356,19 @@ class notifications {
                 }
                 $message = $masked;
             }
-            if (email_to_user($recipient, $noreply, $message->subject, $message->body, '', $attachment, $attachname)) {
+            // Compte Moodle : messagerie (voir messaging::deliver()) ; sans compte : courriel direct.
+            if (
+                messaging::deliver(
+                    $these,
+                    $emailkey,
+                    $recipient,
+                    $message->subject,
+                    $message->body,
+                    $attachment,
+                    $attachname,
+                    $contexturl
+                )
+            ) {
                 $sent++;
             }
         }

@@ -163,6 +163,7 @@ class provider implements
         ], 'privacy:metadata:these_log');
 
         $collection->add_subsystem_link('core_files', [], 'privacy:metadata:core_files');
+        $collection->add_subsystem_link('core_message', [], 'privacy:metadata:core_message');
 
         $collection->add_external_location_link('jury', [
             'student' => 'privacy:metadata:jury:student',

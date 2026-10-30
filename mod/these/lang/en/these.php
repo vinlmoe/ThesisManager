@@ -1491,3 +1491,11 @@ $string['privacy:metadata:servicemailboxes'] = 'The registrar and library servic
 $string['privacy:metadata:servicemailboxes:student'] = 'Student name.';
 $string['privacy:metadata:servicemailboxes:title'] = 'Thesis title (replaced when the thesis is confidential).';
 $string['privacy:metadata:servicemailboxes:status'] = 'Workflow step reached and comments entered with it.';
+$string['privacy:metadata:core_message'] = 'Workflow notifications sent to users who have an account (file waiting, returned, registered or closed, signatures, defence notices, weekly digest).';
+
+// Message providers (user notification preferences).
+$string['messageprovider:dossierawaiting'] = 'Thesis file waiting for you, and reminders';
+$string['messageprovider:statuschanged'] = 'Thesis file returned, registered, closed or adjourned, subject or date changed';
+$string['messageprovider:signaturerequest'] = 'Signature requested or refused on a thesis document';
+$string['messageprovider:juryconvocation'] = 'Defence notices and jury designation';
+$string['messageprovider:digest'] = 'Registrar weekly digest';

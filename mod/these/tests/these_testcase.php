@@ -20,6 +20,7 @@ defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 require_once($CFG->dirroot . '/mod/these/locallib.php');
+require_once(__DIR__ . '/notification_sink.php');
 
 /**
  * Socle commun des tests de mod_these : un cours, une activité et les quatre acteurs du circuit,
@@ -84,6 +85,17 @@ abstract class these_testcase extends \advanced_testcase {
         $this->librarian = $gen->create_and_enrol($this->course, 'teacher', ['username' => 'bibliotheque']);
         \mod_these\local\scopesettings::set(these_settings_scope($this->these), ['libraryagent' => 'bibliotheque']);
         accesslib_clear_all_caches_for_unit_testing();
+    }
+
+    /**
+     * Intercepte tous les envois de l'activité : messages de la messagerie (comptes Moodle) et
+     * courriels directs (destinataires sans compte), présentés comme des courriels (voir
+     * notification_sink). Surcharge de advanced_testcase, d'où le nom en camelCase.
+     *
+     * @return notification_sink
+     */
+    public function redirectEmails() { // phpcs:ignore moodle.NamingConventions.ValidFunctionName.LowercaseMethod
+        return new notification_sink(parent::redirectEmails(), $this->redirectMessages());
     }
 
     /**

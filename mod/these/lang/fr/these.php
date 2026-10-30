@@ -1506,3 +1506,11 @@ $string['privacy:metadata:servicemailboxes'] = "Les adresses de service de la DE
 $string['privacy:metadata:servicemailboxes:student'] = "Nom de l'étudiant.";
 $string['privacy:metadata:servicemailboxes:title'] = 'Titre de la thèse (remplacé quand la thèse est confidentielle).';
 $string['privacy:metadata:servicemailboxes:status'] = 'Étape du circuit atteinte et commentaires saisis avec elle.';
+$string['privacy:metadata:core_message'] = 'Notifications du circuit adressées aux utilisateurs qui ont un compte (dossier en attente, renvoyé, enregistré ou clôturé, signatures, convocations, récapitulatif hebdomadaire).';
+
+// Fournisseurs de messages (préférences de notification de l'utilisateur).
+$string['messageprovider:dossierawaiting'] = 'Dossier de thèse en attente de votre action, et relances';
+$string['messageprovider:statuschanged'] = 'Dossier de thèse renvoyé, enregistré, clôturé ou ajourné, sujet ou date modifiés';
+$string['messageprovider:signaturerequest'] = 'Signature demandée ou refusée sur un document de thèse';
+$string['messageprovider:juryconvocation'] = 'Convocations de soutenance et désignation du jury';
+$string['messageprovider:digest'] = 'Récapitulatif hebdomadaire de la DEVE';
