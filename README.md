@@ -111,14 +111,14 @@ Bibliothèque ──conformité du manuscrit──▶ DEVE ──convocations, f
 ## Qualité
 
 - Style : standard Moodle (`moodlehq/moodle-cs`), sans avertissement.
-- Tests PHPUnit (231 tests pour `mod_these`, 26 pour `mod_thesesynthesis`, couverture mesurée en CI) :
+- Tests PHPUnit (287 tests pour `mod_these`, 26 pour `mod_thesesynthesis`, couverture mesurée en CI) :
   circuit complet, corrections, rapport, renvois,
   droits, relances, documents générés, signatures et scellés, modèles,
   paramètres partagés, questionnaire, recherche, transfert des paramètres,
   annuaire et jury, liens à jeton, opérations concurrentes, planning, thèses
   confidentielles et embargo, grille, conclusions,
   suivi multi-promotions, import, confidentialité, sauvegarde/restauration.
-- Tests Behat (16 scénarios) : création et consultation d'un dossier, dépôt du
+- Tests Behat (19 scénarios, dont 3 pour le suivi) : création et consultation d'un dossier, dépôt du
   sujet avec directeur extérieur, validation des études, liens invalides, thèse
   confidentielle, planning des soutenances, signatures de l'université, import
   et export du registre.

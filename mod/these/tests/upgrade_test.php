@@ -125,7 +125,7 @@ final class upgrade_test extends these_testcase {
     }
 
     /**
-     * 2026103100 : colonne userid du jury ajoutée et remplie : compte de la fiche de l'annuaire, sinon
+     * 2026103003 : colonne userid du jury ajoutée et remplie : compte de la fiche de l'annuaire, sinon
      * unique compte actif portant l'adresse du membre ; aucun pour une adresse ambiguë, inconnue ou
      * celle d'un compte suspendu.
      */

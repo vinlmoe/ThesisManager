@@ -13,6 +13,40 @@ de version recalés sur la date. Les numéros entre parenthèses des sections de
 développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
 été étiquetée.
 
+## mod_these 0.26.0 (2026103003) et mod_thesesynthesis 0.8.1 (2026103003) — jury reconnu par son compte, procès-verbal conservé, fin de la dette
+
+- **Membres du jury reconnus par leur compte, plus par leur adresse.** Le
+  dernier constat de sécurité de l'analyse du 30 octobre est fermé : la
+  connaissance du sujet d'une thèse confidentielle, l'accès aux documents
+  depuis le compte et les jurys du suivi reposent sur le compte rattaché au
+  membre (`these_jury.userid`), actif seulement (ni suspendu ni supprimé).
+  Le compte est rattaché quand le membre est choisi dans l'annuaire et quand
+  la DEVE valide son éligibilité, recalculé si l'adresse change ; la DEVE
+  voit si un membre a un compte rattaché. Sans compte, le membre accède
+  toujours par son lien. L'étape 2026103003 ajoute la colonne et rattache les
+  membres existants (compte unique, confirmé et actif portant l'adresse de la
+  fiche d'annuaire ou du membre ; aucun si l'adresse est ambiguë).
+  Sauvegarde, restauration et confidentialité suivent. Chaînes
+  `juryuseraccount`, `jurynoaccount`.
+- **Procès-verbal conservé intact lors des suppressions de données
+  personnelles** (archives publiques ; RGPD art. 17.3 b et d) : un dossier dont
+  le PV est enregistré garde, après la suppression de l'étudiant, les champs
+  du PV, le jury et les fichiers du PV ; le reste est effacé. La suppression
+  d'un membre du personnel ne touche jamais le PV. L'export inclut toujours
+  le PV. Décrit dans INSTALL (§ 4 bis) et le guide.
+- **Code** : `dossiers` scindée par étape du circuit (`subjects`, `defenses`,
+  `reviews`, `minutes`) ; méthodes longues découpées (import des paramètres,
+  changement de sujet, import des dossiers, demande de signatures aux agents,
+  apposition d'une signature, export du dossier, suivi des signatures,
+  export RGPD) ; erreurs des `catch (\Throwable)` tracées en mode
+  développeur.
+- **Tests** : 287 + 26 (231 + 26 auparavant) — validation de 23 formulaires,
+  import CSV dans les formats réels (BOM, `;` et Windows-1252 d'Excel,
+  ISO-8859-1, guillemets, en-têtes), assertions structurelles sur le HTML
+  rendu au lieu de balises exactes, attributs PHPUnit `CoversClass` et
+  `CoversFunction` (PHPUnit 11), trois scénarios Behat pour le suivi.
+- Guide 2.21.
+
 ## mod_these 0.25.0 (2026103002) et mod_thesesynthesis 0.8.0 (2026103002) — dette architecturale, messagerie et événements
 
 Actions 12 à 14 du plan de `docs/qualite/analyse-qualite-2026-10-30.tex`.

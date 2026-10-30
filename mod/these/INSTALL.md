@@ -209,7 +209,7 @@ signés.
   confidentielle, *Mes jurys* et l'accès aux documents depuis *Suivi des
   thèses* tant qu'il n'est ni suspendu ni supprimé. Un membre sans compte
   rattaché accède aux documents par son lien à jeton. À la mise à jour vers la
-  version 2026103100, les membres existants sont rattachés selon la même règle.
+  version 2026103003, les membres existants sont rattachés selon la même règle.
 - **Suivi multi-promotions** : voir le module `mod_thesesynthesis`.
 
 ## 3 bis (compléments). Thèse confidentielle, embargo

@@ -368,7 +368,7 @@ function xmldb_these_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2026103001, 'these');
     }
 
-    if ($oldversion < 2026103100) {
+    if ($oldversion < 2026103003) {
         $dbman = $DB->get_manager();
         // Compte Moodle rattaché au membre du jury : les droits (sujet d'une thèse confidentielle,
         // jurys du suivi) ne reconnaissent plus un membre à l'égalité de son adresse avec celle d'un
@@ -418,7 +418,7 @@ function xmldb_these_upgrade($oldversion) {
             }
         }
         $members->close();
-        upgrade_mod_savepoint(true, 2026103100, 'these');
+        upgrade_mod_savepoint(true, 2026103003, 'these');
     }
 
     return true;
