@@ -333,27 +333,10 @@ class provider implements
      * @return void
      */
     public static function export_user_data(approved_contextlist $contextlist) {
-        global $DB;
-
         $user = $contextlist->get_user();
         foreach ($contextlist->get_contexts() as $context) {
             if ($context instanceof \context_user && (int) $context->instanceid === (int) $user->id) {
-                $a6 = $DB->get_record('these_a6', ['userid' => $user->id]);
-                if ($a6) {
-                    writer::with_context($context)->export_data([get_string('studiesvalidation', 'mod_these')], (object) [
-                        'defvdate' => $a6->defvdate ? transform::date($a6->defvdate) : null,
-                        'defvschool' => (string) $a6->defvschool,
-                        'a6date' => $a6->a6date ? transform::date($a6->a6date) : get_string('a6notvalidated', 'mod_these'),
-                        'a6school' => (string) $a6->a6school,
-                        'timemodified' => transform::datetime($a6->timemodified),
-                    ]);
-                }
-                writer::with_context($context)->export_area_files(
-                    [get_string('signaturesaved', 'mod_these')],
-                    'mod_these',
-                    'savedsignature',
-                    0
-                );
+                self::export_user_context_data($context, (int) $user->id);
                 continue;
             }
             if (!$context instanceof context_module) {
@@ -363,127 +346,226 @@ class provider implements
             if (!$cm) {
                 continue;
             }
-
-            $dossier = $DB->get_record('these_dossier', ['theseid' => $cm->instance, 'userid' => $user->id]);
-            if ($dossier) {
-                $subcontext = [get_string('mydossier', 'mod_these')];
-                writer::with_context($context)->export_data($subcontext, (object) [
-                    'status' => workflow::status_label($dossier->status),
-                    'title' => $dossier->title,
-                    'titleen' => $dossier->titleen,
-                    'summary' => $dossier->summary,
-                    'keywords' => $dossier->keywords,
-                    'devenumber' => $dossier->devenumber,
-                    'libraryref' => $dossier->libraryref,
-                    'proposeddate' => $dossier->proposeddate ? transform::datetime($dossier->proposeddate) : null,
-                    'defensedate' => $dossier->defensedate ? transform::datetime($dossier->defensedate) : null,
-                    'defenselocation' => $dossier->defenselocation,
-                    'defenseresult' => (int) $dossier->defenseresult ? workflow::result_label($dossier->defenseresult) : null,
-                    'mention' => workflow::mention_label($dossier->mention),
-                    'prizeproposal' => transform::yesno($dossier->prizeproposal),
-                    'correctionsnote' => $dossier->correctionsnote,
-                    'correctionsdone' => $dossier->correctionsdone,
-                    'returncomment' => $dossier->returncomment,
-                    'conclusions' => $dossier->conclusions,
-                    'personaldata' => bordereau::get_bordereau($dossier),
-                    'timecreated' => transform::datetime($dossier->timecreated),
-                ]);
-                $jury = array_map(function ($member) {
-                    return (object) [
-                        'role' => $member->juryrole,
-                        'fullname' => $member->fullname,
-                        'title' => $member->jurytitle,
-                        'institution' => $member->institution,
-                        'email' => $member->email,
-                    ];
-                }, jury::get_jury($dossier->id));
-                if ($jury) {
-                    writer::with_context($context)->export_data(
-                        array_merge($subcontext, [get_string('jury', 'mod_these')]),
-                        (object) ['jury' => $jury]
-                    );
-                }
-                $previous = array_values(array_map(function ($entry) {
-                    return (object) [
-                        'title' => $entry->title,
-                        'summary' => $entry->summary,
-                        'keywords' => $entry->keywords,
-                        'director' => $entry->directorname,
-                        'reason' => $entry->reason,
-                        'time' => transform::datetime($entry->timecreated),
-                    ];
-                }, subjectchange::get_subject_history($dossier->id)));
-                if ($previous) {
-                    writer::with_context($context)->export_data(
-                        array_merge($subcontext, [get_string('subjecthistory', 'mod_these')]),
-                        (object) ['subjects' => $previous]
-                    );
-                }
-                $answers = [];
-                foreach (questionnaire::get_answers($dossier->id) as $questionid => $answer) {
-                    $answers[] = (object) [
-                        'question' => (string) $DB->get_field('these_question', 'label', ['id' => $questionid]),
-                        'answer' => questionnaire::answer_text($answer),
-                    ];
-                }
-                if ($answers) {
-                    writer::with_context($context)->export_data(
-                        array_merge($subcontext, [get_string('questionnaire', 'mod_these')]),
-                        (object) ['answers' => $answers]
-                    );
-                }
-                $history = array_map(function ($log) {
-                    return (object) [
-                        'action' => $log->logaction,
-                        'status' => workflow::status_label($log->tostatus),
-                        'remark' => $log->remark,
-                        'time' => transform::datetime($log->timecreated),
-                    ];
-                }, array_values($DB->get_records('these_log', ['dossierid' => $dossier->id], 'timecreated ASC, id ASC')));
-                writer::with_context($context)->export_data(
-                    array_merge($subcontext, [get_string('history', 'mod_these')]),
-                    (object) ['history' => $history]
-                );
-                foreach (THESE_FILEAREAS as $filearea) {
-                    // Le rapport du directeur ne s'adresse pas à l'étudiant (voir
-                    // these_can_view_filearea()) : il n'est pas exporté avec son dossier.
-                    if ($filearea !== 'directorreport') {
-                        writer::with_context($context)->export_area_files($subcontext, 'mod_these', $filearea, $dossier->id);
-                    }
-                }
-                // Documents scellés, sauf ceux réservés au personnel (rapport, grille).
-                $definitions = signatures::document_definitions();
-                $sealed = get_file_storage()->get_area_files($context->id, 'mod_these', 'sealed', $dossier->id, 'filename', false);
-                foreach ($sealed as $file) {
-                    $doctype = pathinfo($file->get_filename(), PATHINFO_FILENAME);
-                    if (empty($definitions[$doctype]['staffonly'])) {
-                        writer::with_context($context)->export_file($subcontext, $file);
-                    }
-                }
-            }
-
+            self::export_student_dossier($context, $cm, (int) $user->id);
             self::export_staff_data($context, $cm, $user->id);
+            self::export_signatures($context, $cm, (int) $user->id);
+        }
+    }
 
-            // Signatures apposées par l'utilisateur, dans son dossier comme dans ceux des autres.
-            $signatures = $DB->get_records_sql(
-                "SELECT sg.*, d.title
-                   FROM {these_signature} sg
-                   JOIN {these_dossier} d ON d.id = sg.dossierid
-                  WHERE d.theseid = :theseid AND sg.userid = :userid AND sg.timesigned > 0",
-                ['theseid' => $cm->instance, 'userid' => $user->id]
+    /**
+     * Exporte les données du contexte utilisateur : validation des études (A6) et signature
+     * enregistrée.
+     *
+     * @param \context_user $context
+     * @param int $userid
+     * @return void
+     */
+    protected static function export_user_context_data(\context_user $context, int $userid) {
+        global $DB;
+
+        $a6 = $DB->get_record('these_a6', ['userid' => $userid]);
+        if ($a6) {
+            writer::with_context($context)->export_data([get_string('studiesvalidation', 'mod_these')], (object) [
+                'defvdate' => $a6->defvdate ? transform::date($a6->defvdate) : null,
+                'defvschool' => (string) $a6->defvschool,
+                'a6date' => $a6->a6date ? transform::date($a6->a6date) : get_string('a6notvalidated', 'mod_these'),
+                'a6school' => (string) $a6->a6school,
+                'timemodified' => transform::datetime($a6->timemodified),
+            ]);
+        }
+        writer::with_context($context)->export_area_files(
+            [get_string('signaturesaved', 'mod_these')],
+            'mod_these',
+            'savedsignature',
+            0
+        );
+    }
+
+    /**
+     * Exporte le dossier de l'utilisateur dans l'activité, s'il en a un : fiche, jury, sujets
+     * précédents, réponses au questionnaire, historique et fichiers.
+     *
+     * @param context_module $context
+     * @param \stdClass $cm
+     * @param int $userid
+     * @return void
+     */
+    protected static function export_student_dossier(context_module $context, $cm, int $userid) {
+        global $DB;
+
+        $dossier = $DB->get_record('these_dossier', ['theseid' => $cm->instance, 'userid' => $userid]);
+        if (!$dossier) {
+            return;
+        }
+        $subcontext = [get_string('mydossier', 'mod_these')];
+        writer::with_context($context)->export_data($subcontext, self::dossier_export_record($dossier));
+        self::export_dossier_part($context, $subcontext, 'jury', 'jury', array_map(function ($member) {
+            return (object) [
+                'role' => $member->juryrole,
+                'fullname' => $member->fullname,
+                'title' => $member->jurytitle,
+                'institution' => $member->institution,
+                'email' => $member->email,
+            ];
+        }, jury::get_jury($dossier->id)));
+        self::export_dossier_part($context, $subcontext, 'subjecthistory', 'subjects', array_map(function ($entry) {
+            return (object) [
+                'title' => $entry->title,
+                'summary' => $entry->summary,
+                'keywords' => $entry->keywords,
+                'director' => $entry->directorname,
+                'reason' => $entry->reason,
+                'time' => transform::datetime($entry->timecreated),
+            ];
+        }, subjectchange::get_subject_history($dossier->id)));
+        self::export_dossier_part($context, $subcontext, 'questionnaire', 'answers', self::dossier_answers($dossier->id));
+        $history = array_map(function ($log) {
+            return (object) [
+                'action' => $log->logaction,
+                'status' => workflow::status_label($log->tostatus),
+                'remark' => $log->remark,
+                'time' => transform::datetime($log->timecreated),
+            ];
+        }, array_values($DB->get_records('these_log', ['dossierid' => $dossier->id], 'timecreated ASC, id ASC')));
+        // L'historique est exporté même vide, comme avant.
+        writer::with_context($context)->export_data(
+            array_merge($subcontext, [get_string('history', 'mod_these')]),
+            (object) ['history' => $history]
+        );
+        self::export_dossier_files($context, $subcontext, (int) $dossier->id);
+    }
+
+    /**
+     * Fiche du dossier telle qu'exportée à l'étudiant.
+     *
+     * @param \stdClass $dossier
+     * @return \stdClass
+     */
+    protected static function dossier_export_record(\stdClass $dossier) {
+        return (object) [
+            'status' => workflow::status_label($dossier->status),
+            'title' => $dossier->title,
+            'titleen' => $dossier->titleen,
+            'summary' => $dossier->summary,
+            'keywords' => $dossier->keywords,
+            'devenumber' => $dossier->devenumber,
+            'libraryref' => $dossier->libraryref,
+            'proposeddate' => $dossier->proposeddate ? transform::datetime($dossier->proposeddate) : null,
+            'defensedate' => $dossier->defensedate ? transform::datetime($dossier->defensedate) : null,
+            'defenselocation' => $dossier->defenselocation,
+            'defenseresult' => (int) $dossier->defenseresult ? workflow::result_label($dossier->defenseresult) : null,
+            'mention' => workflow::mention_label($dossier->mention),
+            'prizeproposal' => transform::yesno($dossier->prizeproposal),
+            'correctionsnote' => $dossier->correctionsnote,
+            'correctionsdone' => $dossier->correctionsdone,
+            'returncomment' => $dossier->returncomment,
+            'conclusions' => $dossier->conclusions,
+            'personaldata' => bordereau::get_bordereau($dossier),
+            'timecreated' => transform::datetime($dossier->timecreated),
+        ];
+    }
+
+    /**
+     * Exporte une partie du dossier sous son propre sous-contexte, si elle n'est pas vide.
+     *
+     * @param context_module $context
+     * @param string[] $subcontext Sous-contexte du dossier.
+     * @param string $titlekey Chaîne du titre du sous-contexte.
+     * @param string $property Nom de la liste exportée.
+     * @param array $items
+     * @return void
+     */
+    protected static function export_dossier_part(
+        context_module $context,
+        array $subcontext,
+        string $titlekey,
+        string $property,
+        array $items
+    ) {
+        $items = array_values($items);
+        if ($items) {
+            writer::with_context($context)->export_data(
+                array_merge($subcontext, [get_string($titlekey, 'mod_these')]),
+                (object) [$property => $items]
             );
-            foreach ($signatures as $signature) {
-                $subcontext = [get_string('signatures', 'mod_these'), $signature->id];
-                writer::with_context($context)->export_data($subcontext, (object) [
-                    'dossier' => $signature->title,
-                    'document' => signatures::document_label($signature->doctype),
-                    'slot' => signatures::slot_label($signature->slot),
-                    'signername' => $signature->signername,
-                    'ipaddress' => $signature->ipaddress,
-                    'timesigned' => transform::datetime($signature->timesigned),
-                ]);
-                writer::with_context($context)->export_area_files($subcontext, 'mod_these', 'signature', $signature->id);
+        }
+    }
+
+    /**
+     * Réponses au questionnaire du dossier, avec le libellé de chaque question.
+     *
+     * @param int $dossierid
+     * @return \stdClass[]
+     */
+    protected static function dossier_answers(int $dossierid) {
+        global $DB;
+
+        $answers = [];
+        foreach (questionnaire::get_answers($dossierid) as $questionid => $answer) {
+            $answers[] = (object) [
+                'question' => (string) $DB->get_field('these_question', 'label', ['id' => $questionid]),
+                'answer' => questionnaire::answer_text($answer),
+            ];
+        }
+        return $answers;
+    }
+
+    /**
+     * Exporte les fichiers du dossier et ses documents scellés, sauf ceux réservés au personnel.
+     *
+     * @param context_module $context
+     * @param string[] $subcontext
+     * @param int $dossierid
+     * @return void
+     */
+    protected static function export_dossier_files(context_module $context, array $subcontext, int $dossierid) {
+        foreach (THESE_FILEAREAS as $filearea) {
+            // Le rapport du directeur ne s'adresse pas à l'étudiant (voir
+            // these_can_view_filearea()) : il n'est pas exporté avec son dossier.
+            if ($filearea !== 'directorreport') {
+                writer::with_context($context)->export_area_files($subcontext, 'mod_these', $filearea, $dossierid);
             }
+        }
+        // Documents scellés, sauf ceux réservés au personnel (rapport, grille).
+        $definitions = signatures::document_definitions();
+        $sealed = get_file_storage()->get_area_files($context->id, 'mod_these', 'sealed', $dossierid, 'filename', false);
+        foreach ($sealed as $file) {
+            $doctype = pathinfo($file->get_filename(), PATHINFO_FILENAME);
+            if (empty($definitions[$doctype]['staffonly'])) {
+                writer::with_context($context)->export_file($subcontext, $file);
+            }
+        }
+    }
+
+    /**
+     * Exporte les signatures apposées par l'utilisateur, dans son dossier comme dans ceux des autres.
+     *
+     * @param context_module $context
+     * @param \stdClass $cm
+     * @param int $userid
+     * @return void
+     */
+    protected static function export_signatures(context_module $context, $cm, int $userid) {
+        global $DB;
+
+        $signatures = $DB->get_records_sql(
+            "SELECT sg.*, d.title
+               FROM {these_signature} sg
+               JOIN {these_dossier} d ON d.id = sg.dossierid
+              WHERE d.theseid = :theseid AND sg.userid = :userid AND sg.timesigned > 0",
+            ['theseid' => $cm->instance, 'userid' => $userid]
+        );
+        foreach ($signatures as $signature) {
+            $subcontext = [get_string('signatures', 'mod_these'), $signature->id];
+            writer::with_context($context)->export_data($subcontext, (object) [
+                'dossier' => $signature->title,
+                'document' => signatures::document_label($signature->doctype),
+                'slot' => signatures::slot_label($signature->slot),
+                'signername' => $signature->signername,
+                'ipaddress' => $signature->ipaddress,
+                'timesigned' => transform::datetime($signature->timesigned),
+            ]);
+            writer::with_context($context)->export_area_files($subcontext, 'mod_these', 'signature', $signature->id);
         }
     }
 
