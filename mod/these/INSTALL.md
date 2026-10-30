@@ -210,9 +210,13 @@ signés.
   utilisées par la recherche des thèses (`mod_thesesynthesis`).
 - **Numéro d'enregistrement DEVE** : attribué à la validation du dossier de
   soutenance (après le dépôt de la thèse), et non plus à l'enregistrement du sujet.
-- **Rapport du directeur** : rédigé sur sa propre page (*Rédiger le rapport*),
-  enregistrable en plusieurs fois, aperçu PDF, une page au plus ; la validation
-  de la soutenance exige un rapport rédigé avec avis favorable.
+- **Rapport du directeur** : déposé en fichier (PDF ou Word) sur sa propre page
+  (*Déposer le rapport*), rédigé à partir du modèle Word proposé dans les
+  paramètres du circuit (*Modèle du rapport du directeur*, téléchargeable
+  depuis la page de dépôt) ; la validation de la soutenance exige un rapport
+  déposé avec avis favorable. Il n'est plus rédigé dans le module ni généré
+  comme document signé ; le fichier est joint à l'archive de l'université et
+  communiqué à la DEVE, à la bibliothèque et au jury, jamais à l'étudiant.
 - **Procès-verbal** : PV signé scanné (PDF ou images) et décisions du jury
   (admis/ajourné, mention honorable, très honorable ou très honorable avec
   félicitations du jury, proposition pour un prix de thèse, corrections
@@ -306,3 +310,7 @@ ne sont jamais relancés.
 phpcs --standard=phpcs.xml                         # depuis la racine du dépôt
 vendor/bin/phpunit --testsuite mod_these_testsuite # depuis la racine de Moodle
 ```
+
+Flux de travail, vérifications locales, organisation du code et publication
+des versions : voir [`CONTRIBUTING.md`](../../CONTRIBUTING.md) à la racine du
+dépôt.

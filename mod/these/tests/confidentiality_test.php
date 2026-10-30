@@ -214,7 +214,10 @@ final class confidentiality_test extends these_testcase {
         $data = these_document_context($this->these, $this->context, $dossier, 'contract');
         $this->assertTrue($data['contract']['embargo']);
         $this->assertSame(6, $data['contract']['embargomonths']);
-        $this->assertSame(userdate(make_timestamp(2027, 6, 3), '%d/%m/%Y'), $data['contract']['embargountil']);
+        $this->assertSame(
+            userdate(make_timestamp(2027, 6, 3), get_string('strftimedatefullshort', 'langconfig')),
+            $data['contract']['embargountil']
+        );
         $this->assertSame('Brevet en cours', $data['contract']['embargoreason']);
 
         // Affichage dans le dossier.

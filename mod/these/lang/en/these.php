@@ -123,6 +123,7 @@ $string['backto'] = 'Back: {$a}';
 $string['previouspage'] = 'Previous page';
 $string['planningviewweek'] = 'By week';
 $string['planningviewmonth'] = 'By month';
+$string['strftimemonthyear'] = '%B %Y';
 $string['planningweekof'] = 'Week of {$a->start} to {$a->end}';
 $string['planningprevweek'] = 'Previous week';
 $string['planningthisweek'] = 'This week';
