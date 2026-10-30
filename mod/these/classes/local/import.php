@@ -238,16 +238,7 @@ class import {
      * @return array Liste de ['line' => int, 'student' => string, 'ok' => bool, 'message' => string].
      */
     public static function import_rows(stdClass $these, array $rows, $dryrun, $userid) {
-        global $DB;
-
-        $columns = array_map(function ($column) {
-            return core_text::strtolower(trim((string) $column));
-        }, (array) array_shift($rows));
-        foreach (['student', 'title'] as $required) {
-            if (!in_array($required, $columns, true)) {
-                throw new moodle_exception('importmissingcolumn', 'mod_these', '', $required);
-            }
-        }
+        $columns = self::header_columns((array) array_shift($rows));
 
         $report = [];
         $seen = [];
@@ -265,80 +256,139 @@ class import {
             $values += array_fill_keys(self::import_columns(), '');
             $result = ['line' => $line, 'student' => $values['student'], 'ok' => false, 'message' => ''];
 
-            $student = self::find_user($values['student']);
-            $director = $values['director'] !== '' ? self::find_user($values['director']) : null;
-            $status = self::parse_status($values['status']);
-            $defended = $status !== null && $status !== THESE_STATUS_ACTIVE;
-            $defensedate = $values['defensedate'] !== '' ? self::parse_datetime($values['defensedate']) : 0;
-            $mention = self::parse_mention($values['mention']);
-            if (!$student) {
-                $result['message'] = get_string('importusernotfound', 'mod_these', s($values['student']));
-            } else if (!is_enrolled($coursecontext, $student)) {
-                $result['message'] = get_string('importusernotenrolled', 'mod_these', s($values['student']));
-            } else if (
-                isset($seen[$student->id])
-                    || $DB->record_exists('these_dossier', ['theseid' => $these->id, 'userid' => $student->id])
-            ) {
-                $result['message'] = get_string('importdossierexists', 'mod_these');
-            } else if ($values['title'] === '') {
-                $result['message'] = get_string('importtitlemissing', 'mod_these');
-            } else if ($values['director'] !== '' && !$director) {
-                $result['message'] = get_string('importusernotfound', 'mod_these', s($values['director']));
-            } else if ($director && !is_enrolled($coursecontext, $director)) {
-                $result['message'] = get_string('importusernotenrolled', 'mod_these', s($values['director']));
-            } else if (
-                $values['devenumber'] !== ''
-                    && (isset($numbers[$values['devenumber']]) || dossiers::devenumber_taken($these->id, $values['devenumber']))
-            ) {
-                $result['message'] = get_string('devenumbertaken', 'mod_these');
-            } else if ($status === null) {
-                $result['message'] = get_string('importbadstatus', 'mod_these', s($values['status']));
-            } else if ($defensedate === null || ($defended && !$defensedate)) {
-                $result['message'] = get_string('importbaddefensedate', 'mod_these', s($values['defensedate']));
-            } else if ($mention === null) {
-                $result['message'] = get_string('importbadmention', 'mod_these', s($values['mention']));
+            $parsed = self::parse_row($these, $coursecontext, $values, $seen, $numbers);
+            if ($parsed->error !== null) {
+                $result['message'] = $parsed->error;
             } else {
                 $result['ok'] = true;
-                $result['student'] = fullname($student);
-                $seen[$student->id] = true;
+                $result['student'] = fullname($parsed->student);
+                $seen[$parsed->student->id] = true;
                 if ($values['devenumber'] !== '') {
                     $numbers[$values['devenumber']] = true;
                 }
                 if (!$dryrun) {
-                    $now = time();
-                    $record = [
-                        'theseid' => $these->id,
-                        'userid' => $student->id,
-                        'status' => $status,
-                        'statustime' => $now,
-                        'title' => $values['title'],
-                        'titleen' => $values['titleen'],
-                        'summary' => $values['summary'],
-                        'keywords' => $values['keywords'],
-                        'directorid' => $director ? $director->id : 0,
-                        'devenumber' => $values['devenumber'],
-                        'libraryref' => $values['libraryref'],
-                        'defensedate' => (int) $defensedate,
-                        'proposeddate' => (int) $defensedate,
-                        'defenselocation' => $values['defenselocation'],
-                        'timecreated' => $now,
-                        'timemodified' => $now,
-                    ];
-                    if ($defended) {
-                        $record['defenseresult'] = THESE_RESULT_ADMITTED;
-                        $record['mention'] = $mention;
-                        $record['correctionsrequested'] = (int) ($status === THESE_STATUS_CORRECTIONS
-                            || $values['corrections'] !== '');
-                        $record['correctionsnote'] = $values['corrections'];
-                    }
-                    $dossierid = $DB->insert_record('these_dossier', (object) $record);
-                    dossiers::log($dossierid, $userid, 'imported', $status, $status);
+                    self::create_imported_dossier($these, $values, $parsed, $userid);
                 }
                 $result['message'] = get_string($dryrun ? 'importwouldcreate' : 'importcreated', 'mod_these')
-                    . ($status !== THESE_STATUS_ACTIVE ? ' — ' . workflow::status_label($status) : '');
+                    . ($parsed->status !== THESE_STATUS_ACTIVE ? ' — ' . workflow::status_label($parsed->status) : '');
             }
             $report[] = $result;
         }
         return $report;
+    }
+
+    /**
+     * Colonnes de l'en-tête, en minuscules ; l'étudiant et le titre sont obligatoires.
+     *
+     * @param array $header Première ligne du fichier.
+     * @return string[]
+     * @throws moodle_exception importmissingcolumn
+     */
+    private static function header_columns(array $header) {
+        $columns = array_map(function ($column) {
+            return core_text::strtolower(trim((string) $column));
+        }, $header);
+        foreach (['student', 'title'] as $required) {
+            if (!in_array($required, $columns, true)) {
+                throw new moodle_exception('importmissingcolumn', 'mod_these', '', $required);
+            }
+        }
+        return $columns;
+    }
+
+    /**
+     * Lit et vérifie une ligne de l'import.
+     *
+     * @param stdClass $these
+     * @param context_course $coursecontext
+     * @param array $values Valeurs de la ligne, par colonne.
+     * @param array $seen Étudiants déjà importés par les lignes précédentes (id => true).
+     * @param array $numbers Numéros DEVE déjà attribués par les lignes précédentes (numéro => true).
+     * @return stdClass {error (string|null), student, director, status, defended, defensedate, mention}
+     */
+    private static function parse_row(stdClass $these, context_course $coursecontext, array $values, array $seen, array $numbers) {
+        global $DB;
+
+        $parsed = (object) [
+            'error' => null,
+            'student' => self::find_user($values['student']),
+            'director' => $values['director'] !== '' ? self::find_user($values['director']) : null,
+            'status' => self::parse_status($values['status']),
+            'defensedate' => $values['defensedate'] !== '' ? self::parse_datetime($values['defensedate']) : 0,
+            'mention' => self::parse_mention($values['mention']),
+        ];
+        $parsed->defended = $parsed->status !== null && $parsed->status !== THESE_STATUS_ACTIVE;
+        $student = $parsed->student;
+        $director = $parsed->director;
+        if (!$student) {
+            $parsed->error = get_string('importusernotfound', 'mod_these', s($values['student']));
+        } else if (!is_enrolled($coursecontext, $student)) {
+            $parsed->error = get_string('importusernotenrolled', 'mod_these', s($values['student']));
+        } else if (
+            isset($seen[$student->id])
+                || $DB->record_exists('these_dossier', ['theseid' => $these->id, 'userid' => $student->id])
+        ) {
+            $parsed->error = get_string('importdossierexists', 'mod_these');
+        } else if ($values['title'] === '') {
+            $parsed->error = get_string('importtitlemissing', 'mod_these');
+        } else if ($values['director'] !== '' && !$director) {
+            $parsed->error = get_string('importusernotfound', 'mod_these', s($values['director']));
+        } else if ($director && !is_enrolled($coursecontext, $director)) {
+            $parsed->error = get_string('importusernotenrolled', 'mod_these', s($values['director']));
+        } else if (
+            $values['devenumber'] !== ''
+                && (isset($numbers[$values['devenumber']]) || dossiers::devenumber_taken($these->id, $values['devenumber']))
+        ) {
+            $parsed->error = get_string('devenumbertaken', 'mod_these');
+        } else if ($parsed->status === null) {
+            $parsed->error = get_string('importbadstatus', 'mod_these', s($values['status']));
+        } else if ($parsed->defensedate === null || ($parsed->defended && !$parsed->defensedate)) {
+            $parsed->error = get_string('importbaddefensedate', 'mod_these', s($values['defensedate']));
+        } else if ($parsed->mention === null) {
+            $parsed->error = get_string('importbadmention', 'mod_these', s($values['mention']));
+        }
+        return $parsed;
+    }
+
+    /**
+     * Crée le dossier d'une ligne vérifiée et l'inscrit à son historique.
+     *
+     * @param stdClass $these
+     * @param array $values Valeurs de la ligne, par colonne.
+     * @param stdClass $parsed Voir parse_row().
+     * @param int $userid Auteur de l'import.
+     * @return void
+     */
+    private static function create_imported_dossier(stdClass $these, array $values, stdClass $parsed, $userid) {
+        global $DB;
+
+        $now = time();
+        $record = [
+            'theseid' => $these->id,
+            'userid' => $parsed->student->id,
+            'status' => $parsed->status,
+            'statustime' => $now,
+            'title' => $values['title'],
+            'titleen' => $values['titleen'],
+            'summary' => $values['summary'],
+            'keywords' => $values['keywords'],
+            'directorid' => $parsed->director ? $parsed->director->id : 0,
+            'devenumber' => $values['devenumber'],
+            'libraryref' => $values['libraryref'],
+            'defensedate' => (int) $parsed->defensedate,
+            'proposeddate' => (int) $parsed->defensedate,
+            'defenselocation' => $values['defenselocation'],
+            'timecreated' => $now,
+            'timemodified' => $now,
+        ];
+        if ($parsed->defended) {
+            $record['defenseresult'] = THESE_RESULT_ADMITTED;
+            $record['mention'] = $parsed->mention;
+            $record['correctionsrequested'] = (int) ($parsed->status === THESE_STATUS_CORRECTIONS
+                || $values['corrections'] !== '');
+            $record['correctionsnote'] = $values['corrections'];
+        }
+        $dossierid = $DB->insert_record('these_dossier', (object) $record);
+        dossiers::log($dossierid, $userid, 'imported', $parsed->status, $parsed->status);
     }
 }
