@@ -443,45 +443,74 @@ class signatures {
             $record->id = $DB->insert_record('these_signature', $record);
         }
 
-        $fs = get_file_storage();
-        $fs->delete_area_files($context->id, 'mod_these', 'signature', $record->id);
-        if ((string) $png !== '') {
-            $fs->create_file_from_string([
-                'contextid' => $context->id,
-                'component' => 'mod_these',
-                'filearea' => 'signature',
-                'itemid' => $record->id,
-                'filepath' => '/',
-                'filename' => 'signature.png',
-                'userid' => $userid ?: null,
-            ], $png);
-        }
+        self::store_signature_image($context, $record->id, $png, $userid);
 
         // Historique : au nom du compte DEVE qui a vérifié l'identité ou enregistré le scan, s'il y en a un.
-        $remark = self::document_label($doctype) . ' — ' . self::slot_label($slot) . ' — ' . trim($name);
-        if ($record->delegated) {
-            $remark .= ' (' . get_string('signeddelegated', 'mod_these') . ')';
-        }
-        $validated = $signature ? signatureagent::validator_label($signature) : '';
-        if ($validated !== '') {
-            $remark .= ' — ' . $validated;
-        }
-        if ($method !== 'online') {
-            $remark .= ' — ' . get_string('signedmethod' . $method, 'mod_these');
-        }
         dossiers::log(
             $dossier->id,
             $record->verifiedby ?: $userid,
             'signed',
             $dossier->status,
             $dossier->status,
-            $remark
+            self::signature_remark($doctype, $slot, $name, (bool) $record->delegated, $method, $signature ?: null)
         );
         seals::seal_document($context, $dossier, $doctype);
         document_signed::create_from_dossier($dossier, $context, $record->verifiedby ?: $userid, [
             'doctype' => $doctype, 'slot' => $slot, 'method' => $method, 'signatureid' => (int) $record->id,
         ])->trigger();
         return $DB->get_record('these_signature', ['id' => $record->id]);
+    }
+
+    /**
+     * Remplace l'image d'une signature (aucune image pour un scan).
+     *
+     * @param context $context
+     * @param int $signatureid
+     * @param string $png Image de la signature ('' pour aucune).
+     * @param int $userid Signataire (0 sans compte).
+     * @return void
+     */
+    private static function store_signature_image(context $context, $signatureid, $png, $userid) {
+        $fs = get_file_storage();
+        $fs->delete_area_files($context->id, 'mod_these', 'signature', $signatureid);
+        if ((string) $png !== '') {
+            $fs->create_file_from_string([
+                'contextid' => $context->id,
+                'component' => 'mod_these',
+                'filearea' => 'signature',
+                'itemid' => $signatureid,
+                'filepath' => '/',
+                'filename' => 'signature.png',
+                'userid' => $userid ?: null,
+            ], $png);
+        }
+    }
+
+    /**
+     * Mention d'une signature à l'historique du dossier : document, emplacement, signataire,
+     * délégation, validation qui l'a précédée et mode de signature.
+     *
+     * @param string $doctype
+     * @param string $slot
+     * @param string $name Nom du signataire.
+     * @param bool $delegated
+     * @param string $method 'online', 'inperson' ou 'scan'.
+     * @param stdClass|null $previous Signature attendue avant celle-ci, s'il y en avait une.
+     * @return string
+     */
+    private static function signature_remark($doctype, $slot, $name, $delegated, $method, ?stdClass $previous) {
+        $remark = self::document_label($doctype) . ' — ' . self::slot_label($slot) . ' — ' . trim($name);
+        if ($delegated) {
+            $remark .= ' (' . get_string('signeddelegated', 'mod_these') . ')';
+        }
+        $validated = $previous ? signatureagent::validator_label($previous) : '';
+        if ($validated !== '') {
+            $remark .= ' — ' . $validated;
+        }
+        if ($method !== 'online') {
+            $remark .= ' — ' . get_string('signedmethod' . $method, 'mod_these');
+        }
+        return $remark;
     }
 
     /**
