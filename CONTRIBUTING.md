@@ -15,8 +15,8 @@ dépôt active une règle de protection de la branche (GitHub, *Settings* →
 *Rules* → *Rulesets*, ou *Branches* → *Branch protection rules*) :
 
 - demande de fusion obligatoire, avec au moins une approbation ;
-- vérifications obligatoires : *Style Moodle*, les deux tâches
-  *Moodle … · PHP … · …* et *Guide PDF* ;
+- vérifications obligatoires : *Style Moodle*, les trois tâches
+  *Moodle … · PHP … · …* (4.1, 4.5 et 5.0) et *Guide PDF* ;
 - branche à jour avant fusion ; poussées forcées et suppression interdites.
 
 ## Vérifications locales
@@ -57,7 +57,9 @@ Une version se publie par une demande de fusion : nouvelle section en tête de
 dépendance de `mod_thesesynthesis` si elle change). Une fois fusionnée et la CI
 verte sur `main`, la CI étiquette `vX.Y.Z` (d'après `release` de `mod_these`) et
 crée la publication GitHub, avec la section de `CHANGES.md` pour notes et le
-guide PDF joint. Une version déjà étiquetée n'est pas republiée.
+guide PDF joint. Une version déjà étiquetée n'est pas republiée ; si la première
+section de `CHANGES.md` n'est pas celle de la version lue dans `version.php`, la
+publication échoue avec un message explicite.
 
 ## Guide
 
