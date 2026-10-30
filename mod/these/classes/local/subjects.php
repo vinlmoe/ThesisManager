@@ -94,6 +94,40 @@ class subjects {
     }
 
     /**
+     * Champs de la fiche de sujet soumise (les champs absents du formulaire gardent leur valeur),
+     * complétés du titre du directeur et des engagements ; ceux du directeur extérieur sont vidés
+     * quand le directeur n'est pas extérieur.
+     *
+     * @param stdClass $data Formulaire de sujet soumis.
+     * @param stdClass $dossier
+     * @return array
+     */
+    public static function subject_fields(stdClass $data, stdClass $dossier) {
+        $fields = [];
+        foreach (
+            ['title', 'titleen', 'summary', 'keywords', 'studyyear', 'directortitle',
+                'extdirectorname', 'extdirectorgrade', 'extdirectorinstitution', 'extdirectoremail'] as $field
+        ) {
+            $fields[$field] = (string) dossiers::submitted_value($data, $dossier, $field);
+        }
+        foreach (['directorid', 'confidential', 'externaldirector'] as $field) {
+            $fields[$field] = (int) dossiers::submitted_value($data, $dossier, $field);
+        }
+        $fields = self::people_fields($fields, $data);
+        if (property_exists($data, 'commitguide')) {
+            $fields['commitments'] = (!empty($data->commitguide) ? signatures::COMMIT_GUIDE : 0)
+                | (!empty($data->commitduplicate) ? signatures::COMMIT_DUPLICATE : 0)
+                | (!empty($data->commitethics) ? signatures::COMMIT_ETHICS : 0);
+        }
+        if (empty($fields['externaldirector'])) {
+            foreach (['extdirectorname', 'extdirectorgrade', 'extdirectorinstitution', 'extdirectoremail'] as $field) {
+                $fields[$field] = '';
+            }
+        }
+        return $fields;
+    }
+
+    /**
      * Enregistre la fiche de sujet (phase 1, étape 1) et, si demandé, la soumet signée.
      *
      * Toute modification du contenu invalide les signatures déjà apposées sur le formulaire de dépôt
@@ -122,27 +156,7 @@ class subjects {
     ) {
         return dossiers::dossier_operation($dossier, function () use ($these, $cm, $dossier, $data, $submit, $userid, $signature) {
             $context = context_module::instance($cm->id);
-            $fields = [];
-            foreach (
-                ['title', 'titleen', 'summary', 'keywords', 'studyyear', 'directortitle',
-                    'extdirectorname', 'extdirectorgrade', 'extdirectorinstitution', 'extdirectoremail'] as $field
-            ) {
-                $fields[$field] = (string) dossiers::submitted_value($data, $dossier, $field);
-            }
-            foreach (['directorid', 'confidential', 'externaldirector'] as $field) {
-                $fields[$field] = (int) dossiers::submitted_value($data, $dossier, $field);
-            }
-            $fields = self::people_fields($fields, $data);
-            if (property_exists($data, 'commitguide')) {
-                $fields['commitments'] = (!empty($data->commitguide) ? signatures::COMMIT_GUIDE : 0)
-                    | (!empty($data->commitduplicate) ? signatures::COMMIT_DUPLICATE : 0)
-                    | (!empty($data->commitethics) ? signatures::COMMIT_ETHICS : 0);
-            }
-            if (empty($fields['externaldirector'])) {
-                foreach (['extdirectorname', 'extdirectorgrade', 'extdirectorinstitution', 'extdirectoremail'] as $field) {
-                    $fields[$field] = '';
-                }
-            }
+            $fields = self::subject_fields($data, $dossier);
 
             if (!$submit) {
                 $dossier = dossiers::set_status($dossier, $dossier->status, $userid, 'subjectsaved', '', $fields);

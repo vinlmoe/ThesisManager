@@ -87,68 +87,17 @@ class subjectchange {
                 throw new coding_exception('Changement de sujet impossible au statut ' . $dossier->status);
             }
             $context = context_module::instance($cm->id);
-            $now = time();
             $olddirector = $dossier->directorid ? $DB->get_record('user', ['id' => $dossier->directorid, 'deleted' => 0]) : null;
-
-            // Trace de l'ancien sujet.
-            $history = (object) [
-                'dossierid' => $dossier->id,
-                'title' => (string) $dossier->title,
-                'titleen' => (string) $dossier->titleen,
-                'summary' => (string) $dossier->summary,
-                'keywords' => (string) $dossier->keywords,
-                'studyyear' => (string) ($dossier->studyyear ?? ''),
-                'confidential' => (int) ($dossier->confidential ?? 0),
-                'directorid' => (int) $dossier->directorid,
-                'directorname' => !empty($dossier->externaldirector) ? (string) $dossier->extdirectorname
-                    : ($olddirector ? fullname($olddirector) : ''),
-                'libraryref' => (string) $dossier->libraryref,
-                'reason' => trim((string) $reason),
-                'changedby' => (int) $userid,
-                'timecreated' => $now,
-            ];
-            $history->id = $DB->insert_record('these_subjecthistory', $history);
-            try {
-                get_file_storage()->create_file_from_string([
-                    'contextid' => $context->id,
-                    'component' => 'mod_these',
-                    'filearea' => 'subjectarchive',
-                    'itemid' => $dossier->id,
-                    'filepath' => '/',
-                    'filename' => 'sujet-' . userdate($now, '%Y-%m-%d') . '-' . $history->id . '.pdf',
-                ], documentrenderer::signed_document_pdf($these, $context, $dossier, 'subject'));
-            } catch (\Throwable $e) {
-                debugging('Archivage du dépôt de sujet impossible : ' . $e->getMessage(), DEBUG_DEVELOPER);
-            }
+            self::archive_subject($these, $context, $dossier, $olddirector, $userid, $reason);
 
             // Tous les documents signés (sujet, et soutenance d'un dossier abandonné relancé) sont
             // révoqués : leurs signatures sont redemandées au fil du nouveau circuit.
             signatures::revoke_signatures($context, $dossier, $userid);
 
             $oldtitle = (string) $dossier->title;
-            $fields = [];
-            foreach (
-                ['title', 'titleen', 'summary', 'keywords', 'studyyear', 'directortitle',
-                    'extdirectorname', 'extdirectorgrade', 'extdirectorinstitution', 'extdirectoremail'] as $field
-            ) {
-                $fields[$field] = (string) dossiers::submitted_value($data, $dossier, $field);
-            }
-            foreach (['directorid', 'confidential', 'externaldirector'] as $field) {
-                $fields[$field] = (int) dossiers::submitted_value($data, $dossier, $field);
-            }
-            $fields = subjects::people_fields($fields, $data);
+            $fields = subjects::subject_fields($data, $dossier);
             // Dossier abandonné relancé par le nouveau sujet : le statut atteint lors de l'abandon ne vaut plus.
             $fields['cancelledfromstatus'] = 0;
-            if (property_exists($data, 'commitguide')) {
-                $fields['commitments'] = (!empty($data->commitguide) ? signatures::COMMIT_GUIDE : 0)
-                    | (!empty($data->commitduplicate) ? signatures::COMMIT_DUPLICATE : 0)
-                    | (!empty($data->commitethics) ? signatures::COMMIT_ETHICS : 0);
-            }
-            if (empty($fields['externaldirector'])) {
-                foreach (['extdirectorname', 'extdirectorgrade', 'extdirectorinstitution', 'extdirectoremail'] as $field) {
-                    $fields[$field] = '';
-                }
-            }
             $dossier = dossiers::set_status(
                 $dossier,
                 THESE_STATUS_SUBJECT_SUBMITTED,
@@ -162,24 +111,100 @@ class subjectchange {
             }
             // Un directeur extérieur n'est invité à signer qu'à la validation du nouveau sujet par le directeur.
 
-            // Avertissement de l'ancien directeur, de la DEVE et de la bibliothèque.
-            $recipients = [];
-            if ($olddirector) {
-                $recipients[core_text::strtolower($olddirector->email)] = $olddirector;
-            }
-            foreach (['deve', 'library'] as $service) {
-                foreach (notifications::get_service_recipients($these, $context, $service) as $recipient) {
-                    $recipients[core_text::strtolower((string) $recipient->email)] = $recipient;
-                }
-            }
-            $vars = notifications::email_base_vars($these, $cm, $dossier);
-            $vars['oldtitle'] = format_string($oldtitle);
-            $vars['reason'] = trim((string) $reason);
-            notifications::send_email($these, 'subjectchanged', array_values($recipients), $vars, '', '', $dossier);
+            self::notify_subject_changed($these, $cm, $context, $dossier, $olddirector, $oldtitle, $reason);
             // Le (nouveau) directeur est attendu pour valider le nouveau sujet.
             notifications::notify_actor($these, $cm, $dossier);
             return $dossier;
         });
+    }
+
+    /**
+     * Trace de l'ancien sujet : historique et PDF du dépôt de sujet signé (zone subjectarchive).
+     *
+     * @param stdClass $these
+     * @param context $context
+     * @param stdClass $dossier Dossier avant changement.
+     * @param stdClass|null $olddirector
+     * @param int $userid
+     * @param string $reason
+     * @return void
+     */
+    private static function archive_subject(
+        stdClass $these,
+        context $context,
+        stdClass $dossier,
+        ?stdClass $olddirector,
+        $userid,
+        $reason
+    ) {
+        global $DB;
+
+        $now = time();
+        $history = (object) [
+            'dossierid' => $dossier->id,
+            'title' => (string) $dossier->title,
+            'titleen' => (string) $dossier->titleen,
+            'summary' => (string) $dossier->summary,
+            'keywords' => (string) $dossier->keywords,
+            'studyyear' => (string) ($dossier->studyyear ?? ''),
+            'confidential' => (int) ($dossier->confidential ?? 0),
+            'directorid' => (int) $dossier->directorid,
+            'directorname' => !empty($dossier->externaldirector) ? (string) $dossier->extdirectorname
+                : ($olddirector ? fullname($olddirector) : ''),
+            'libraryref' => (string) $dossier->libraryref,
+            'reason' => trim((string) $reason),
+            'changedby' => (int) $userid,
+            'timecreated' => $now,
+        ];
+        $history->id = $DB->insert_record('these_subjecthistory', $history);
+        try {
+            get_file_storage()->create_file_from_string([
+                'contextid' => $context->id,
+                'component' => 'mod_these',
+                'filearea' => 'subjectarchive',
+                'itemid' => $dossier->id,
+                'filepath' => '/',
+                'filename' => 'sujet-' . userdate($now, '%Y-%m-%d') . '-' . $history->id . '.pdf',
+            ], documentrenderer::signed_document_pdf($these, $context, $dossier, 'subject'));
+        } catch (\Throwable $e) {
+            debugging('Archivage du dépôt de sujet impossible : ' . $e->getMessage(), DEBUG_DEVELOPER);
+        }
+    }
+
+    /**
+     * Avertit l'ancien directeur, la DEVE et la bibliothèque du changement de sujet.
+     *
+     * @param stdClass $these
+     * @param stdClass $cm
+     * @param context $context
+     * @param stdClass $dossier Dossier à jour.
+     * @param stdClass|null $olddirector
+     * @param string $oldtitle
+     * @param string $reason
+     * @return void
+     */
+    private static function notify_subject_changed(
+        stdClass $these,
+        stdClass $cm,
+        context $context,
+        stdClass $dossier,
+        ?stdClass $olddirector,
+        $oldtitle,
+        $reason
+    ) {
+        $recipients = [];
+        if ($olddirector) {
+            $recipients[core_text::strtolower($olddirector->email)] = $olddirector;
+        }
+        foreach (['deve', 'library'] as $service) {
+            foreach (notifications::get_service_recipients($these, $context, $service) as $recipient) {
+                $recipients[core_text::strtolower((string) $recipient->email)] = $recipient;
+            }
+        }
+        $vars = notifications::email_base_vars($these, $cm, $dossier);
+        $vars['oldtitle'] = format_string($oldtitle);
+        $vars['reason'] = trim((string) $reason);
+        notifications::send_email($these, 'subjectchanged', array_values($recipients), $vars, '', '', $dossier);
     }
 
     /**
