@@ -161,126 +161,198 @@ class settingstransfer {
         $transaction = $DB->start_delegated_transaction();
 
         if (in_array('activity', $groups, true) && is_array($source['activity'] ?? null)) {
-            $update = (object) ['id' => $these->id, 'timemodified' => time()];
-            foreach (self::settings_activity_fields() as $field => $type) {
-                if (array_key_exists($field, $source['activity'])) {
-                    $update->$field = clean_param($source['activity'][$field] ?? '', $type);
-                }
-            }
-            if (isset($update->minjury)) {
-                $update->minjury = max(1, (int) $update->minjury);
-            }
-            if (isset($update->reminderdays)) {
-                $update->reminderdays = max(0, (int) $update->reminderdays);
-            }
-            $DB->update_record('these', $update);
-            foreach ((array) $update as $field => $value) {
-                $these->$field = $value;
-            }
+            self::import_activity($these, $source['activity']);
             $result->activity = true;
         }
-
         if (in_array('emails', $groups, true) && is_array($source['emails'] ?? null)) {
-            $DB->delete_records('these_email_template', ['theseid' => $these->id]);
-            $definitions = notifications::get_email_definitions();
-            foreach ($source['emails'] as $email) {
-                $key = (string) ($email['emailkey'] ?? '');
-                if (!isset($definitions[$key])) {
-                    $result->skipped[] = get_string('transferskippedemail', 'mod_these', s($key));
-                    continue;
-                }
-                $subject = (string) ($email['subject'] ?? '');
-                notifications::save_email_template($these->id, $key, $subject, (string) ($email['body'] ?? ''));
-                $result->emails++;
-            }
+            self::import_emails($these, $source['emails'], $result);
         }
-
         if (in_array('griditems', $groups, true) && is_array($source['griditems'] ?? null) && $source['griditems']) {
-            $items = [];
-            foreach ($source['griditems'] as $item) {
-                $items[] = (object) [
-                    'itemkey' => clean_param((string) ($item['itemkey'] ?? ''), PARAM_ALPHANUM),
-                    // Longueur de these_griditem.section (install.xml) ; une section inconnue est ramenée par
-                    // these_save_grid_items() à la section par défaut.
-                    'section' => core_text::substr(clean_param((string) ($item['section'] ?? ''), PARAM_TEXT), 0, 10),
-                    'label' => clean_param((string) ($item['label'] ?? ''), PARAM_TEXT),
-                    'conditional' => !empty($item['conditional']),
-                ];
-            }
-            $scope = doctemplates::local_scope($these);
-            grid::save_grid_items($scope, $items);
-            $result->griditems = count(grid::get_grid_items($scope), COUNT_RECURSIVE) - count(grid::grid_sections());
+            self::import_griditems($these, $source['griditems'], $result);
         }
-
-        // Questionnaire : les réponses déjà données aux questions remplacées sont supprimées avec elles.
         if (in_array('questions', $groups, true) && is_array($source['questions'] ?? null)) {
-            $scope = doctemplates::local_scope($these);
-            foreach (array_keys(questionnaire::get_questions($scope)) as $questionid) {
-                questionnaire::delete_question($scope, $questionid);
-            }
-            foreach ($source['questions'] as $question) {
-                $label = clean_param((string) ($question['label'] ?? ''), PARAM_TEXT);
-                if (trim($label) === '') {
-                    continue;
-                }
-                questionnaire::save_question($scope, (object) [
-                    'qtype' => (string) ($question['qtype'] ?? 'text'),
-                    'label' => $label,
-                    'options' => clean_param((string) ($question['options'] ?? ''), PARAM_TEXT),
-                    'required' => !empty($question['required']),
-                ]);
-                $result->questions++;
-            }
+            self::import_questions($these, $source['questions'], $result);
         }
-
         if (in_array('doctemplates', $groups, true) && is_array($source['doctemplates'] ?? null)) {
-            $DB->delete_records('these_doctemplate', ['theseid' => $these->id]);
-            $types = doctemplates::doctemplate_types();
-            foreach ($source['doctemplates'] as $template) {
-                $type = (string) ($template['doctype'] ?? '');
-                $content = (string) ($template['content'] ?? '');
-                if (!array_key_exists($type, $types)) {
-                    $result->skipped[] = get_string('transferskippeddoctemplate', 'mod_these', s($type));
-                    continue;
-                }
-                $error = documentrenderer::doctemplate_error(doctemplates::local_scope($these), $type, $content, $these);
-                if ($error !== null) {
-                    $result->skipped[] = doctemplates::doctemplate_label($type) . ' : ' . $error;
-                    continue;
-                }
-                doctemplates::set_doctemplate(doctemplates::local_scope($these), $type, $content);
-                $result->doctemplates++;
-            }
+            self::import_doctemplates($these, $source['doctemplates'], $result);
         }
-
         if (in_array('docimages', $groups, true) && is_array($source['docimages'] ?? null)) {
-            $fs = get_file_storage();
-            $fs->delete_area_files($context->id, 'mod_these', 'docimages', 0);
-            foreach ($source['docimages'] as $image) {
-                $filename = clean_param((string) ($image['filename'] ?? ''), PARAM_FILE);
-                $content = base64_decode((string) ($image['content'] ?? ''), true);
-                $info = $content !== false ? @getimagesizefromstring($content) : false;
-                if (
-                    $filename === '' || !$info || !in_array($info[2], [IMAGETYPE_PNG, IMAGETYPE_JPEG], true)
-                        || $fs->file_exists($context->id, 'mod_these', 'docimages', 0, '/', $filename)
-                ) {
-                    $result->skipped[] = get_string('transferskippedimage', 'mod_these', s($filename));
-                    continue;
-                }
-                $fs->create_file_from_string([
-                    'contextid' => $context->id,
-                    'component' => 'mod_these',
-                    'filearea' => 'docimages',
-                    'itemid' => 0,
-                    'filepath' => '/',
-                    'filename' => $filename,
-                ], $content);
-                $result->docimages++;
-            }
+            self::import_docimages($context, $source['docimages'], $result);
         }
 
         $transaction->allow_commit();
         return $result;
+    }
+
+    /**
+     * Import des paramètres de l'activité elle-même.
+     *
+     * @param stdClass $these Mise à jour.
+     * @param array $activity Champs transférés.
+     * @return void
+     */
+    private static function import_activity(stdClass $these, array $activity) {
+        global $DB;
+
+        $update = (object) ['id' => $these->id, 'timemodified' => time()];
+        foreach (self::settings_activity_fields() as $field => $type) {
+            if (array_key_exists($field, $activity)) {
+                $update->$field = clean_param($activity[$field] ?? '', $type);
+            }
+        }
+        if (isset($update->minjury)) {
+            $update->minjury = max(1, (int) $update->minjury);
+        }
+        if (isset($update->reminderdays)) {
+            $update->reminderdays = max(0, (int) $update->reminderdays);
+        }
+        $DB->update_record('these', $update);
+        foreach ((array) $update as $field => $value) {
+            $these->$field = $value;
+        }
+    }
+
+    /**
+     * Import des courriels personnalisés, qui remplacent ceux de l'activité.
+     *
+     * @param stdClass $these
+     * @param array $emails
+     * @param stdClass $result Voir import_settings(), mis à jour.
+     * @return void
+     */
+    private static function import_emails(stdClass $these, array $emails, stdClass $result) {
+        global $DB;
+
+        $DB->delete_records('these_email_template', ['theseid' => $these->id]);
+        $definitions = notifications::get_email_definitions();
+        foreach ($emails as $email) {
+            $key = (string) ($email['emailkey'] ?? '');
+            if (!isset($definitions[$key])) {
+                $result->skipped[] = get_string('transferskippedemail', 'mod_these', s($key));
+                continue;
+            }
+            $subject = (string) ($email['subject'] ?? '');
+            notifications::save_email_template($these->id, $key, $subject, (string) ($email['body'] ?? ''));
+            $result->emails++;
+        }
+    }
+
+    /**
+     * Import des éléments de la grille de conformité.
+     *
+     * @param stdClass $these
+     * @param array $griditems
+     * @param stdClass $result Voir import_settings(), mis à jour.
+     * @return void
+     */
+    private static function import_griditems(stdClass $these, array $griditems, stdClass $result) {
+        $items = [];
+        foreach ($griditems as $item) {
+            $items[] = (object) [
+                'itemkey' => clean_param((string) ($item['itemkey'] ?? ''), PARAM_ALPHANUM),
+                // Longueur de these_griditem.section (install.xml) ; une section inconnue est ramenée par
+                // these_save_grid_items() à la section par défaut.
+                'section' => core_text::substr(clean_param((string) ($item['section'] ?? ''), PARAM_TEXT), 0, 10),
+                'label' => clean_param((string) ($item['label'] ?? ''), PARAM_TEXT),
+                'conditional' => !empty($item['conditional']),
+            ];
+        }
+        $scope = doctemplates::local_scope($these);
+        grid::save_grid_items($scope, $items);
+        $result->griditems = count(grid::get_grid_items($scope), COUNT_RECURSIVE) - count(grid::grid_sections());
+    }
+
+    /**
+     * Import du questionnaire : les réponses déjà données aux questions remplacées sont supprimées
+     * avec elles.
+     *
+     * @param stdClass $these
+     * @param array $questions
+     * @param stdClass $result Voir import_settings(), mis à jour.
+     * @return void
+     */
+    private static function import_questions(stdClass $these, array $questions, stdClass $result) {
+        $scope = doctemplates::local_scope($these);
+        foreach (array_keys(questionnaire::get_questions($scope)) as $questionid) {
+            questionnaire::delete_question($scope, $questionid);
+        }
+        foreach ($questions as $question) {
+            $label = clean_param((string) ($question['label'] ?? ''), PARAM_TEXT);
+            if (trim($label) === '') {
+                continue;
+            }
+            questionnaire::save_question($scope, (object) [
+                'qtype' => (string) ($question['qtype'] ?? 'text'),
+                'label' => $label,
+                'options' => clean_param((string) ($question['options'] ?? ''), PARAM_TEXT),
+                'required' => !empty($question['required']),
+            ]);
+            $result->questions++;
+        }
+    }
+
+    /**
+     * Import des modèles de documents ; ceux qui ne produisent pas de document sont ignorés.
+     *
+     * @param stdClass $these
+     * @param array $templates
+     * @param stdClass $result Voir import_settings(), mis à jour.
+     * @return void
+     */
+    private static function import_doctemplates(stdClass $these, array $templates, stdClass $result) {
+        global $DB;
+
+        $DB->delete_records('these_doctemplate', ['theseid' => $these->id]);
+        $types = doctemplates::doctemplate_types();
+        foreach ($templates as $template) {
+            $type = (string) ($template['doctype'] ?? '');
+            $content = (string) ($template['content'] ?? '');
+            if (!array_key_exists($type, $types)) {
+                $result->skipped[] = get_string('transferskippeddoctemplate', 'mod_these', s($type));
+                continue;
+            }
+            $error = documentrenderer::doctemplate_error(doctemplates::local_scope($these), $type, $content, $these);
+            if ($error !== null) {
+                $result->skipped[] = doctemplates::doctemplate_label($type) . ' : ' . $error;
+                continue;
+            }
+            doctemplates::set_doctemplate(doctemplates::local_scope($these), $type, $content);
+            $result->doctemplates++;
+        }
+    }
+
+    /**
+     * Import des images des documents (PNG ou JPEG).
+     *
+     * @param context $context
+     * @param array $images
+     * @param stdClass $result Voir import_settings(), mis à jour.
+     * @return void
+     */
+    private static function import_docimages(context $context, array $images, stdClass $result) {
+        $fs = get_file_storage();
+        $fs->delete_area_files($context->id, 'mod_these', 'docimages', 0);
+        foreach ($images as $image) {
+            $filename = clean_param((string) ($image['filename'] ?? ''), PARAM_FILE);
+            $content = base64_decode((string) ($image['content'] ?? ''), true);
+            $info = $content !== false ? @getimagesizefromstring($content) : false;
+            if (
+                $filename === '' || !$info || !in_array($info[2], [IMAGETYPE_PNG, IMAGETYPE_JPEG], true)
+                    || $fs->file_exists($context->id, 'mod_these', 'docimages', 0, '/', $filename)
+            ) {
+                $result->skipped[] = get_string('transferskippedimage', 'mod_these', s($filename));
+                continue;
+            }
+            $fs->create_file_from_string([
+                'contextid' => $context->id,
+                'component' => 'mod_these',
+                'filearea' => 'docimages',
+                'itemid' => 0,
+                'filepath' => '/',
+                'filename' => $filename,
+            ], $content);
+            $result->docimages++;
+        }
     }
 
     /**
