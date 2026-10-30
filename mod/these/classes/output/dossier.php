@@ -250,51 +250,18 @@ class dossier implements \renderable, \templatable {
         $knows = $rights->knowssubject;
         $involved = $rights->viewall || $rights->director || $rights->owner;
 
-        $actor = workflow::step_actor($status);
-        $waiting = false;
-        if ($actor !== null) {
-            $waiting = get_string('waitingfor', 'mod_these', workflow::actor_label($actor)) . ' — '
-                . get_string('since', 'mod_these', userdate($dossier->statustime, get_string('strftimedate', 'langconfig')));
-        }
-        $adjourned = false;
-        if (minutes::is_adjourned($dossier)) {
-            $adjourned = get_string(
-                $rights->student ? 'adjournednoticestudent' : 'adjournednotice',
-                'mod_these',
-                userdate($dossier->statustime, get_string('strftimedate', 'langconfig'))
-            );
-        }
-        $actionbar = false;
-        if ($this->withactions) {
-            $actions = new actions(rendering::get_dossier_actions($this->cm, $dossier, $rights), 'btn btn-primary mr-1 mb-1');
-            $actionbar = $actions->is_empty() ? false : $actions->export_for_template($output);
-        }
-
         $data = [
             'progress' => (new progress($dossier))->export_for_template($output),
             'status' => (new status_badge($status))->export_for_template($output),
-            'waiting' => $waiting,
+            'waiting' => $this->waiting_notice(),
             'returnnotice' => $this->return_notice(),
-            'adjourned' => $adjourned,
-            'actionbar' => $actionbar,
+            'adjourned' => $this->adjourned_notice(),
+            'actionbar' => $this->action_bar($output),
             'subject' => $this->subject_section($output)->export_for_template($output),
             'embargo' => (new embargo($dossier, $rights))->export_for_template($output),
             'subjecthistory' => $knows && $involved
                 ? (new subject_history($this->context, $dossier))->export_for_template($output) : false,
-            'registration' => (new detail_section(get_string('registration', 'mod_these'), [
-                get_string('devenumber', 'mod_these') => self::text($dossier->devenumber),
-                get_string('libraryref', 'mod_these') => self::text($dossier->libraryref),
-                get_string('defvvalidation', 'mod_these') => [parts::text(\mod_these\local\a6::defv_label($dossier))],
-                get_string('a6validation', 'mod_these') => array_merge(
-                    [parts::text(\mod_these\local\a6::label($dossier))],
-                    // La DEVE la saisit sur sa page à part.
-                    $rights->deve ? [parts::text(' '), parts::link(
-                        \mod_these\local\a6::url($this->cm, $dossier->userid),
-                        get_string('a6edit', 'mod_these'),
-                        'btn btn-sm btn-secondary ml-2'
-                    )] : []
-                ),
-            ]))->export_for_template($output),
+            'registration' => $this->registration_section()->export_for_template($output),
             'defense' => false,
             'corrections' => false,
             'answers' => false,
@@ -304,35 +271,121 @@ class dossier implements \renderable, \templatable {
         ];
 
         if (rendering::rank_reached($dossier, THESE_STATUS_ACTIVE) || $dossier->proposeddate) {
-            $data['defense'] = $this->defense_section($output)->export_for_template($output);
-            // Salle déjà occupée sur le créneau, pour le personnel : au-dessus de la soutenance.
-            $data['roomconflicts'] = $rights->viewall ? \mod_these\local\defenseconflicts::render_room_conflicts($dossier) : '';
-            if (!empty($dossier->correctionsrequested)) {
-                $data['corrections'] = $this->corrections_section($output)->export_for_template($output);
-            }
-            if ($knows && $involved) {
-                $data['answers'] = \mod_these\local\questionnaire::answers_section((object) ['id' => $dossier->theseid], $dossier)
-                    ->export_for_template($output);
-            }
-            $members = \mod_these\local\jury::get_jury($dossier->id);
-            $data['jury'] = (new jury($members, $involved, $rights->deve))->export_for_template($output);
-            // Conflits de jury, pour le personnel : au-dessus du tableau du jury.
-            $data['jury']['conflicts'] = $rights->viewall ? \mod_these\local\defenseconflicts::render_jury_conflicts($dossier) : '';
-            $juryvalidated = $status >= THESE_STATUS_DEFENSE_VALIDATED && $status < THESE_STATUS_CLOSED;
-            if ($rights->deve && $juryvalidated) {
-                $url = new moodle_url('/mod/these/jurynotify.php', [
-                    'id' => $this->cm->id,
-                    'dossierid' => $dossier->id,
-                    'sesskey' => sesskey(),
-                ]);
-                $data['juryresend'] = ['url' => $url->out(false), 'label' => get_string('juryresendaccess', 'mod_these')];
-            }
+            $data = array_merge($data, $this->defense_data($output, $knows && $involved, $involved));
         }
 
         $data['signeddocuments'] = (new signed_documents($this->cm, $this->context, $dossier, $rights))
             ->export_for_template($output);
         $data['history'] = (new history($dossier->id, $rights->viewall || $rights->director, $knows))
             ->export_for_template($output);
+        return $data;
+    }
+
+    /**
+     * Acteur attendu pour l'étape en cours, et depuis quand.
+     *
+     * @return string|false
+     */
+    protected function waiting_notice() {
+        $actor = workflow::step_actor((int) $this->dossier->status);
+        if ($actor === null) {
+            return false;
+        }
+        return get_string('waitingfor', 'mod_these', workflow::actor_label($actor)) . ' — '
+            . get_string('since', 'mod_these', userdate($this->dossier->statustime, get_string('strftimedate', 'langconfig')));
+    }
+
+    /**
+     * Avertissement d'un dossier en attente d'une nouvelle soutenance après un ajournement.
+     *
+     * @return string|false
+     */
+    protected function adjourned_notice() {
+        if (!minutes::is_adjourned($this->dossier)) {
+            return false;
+        }
+        return get_string(
+            $this->rights->student ? 'adjournednoticestudent' : 'adjournednotice',
+            'mod_these',
+            userdate($this->dossier->statustime, get_string('strftimedate', 'langconfig'))
+        );
+    }
+
+    /**
+     * Barre d'actions du dossier, si elle est demandée et non vide.
+     *
+     * @param \renderer_base $output
+     * @return array|false
+     */
+    protected function action_bar(\renderer_base $output) {
+        if (!$this->withactions) {
+            return false;
+        }
+        $links = rendering::get_dossier_actions($this->cm, $this->dossier, $this->rights);
+        $actions = new actions($links, 'btn btn-primary mr-1 mb-1');
+        return $actions->is_empty() ? false : $actions->export_for_template($output);
+    }
+
+    /**
+     * Section « Enregistrement » : numéros DEVE et bibliothèque, validations DEFV et A6.
+     *
+     * @return detail_section
+     */
+    protected function registration_section(): detail_section {
+        $dossier = $this->dossier;
+        return new detail_section(get_string('registration', 'mod_these'), [
+            get_string('devenumber', 'mod_these') => self::text($dossier->devenumber),
+            get_string('libraryref', 'mod_these') => self::text($dossier->libraryref),
+            get_string('defvvalidation', 'mod_these') => [parts::text(\mod_these\local\a6::defv_label($dossier))],
+            get_string('a6validation', 'mod_these') => array_merge(
+                [parts::text(\mod_these\local\a6::label($dossier))],
+                // La DEVE la saisit sur sa page à part.
+                $this->rights->deve ? [parts::text(' '), parts::link(
+                    \mod_these\local\a6::url($this->cm, $dossier->userid),
+                    get_string('a6edit', 'mod_these'),
+                    'btn btn-sm btn-secondary ml-2'
+                )] : []
+            ),
+        ]);
+    }
+
+    /**
+     * Données de la phase de soutenance : soutenance, conflits de salle, corrections, réponses au
+     * questionnaire, jury et renvoi de ses accès.
+     *
+     * @param \renderer_base $output
+     * @param bool $showanswers Réponses au questionnaire visibles.
+     * @param bool $involved Personne concernée par le dossier (personnel, directeur, étudiant).
+     * @return array Clés defense, roomconflicts, corrections, answers, jury, juryresend.
+     */
+    protected function defense_data(\renderer_base $output, bool $showanswers, bool $involved): array {
+        $dossier = $this->dossier;
+        $rights = $this->rights;
+        $status = (int) $dossier->status;
+        $data = [];
+        $data['defense'] = $this->defense_section($output)->export_for_template($output);
+        // Salle déjà occupée sur le créneau, pour le personnel : au-dessus de la soutenance.
+        $data['roomconflicts'] = $rights->viewall ? \mod_these\local\defenseconflicts::render_room_conflicts($dossier) : '';
+        if (!empty($dossier->correctionsrequested)) {
+            $data['corrections'] = $this->corrections_section($output)->export_for_template($output);
+        }
+        if ($showanswers) {
+            $data['answers'] = \mod_these\local\questionnaire::answers_section((object) ['id' => $dossier->theseid], $dossier)
+                ->export_for_template($output);
+        }
+        $members = \mod_these\local\jury::get_jury($dossier->id);
+        $data['jury'] = (new jury($members, $involved, $rights->deve))->export_for_template($output);
+        // Conflits de jury, pour le personnel : au-dessus du tableau du jury.
+        $data['jury']['conflicts'] = $rights->viewall ? \mod_these\local\defenseconflicts::render_jury_conflicts($dossier) : '';
+        $juryvalidated = $status >= THESE_STATUS_DEFENSE_VALIDATED && $status < THESE_STATUS_CLOSED;
+        if ($rights->deve && $juryvalidated) {
+            $url = new moodle_url('/mod/these/jurynotify.php', [
+                'id' => $this->cm->id,
+                'dossierid' => $dossier->id,
+                'sesskey' => sesskey(),
+            ]);
+            $data['juryresend'] = ['url' => $url->out(false), 'label' => get_string('juryresendaccess', 'mod_these')];
+        }
         return $data;
     }
 }
