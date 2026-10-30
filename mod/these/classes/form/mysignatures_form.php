@@ -17,6 +17,7 @@
 namespace mod_these\form;
 
 use mod_these\local\signatures;
+use mod_these\local\signaturefields;
 
 /**
  * Documents qui attendent la signature de l'utilisateur connecté (agent DEVE, membre du jury ou
@@ -60,7 +61,7 @@ class mysignatures_form extends base_form {
                 ));
             }
         }
-        signatures::add_signature_fields(
+        signaturefields::add_signature_fields(
             $mform,
             $this->_customdata['signername'],
             get_string('signmyintro', 'mod_these'),
@@ -86,6 +87,6 @@ class mysignatures_form extends base_form {
         if (!$chosen) {
             $errors['documentsgroup'] = get_string('signnodocument', 'mod_these');
         }
-        return array_merge($errors, signatures::signature_errors($data));
+        return array_merge($errors, signaturefields::signature_errors($data));
     }
 }

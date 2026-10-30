@@ -352,7 +352,7 @@ class rendering {
         $jury = array_map(function ($member) use ($roles) {
             return ($roles[$member->juryrole] ?? $member->juryrole) . ' : ' . $member->fullname;
         }, jury::get_jury($dossier->id));
-        $embargo = signatures::embargo_until($dossier);
+        $embargo = bordereau::embargo_until($dossier);
         return [
             'devenumber' => $dossier->devenumber,
             'student' => $student ? fullname($student) : '',

@@ -49,7 +49,7 @@ class griditems_page {
         global $DB, $OUTPUT, $PAGE;
 
         $items = [];
-        foreach (signatures::get_grid_items($scope) as $sectionitems) {
+        foreach (grid::get_grid_items($scope) as $sectionitems) {
             foreach ($sectionitems as $item) {
                 $items[] = $item;
             }
@@ -79,7 +79,7 @@ class griditems_page {
                         'conditional' => $data->conditional[$i] ?? 0,
                     ];
                 }
-                signatures::save_grid_items($scope, $submitted);
+                grid::save_grid_items($scope, $submitted);
             }
             redirect($pageurl, get_string('griditemssaved', 'mod_these'), null, \core\output\notification::NOTIFY_SUCCESS);
         }

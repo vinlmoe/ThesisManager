@@ -20,6 +20,9 @@ use mod_these\local\doctemplates;
 use mod_these\local\files;
 use mod_these\local\jury;
 use mod_these\local\signatures;
+use mod_these\local\bordereau;
+use mod_these\local\grid;
+use mod_these\local\signaturefields;
 
 /**
  * Dépôt des documents de soutenance (phase 2, étape 1) : manuscrit (seul document déposé), date
@@ -132,11 +135,11 @@ class defense_form extends base_form {
             $mform->addHelpButton('b' . $field, 'bsummary', 'mod_these');
         }
         $keywords = [];
-        for ($i = 0; $i < signatures::BORDEREAU_KEYWORDS; $i++) {
+        for ($i = 0; $i < bordereau::BORDEREAU_KEYWORDS; $i++) {
             $keywords[] = $mform->createElement('text', "bkeyword[$i]", '', ['size' => 22]);
         }
         $mform->addGroup($keywords, 'bkeywordgroup', get_string('bkeywords', 'mod_these'), ' ', false);
-        for ($i = 0; $i < signatures::BORDEREAU_KEYWORDS; $i++) {
+        for ($i = 0; $i < bordereau::BORDEREAU_KEYWORDS; $i++) {
             $mform->setType("bkeyword[$i]", PARAM_TEXT);
         }
         $mform->addHelpButton('bkeywordgroup', 'bkeywords', 'mod_these');
@@ -147,7 +150,7 @@ class defense_form extends base_form {
         $mform->addElement('static', 'gridhelp', '', get_string('gridstudenthelp', 'mod_these'));
         $mform->addElement('text', 'ethicsnumber', get_string('ethicsnumber', 'mod_these'), ['size' => 20]);
         $mform->setType('ethicsnumber', PARAM_TEXT);
-        foreach (signatures::get_grid_items(doctemplates::settings_scope($this->_customdata['these'])) as $section => $items) {
+        foreach (grid::get_grid_items(doctemplates::settings_scope($this->_customdata['these'])) as $section => $items) {
             $mform->addElement(
                 'static',
                 'gridsection' . $section,
@@ -179,17 +182,17 @@ class defense_form extends base_form {
             'optional' => true, 'startyear' => (int) date('Y'), 'stopyear' => (int) date('Y') + 30,
         ]);
         $mform->addHelpButton('bconfidentialuntil', 'bconfidentialuntil', 'mod_these');
-        // Embargo : diffusion différée d'au plus signatures::EMBARGO_MAX_MONTHS mois après la soutenance,
+        // Embargo : diffusion différée d'au plus bordereau::EMBARGO_MAX_MONTHS mois après la soutenance,
         // sur demande motivée.
-        $mform->addElement('advcheckbox', 'bembargo', '', get_string('bembargo', 'mod_these', signatures::EMBARGO_MAX_MONTHS));
+        $mform->addElement('advcheckbox', 'bembargo', '', get_string('bembargo', 'mod_these', bordereau::EMBARGO_MAX_MONTHS));
         $mform->addHelpButton('bembargo', 'embargo', 'mod_these');
         $months = [];
-        for ($n = 1; $n <= signatures::EMBARGO_MAX_MONTHS; $n++) {
+        for ($n = 1; $n <= bordereau::EMBARGO_MAX_MONTHS; $n++) {
             $months[$n] = get_string('embargomonthsoption', 'mod_these', $n);
         }
         $mform->addElement('select', 'bembargomonths', get_string('bembargomonths', 'mod_these'), $months);
         $mform->setType('bembargomonths', PARAM_INT);
-        $mform->setDefault('bembargomonths', signatures::EMBARGO_MAX_MONTHS);
+        $mform->setDefault('bembargomonths', bordereau::EMBARGO_MAX_MONTHS);
         $mform->hideIf('bembargomonths', 'bembargo', 'notchecked');
         $mform->addElement('textarea', 'bembargoreason', get_string('bembargoreason', 'mod_these'), ['rows' => 3, 'cols' => 80]);
         $mform->setType('bembargoreason', PARAM_TEXT);
@@ -210,7 +213,11 @@ class defense_form extends base_form {
             questionnaire_form::add_question_fields($mform, $questions);
         }
 
-        signatures::add_signature_fields($mform, $this->_customdata['signername'], get_string('signdefenseintro', 'mod_these'));
+        signaturefields::add_signature_fields(
+            $mform,
+            $this->_customdata['signername'],
+            get_string('signdefenseintro', 'mod_these')
+        );
 
         $buttons = [];
         $buttons[] = $mform->createElement('submit', 'submitdefense', get_string($this->_customdata['submitlabel'], 'mod_these'));
@@ -244,7 +251,7 @@ class defense_form extends base_form {
             $errors['proposeddate'] = self::too_soon_error($this->_customdata);
         }
         // Grille de conformité : éléments obligatoires cochés et attestation de l'étudiant.
-        foreach (signatures::get_grid_items(doctemplates::settings_scope($this->_customdata['these'])) as $items) {
+        foreach (grid::get_grid_items(doctemplates::settings_scope($this->_customdata['these'])) as $items) {
             foreach ($items as $key => $item) {
                 if (!$item->conditional && empty($data['grid_' . $key])) {
                     $errors['grid_' . $key] = get_string('gridrequired', 'mod_these');
@@ -284,15 +291,15 @@ class defense_form extends base_form {
             $errors['bpersonalemail'] = get_string('invalidemail');
         }
         foreach (['bsummaryfr', 'bsummaryen'] as $field) {
-            if (\core_text::strlen((string) ($data[$field] ?? '')) > signatures::BORDEREAU_SUMMARY_MAX) {
-                $errors[$field] = get_string('summarytoolong', 'mod_these', signatures::BORDEREAU_SUMMARY_MAX);
+            if (\core_text::strlen((string) ($data[$field] ?? '')) > bordereau::BORDEREAU_SUMMARY_MAX) {
+                $errors[$field] = get_string('summarytoolong', 'mod_these', bordereau::BORDEREAU_SUMMARY_MAX);
             }
         }
         if (!array_filter(array_map('trim', (array) ($data['bkeyword'] ?? [])), 'strlen')) {
             $errors['bkeywordgroup'] = get_string('required');
         }
         $errors = array_merge($errors, questionnaire_form::question_errors($this->_customdata['questions'] ?? [], $data));
-        return array_merge($errors, signatures::signature_errors($data));
+        return array_merge($errors, signaturefields::signature_errors($data));
     }
 
     /**

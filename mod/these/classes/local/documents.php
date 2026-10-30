@@ -96,7 +96,7 @@ class documents {
      * @return string
      */
     public static function signed_document_filename(context $context, stdClass $dossier, $doctype, $name = '') {
-        $sealed = signatures::get_sealed_document($context, $dossier->id, $doctype);
+        $sealed = seals::get_sealed_document($context, $dossier->id, $doctype);
         return self::document_filename($doctype, $name, $sealed ? (int) $sealed->get_timecreated() : 0);
     }
 

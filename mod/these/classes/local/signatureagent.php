@@ -269,7 +269,7 @@ class signatureagent {
                 continue;
             }
             $single = count($agents) === 1 ? reset($agents) : null;
-            foreach (signatures::pending_documents_for_slot($dossier, $slot, $doctypes) as $doctype) {
+            foreach (signaturetokens::pending_documents_for_slot($dossier, $slot, $doctypes) as $doctype) {
                 if (!self::agent_document_due($dossier, $doctype)) {
                     continue;
                 }

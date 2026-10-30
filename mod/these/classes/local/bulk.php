@@ -78,9 +78,9 @@ class bulk {
                 foreach (signatures::external_slots() as $slot) {
                     // Seules les demandes déjà émises par le circuit sont relancées : un nouveau lien n'est pas
                     // envoyé au directeur extérieur avant la validation du sujet par le directeur.
-                    $requested = signatures::requested_documents_for_slot($dossier, $slot, $available);
+                    $requested = signaturetokens::requested_documents_for_slot($dossier, $slot, $available);
                     if ($requested) {
-                        $sent = signatures::request_signature($these, $cm, $dossier, $slot, $requested) !== null || $sent;
+                        $sent = signaturetokens::request_signature($these, $cm, $dossier, $slot, $requested) !== null || $sent;
                     }
                 }
                 return $sent;

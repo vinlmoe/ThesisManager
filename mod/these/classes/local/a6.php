@@ -49,7 +49,7 @@ class a6 {
 
         $record = $userid ? $DB->get_record('these_a6', ['userid' => (int) $userid]) : null;
         $agreement = $dossier ? signatures::get_agreement($dossier) : [];
-        $bordereau = $dossier ? signatures::get_bordereau($dossier) : [];
+        $bordereau = $dossier ? bordereau::get_bordereau($dossier) : [];
         if ($record) {
             $a6 = ['date' => (int) $record->a6date, 'notyet' => empty($record->a6date),
                 'school' => (string) $record->a6school, 'recorded' => true];
@@ -198,7 +198,7 @@ class a6 {
         if ($a6['notyet'] || !$a6['date']) {
             return get_string('a6notvalidated', 'mod_these');
         }
-        $schools = signatures::school_options();
+        $schools = bordereau::school_options();
         $label = userdate($a6['date'], get_string('strftimedate', 'langconfig'));
         if ($a6['school'] !== '' && isset($schools[$a6['school']])) {
             $label .= ' (' . $schools[$a6['school']] . ')';
@@ -216,7 +216,7 @@ class a6 {
         if (empty($a6['defvdate'])) {
             return get_string('defvnotrecorded', 'mod_these');
         }
-        $schools = signatures::school_options();
+        $schools = bordereau::school_options();
         $label = userdate($a6['defvdate'], get_string('strftimedate', 'langconfig'));
         if ($a6['defvschool'] !== '' && isset($schools[$a6['defvschool']])) {
             $label .= ' (' . $schools[$a6['defvschool']] . ')';
@@ -410,7 +410,7 @@ class a6 {
         if ($value === '') {
             return '';
         }
-        foreach (signatures::school_options() as $key => $label) {
+        foreach (bordereau::school_options() as $key => $label) {
             if ($key !== '' && ($value === self::normalise($key) || strpos(self::normalise($label), $value) !== false)) {
                 return $key;
             }

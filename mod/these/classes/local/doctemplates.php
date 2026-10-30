@@ -375,9 +375,9 @@ class doctemplates {
     public static function build_document_context(array $src) {
         $these = $src['these'];
         $d = $src['dossier'];
-        $b = signatures::get_bordereau($d);
+        $b = bordereau::get_bordereau($d);
         $agreementdata = signatures::get_agreement($d);
-        $griddata = signatures::get_grid($d);
+        $griddata = grid::get_grid($d);
         $config = scopesettings::get_all($src['scope'] ?? self::settings_scope($these));
 
         $day = function ($time) {
@@ -386,7 +386,7 @@ class doctemplates {
         $up = function ($text) {
             return core_text::strtoupper(trim((string) $text));
         };
-        $schools = signatures::school_options();
+        $schools = bordereau::school_options();
         $school = function ($key) use ($schools) {
             return (string) $key !== '' ? ($schools[$key] ?? '') : '';
         };
@@ -454,7 +454,7 @@ class doctemplates {
 
         // Thèse.
         $keywords = dossiers::split_keywords((string) $d->keywords);
-        $abeskeywords = array_slice(array_values((array) ($b['keywords'] ?? [])), 0, signatures::BORDEREAU_KEYWORDS);
+        $abeskeywords = array_slice(array_values((array) ($b['keywords'] ?? [])), 0, bordereau::BORDEREAU_KEYWORDS);
         $thesis = [
             'title' => (string) $d->title,
             'titleupper' => $up($d->title),
@@ -472,7 +472,7 @@ class doctemplates {
             'ethicsnumber' => trim((string) $d->ethicsnumber),
         ];
         $summary = function ($field) use ($b) {
-            return core_text::substr((string) ($b[$field] ?? ''), 0, signatures::BORDEREAU_SUMMARY_MAX);
+            return core_text::substr((string) ($b[$field] ?? ''), 0, bordereau::BORDEREAU_SUMMARY_MAX);
         };
         $abes = [
             'nbvolumes' => (string) (int) ($b['nbvolumes'] ?? 1 ?: 1),
@@ -482,7 +482,7 @@ class doctemplates {
             'summaryfrhtml' => self::doctemplate_text($summary('summaryfr')),
             'summaryenhtml' => self::doctemplate_text($summary('summaryen')),
         ];
-        for ($i = 1; $i <= signatures::BORDEREAU_KEYWORDS; $i++) {
+        for ($i = 1; $i <= bordereau::BORDEREAU_KEYWORDS; $i++) {
             $abes['kw' . $i] = (string) ($abeskeywords[$i - 1] ?? '');
         }
 
@@ -579,7 +579,7 @@ class doctemplates {
         $mark = [];
         $gridsections = [];
         $checkmark = '<span style="font-family:freeserif;">&#10003;</span>';
-        foreach (signatures::get_grid_items($src['scope'] ?? null) as $section => $items) {
+        foreach (grid::get_grid_items($src['scope'] ?? null) as $section => $items) {
             $rows = [];
             foreach ($items as $key => $item) {
                 $checked = !empty($griddata[$key]);
@@ -603,8 +603,8 @@ class doctemplates {
             'confidential' => !empty($d->confidential),
             'confidentialuntil' => !empty($d->confidential) ? $day($b['confidentialuntil'] ?? 0) : '',
             'embargo' => $embargo,
-            'embargountil' => $embargo ? $day(signatures::embargo_until($d)) : '',
-            'embargomonths' => $embargo ? signatures::embargo_months($b) : 0,
+            'embargountil' => $embargo ? $day(bordereau::embargo_until($d)) : '',
+            'embargomonths' => $embargo ? bordereau::embargo_months($b) : 0,
             'embargoreason' => $embargo ? trim((string) ($b['embargoreason'] ?? '')) : '',
             'internet' => ($b['diffusion'] ?? '') === 'internet',
             'restricted' => ($b['diffusion'] ?? '') === 'restricted',
@@ -866,7 +866,7 @@ class doctemplates {
         }
         // Document entièrement signé : le PDF scellé fait foi (scellé au besoin pour un document signé
         // avant l'apparition des scellés).
-        $sealed = signatures::seal_document($context, $dossier, $doctype);
+        $sealed = seals::seal_document($context, $dossier, $doctype);
         if ($sealed) {
             return $sealed->get_content();
         }
@@ -1010,7 +1010,7 @@ class doctemplates {
                 . "Dernier paragraphe des conclusions, qui reste avec les signatures.",
             'reportfavorable' => 1,
             'conformitygrid' => json_encode(array_fill_keys(
-                array_merge(...array_map('array_keys', array_values(signatures::get_grid_items($scope)))),
+                array_merge(...array_map('array_keys', array_values(grid::get_grid_items($scope)))),
                 1
             )),
             'agreement' => json_encode(['defvdate' => make_timestamp(2023, 7, 3), 'mobility' => 1,

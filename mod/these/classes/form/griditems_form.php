@@ -17,6 +17,7 @@
 namespace mod_these\form;
 
 use mod_these\local\signatures;
+use mod_these\local\grid;
 
 /**
  * Éléments de la grille de conformité de l'activité (DEVE), dans l'ordre : rubrique, libellé, élément
@@ -38,7 +39,7 @@ class griditems_form extends base_form {
         $this->add_hidden_ids();
 
         $sections = [];
-        foreach (signatures::grid_sections() as $section) {
+        foreach (grid::grid_sections() as $section) {
             $sections[$section] = get_string('gridsection' . $section, 'mod_these');
         }
         $repeat = [

@@ -18,6 +18,7 @@ namespace mod_these\form;
 
 use mod_these\local\dossiers;
 use mod_these\local\signatures;
+use mod_these\local\signaturefields;
 
 /**
  * Formulaire de dépôt de sujet de thèse (phase 1, étape 1), reprenant le formulaire papier de
@@ -129,7 +130,11 @@ class subject_form extends base_form {
             ));
         }
 
-        signatures::add_signature_fields($mform, $this->_customdata['signername'], get_string('signsubjectintro', 'mod_these'));
+        signaturefields::add_signature_fields(
+            $mform,
+            $this->_customdata['signername'],
+            get_string('signsubjectintro', 'mod_these')
+        );
 
         $buttons = [];
         $buttons[] = $mform->createElement('submit', 'submitsubject', get_string($this->_customdata['submitlabel'], 'mod_these'));
@@ -230,6 +235,6 @@ class subject_form extends base_form {
                 $errors[$field] = get_string('commitrequired', 'mod_these');
             }
         }
-        return array_merge($errors, signatures::signature_errors($data));
+        return array_merge($errors, signaturefields::signature_errors($data));
     }
 }

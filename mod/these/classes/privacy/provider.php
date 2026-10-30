@@ -40,6 +40,8 @@ use mod_these\local\signatureagent;
 use mod_these\local\signatures;
 use mod_these\local\subjectchange;
 use mod_these\local\workflow;
+use mod_these\local\bordereau;
+use mod_these\local\seals;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -360,7 +362,7 @@ class provider implements
                     'correctionsdone' => $dossier->correctionsdone,
                     'returncomment' => $dossier->returncomment,
                     'conclusions' => $dossier->conclusions,
-                    'personaldata' => signatures::get_bordereau($dossier),
+                    'personaldata' => bordereau::get_bordereau($dossier),
                     'timecreated' => transform::datetime($dossier->timecreated),
                 ]);
                 $jury = array_map(function ($member) {
@@ -629,7 +631,7 @@ class provider implements
         foreach ($signatures as $signature) {
             get_file_storage()->delete_area_files($context->id, 'mod_these', 'signature', $signature->id);
             // Le document scellé reproduit la signature : il sera scellé de nouveau sans elle.
-            signatures::unseal_document($context, $signature->dossierid, $signature->doctype);
+            seals::unseal_document($context, $signature->dossierid, $signature->doctype);
             $DB->update_record('these_signature', (object) [
                 'id' => $signature->id, 'userid' => 0, 'signername' => '', 'signeremail' => '', 'ipaddress' => '',
             ]);

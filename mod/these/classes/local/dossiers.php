@@ -488,7 +488,7 @@ class dossiers {
      */
     public static function extract_bordereau(stdClass $data, array $existing) {
         $bordereau = $existing;
-        foreach (signatures::bordereau_fields() as $field) {
+        foreach (bordereau::bordereau_fields() as $field) {
             if ($field === 'keywords') {
                 if (property_exists($data, 'bkeyword')) {
                     $bordereau['keywords'] = array_values(array_filter(array_map('trim', (array) $data->bkeyword), 'strlen'));
@@ -544,14 +544,14 @@ class dossiers {
                 'titleen' => (string) self::submitted_value($data, $dossier, 'titleen'),
                 'conclusions' => (string) self::submitted_value($data, $dossier, 'conclusions'),
                 'bordereau' => json_encode(
-                    self::extract_bordereau($data, signatures::get_bordereau($dossier)),
+                    self::extract_bordereau($data, bordereau::get_bordereau($dossier)),
                     JSON_UNESCAPED_UNICODE
                 ),
             ];
             // Grille de conformité remplie par l'étudiant ; le directeur la vérifie et la signe ensuite.
             if (property_exists($data, 'ethicsnumber')) {
                 $grid = [];
-                foreach (signatures::get_grid_items(doctemplates::settings_scope($these)) as $items) {
+                foreach (grid::get_grid_items(doctemplates::settings_scope($these)) as $items) {
                     foreach (array_keys($items) as $item) {
                         $grid[$item] = (int) !empty($data->{'grid_' . $item});
                     }
@@ -664,7 +664,7 @@ class dossiers {
             }
             if ($step['request']) {
                 // Un seul appel pour tous les documents : chaque signataire reçoit un seul lien.
-                signatures::request_external_signatures($these, $cm, $dossier, $step['request']);
+                signaturetokens::request_external_signatures($these, $cm, $dossier, $step['request']);
             }
 
             if ((int) $dossier->status === THESE_STATUS_ACTIVE) {

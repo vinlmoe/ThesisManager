@@ -21,6 +21,7 @@ use mod_these\local\signatures;
 use mod_these\local\university;
 use moodle_url;
 use stdClass;
+use mod_these\local\signaturetokens;
 
 /**
  * Signatures à recueillir d'un dossier : signataires sans compte (président du jury, direction...),
@@ -78,7 +79,7 @@ class external_signers implements \renderable, \templatable {
                 continue;
             }
             $pending = array_filter(
-                signatures::pending_documents_for_slot($dossier, $slot),
+                signaturetokens::pending_documents_for_slot($dossier, $slot),
                 function ($doctype) use ($dossier, $internal, $started) {
                     return signatures::document_available($dossier, $doctype) && (!$internal || in_array($doctype, $started, true));
                 }
@@ -129,7 +130,7 @@ class external_signers implements \renderable, \templatable {
                     'pending' => [],
                 ];
             }
-            foreach (signatures::pending_documents_for_slot($dossier, $slot) as $doctype) {
+            foreach (signaturetokens::pending_documents_for_slot($dossier, $slot) as $doctype) {
                 if (signatureagent::agent_document_due($dossier, $doctype)) {
                     $groups[$key]['pending'][] = signatureagent::document_label($doctype, $slot);
                 }

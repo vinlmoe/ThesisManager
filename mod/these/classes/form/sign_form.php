@@ -17,6 +17,7 @@
 namespace mod_these\form;
 
 use mod_these\local\signatures;
+use mod_these\local\signaturefields;
 
 /**
  * Signature, en une seule fois, des documents qui attendent un signataire invité (président du
@@ -44,7 +45,7 @@ class sign_form extends base_form {
             $mform->addElement('hidden', $name);
             $mform->setType($name, $type);
         }
-        signatures::add_signature_fields(
+        signaturefields::add_signature_fields(
             $mform,
             $this->_customdata['signername'],
             get_string('signexternalintro', 'mod_these'),
@@ -62,6 +63,6 @@ class sign_form extends base_form {
      * @return array
      */
     public function validation($data, $files) {
-        return array_merge(parent::validation($data, $files), signatures::signature_errors($data));
+        return array_merge(parent::validation($data, $files), signaturefields::signature_errors($data));
     }
 }

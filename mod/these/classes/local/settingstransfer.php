@@ -91,7 +91,7 @@ class settingstransfer {
         }
         if (in_array('griditems', $groups, true)) {
             $data['groups']['griditems'] = [];
-            foreach (signatures::get_grid_items(doctemplates::local_scope($these)) as $items) {
+            foreach (grid::get_grid_items(doctemplates::local_scope($these)) as $items) {
                 foreach ($items as $item) {
                     $data['groups']['griditems'][] = ['itemkey' => $item->itemkey, 'section' => $item->section,
                         'label' => $item->label, 'conditional' => (int) $item->conditional];
@@ -208,8 +208,8 @@ class settingstransfer {
                 ];
             }
             $scope = doctemplates::local_scope($these);
-            signatures::save_grid_items($scope, $items);
-            $result->griditems = count(signatures::get_grid_items($scope), COUNT_RECURSIVE) - count(signatures::grid_sections());
+            grid::save_grid_items($scope, $items);
+            $result->griditems = count(grid::get_grid_items($scope), COUNT_RECURSIVE) - count(grid::grid_sections());
         }
 
         // Questionnaire : les réponses déjà données aux questions remplacées sont supprimées avec elles.

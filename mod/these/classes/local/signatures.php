@@ -20,15 +20,17 @@ use mod_these\event\document_signed;
 use mod_these\output;
 use coding_exception;
 use context;
-use html_writer;
-use moodle_url;
-use MoodleQuickForm;
 use stdClass;
 
 /**
- * Documents officiels, signatures et scellés.
+ * Documents officiels et signatures : documents produits par le module et leurs emplacements de
+ * signature, contenu couvert par les signatures, apposition, suppression, révocation et
+ * invalidation des signatures.
  *
- * Les fonctions these_*() correspondantes de locallib.php sont des façades de ces méthodes.
+ * Voir aussi seals (scellés), signaturetokens (demandes aux signataires sans compte),
+ * signaturefields (bloc de signature des formulaires), bordereau et grid.
+ *
+ * Les fonctions these_*() correspondantes de locallib/signatures.php sont des façades de ces méthodes.
  *
  * @package   mod_these
  * @copyright 2026 Sébastien Lefebvre
@@ -43,15 +45,6 @@ class signatures {
 
     /** Engagement de l'étudiant : soumettre le protocole au comité d'éthique (si nécessaire). */
     public const COMMIT_ETHICS = 4;
-
-    /** Durée maximale de l'embargo de diffusion qu'un étudiant peut demander, en mois après la soutenance. */
-    public const EMBARGO_MAX_MONTHS = 12;
-
-    /** Longueur maximale d'un résumé du bordereau, espaces compris. */
-    public const BORDEREAU_SUMMARY_MAX = 1700;
-
-    /** Nombre de mots-clés du bordereau. */
-    public const BORDEREAU_KEYWORDS = 8;
 
     /**
      * Documents de l'établissement produits par le module, et qui les signe.
@@ -195,9 +188,9 @@ class signatures {
                     'commitments' => (int) ($dossier->commitments ?? 0),
                 ];
             case 'bordereau':
-                return $common + ['titleen' => (string) $dossier->titleen, 'bordereau' => self::get_bordereau($dossier)];
+                return $common + ['titleen' => (string) $dossier->titleen, 'bordereau' => bordereau::get_bordereau($dossier)];
             case 'grid':
-                return $common + ['grid' => self::get_grid($dossier), 'ethicsnumber' => (string) ($dossier->ethicsnumber ?? '')];
+                return $common + ['grid' => grid::get_grid($dossier), 'ethicsnumber' => (string) ($dossier->ethicsnumber ?? '')];
             case 'agreement':
                 $scientific = [
                     'directorid' => (int) $dossier->directorid,
@@ -215,7 +208,7 @@ class signatures {
                     'extdirectorname' => (string) ($dossier->extdirectorname ?? ''),
                 ];
             case 'signaletique':
-                $student = self::get_bordereau($dossier);
+                $student = bordereau::get_bordereau($dossier);
                 $keys = ['birthname', 'firstnames', 'personalemail', 'emailconsent', 'birthdate', 'birthplace', 'birthdept',
                     'street', 'postcode', 'city', 'country', 'phone', 'defvdate', 'defvschool', 'a6date', 'a6school', 'a6notyet'];
                 return $common + [
@@ -226,7 +219,7 @@ class signatures {
                     }, jury::get_jury($dossier->id)),
                 ];
             case 'contract':
-                $student = self::get_bordereau($dossier);
+                $student = bordereau::get_bordereau($dossier);
                 $keys = ['birthname', 'firstnames', 'birthdate', 'street', 'postcode', 'city', 'country', 'personalemail',
                     'confidentialuntil', 'embargo', 'embargomonths', 'embargountil', 'embargoreason', 'diffusion'];
                 return $common + [
@@ -265,14 +258,14 @@ class signatures {
             case 'subject':
                 return trim((string) $dossier->title) !== '';
             case 'bordereau':
-                return !empty(self::get_bordereau($dossier));
+                return !empty(bordereau::get_bordereau($dossier));
             case 'grid':
-                return !empty(self::get_grid($dossier));
+                return !empty(grid::get_grid($dossier));
             case 'agreement':
                 return !empty(self::get_agreement($dossier)) || self::has_signature($dossier->id, 'agreement');
             case 'signaletique':
             case 'contract':
-                return !empty(self::get_bordereau($dossier));
+                return !empty(bordereau::get_bordereau($dossier));
             case 'conformity':
                 return rendering::rank_reached($dossier, THESE_STATUS_CONFORM);
             case 'conclusions':
@@ -328,242 +321,6 @@ class signatures {
      */
     public static function get_agreement(stdClass $dossier) {
         $data = json_decode((string) ($dossier->agreement ?? ''), true);
-        return is_array($data) ? $data : [];
-    }
-
-    /**
-     * Écoles nationales vétérinaires, pour le cursus déclaré dans la fiche signalétique.
-     *
-     * @return array
-     */
-    public static function school_options() {
-        return [
-            '' => get_string('choosedots'),
-            'alfort' => 'EnvA (Maisons-Alfort)',
-            'lyon' => 'VetAgro Sup (Lyon)',
-            'nantes' => 'Oniris VetAgroBio (Nantes)',
-            'toulouse' => 'ENVT (Toulouse)',
-            'rouen' => 'UniLaSalle (Rouen)',
-            'other' => get_string('schoolother', 'mod_these'),
-        ];
-    }
-
-    /**
-     * Bordereau de thèse d'un dossier.
-     *
-     * @param stdClass $dossier
-     * @return array Voir these_bordereau_fields() ; tableau vide s'il n'a pas été renseigné.
-     */
-    public static function get_bordereau(stdClass $dossier) {
-        $data = json_decode((string) ($dossier->bordereau ?? ''), true);
-        return is_array($data) ? $data : [];
-    }
-
-    /**
-     * Données saisies par l'étudiant au dépôt de sa soutenance, communes au bordereau ABES, à la
-     * fiche signalétique et au contrat de diffusion (stockées ensemble dans these_dossier.bordereau).
-     *
-     * @return string[]
-     */
-    public static function bordereau_fields() {
-        return [
-            // État civil et coordonnées.
-            'birthname', 'firstnames', 'usagename', 'publicationname', 'birthdate', 'birthplace', 'birthdept',
-            'nationality', 'street', 'postcode', 'city', 'country', 'phone', 'personalemail', 'emailconsent',
-            // Cursus.
-            'defvdate', 'defvschool', 'a6date', 'a6school', 'a6notyet',
-            // Bordereau ABES.
-            'nbvolumes', 'nbpages', 'nbrefs', 'summaryfr', 'summaryen', 'keywords',
-            // Contrat de diffusion.
-            'confidentialuntil', 'embargo', 'embargomonths', 'embargountil', 'embargoreason', 'diffusion',
-            // Soutenance.
-            'visio',
-        ];
-    }
-
-    /**
-     * Fin de l'embargo de diffusion d'une thèse : la durée demandée, en mois (self::EMBARGO_MAX_MONTHS
-     * au plus, et par défaut), après la soutenance (date arrêtée, à défaut date proposée). Un embargo
-     * enregistré avec une date garde sa date, sans dépasser un an après la soutenance.
-     *
-     * @param stdClass $dossier
-     * @return int 0 sans embargo, ou tant que la soutenance n'a pas de date.
-     */
-    public static function embargo_until(stdClass $dossier) {
-        $bordereau = self::get_bordereau($dossier);
-        if (empty($bordereau['embargo'])) {
-            return 0;
-        }
-        $defense = (int) ($dossier->defensedate ?: $dossier->proposeddate);
-        $max = $defense ? self::add_months($defense, self::EMBARGO_MAX_MONTHS) : 0;
-        if (!empty($bordereau['embargountil'])) {
-            $until = (int) $bordereau['embargountil'];
-            return $max ? min($until, $max) : $until;
-        }
-        if (!$defense) {
-            return 0;
-        }
-        return self::add_months($defense, self::embargo_months($bordereau));
-    }
-
-    /**
-     * Durée de l'embargo demandée, en mois : de 1 à self::EMBARGO_MAX_MONTHS, cette durée maximale à
-     * défaut (demandes antérieures au choix de la durée).
-     *
-     * @param array $bordereau Voir these_get_bordereau().
-     * @return int
-     */
-    public static function embargo_months(array $bordereau) {
-        $months = (int) ($bordereau['embargomonths'] ?? 0);
-        return $months >= 1 && $months <= self::EMBARGO_MAX_MONTHS ? $months : self::EMBARGO_MAX_MONTHS;
-    }
-
-    /**
-     * Jour (à minuit) tombant un nombre de mois après une date, ramené au dernier jour du mois s'il
-     * n'existe pas (31 janvier plus un mois : 28 ou 29 février).
-     *
-     * @param int $time
-     * @param int $months
-     * @return int
-     */
-    protected static function add_months($time, $months) {
-        $date = usergetdate($time);
-        $month = $date['mon'] - 1 + (int) $months;
-        $year = $date['year'] + intdiv($month, 12);
-        $month = $month % 12 + 1;
-        $day = min($date['mday'], (int) date('t', make_timestamp($year, $month, 1, 12)));
-        return make_timestamp($year, $month, $day);
-    }
-
-    /**
-     * Éléments de la grille de conformité du directeur, par rubrique. Les éléments « conditionnels »
-     * ne s'appliquent qu'à certaines thèses : ils peuvent rester non cochés.
-     *
-     * @return array rubrique => [clé => conditionnel (bool)]
-     */
-    public static function grid_items() {
-        return [
-            'fond' => [
-                'question' => false, 'answer' => false, 'biblio' => false, 'critique' => false, 'ownwork' => false,
-                'tool' => true,
-            ],
-            'forme' => [
-                'french' => false, 'language' => false, 'typing' => false, 'thanks' => false, 'toc' => false,
-                'staff' => false, 'lists' => false, 'covers' => false, 'citations' => false, 'bibliography' => false,
-                'figures' => false, 'introduction' => false, 'conclusion' => false, 'abstract' => false,
-                'structure' => true,
-            ],
-        ];
-    }
-
-    /**
-     * Rubriques de la grille de conformité, dans l'ordre.
-     *
-     * @return string[]
-     */
-    public static function grid_sections() {
-        return ['fond', 'forme'];
-    }
-
-    /**
-     * Éléments de la grille de conformité d'une portée de paramètres (voir these_settings_scope()),
-     * modifiables par la DEVE. Les éléments d'origine (these_grid_items()) sont enregistrés à la
-     * première consultation.
-     *
-     * @param stdClass|null $scope null : éléments d'origine, sans enregistrement (aperçus).
-     * @return array rubrique => [clé => {itemkey, section, label, conditional, sortorder}]
-     */
-    public static function get_grid_items(?stdClass $scope) {
-        global $DB;
-
-        $records = $scope
-            ? $DB->get_records('these_griditem', doctemplates::scope_conditions($scope), 'sortorder ASC, id ASC') : [];
-        if (!$records) {
-            $records = [];
-            $sortorder = 0;
-            foreach (self::grid_items() as $section => $items) {
-                foreach ($items as $key => $conditional) {
-                    $records[] = (object) array_merge($scope ? doctemplates::scope_conditions($scope) : [], [
-                        'itemkey' => $key,
-                        'section' => $section,
-                        'label' => get_string('grid' . $key, 'mod_these'),
-                        'conditional' => (int) $conditional,
-                        'sortorder' => $sortorder++,
-                        'timemodified' => time(),
-                    ]);
-                }
-            }
-            if ($scope) {
-                foreach ($records as $record) {
-                    $record->id = $DB->insert_record('these_griditem', $record);
-                }
-            }
-        }
-        $sections = array_fill_keys(self::grid_sections(), []);
-        foreach ($records as $record) {
-            $section = array_key_exists($record->section, $sections) ? $record->section : 'forme';
-            $sections[$section][$record->itemkey] = $record;
-        }
-        return $sections;
-    }
-
-    /**
-     * Remplace les éléments de la grille de conformité d'une portée. Un élément gardé conserve sa clé,
-     * et donc les réponses déjà données ; un élément supprimé disparaît des grilles et de leurs PDF.
-     *
-     * @param stdClass $scope Voir these_settings_scope().
-     * @param array $items Liste d'objets {itemkey ('' pour un nouvel élément), section, label, conditional}, dans l'ordre ;
-     *                     une clé inconnue de la portée (transfert depuis une autre) est reprise telle quelle.
-     * @return void
-     */
-    public static function save_grid_items(stdClass $scope, array $items) {
-        global $DB;
-
-        $transaction = $DB->start_delegated_transaction();
-        $existing = $DB->get_records_menu('these_griditem', doctemplates::scope_conditions($scope), '', 'itemkey, id');
-        $kept = [];
-        $sortorder = 0;
-        foreach ($items as $item) {
-            $label = trim((string) $item->label);
-            if ($label === '') {
-                continue;
-            }
-            $key = (string) ($item->itemkey ?? '');
-            if (!preg_match('/^[a-zA-Z0-9]{1,40}$/', $key) || isset($kept[$key])) {
-                $key = 'item' . random_string(10);
-            }
-            $record = (object) array_merge(doctemplates::scope_conditions($scope), [
-                'itemkey' => $key,
-                'section' => in_array($item->section, self::grid_sections(), true) ? $item->section : 'forme',
-                'label' => $label,
-                'conditional' => empty($item->conditional) ? 0 : 1,
-                'sortorder' => $sortorder++,
-                'timemodified' => time(),
-            ]);
-            if (isset($existing[$key])) {
-                $record->id = $existing[$key];
-                $DB->update_record('these_griditem', $record);
-            } else {
-                $DB->insert_record('these_griditem', $record);
-            }
-            $kept[$key] = true;
-        }
-        foreach ($existing as $key => $id) {
-            if (!isset($kept[$key])) {
-                $DB->delete_records('these_griditem', ['id' => $id]);
-            }
-        }
-        $transaction->allow_commit();
-    }
-
-    /**
-     * Grille de conformité d'un dossier.
-     *
-     * @param stdClass $dossier
-     * @return array clé => 0|1 ; tableau vide si elle n'a pas été renseignée.
-     */
-    public static function get_grid(stdClass $dossier) {
-        $data = json_decode((string) ($dossier->conformitygrid ?? ''), true);
         return is_array($data) ? $data : [];
     }
 
@@ -671,7 +428,7 @@ class signatures {
             'token' => null,
             'timesigned' => $now,
             'contenthash' => self::document_hash($dossier, $doctype, $slot),
-            'templatehash' => self::document_template_hash($dossier, $doctype),
+            'templatehash' => seals::document_template_hash($dossier, $doctype),
             'ipaddress' => getremoteaddr(),
             'method' => $method,
             'delegated' => empty($options['delegated']) ? 0 : 1,
@@ -720,7 +477,7 @@ class signatures {
             $dossier->status,
             $remark
         );
-        self::seal_document($context, $dossier, $doctype);
+        seals::seal_document($context, $dossier, $doctype);
         document_signed::create_from_dossier($dossier, $context, $record->verifiedby ?: $userid, [
             'doctype' => $doctype, 'slot' => $slot, 'method' => $method, 'signatureid' => (int) $record->id,
         ])->trigger();
@@ -739,7 +496,7 @@ class signatures {
 
         get_file_storage()->delete_area_files($context->id, 'mod_these', 'signature', $signature->id);
         $DB->delete_records('these_signature', ['id' => $signature->id]);
-        self::unseal_document($context, $signature->dossierid, $signature->doctype);
+        seals::unseal_document($context, $signature->dossierid, $signature->doctype);
     }
 
     /**
@@ -812,7 +569,7 @@ class signatures {
             }
             if (
                 $signature->contenthash !== self::document_hash($dossier, $signature->doctype, $signature->slot)
-                || self::signature_template_changed($context, $dossier, $signature)
+                || seals::signature_template_changed($context, $dossier, $signature)
             ) {
                 self::delete_signature($context, $signature);
                 $invalidated[] = $key;
@@ -828,154 +585,6 @@ class signatures {
             )));
         }
         return $invalidated;
-    }
-
-    /**
-     * Empreinte SHA-256 de la mise en forme d'un document : modèles en vigueur, images qu'ils
-     * appellent et, pour le contrat de diffusion, contrat type déposé dans les paramètres.
-     *
-     * @param stdClass $dossier
-     * @param string $doctype
-     * @return string
-     */
-    public static function document_template_hash(stdClass $dossier, $doctype) {
-        global $DB;
-
-        $these = $DB->get_record('these', ['id' => $dossier->theseid], '*', MUST_EXIST);
-        $scope = doctemplates::settings_scope($these);
-        $types = array_keys(array_filter(doctemplates::doctemplate_types(), function ($signed) use ($doctype) {
-            return $signed === $doctype;
-        }));
-        $parts = [];
-        $images = doctemplates::doctemplate_images($scope);
-        foreach ($types as $type) {
-            $template = doctemplates::get_doctemplate($scope, $type);
-            $parts[] = $template;
-            foreach ($images as $name => $source) {
-                if (strpos($template, 'img.' . $name) !== false) {
-                    $parts[] = $name . ':' . sha1($source);
-                }
-            }
-        }
-        if ($doctype === 'contract') {
-            $parts[] = sha1((string) doctemplates::get_contract_template($these));
-        }
-        return hash('sha256', implode("\n", $parts));
-    }
-
-    /**
-     * Indique si la mise en forme d'un document a changé depuis une signature. Un document scellé
-     * ne dépend plus de son modèle ; une signature antérieure à l'enregistrement de cette empreinte
-     * n'est pas remise en cause.
-     *
-     * @param context $context
-     * @param stdClass $dossier
-     * @param stdClass $signature
-     * @return bool
-     */
-    public static function signature_template_changed(context $context, stdClass $dossier, stdClass $signature) {
-        if (empty($signature->templatehash) || self::get_sealed_document($context, $dossier->id, $signature->doctype)) {
-            return false;
-        }
-        return $signature->templatehash !== self::document_template_hash($dossier, $signature->doctype);
-    }
-
-    /**
-     * Indique si tous les emplacements de signature d'un document sont signés.
-     *
-     * @param stdClass $dossier
-     * @param string $doctype
-     * @return bool
-     */
-    public static function document_fully_signed(stdClass $dossier, $doctype) {
-        $signatures = self::get_signatures($dossier->id);
-        foreach (self::document_slots($dossier, $doctype) as $slot) {
-            if (empty($signatures[$doctype . ':' . $slot]->timesigned)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
-     * PDF scellé d'un document.
-     *
-     * @param context $context
-     * @param int $dossierid
-     * @param string $doctype
-     * @return stored_file|null
-     */
-    public static function get_sealed_document(context $context, $dossierid, $doctype) {
-        $file = get_file_storage()->get_file($context->id, 'mod_these', 'sealed', $dossierid, '/', $doctype . '.pdf');
-        return $file ?: null;
-    }
-
-    /**
-     * Scelle un document dont toutes les signatures sont apposées : le PDF est produit une dernière
-     * fois et conservé tel quel. Il ne dépend plus ensuite ni des modèles ni du contrat type, et son
-     * empreinte SHA-256, calculée sur ses octets, est inscrite à l'historique du dossier.
-     *
-     * Une signature dont la mise en forme a changé depuis qu'elle a été apposée est d'abord invalidée
-     * (voir these_refresh_signatures()) : le document n'est alors pas scellé.
-     *
-     * @param context $context
-     * @param stdClass $dossier
-     * @param string $doctype
-     * @return stored_file|null Document scellé, null s'il attend encore une signature.
-     */
-    public static function seal_document(context $context, stdClass $dossier, $doctype) {
-        global $DB;
-
-        if ($sealed = self::get_sealed_document($context, $dossier->id, $doctype)) {
-            return $sealed;
-        }
-        if (
-            !self::document_fully_signed($dossier, $doctype)
-                || ($doctype === 'contract'
-                    && doctemplates::contract_template_problem($DB->get_record('these', ['id' => $dossier->theseid])) !== null)
-        ) {
-            return null;
-        }
-        self::refresh_signatures($context, $dossier);
-        if (!self::document_fully_signed($dossier, $doctype)) {
-            return null;
-        }
-        $these = $DB->get_record('these', ['id' => $dossier->theseid], '*', MUST_EXIST);
-        $pdf = doctemplates::render_document_pdf($these, $context, $dossier, $doctype);
-        $file = get_file_storage()->create_file_from_string([
-            'contextid' => $context->id,
-            'component' => 'mod_these',
-            'filearea' => 'sealed',
-            'itemid' => $dossier->id,
-            'filepath' => '/',
-            'filename' => $doctype . '.pdf',
-        ], $pdf);
-        dossiers::log(
-            $dossier->id,
-            0,
-            'documentsealed',
-            $dossier->status,
-            $dossier->status,
-            self::document_label($doctype) . ' — SHA-256 ' . hash('sha256', $pdf)
-        );
-        return $file;
-    }
-
-    /**
-     * Retire le scellé d'un document dont une signature disparaît : il sera scellé de nouveau une
-     * fois toutes ses signatures apposées.
-     *
-     * @param context $context
-     * @param int $dossierid
-     * @param string $doctype
-     * @return void
-     */
-    public static function unseal_document(context $context, $dossierid, $doctype) {
-        if ($file = self::get_sealed_document($context, $dossierid, $doctype)) {
-            $file->delete();
-        }
-        // La pièce scellée pour l'université ne vaut plus non plus.
-        university::unseal($context, $dossierid, $doctype);
     }
 
     /**
@@ -1009,270 +618,6 @@ class signatures {
     }
 
     /**
-     * Documents en attente de la signature d'un signataire sans compte, dans un dossier.
-     *
-     * @param stdClass $dossier
-     * @param string $slot
-     * @param string[]|null $doctypes Documents à considérer (tous par défaut).
-     * @return string[]
-     */
-    public static function pending_documents_for_slot(stdClass $dossier, $slot, ?array $doctypes = null) {
-        $signatures = self::get_signatures($dossier->id);
-        $pending = [];
-        foreach ($doctypes ?? array_keys(self::document_definitions()) as $doctype) {
-            if (!in_array($slot, self::document_slots($dossier, $doctype), true)) {
-                continue;
-            }
-            $existing = $signatures[$doctype . ':' . $slot] ?? null;
-            if (!$existing || empty($existing->timesigned)) {
-                $pending[] = $doctype;
-            }
-        }
-        return $pending;
-    }
-
-    /**
-     * Documents en attente d'un signataire sans compte dont la demande de signature a déjà été émise
-     * (lien envoyé, ou signature attendue sur place) : ceux qu'une relance peut redemander. Les
-     * documents dont la demande n'a pas encore été émise par le circuit (voir these_review_steps())
-     * n'en font pas partie : le directeur extérieur, par exemple, n'est pas relancé avant que le
-     * directeur interne ait validé le sujet.
-     *
-     * @param stdClass $dossier
-     * @param string $slot
-     * @param string[]|null $doctypes Documents à considérer (tous par défaut).
-     * @return string[]
-     */
-    public static function requested_documents_for_slot(stdClass $dossier, $slot, ?array $doctypes = null) {
-        $signatures = self::get_signatures($dossier->id);
-        return array_values(array_filter(
-            self::pending_documents_for_slot($dossier, $slot, $doctypes),
-            function ($doctype) use ($signatures, $slot) {
-                return !empty($signatures[$doctype . ':' . $slot]->requesttime);
-            }
-        ));
-    }
-
-    /**
-     * Invite un signataire sans compte à signer, en une seule fois, les documents qui l'attendent :
-     * chaque emplacement reçoit le même nouveau jeton, et le lien de signature est envoyé au
-     * signataire s'il a une adresse. Sans adresse, les signatures restent en attente et peuvent être
-     * recueillies sur place par la DEVE (signatures.php). La direction générale n'est jamais invitée :
-     * ses documents sont signés par délégation, demandés aux agents DEVE quand il y en a (voir
-     * signatureagent::request_agent_signatures()). L'université non plus quand elle signe sur papier
-     * ou par ses délégataires internes (voir university::sends_link()).
-     *
-     * @param stdClass $these
-     * @param stdClass $cm
-     * @param stdClass $dossier
-     * @param string $slot
-     * @param string[]|null $doctypes Documents concernés (tous ceux en attente par défaut).
-     * @return string|null Jeton, ou null si aucun document n'attend ce signataire.
-     */
-    public static function request_signature(stdClass $these, stdClass $cm, stdClass $dossier, $slot, ?array $doctypes = null) {
-        global $DB;
-
-        if (($slot === 'dg' && signatureagent::signs_dg_by_delegation($these)) || !university::sends_link($these, $slot)) {
-            return null;
-        }
-        $doctypes = self::pending_documents_for_slot($dossier, $slot, $doctypes);
-        if (!$doctypes) {
-            return null;
-        }
-        $signer = self::external_signers($dossier)[$slot];
-        $token = rights::new_token();
-        $now = time();
-        foreach ($doctypes as $doctype) {
-            $signature = $DB->get_record('these_signature', ['dossierid' => $dossier->id, 'doctype' => $doctype, 'slot' => $slot]);
-            $record = (object) [
-                'dossierid' => $dossier->id,
-                'doctype' => $doctype,
-                'slot' => $slot,
-                'userid' => 0,
-                'signername' => $signer['name'],
-                'signeremail' => $signer['email'],
-                'token' => rights::token_hash($token),
-                'requesttime' => $now,
-                'timesigned' => 0,
-                'contenthash' => null,
-                'templatehash' => null,
-            ];
-            if ($signature) {
-                $record->id = $signature->id;
-                $DB->update_record('these_signature', $record);
-            } else {
-                $record->timecreated = $now;
-                $DB->insert_record('these_signature', $record);
-            }
-        }
-
-        $labels = implode(', ', array_map('these_document_label', $doctypes));
-        if ($signer['email'] !== '' && validate_email($signer['email'])) {
-            $vars = notifications::email_base_vars($these, $cm, $dossier);
-            $vars['name'] = $signer['name'];
-            $vars['document'] = $labels;
-            $vars['url'] = (new moodle_url('/mod/these/sign.php', ['token' => $token]))->out(false);
-            notifications::send_email(
-                $these,
-                'signaturerequest',
-                [notifications::make_external_user($signer['email'], $signer['name'])],
-                $vars,
-                '',
-                '',
-                $dossier
-            );
-        }
-        dossiers::log(
-            $dossier->id,
-            0,
-            'signaturerequested',
-            $dossier->status,
-            $dossier->status,
-            self::slot_label($slot) . ($signer['name'] !== '' ? ' (' . $signer['name'] . ')' : '') . ' — ' . $labels
-        );
-        return $token;
-    }
-
-    /**
-     * Invite tous les signataires sans compte attendus sur des documents et qui n'ont pas encore
-     * signé (un seul courriel par signataire, pour tous ses documents).
-     *
-     * @param stdClass $these
-     * @param stdClass $cm
-     * @param stdClass $dossier
-     * @param string|string[] $doctypes
-     * @return int Nombre de signataires invités.
-     */
-    public static function request_external_signatures(stdClass $these, stdClass $cm, stdClass $dossier, $doctypes) {
-        $count = 0;
-        foreach (self::external_slots() as $slot) {
-            if (self::request_signature($these, $cm, $dossier, $slot, (array) $doctypes) !== null) {
-                $count++;
-            }
-        }
-        return $count;
-    }
-
-    /**
-     * Signatures en attente correspondant à un jeton d'invitation : tous les documents qu'un même
-     * signataire doit signer dans un dossier. Le lien vaut rights::TOKEN_LIFETIME à partir de
-     * l'invitation ; la DEVE peut en envoyer un nouveau depuis le suivi des signatures.
-     *
-     * @param string $token
-     * @return stdClass[] Signatures en attente, vide si le jeton est inconnu, déjà utilisé ou expiré.
-     */
-    public static function get_signatures_by_token($token) {
-        global $DB;
-
-        $token = clean_param($token, PARAM_ALPHANUM);
-        if (strlen($token) < 32) {
-            return [];
-        }
-        return array_values($DB->get_records_select(
-            'these_signature',
-            'token = :token AND timesigned = 0 AND requesttime > :since',
-            ['token' => rights::token_hash($token), 'since' => time() - rights::TOKEN_LIFETIME],
-            'id ASC'
-        ));
-    }
-
-    /**
-     * Ajoute à un formulaire le bloc de signature : zone de tracé, nom du signataire et
-     * certification. La zone de tracé alimente un champ caché « signaturedata » (module AMD
-     * mod_these/signaturepad).
-     *
-     * Le nom du signataire n'est saisi que par la DEVE (signature sur place, par délégation) : pour
-     * les autres, c'est le nom de leur compte Moodle (ou celui de l'invitation), affiché sans pouvoir
-     * être modifié.
-     *
-     * @param MoodleQuickForm $mform
-     * @param string $defaultname Nom du signataire (proposé s'il est modifiable).
-     * @param string $intro Texte d'introduction (ce qui est signé).
-     * @param bool $allowsaved Proposer de reprendre ou d'enregistrer la signature de l'utilisateur.
-     * @param bool $editablename Nom saisi par le signataire (DEVE, ou nom inconnu).
-     * @return void
-     */
-    public static function add_signature_fields(
-        MoodleQuickForm $mform,
-        $defaultname,
-        $intro = '',
-        $allowsaved = true,
-        $editablename = false
-    ) {
-        global $PAGE, $USER;
-
-        $mform->addElement('header', 'signatureheader', get_string('signature', 'mod_these'));
-        $mform->setExpanded('signatureheader');
-        if ($intro !== '') {
-            $mform->addElement('static', 'signatureintro', '', $intro);
-        }
-        // Signature enregistrée de l'utilisateur connecté : reprise d'office, sans nouveau tracé.
-        $cansave = $allowsaved && isloggedin() && !isguestuser();
-        $saved = $cansave ? signatureagent::get_saved_signature($USER->id) : null;
-        if ($saved !== null) {
-            $mform->addElement('advcheckbox', 'usesavedsignature', '', get_string('signatureusesaved', 'mod_these')
-                . html_writer::empty_tag('br') . html_writer::empty_tag('img', [
-                    'src' => 'data:image/png;base64,' . base64_encode($saved), 'alt' => get_string('signaturesaved', 'mod_these'),
-                    'class' => 'these-saved-signature border mt-1', 'style' => 'max-height:80px;background:#fff;',
-                ]));
-            $mform->setDefault('usesavedsignature', 1);
-        }
-        $pad = html_writer::div(
-            html_writer::tag('canvas', '', ['width' => 520, 'height' => 170, 'class' => 'these-signature-canvas',
-                'aria-label' => get_string('signaturedraw', 'mod_these')])
-                . html_writer::div(
-                    html_writer::tag('button', get_string('signatureclear', 'mod_these'), [
-                        'type' => 'button', 'class' => 'btn btn-sm btn-secondary', 'data-action' => 'these-signature-clear',
-                    ]),
-                    'mt-1'
-                ),
-            'these-signature-pad'
-        );
-        $mform->addElement('static', 'signaturepad', get_string('signaturedraw', 'mod_these'), $pad);
-        $mform->addElement('hidden', 'signaturedata', '');
-        $mform->setType('signaturedata', PARAM_RAW);
-        if ($cansave) {
-            $mform->addElement('advcheckbox', 'savesignature', '', get_string('signaturesave', 'mod_these'));
-            $mform->setDefault('savesignature', 1);
-        }
-        if ($saved !== null) {
-            $mform->hideIf('signaturepad', 'usesavedsignature', 'checked');
-            $mform->hideIf('savesignature', 'usesavedsignature', 'checked');
-        }
-        $mform->addElement('text', 'signername', get_string('signername', 'mod_these'), ['size' => 48]);
-        $mform->setType('signername', PARAM_TEXT);
-        $mform->setDefault('signername', $defaultname);
-        if (!$editablename && trim((string) $defaultname) !== '') {
-            // Nom imposé : affiché seulement, la valeur soumise est ignorée au profit de celle-ci.
-            $mform->hardFreeze('signername');
-        }
-        $mform->addElement('advcheckbox', 'signatureconsent', '', get_string('signatureconsent', 'mod_these'));
-        $PAGE->requires->js_call_amd('mod_these/signaturepad', 'init');
-    }
-
-    /**
-     * Contrôle du bloc de signature (voir these_add_signature_fields()).
-     *
-     * @param array $data
-     * @return array Erreurs, indexées par champ.
-     */
-    public static function signature_errors(array $data) {
-        global $USER;
-
-        $errors = [];
-        $saved = !empty($data['usesavedsignature']) && signatureagent::get_saved_signature($USER->id) !== null;
-        if (!$saved && self::decode_signature_image($data['signaturedata'] ?? '') === null) {
-            $errors['signername'] = get_string('signaturemissing', 'mod_these');
-        } else if (trim((string) ($data['signername'] ?? '')) === '') {
-            $errors['signername'] = get_string('required');
-        }
-        if (empty($data['signatureconsent'])) {
-            $errors['signatureconsent'] = get_string('signatureconsentrequired', 'mod_these');
-        }
-        return $errors;
-    }
-
-    /**
      * Tableau des documents signés d'un dossier : état de chaque signature et lien de
      * téléchargement du PDF.
      *
@@ -1286,5 +631,31 @@ class signatures {
         global $PAGE;
 
         return $PAGE->get_renderer('mod_these')->render(new output\signed_documents($cm, $context, $dossier, $rights));
+    }
+
+    /**
+     * Voir signaturetokens::requested_documents_for_slot(). Conservé pour les appels existants.
+     *
+     * @param stdClass $dossier
+     * @param string $slot
+     * @param string[]|null $doctypes
+     * @return string[]
+     */
+    public static function requested_documents_for_slot(stdClass $dossier, $slot, ?array $doctypes = null) {
+        return signaturetokens::requested_documents_for_slot($dossier, $slot, $doctypes);
+    }
+
+    /**
+     * Voir signaturetokens::request_signature(). Conservé pour les appels existants.
+     *
+     * @param stdClass $these
+     * @param stdClass $cm
+     * @param stdClass $dossier
+     * @param string $slot
+     * @param string[]|null $doctypes
+     * @return string|null
+     */
+    public static function request_signature(stdClass $these, stdClass $cm, stdClass $dossier, $slot, ?array $doctypes = null) {
+        return signaturetokens::request_signature($these, $cm, $dossier, $slot, $doctypes);
     }
 }

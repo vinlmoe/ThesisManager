@@ -73,7 +73,7 @@ class scans {
                 continue;
             }
             foreach (signatures::document_slots($dossier, $doctype) as $slot) {
-                if (in_array($doctype, signatures::pending_documents_for_slot($dossier, $slot, [$doctype]), true)) {
+                if (in_array($doctype, signaturetokens::pending_documents_for_slot($dossier, $slot, [$doctype]), true)) {
                     $pending[$doctype][$slot] = signatures::slot_label($slot);
                 }
             }

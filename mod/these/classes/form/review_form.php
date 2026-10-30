@@ -20,6 +20,8 @@ use mod_these\local\dossiers;
 use mod_these\local\jury;
 use mod_these\local\signatures;
 use mod_these\local\workflow;
+use mod_these\local\grid;
+use mod_these\local\signaturefields;
 
 /**
  * Formulaire commun aux six étapes de validation du circuit (voir these_review_steps()) : un
@@ -89,7 +91,7 @@ class review_form extends base_form {
                 $mform->setType('ethicsnumber', PARAM_TEXT);
                 // Éléments de la grille de l'activité (modifiables par la DEVE) : la grille signée
                 // n'est produite qu'à partir de ce formulaire rempli.
-                foreach (signatures::get_grid_items($this->_customdata['scope']) as $section => $items) {
+                foreach (grid::get_grid_items($this->_customdata['scope']) as $section => $items) {
                     $mform->addElement(
                         'static',
                         'gridsection' . $section,
@@ -158,7 +160,7 @@ class review_form extends base_form {
         }
 
         if (!empty($this->_customdata['signs'])) {
-            signatures::add_signature_fields(
+            signaturefields::add_signature_fields(
                 $mform,
                 $this->_customdata['signername'],
                 get_string('signreviewintro', 'mod_these', $this->_customdata['signs']),
@@ -243,7 +245,7 @@ class review_form extends base_form {
                 if (empty($this->_customdata['externaldirector']) && trim((string) ($data['directorfunction'] ?? '')) === '') {
                     $errors['directorfunction'] = get_string('required');
                 }
-                foreach (signatures::get_grid_items($this->_customdata['scope']) as $items) {
+                foreach (grid::get_grid_items($this->_customdata['scope']) as $items) {
                     foreach ($items as $key => $item) {
                         if (!$item->conditional && empty($data['grid_' . $key])) {
                             $errors['grid_' . $key] = get_string('gridrequired', 'mod_these');
@@ -280,7 +282,7 @@ class review_form extends base_form {
                 break;
         }
         if (!empty($this->_customdata['signs'])) {
-            $errors = array_merge($errors, signatures::signature_errors($data));
+            $errors = array_merge($errors, signaturefields::signature_errors($data));
         }
         return $errors;
     }

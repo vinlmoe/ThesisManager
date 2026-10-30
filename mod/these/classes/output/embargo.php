@@ -18,6 +18,7 @@ namespace mod_these\output;
 
 use mod_these\local\signatures;
 use stdClass;
+use mod_these\local\bordereau;
 
 /**
  * Diffusion de la thèse choisie au dépôt de la soutenance : mode de diffusion et demande d'embargo,
@@ -54,7 +55,7 @@ class embargo implements \renderable, \templatable {
      */
     public function get_section(): detail_section {
         $section = new detail_section(get_string('diffusion', 'mod_these'));
-        $bordereau = signatures::get_bordereau($this->dossier);
+        $bordereau = bordereau::get_bordereau($this->dossier);
         if (!$bordereau) {
             return $section;
         }
@@ -65,13 +66,13 @@ class embargo implements \renderable, \templatable {
                 ? [parts::text(get_string('diffusion' . $diffusion, 'mod_these'))] : null
         );
         if (!empty($bordereau['embargo'])) {
-            $until = signatures::embargo_until($this->dossier);
+            $until = bordereau::embargo_until($this->dossier);
             $label = $until
                 ? get_string('embargorequested', 'mod_these', (object) [
-                    'months' => \mod_these\local\signatures::embargo_months($bordereau),
+                    'months' => \mod_these\local\bordereau::embargo_months($bordereau),
                     'until' => userdate($until, get_string('strftimedate', 'langconfig')),
                 ])
-                : get_string('embargorequestednodate', 'mod_these', \mod_these\local\signatures::embargo_months($bordereau));
+                : get_string('embargorequestednodate', 'mod_these', \mod_these\local\bordereau::embargo_months($bordereau));
             $section->add_row(parts::strong(get_string('embargo', 'mod_these')), [parts::badge($label, 'badge badge-warning')]);
             if ($this->rights->knowssubject && trim((string) ($bordereau['embargoreason'] ?? '')) !== '') {
                 $section->add_row(
