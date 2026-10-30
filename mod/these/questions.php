@@ -27,14 +27,13 @@
 require(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/these/locallib.php');
 
+use mod_these\local\page;
+
 $id = required_param('id', PARAM_INT);
 
-$cm = get_coursemodule_from_id('these', $id, 0, false, MUST_EXIST);
-$course = get_course($cm->course);
-$these = $DB->get_record('these', ['id' => $cm->instance], '*', MUST_EXIST);
-
+$activity = page::load_activity($id);
+['cm' => $cm, 'course' => $course, 'these' => $these, 'context' => $context] = (array) $activity;
 require_login($course, true, $cm);
-$context = context_module::instance($cm->id);
 these_require_service($context, 'deve');
 
 $PAGE->set_url('/mod/these/questions.php', ['id' => $cm->id]);

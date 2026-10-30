@@ -18,10 +18,6 @@ namespace mod_these\form;
 
 use mod_these\local\signatures;
 
-defined('MOODLE_INTERNAL') || die();
-
-require_once($CFG->libdir . '/formslib.php');
-
 /**
  * Documents qui attendent la signature de l'utilisateur connecté (agent DEVE, membre du jury ou
  * autre signataire invité ayant un compte), signés en une fois : documents groupés par dossier, une
@@ -35,7 +31,7 @@ require_once($CFG->libdir . '/formslib.php');
  * @copyright 2026 Sébastien Lefebvre
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class mysignatures_form extends \moodleform {
+class mysignatures_form extends base_form {
     /**
      * Defines the form fields.
      */

@@ -19,10 +19,6 @@ namespace mod_these\form;
 use mod_these\local\dossiers;
 use mod_these\local\jury;
 
-defined('MOODLE_INTERNAL') || die();
-
-require_once($CFG->libdir . '/formslib.php');
-
 /**
  * Modification d'un dossier par la DEVE, à tout moment et sans changer son statut : corriger le
  * sujet, changer de directeur, rectifier un numéro, reporter une soutenance ou modifier le jury.
@@ -31,17 +27,14 @@ require_once($CFG->libdir . '/formslib.php');
  * @copyright 2026 Sébastien Lefebvre
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class dossier_edit_form extends \moodleform {
+class dossier_edit_form extends base_form {
     /**
      * Defines the form fields.
      */
     public function definition() {
         $mform = $this->_form;
 
-        $mform->addElement('hidden', 'id');
-        $mform->setType('id', PARAM_INT);
-        $mform->addElement('hidden', 'dossierid');
-        $mform->setType('dossierid', PARAM_INT);
+        $this->add_hidden_ids(true);
 
         $mform->addElement('header', 'subjectheader', get_string('subject', 'mod_these'));
         $mform->addElement('textarea', 'title', get_string('subjecttitle', 'mod_these'), ['rows' => 2, 'cols' => 80]);

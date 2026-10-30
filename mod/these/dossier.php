@@ -26,19 +26,17 @@
 require(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/these/locallib.php');
 
+use mod_these\local\page;
+
 $id = required_param('id', PARAM_INT);
 $dossierid = required_param('dossierid', PARAM_INT);
 
-$cm = get_coursemodule_from_id('these', $id, 0, false, MUST_EXIST);
-$course = get_course($cm->course);
-$these = $DB->get_record('these', ['id' => $cm->instance], '*', MUST_EXIST);
-
+$activity = page::load_activity($id);
+['cm' => $cm, 'course' => $course, 'these' => $these, 'context' => $context] = (array) $activity;
 require_login($course, true, $cm);
-$context = context_module::instance($cm->id);
 these_require_view($context);
 
-$dossier = $DB->get_record('these_dossier', ['id' => $dossierid, 'theseid' => $these->id], '*', MUST_EXIST);
-$rights = these_get_rights($context, $dossier, $USER->id);
+['dossier' => $dossier, 'rights' => $rights] = (array) page::load_dossier($activity, $dossierid, $USER->id);
 if (!these_can_view_dossier($rights)) {
     throw new required_capability_exception($context, 'mod/these:viewall', 'nopermissions', '');
 }

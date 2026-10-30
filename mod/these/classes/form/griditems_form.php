@@ -18,10 +18,6 @@ namespace mod_these\form;
 
 use mod_these\local\signatures;
 
-defined('MOODLE_INTERNAL') || die();
-
-require_once($CFG->libdir . '/formslib.php');
-
 /**
  * Éléments de la grille de conformité de l'activité (DEVE), dans l'ordre : rubrique, libellé, élément
  * facultatif. Un libellé vidé supprime l'élément.
@@ -32,15 +28,14 @@ require_once($CFG->libdir . '/formslib.php');
  * @copyright 2026 Sébastien Lefebvre
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class griditems_form extends \moodleform {
+class griditems_form extends base_form {
     /**
      * Defines the form fields.
      */
     public function definition() {
         $mform = $this->_form;
 
-        $mform->addElement('hidden', 'id');
-        $mform->setType('id', PARAM_INT);
+        $this->add_hidden_ids();
 
         $sections = [];
         foreach (signatures::grid_sections() as $section) {

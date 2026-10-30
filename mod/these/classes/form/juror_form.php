@@ -16,10 +16,6 @@
 
 namespace mod_these\form;
 
-defined('MOODLE_INTERNAL') || die();
-
-require_once($CFG->libdir . '/formslib.php');
-
 use mod_these\local\jurors;
 
 /**
@@ -29,7 +25,7 @@ use mod_these\local\jurors;
  * @copyright 2026 Sébastien Lefebvre
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class juror_form extends \moodleform {
+class juror_form extends base_form {
     /**
      * Defines the form fields.
      */

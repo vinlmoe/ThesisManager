@@ -21,10 +21,6 @@ use mod_these\local\files;
 use mod_these\local\jury;
 use mod_these\local\signatures;
 
-defined('MOODLE_INTERNAL') || die();
-
-require_once($CFG->libdir . '/formslib.php');
-
 /**
  * Dépôt des documents de soutenance (phase 2, étape 1) : manuscrit (seul document déposé), date
  * proposée, composition du jury, puis les données des documents de l'établissement qui reviennent à
@@ -39,17 +35,14 @@ require_once($CFG->libdir . '/formslib.php');
  * @copyright 2026 Sébastien Lefebvre
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class defense_form extends \moodleform {
+class defense_form extends base_form {
     /**
      * Defines the form fields.
      */
     public function definition() {
         $mform = $this->_form;
 
-        $mform->addElement('hidden', 'id');
-        $mform->setType('id', PARAM_INT);
-        $mform->addElement('hidden', 'dossierid');
-        $mform->setType('dossierid', PARAM_INT);
+        $this->add_hidden_ids(true);
 
         $mform->addElement('header', 'documentsheader', get_string('defensedocuments', 'mod_these'));
         $mform->setExpanded('documentsheader');

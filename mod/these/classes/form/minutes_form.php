@@ -19,10 +19,6 @@ namespace mod_these\form;
 use mod_these\local\files;
 use mod_these\local\workflow;
 
-defined('MOODLE_INTERNAL') || die();
-
-require_once($CFG->libdir . '/formslib.php');
-
 /**
  * Dépôt du procès-verbal de soutenance par la DEVE (phase 2, étape 6) : le PV signé par le jury,
  * scanné, et les décisions cochées par le jury, reportées ici : résultat, mention, proposition
@@ -32,17 +28,14 @@ require_once($CFG->libdir . '/formslib.php');
  * @copyright 2026 Sébastien Lefebvre
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class minutes_form extends \moodleform {
+class minutes_form extends base_form {
     /**
      * Defines the form fields.
      */
     public function definition() {
         $mform = $this->_form;
 
-        $mform->addElement('hidden', 'id');
-        $mform->setType('id', PARAM_INT);
-        $mform->addElement('hidden', 'dossierid');
-        $mform->setType('dossierid', PARAM_INT);
+        $this->add_hidden_ids(true);
 
         $mform->addElement('filemanager', 'pv', get_string('minutesscan', 'mod_these'), null, files::filemanager_options('pv'));
         $mform->addHelpButton('pv', 'minutesscan', 'mod_these');

@@ -28,6 +28,7 @@ require(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/these/locallib.php');
 
 use mod_these\local\a6;
+use mod_these\local\page;
 use mod_these\output;
 
 $id = required_param('id', PARAM_INT);
@@ -36,12 +37,9 @@ $state = optional_param('state', '', PARAM_ALPHA);
 $search = optional_param('search', '', PARAM_TEXT);
 $returnurl = optional_param('returnurl', '', PARAM_LOCALURL);
 
-$cm = get_coursemodule_from_id('these', $id, 0, false, MUST_EXIST);
-$course = get_course($cm->course);
-$these = $DB->get_record('these', ['id' => $cm->instance], '*', MUST_EXIST);
-
+$activity = page::load_activity($id);
+['cm' => $cm, 'course' => $course, 'these' => $these, 'context' => $context] = (array) $activity;
 require_login($course, true, $cm);
-$context = context_module::instance($cm->id);
 these_require_service($context, 'deve');
 
 $listurl = a6::url($cm);

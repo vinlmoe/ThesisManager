@@ -18,10 +18,6 @@ namespace mod_these\form;
 
 use mod_these\local\files;
 
-defined('MOODLE_INTERNAL') || die();
-
-require_once($CFG->libdir . '/formslib.php');
-
 /**
  * Rapport du directeur sur le manuscrit : fichier déposé (rédigé à partir du modèle des paramètres du
  * circuit, s'il y en a un) et avis favorable. Le rapport est obligatoire pour valider la soutenance.
@@ -32,17 +28,14 @@ require_once($CFG->libdir . '/formslib.php');
  * @copyright 2026 Sébastien Lefebvre
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class report_form extends \moodleform {
+class report_form extends base_form {
     /**
      * Defines the form fields.
      */
     public function definition() {
         $mform = $this->_form;
 
-        $mform->addElement('hidden', 'id');
-        $mform->setType('id', PARAM_INT);
-        $mform->addElement('hidden', 'dossierid');
-        $mform->setType('dossierid', PARAM_INT);
+        $this->add_hidden_ids(true);
 
         if (!empty($this->_customdata['templateurl'])) {
             $mform->addElement('static', 'reporttemplate', get_string('reporttemplate', 'mod_these'), \html_writer::link(

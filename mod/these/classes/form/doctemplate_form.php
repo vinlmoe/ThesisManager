@@ -18,10 +18,6 @@ namespace mod_these\form;
 
 use mod_these\local\doctemplates;
 
-defined('MOODLE_INTERNAL') || die();
-
-require_once($CFG->libdir . '/formslib.php');
-
 /**
  * Modification du modèle d'un document de l'activité (DEVE) : le source HTML avec ses balises
  * Mustache, un aperçu PDF avec des données fictives (dans un nouvel onglet), l'enregistrement.
@@ -30,15 +26,14 @@ require_once($CFG->libdir . '/formslib.php');
  * @copyright 2026 Sébastien Lefebvre
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class doctemplate_form extends \moodleform {
+class doctemplate_form extends base_form {
     /**
      * Defines the form fields.
      */
     public function definition() {
         $mform = $this->_form;
 
-        $mform->addElement('hidden', 'id');
-        $mform->setType('id', PARAM_INT);
+        $this->add_hidden_ids();
         $mform->addElement('hidden', 'type');
         $mform->setType('type', PARAM_ALPHA);
 

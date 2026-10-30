@@ -21,10 +21,6 @@ use mod_these\local\jury;
 use mod_these\local\signatures;
 use mod_these\local\workflow;
 
-defined('MOODLE_INTERNAL') || die();
-
-require_once($CFG->libdir . '/formslib.php');
-
 /**
  * Formulaire commun aux six étapes de validation du circuit (voir these_review_steps()) : un
  * commentaire, un bouton de validation et un bouton de renvoi, plus les champs propres à
@@ -46,7 +42,7 @@ require_once($CFG->libdir . '/formslib.php');
  * @copyright 2026 Sébastien Lefebvre
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class review_form extends \moodleform {
+class review_form extends base_form {
     /**
      * Defines the form fields.
      */
@@ -54,10 +50,7 @@ class review_form extends \moodleform {
         $mform = $this->_form;
         $stepkey = $this->_customdata['stepkey'];
 
-        $mform->addElement('hidden', 'id');
-        $mform->setType('id', PARAM_INT);
-        $mform->addElement('hidden', 'dossierid');
-        $mform->setType('dossierid', PARAM_INT);
+        $this->add_hidden_ids(true);
 
         $mform->addElement('header', 'stepheader', get_string('review' . $stepkey, 'mod_these'));
         $mform->setExpanded('stepheader');

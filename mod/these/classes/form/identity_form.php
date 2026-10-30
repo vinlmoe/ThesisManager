@@ -16,10 +16,6 @@
 
 namespace mod_these\form;
 
-defined('MOODLE_INTERNAL') || die();
-
-require_once($CFG->libdir . '/formslib.php');
-
 /**
  * Signature sur place (sign.php) : avant d'ouvrir la page de signature, la DEVE certifie avoir
  * vérifié l'identité du signataire présent. La vérification est inscrite à l'historique à son nom.
@@ -28,17 +24,14 @@ require_once($CFG->libdir . '/formslib.php');
  * @copyright 2026 Sébastien Lefebvre
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class identity_form extends \moodleform {
+class identity_form extends base_form {
     /**
      * Defines the form fields.
      */
     public function definition() {
         $mform = $this->_form;
 
-        foreach (['id' => PARAM_INT, 'dossierid' => PARAM_INT, 'slot' => PARAM_ALPHA] as $name => $type) {
-            $mform->addElement('hidden', $name);
-            $mform->setType($name, $type);
-        }
+        $this->add_hidden_ids(true, ['slot' => PARAM_ALPHA]);
         $mform->addElement('header', 'identityheader', get_string('signidentity', 'mod_these'));
         $mform->addElement('static', 'identityintro', '', get_string('signidentity_desc', 'mod_these'));
         $mform->addElement('advcheckbox', 'identityverified', '', get_string('signidentityverified', 'mod_these'));

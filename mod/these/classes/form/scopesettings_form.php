@@ -16,10 +16,6 @@
 
 namespace mod_these\form;
 
-defined('MOODLE_INTERNAL') || die();
-
-require_once($CFG->libdir . '/formslib.php');
-
 use mod_these\local\scopesettings;
 
 /**
@@ -34,15 +30,14 @@ use mod_these\local\scopesettings;
  * @copyright 2026 Sébastien Lefebvre
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class scopesettings_form extends \moodleform {
+class scopesettings_form extends base_form {
     /**
      * Defines the form fields.
      */
     public function definition() {
         $mform = $this->_form;
 
-        $mform->addElement('hidden', 'id');
-        $mform->setType('id', PARAM_INT);
+        $this->add_hidden_ids();
 
         $mform->addElement('header', 'agentheader', get_string('settingsdeveagent', 'mod_these'));
         $mform->setExpanded('agentheader');

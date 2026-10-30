@@ -16,10 +16,6 @@
 
 namespace mod_these\form;
 
-defined('MOODLE_INTERNAL') || die();
-
-require_once($CFG->libdir . '/formslib.php');
-
 /**
  * Import de l'annuaire du jury depuis un fichier CSV.
  *
@@ -27,7 +23,7 @@ require_once($CFG->libdir . '/formslib.php');
  * @copyright 2026 Sébastien Lefebvre
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class juror_import_form extends \moodleform {
+class juror_import_form extends base_form {
     /**
      * Defines the form fields.
      */

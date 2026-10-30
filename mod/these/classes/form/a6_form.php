@@ -18,10 +18,6 @@ namespace mod_these\form;
 
 use mod_these\local\signatures;
 
-defined('MOODLE_INTERNAL') || die();
-
-require_once($CFG->libdir . '/formslib.php');
-
 /**
  * Validation des études d'un étudiant, saisie par la DEVE sur sa page (voir \mod_these\local\a6) :
  * obtention du DEFV (date et école), et validation de l'A6 (date, ou pas encore validée, et école).
@@ -30,17 +26,14 @@ require_once($CFG->libdir . '/formslib.php');
  * @copyright 2026 Sébastien Lefebvre
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class a6_form extends \moodleform {
+class a6_form extends base_form {
     /**
      * Defines the form fields.
      */
     public function definition() {
         $mform = $this->_form;
 
-        foreach (['id' => PARAM_INT, 'userid' => PARAM_INT, 'returnurl' => PARAM_LOCALURL] as $name => $type) {
-            $mform->addElement('hidden', $name);
-            $mform->setType($name, $type);
-        }
+        $this->add_hidden_ids(false, ['userid' => PARAM_INT, 'returnurl' => PARAM_LOCALURL]);
         $mform->addElement('static', 'studentname', get_string('student', 'mod_these'), s($this->_customdata['studentname']));
         $mform->addElement('header', 'defvheader', get_string('defvvalidation', 'mod_these'));
         $mform->setExpanded('defvheader');

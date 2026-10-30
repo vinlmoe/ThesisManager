@@ -19,10 +19,6 @@ namespace mod_these\form;
 use mod_these\local\dossiers;
 use mod_these\local\signatures;
 
-defined('MOODLE_INTERNAL') || die();
-
-require_once($CFG->libdir . '/formslib.php');
-
 /**
  * Formulaire de dépôt de sujet de thèse (phase 1, étape 1), reprenant le formulaire papier de
  * l'établissement : identité et année d'études, titre (confidentiel ou non), mots-clés,
@@ -43,7 +39,7 @@ require_once($CFG->libdir . '/formslib.php');
  * @copyright 2026 Sébastien Lefebvre
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class subject_form extends \moodleform {
+class subject_form extends base_form {
     /** Champs exigés à la soumission. */
     const REQUIRED_FIELDS = ['title', 'keywords', 'studyyear'];
 
@@ -58,10 +54,7 @@ class subject_form extends \moodleform {
 
         $mform = $this->_form;
 
-        $mform->addElement('hidden', 'id');
-        $mform->setType('id', PARAM_INT);
-        $mform->addElement('hidden', 'dossierid');
-        $mform->setType('dossierid', PARAM_INT);
+        $this->add_hidden_ids(true);
 
         if (!empty($this->_customdata['subjectchange'])) {
             $mform->addElement('header', 'changeheader', get_string('subjectchange', 'mod_these'));

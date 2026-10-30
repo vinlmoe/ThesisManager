@@ -18,10 +18,6 @@ namespace mod_these\form;
 
 use mod_these\local\settingstransfer;
 
-defined('MOODLE_INTERNAL') || die();
-
-require_once($CFG->libdir . '/formslib.php');
-
 /**
  * Transfert des paramètres de l'activité (DEVE) : export dans un fichier, ou reprise depuis une
  * autre activité ou depuis un fichier exporté.
@@ -32,7 +28,7 @@ require_once($CFG->libdir . '/formslib.php');
  * @copyright 2026 Sébastien Lefebvre
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class settings_transfer_form extends \moodleform {
+class settings_transfer_form extends base_form {
     /**
      * Defines the form fields.
      */
@@ -40,8 +36,7 @@ class settings_transfer_form extends \moodleform {
         $mform = $this->_form;
         $import = $this->_customdata['mode'] === 'import';
 
-        $mform->addElement('hidden', 'id');
-        $mform->setType('id', PARAM_INT);
+        $this->add_hidden_ids();
         $mform->addElement('hidden', 'mode', $this->_customdata['mode']);
         $mform->setType('mode', PARAM_ALPHA);
 
