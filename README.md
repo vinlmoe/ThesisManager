@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/vinlmoe/ThesisManager/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/vinlmoe/ThesisManager/actions/workflows/ci.yml)
 [![Moodle 4.0+](https://img.shields.io/badge/Moodle-4.0%2B-f98012?logo=moodle&logoColor=white)](https://moodle.org)
-[![PHP 8.2](https://img.shields.io/badge/PHP-8.2-777bb4?logo=php&logoColor=white)](https://www.php.net)
+[![PHP 8.0–8.3](https://img.shields.io/badge/PHP-8.0%E2%80%938.3-777bb4?logo=php&logoColor=white)](https://www.php.net)
 [![Licence GPL v3+](https://img.shields.io/badge/licence-GPL%20v3%2B-blue)](https://www.gnu.org/licenses/gpl-3.0)
 
 Module d'activité Moodle pour la gestion des thèses d'exercice vétérinaire, du
@@ -31,7 +31,7 @@ Phase 1 — sujet
         … dossier « dormant », parfois plusieurs années …
 
 Phase 2 — soutenance
-Étudiant ──questionnaire, manuscrit, date, jury──▶ Directeur ──rapport rédigé + validation──▶ DEVE ──dossier complet, n° d'enregistrement──▶
+Étudiant ──questionnaire, manuscrit, date, jury──▶ Directeur ──rapport déposé + validation──▶ DEVE ──dossier complet, n° d'enregistrement──▶
 Bibliothèque ──conformité du manuscrit──▶ DEVE ──convocations, feuille de jury, PV à signer──▶ jury et université
                                           DEVE ──PV scanné, décisions du jury──▶ dossier clôturé
                                                       └── corrections demandées : Étudiant ──manuscrit corrigé──▶ Directeur ──▶ Bibliothèque ──▶ DEVE ──▶ dossier clôturé
@@ -42,9 +42,10 @@ Bibliothèque ──conformité du manuscrit──▶ DEVE ──convocations, f
   l'étape qui l'a renvoyé) ou, pour la DEVE, au directeur de thèse.
 - Le **numéro d'enregistrement DEVE** est attribué après le dépôt de la thèse,
   à la validation du dossier de soutenance.
-- Le directeur **rédige son rapport dans un formulaire** (brouillon, aperçu PDF,
-  une page au plus), puis valide la soutenance (avis, grille de conformité,
-  signature unique) ; le rapport n'est pas communiqué à l'étudiant.
+- Le directeur **dépose son rapport** (PDF ou Word, à partir du modèle Word
+  proposé dans les paramètres du circuit), puis valide la soutenance (avis,
+  grille de conformité, signature unique) ; le rapport est communiqué à la
+  DEVE, à la bibliothèque et au jury, pas à l'étudiant.
 - **Procès-verbal** : la DEVE dépose le PV scanné et reporte les décisions
   cochées par le jury : admis ou ajourné, mention (honorable, très honorable,
   très honorable avec félicitations du jury), proposition pour un prix de
@@ -63,7 +64,7 @@ Bibliothèque ──conformité du manuscrit──▶ DEVE ──convocations, f
 - **Questionnaire préalable au jury** modifiable (réponses courtes ou longues,
   listes, QCM), rempli par l'étudiant avant le dépôt de la soutenance.
 - Les **documents officiels** (E01 sujet, E02 agréments, E03 fiche
-  signalétique, bordereau ABES, rapport, grille, conclusions) sont reconstitués
+  signalétique, bordereau ABES, grille, conclusions) sont reconstitués
   dans la mise en forme de l'établissement et **signés dans le module** (tracé,
   empreinte du contenu, liens de signature pour les signataires extérieurs). Le
   contrat de diffusion reprend le PDF déposé par l'administrateur, entre une
@@ -97,8 +98,8 @@ Bibliothèque ──conformité du manuscrit──▶ DEVE ──convocations, f
   **relance** l'acteur attendu après un délai paramétrable (jamais pendant la
   phase dormante).
 - **Thèse confidentielle** : sujet connu de l'étudiant, de la DEVE, de la
-  bibliothèque, du directeur et du jury seulement, masqué partout ailleurs. **Embargo de diffusion** de
-  5 ans sur demande motivée, reporté au contrat de diffusion.
+  bibliothèque, du directeur et du jury seulement, masqué partout ailleurs. **Embargo de diffusion**
+  d'un an au plus (de un à douze mois) sur demande motivée, reporté au contrat de diffusion.
 - Un tableau de bord par acteur (« À traiter », décompte par statut, recherche),
   l'export du registre (CSV, Excel, ODS) et l'**import CSV** des sujets déjà
   enregistrés à la mise en service.
@@ -110,17 +111,21 @@ Bibliothèque ──conformité du manuscrit──▶ DEVE ──convocations, f
 ## Qualité
 
 - Style : standard Moodle (`moodlehq/moodle-cs`), sans avertissement.
-- Tests PHPUnit (90 + 7 tests, couverture mesurée en CI) : circuit complet, corrections, rapport, renvois,
+- Tests PHPUnit (222 tests pour `mod_these`, 26 pour `mod_thesesynthesis`, couverture mesurée en CI) :
+  circuit complet, corrections, rapport, renvois,
   droits, relances, documents générés, signatures et scellés, modèles,
   paramètres partagés, questionnaire, recherche, transfert des paramètres,
   annuaire et jury, liens à jeton, opérations concurrentes, planning, thèses
   confidentielles et embargo, grille, conclusions,
   suivi multi-promotions, import, confidentialité, sauvegarde/restauration.
-- Tests Behat : création et consultation d'un dossier, liens invalides,
-  planning des soutenances.
+- Tests Behat (16 scénarios) : création et consultation d'un dossier, dépôt du
+  sujet avec directeur extérieur, validation des études, liens invalides, thèse
+  confidentielle, planning des soutenances, signatures de l'université, import
+  et export du registre.
 - CI GitHub Actions : phpcs, lint, validation du plugin, savepoints, PHPDoc,
-  PHPUnit et Behat sur Moodle 4.1 LTS (PHP 8.0, MariaDB) et Moodle 4.5 LTS
-  (PHP 8.2, PostgreSQL) ; production du guide PDF.
+  PHPUnit et Behat sur Moodle 4.1 LTS (PHP 8.0, MariaDB), Moodle 4.5 LTS
+  (PHP 8.2, PostgreSQL, couverture en artefact) et Moodle 5.0 (PHP 8.3,
+  PostgreSQL) ; production du guide PDF.
 - Contribution : voir [`CONTRIBUTING.md`](CONTRIBUTING.md) ; évolutions dans
   [`CHANGES.md`](CHANGES.md).
 
@@ -133,3 +138,7 @@ Bibliothèque ──conformité du manuscrit──▶ DEVE ──convocations, f
   [version publiée](https://github.com/vinlmoe/ThesisManager/releases/latest)
   et produit par la CI à chaque modification (artefact `guide-these`) depuis
   son source LaTeX [`docs/guides/guide-these.tex`](docs/guides/guide-these.tex).
+
+## Licence
+
+GPL v3 ou ultérieure, voir [`LICENSE`](LICENSE).

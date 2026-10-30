@@ -273,7 +273,7 @@ class planning {
             $days[$key]['defenses'][] = $row;
         }
         return [
-            'today' => userdate(time(), '%d/%m/%Y'),
+            'today' => userdate(time(), get_string('strftimedatefullshort', 'langconfig')),
             'establishment' => [
                 'name' => (string) ($establishment->establishmentname ?? ''),
                 'city' => (string) ($establishment->establishmentcity ?? ''),
@@ -331,12 +331,12 @@ class planning {
             false
         );
         return [
-            'today' => userdate(time(), '%d/%m/%Y'),
+            'today' => userdate(time(), get_string('strftimedatefullshort', 'langconfig')),
             'establishment' => [
                 'name' => (string) ($establishment->establishmentname ?? ''),
                 'city' => (string) ($establishment->establishmentcity ?? ''),
             ],
-            'period' => ['label' => userdate($start, '%B %Y')],
+            'period' => ['label' => userdate($start, get_string('strftimemonthyear', 'mod_these'))],
             'count' => 2,
             'hasdefenses' => true,
             'days' => [['label' => $first['day'], 'defenses' => [$first, $second]]],

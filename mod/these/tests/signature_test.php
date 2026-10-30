@@ -65,6 +65,35 @@ final class signature_test extends these_testcase {
     }
 
     /**
+     * Données du formulaire de sujet avec un directeur extérieur, dont l'adresse est saisie par
+     * l'étudiant.
+     *
+     * @return \stdClass
+     */
+    private function external_subject_data(): \stdClass {
+        $data = $this->subject_data();
+        $data->externaldirector = 1;
+        $data->extdirectorname = 'Dr Jean Externe';
+        $data->extdirectorgrade = 'Docteur vétérinaire';
+        $data->extdirectorinstitution = 'Clinique du Lac';
+        $data->extdirectoremail = 'externe@example.com';
+        return $data;
+    }
+
+    /**
+     * Courriels interceptés envoyés à une adresse.
+     *
+     * @param array $messages
+     * @param string $email
+     * @return array
+     */
+    private function messages_to(array $messages, string $email): array {
+        return array_values(array_filter($messages, function ($message) use ($email) {
+            return $message->to === $email;
+        }));
+    }
+
+    /**
      * Seules les images PNG plausibles sont acceptées comme signature.
      */
     public function test_decode_signature_image(): void {
@@ -185,27 +214,100 @@ final class signature_test extends these_testcase {
     }
 
     /**
-     * Directeur extérieur : un lien de signature lui est envoyé à la soumission du sujet, et sa
-     * signature par le lien efface le jeton.
+     * Directeur extérieur : aucun lien de signature n'est envoyé à la soumission du sujet (l'adresse
+     * est saisie par l'étudiant) ; un seul lien part à la validation du sujet par le directeur, et
+     * le validateur voit l'adresse qui le recevra.
+     */
+    public function test_external_director_requested_after_director_validation(): void {
+        $this->setup_activity();
+        $sink = $this->redirectEmails();
+        $dossier = these_create_dossier($this->these->id, $this->student->id, $this->student->id);
+        $dossier = these_save_subject(
+            $this->these,
+            $this->cm,
+            $dossier,
+            $this->external_subject_data(),
+            true,
+            $this->student->id,
+            $this->signature()
+        );
+        $this->assertCount(0, $this->messages_to($sink->get_messages(), 'externe@example.com'));
+        $this->assertArrayNotHasKey('subject:extdirector', these_get_signatures($dossier->id));
+        $this->assertSame(
+            'Dr Jean Externe (Docteur vétérinaire, Clinique du Lac) — externe@example.com',
+            \mod_these\local\dossiers::external_director_summary($dossier)
+        );
+
+        $dossier = these_validate_step($this->these, $this->cm, $dossier, $this->director->id, [], '', $this->signature());
+        $this->assertCount(1, $this->messages_to($sink->get_messages(), 'externe@example.com'));
+        $signature = these_get_signatures($dossier->id)['subject:extdirector'];
+        $this->assertEmpty($signature->timesigned);
+        $this->assertNotEmpty($signature->requesttime);
+        $this->assertSame('externe@example.com', $signature->signeremail);
+
+        // Aucun nouvel envoi aux étapes suivantes.
+        $dossier = these_validate_step($this->these, $this->cm, $dossier, $this->deve->id, [], '', $this->signature());
+        $this->assertCount(1, $this->messages_to($sink->get_messages(), 'externe@example.com'));
+    }
+
+    /**
+     * Un sujet renvoyé puis soumis de nouveau avec un directeur extérieur n'émet pas de lien à la
+     * soumission : seule la validation du directeur l'émet.
+     */
+    public function test_external_director_not_requested_at_resubmission(): void {
+        $this->setup_activity();
+        $sink = $this->redirectEmails();
+        $dossier = these_create_dossier($this->these->id, $this->student->id, $this->student->id);
+        $dossier = these_save_subject(
+            $this->these,
+            $this->cm,
+            $dossier,
+            $this->subject_data(),
+            true,
+            $this->student->id,
+            $this->signature()
+        );
+        $dossier = these_return_dossier($this->these, $this->cm, $dossier, $this->director->id, 'student', 'Précisez le directeur');
+        $dossier = these_save_subject(
+            $this->these,
+            $this->cm,
+            $dossier,
+            $this->external_subject_data(),
+            true,
+            $this->student->id,
+            $this->signature()
+        );
+        $this->assertEquals(THESE_STATUS_SUBJECT_SUBMITTED, $dossier->status);
+        $this->assertCount(0, $this->messages_to($sink->get_messages(), 'externe@example.com'));
+
+        $dossier = these_validate_step($this->these, $this->cm, $dossier, $this->director->id, [], '', $this->signature());
+        $this->assertCount(1, $this->messages_to($sink->get_messages(), 'externe@example.com'));
+    }
+
+    /**
+     * Directeur extérieur : le lien envoyé à la validation du directeur vaut, et sa signature par le
+     * lien efface le jeton.
      */
     public function test_external_director_token(): void {
         $this->setup_activity();
         $sink = $this->redirectEmails();
         $dossier = these_create_dossier($this->these->id, $this->student->id, $this->student->id);
-        $data = $this->subject_data();
-        $data->externaldirector = 1;
-        $data->extdirectorname = 'Dr Jean Externe';
-        $data->extdirectorgrade = 'Docteur vétérinaire';
-        $data->extdirectorinstitution = 'Clinique du Lac';
-        $data->extdirectoremail = 'externe@example.com';
-        $dossier = these_save_subject($this->these, $this->cm, $dossier, $data, true, $this->student->id, $this->signature());
+        $dossier = these_save_subject(
+            $this->these,
+            $this->cm,
+            $dossier,
+            $this->external_subject_data(),
+            true,
+            $this->student->id,
+            $this->signature()
+        );
+        $dossier = these_validate_step($this->these, $this->cm, $dossier, $this->director->id, [], '', $this->signature());
 
         // Nouveau lien, valable.
         $token = $this->token_sent_to($sink->get_messages(), 'externe@example.com');
         $this->assertCount(1, these_get_signatures_by_token($token));
         $signature = these_get_signatures($dossier->id)['subject:extdirector'];
         $this->assertEmpty($signature->timesigned);
-        $token = $this->token_sent_to($sink->get_messages(), 'externe@example.com');
         // Seule l'empreinte du jeton est en base.
         $this->assertSame(these_token_hash($token), $signature->token);
         $this->assertEmpty(these_get_signatures_by_token($signature->token));
@@ -227,21 +329,60 @@ final class signature_test extends these_testcase {
     }
 
     /**
+     * Relance groupée de la DEVE : rien n'est envoyé au directeur extérieur tant que le directeur
+     * n'a pas validé le sujet ; après, la relance envoie un nouveau lien.
+     */
+    public function test_bulk_remind_waits_for_director_validation(): void {
+        $this->setup_activity();
+        $sink = $this->redirectEmails();
+        $dossier = these_create_dossier($this->these->id, $this->student->id, $this->student->id);
+        $dossier = these_save_subject(
+            $this->these,
+            $this->cm,
+            $dossier,
+            $this->external_subject_data(),
+            true,
+            $this->student->id,
+            $this->signature()
+        );
+        $apply = function ($dossier) {
+            return \mod_these\local\bulk::apply($this->these, $this->cm, $this->context, $dossier, 'remind', $this->deve->id);
+        };
+        $this->assertFalse($apply($dossier));
+        $this->assertCount(0, $this->messages_to($sink->get_messages(), 'externe@example.com'));
+        $this->assertArrayNotHasKey('subject:extdirector', these_get_signatures($dossier->id));
+
+        $dossier = these_validate_step($this->these, $this->cm, $dossier, $this->director->id, [], '', $this->signature());
+        $first = $this->token_sent_to($sink->get_messages(), 'externe@example.com');
+        $sink->clear();
+        $this->assertTrue($apply($this->reload($dossier->id)));
+        $second = $this->token_sent_to($sink->get_messages(), 'externe@example.com');
+        $this->assertNotSame($first, $second);
+        $this->assertEmpty(these_get_signatures_by_token($first));
+        $this->assertCount(1, these_get_signatures_by_token($second));
+    }
+
+    /**
      * Relance automatique : une signature attendue depuis plus que le délai de relance est redemandée
-     * (nouveau lien), et le délai repart de zéro.
+     * (nouveau lien), et le délai repart de zéro. Rien n'est relancé avant la validation du sujet par
+     * le directeur.
      */
     public function test_signature_reminders(): void {
         global $DB;
         $this->setup_activity();
         $sink = $this->redirectEmails();
         $dossier = these_create_dossier($this->these->id, $this->student->id, $this->student->id);
-        $data = $this->subject_data();
-        $data->externaldirector = 1;
-        $data->extdirectorname = 'Dr Jean Externe';
-        $data->extdirectorgrade = 'Docteur vétérinaire';
-        $data->extdirectorinstitution = 'Clinique du Lac';
-        $data->extdirectoremail = 'externe@example.com';
-        $dossier = these_save_subject($this->these, $this->cm, $dossier, $data, true, $this->student->id, $this->signature());
+        $dossier = these_save_subject(
+            $this->these,
+            $this->cm,
+            $dossier,
+            $this->external_subject_data(),
+            true,
+            $this->student->id,
+            $this->signature()
+        );
+        $this->assertSame(0, \mod_these\local\notifications::send_signature_reminders());
+        $dossier = these_validate_step($this->these, $this->cm, $dossier, $this->director->id, [], '', $this->signature());
         $sink->clear();
 
         // Délai de relance (14 jours) pas encore écoulé.

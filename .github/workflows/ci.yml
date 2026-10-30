@@ -1,25 +1,28 @@
 name: CI
 
+# Les étiquettes vX.Y.Z sont créées par le job « Publication » (jeton du dépôt, qui ne déclenche
+# aucune exécution) : rien ne s'exécute sur étiquette.
 on:
   push:
     branches:
       - main
-    tags:
-      - "v*"
   pull_request:
   workflow_dispatch:
 
 permissions:
   contents: read
 
+# Une poussée sur une demande de fusion annule l'exécution précédente ; sur main, chaque exécution va
+# à son terme (la publication ne doit pas être interrompue).
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   style:
     name: Style Moodle
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
 
     steps:
       - name: Checkout
@@ -37,7 +40,7 @@ jobs:
       - name: Install Moodle coding standard
         run: |
           composer global config --no-plugins allow-plugins.dealerdirect/phpcodesniffer-composer-installer true
-          composer global require --no-interaction moodlehq/moodle-cs
+          composer global require --no-interaction "moodlehq/moodle-cs:^3.7"
           echo "$(composer global config bin-dir --absolute)" >> "$GITHUB_PATH"
 
       - name: Run phpcs
@@ -50,10 +53,12 @@ jobs:
           ! grep -rn "GLOB_BRACE" mod --include='*.php'
 
   moodle:
-    # Les deux versions LTS couvertes par $plugin->requires (Moodle 4.0 et plus) : la plus ancienne
-    # encore suivie, avec la plus ancienne version de PHP qu'elle accepte, et la plus récente.
+    # Les deux versions LTS encore suivies, avec la plus ancienne version de PHP que chacune accepte
+    # (la couverture est mesurée sur la seconde), et la version majeure courante avec PHP 8.3.
+    # $plugin->requires annonce Moodle 4.0, qui n'est pas testé.
     name: Moodle ${{ matrix.moodle }} · PHP ${{ matrix.php }} · ${{ matrix.database }}
     runs-on: ubuntu-24.04
+    timeout-minutes: 60
 
     strategy:
       fail-fast: false
@@ -67,6 +72,10 @@ jobs:
             php: "8.2"
             database: pgsql
             coverage: pcov
+          - moodle: MOODLE_500_STABLE
+            php: "8.3"
+            database: pgsql
+            coverage: none
 
     services:
       postgres:
@@ -183,13 +192,25 @@ jobs:
         env:
           COVERAGE: ${{ matrix.coverage }}
         run: |
-          # Couverture des tests mesurée sur une seule configuration (pcov), affichée dans le journal.
+          # Couverture des tests mesurée sur une seule configuration (pcov) : affichée dans le journal
+          # et conservée au format Clover (moodle-plugin-ci écrit coverage.xml dans le répertoire
+          # courant, un fichier par module) pour l'artefact « coverage ».
           options=""
-          if [ "$COVERAGE" = "pcov" ]; then options="--coverage-text"; fi
+          if [ "$COVERAGE" = "pcov" ]; then options="--coverage-text --coverage-clover"; mkdir -p coverage; fi
           check_status=0
-          moodle-plugin-ci phpunit $options mod/these || check_status=1
-          moodle-plugin-ci phpunit $options mod/thesesynthesis || check_status=1
+          for plugin in these thesesynthesis; do
+            moodle-plugin-ci phpunit $options "mod/$plugin" || check_status=1
+            if [ -f coverage.xml ]; then mv coverage.xml "coverage/$plugin.xml"; fi
+          done
           exit "$check_status"
+
+      - name: Upload coverage
+        if: ${{ !cancelled() && steps.moodle_install.outcome == 'success' && matrix.coverage == 'pcov' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/
+          if-no-files-found: error
 
       - name: Behat
         if: ${{ !cancelled() && steps.moodle_install.outcome == 'success' }}
@@ -200,12 +221,11 @@ jobs:
           exit "$check_status"
 
   guide:
-    # Le guide PDF n'est plus versionné : il est produit ici depuis son source LaTeX, conservé comme
-    # artefact de chaque exécution et joint à la publication d'une version (étiquette v*).
+    # Le guide PDF n'est plus versionné : il est produit ici depuis son source LaTeX et conservé comme
+    # artefact de chaque exécution ; le job « Publication » le joint à la publication d'une version.
     name: Guide PDF
     runs-on: ubuntu-24.04
-    permissions:
-      contents: write
+    timeout-minutes: 20
 
     steps:
       - name: Checkout
@@ -233,16 +253,6 @@ jobs:
           name: guide-these
           path: docs/guides/guide-these.pdf
 
-      - name: Attach guide to release
-        if: startsWith(github.ref, 'refs/tags/v')
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1 \
-            || gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --title "$GITHUB_REF_NAME" \
-                 --notes-file CHANGES.md
-          gh release upload "$GITHUB_REF_NAME" docs/guides/guide-these.pdf --repo "$GITHUB_REPOSITORY" --clobber
-
   release:
     # Publication automatique : sur main, une fois tous les contrôles verts, la version de mod_these
     # (release de version.php) qui n'a pas encore d'étiquette est étiquetée vX.Y.Z et publiée, avec la
@@ -251,6 +261,7 @@ jobs:
     needs: [style, moodle, guide]
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
     permissions:
       contents: write
 
@@ -265,6 +276,14 @@ jobs:
         run: |
           release=$(sed -nE "s/^\\\$plugin->release *= *'([^']+)';.*/\1/p" mod/these/version.php)
           if [ -z "$release" ]; then echo "release introuvable dans mod/these/version.php"; exit 1; fi
+          # Les notes de publication sont la première section de CHANGES.md : elle doit être celle de
+          # la version publiée, sinon la publication s'arrête ici.
+          heading=$(grep -m 1 '^## ' CHANGES.md)
+          if ! printf '%s\n' "$heading" | grep -qwF "$release"; then
+            echo "::error file=CHANGES.md::La première section de CHANGES.md (« $heading ») ne mentionne pas" \
+              "la version $release de mod/these/version.php : ajouter la section de la version avant de publier."
+            exit 1
+          fi
           echo "tag=v$release" >> "$GITHUB_OUTPUT"
 
       - name: Download guide

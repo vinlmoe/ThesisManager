@@ -77,9 +77,10 @@ $capabilities = [
     ],
 
     // DEVE : enregistrer les sujets, valider les dossiers de soutenance, générer les documents,
-    // déposer les procès-verbaux, modifier ou abandonner un dossier, paramétrer les courriels.
+    // déposer les procès-verbaux, modifier ou abandonner un dossier, paramétrer les courriels et
+    // les modèles HTML des documents (RISK_XSS).
     'mod/these:managedeve' => [
-        'riskbitmask' => RISK_PERSONAL | RISK_SPAM,
+        'riskbitmask' => RISK_PERSONAL | RISK_SPAM | RISK_XSS,
         'captype' => 'write',
         'contextlevel' => CONTEXT_MODULE,
         'archetypes' => [

@@ -35,17 +35,23 @@ require_once(__DIR__ . '/these_testcase.php');
 final class import_test extends these_testcase {
     /**
      * Contenu CSV de test : une ligne valide, un étudiant inconnu, un doublon, un directeur
-     * inconnu.
+     * inconnu, un étudiant non inscrit au cours, un directeur non inscrit au cours.
      *
      * @return string
      */
     private function csv(): string {
-        $other = $this->getDataGenerator()->create_and_enrol($this->course, 'student');
+        $gen = $this->getDataGenerator();
+        $other = $gen->create_and_enrol($this->course, 'student');
+        $third = $gen->create_and_enrol($this->course, 'student');
+        $notenrolled = $gen->create_user();
+        $outsidedirector = $gen->create_user();
         return "student;title;director;devenumber;libraryref\n"
             . "{$this->student->username};Sujet importé;{$this->director->email};2019-004;NOT-1\n"
             . "inconnu;Sujet;;;\n"
             . "{$this->student->email};Doublon;;;\n"
-            . "{$other->username};Sujet;personne@nulle.part;;\n";
+            . "{$other->username};Sujet;personne@nulle.part;;\n"
+            . "{$notenrolled->username};Sujet;;;\n"
+            . "{$third->username};Sujet;{$outsidedirector->email};;\n";
     }
 
     /**
@@ -55,7 +61,9 @@ final class import_test extends these_testcase {
         global $DB;
         $this->setup_activity();
         $report = these_import_dossiers($this->these, $this->csv(), 'semicolon', 'UTF-8', true, $this->deve->id);
-        $this->assertEquals([true, false, false, false], array_column($report, 'ok'));
+        $this->assertEquals([true, false, false, false, false, false], array_column($report, 'ok'));
+        $this->assertSame(get_string('importusernotenrolled', 'mod_these', $report[4]['student']), $report[4]['message']);
+        $this->assertStringContainsString(get_string('importusernotenrolled', 'mod_these', ''), $report[5]['message']);
         $this->assertEquals(0, $DB->count_records('these_dossier', ['theseid' => $this->these->id]));
     }
 

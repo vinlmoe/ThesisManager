@@ -54,7 +54,8 @@ if ($token !== '') {
     $member = these_get_jury_member_access($memberid, $USER);
     $pageparams = ['member' => $memberid];
 }
-$PAGE->set_url(new moodle_url('/mod/these/jury.php', $pageparams));
+// Le jeton reste hors de l'adresse de la page (journaux, navigation) : il n'est repris que dans les liens.
+$PAGE->set_url(new moodle_url('/mod/these/jury.php', $token !== '' ? [] : $pageparams));
 $PAGE->set_pagelayout('embedded');
 if (!$member) {
     $PAGE->set_context(context_system::instance());

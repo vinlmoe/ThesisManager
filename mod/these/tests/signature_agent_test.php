@@ -253,8 +253,9 @@ final class signature_agent_test extends these_testcase {
     }
 
     /**
-     * Un membre du jury invité par courriel et qui a un compte à cette adresse retrouve sa
-     * signature en attente dans « Mes signatures ».
+     * Un signataire invité par courriel ne retrouve pas sa signature dans « Mes signatures », même
+     * avec un compte à cette adresse : l'adresse d'un compte n'est pas vérifiée, la signature à jeton
+     * ne se signe que par le lien.
      */
     public function test_invited_signer_with_account(): void {
         $this->setup_activity();
@@ -265,10 +266,12 @@ final class signature_agent_test extends these_testcase {
         these_save_jury($dossier->id, $this->generator->default_jury());
         $this->redirectEmails();
         these_request_signature($this->these, $this->cm, $dossier, 'president', ['conclusions']);
-        $pending = these_get_user_pending_signatures($president);
-        $this->assertCount(1, $pending);
-        $this->assertSame('conclusions', reset($pending)->doctype);
+        $this->assertCount(0, these_get_user_pending_signatures($president));
         $this->assertCount(0, these_get_user_pending_signatures($this->student));
+        // La signature reste attendue : elle se signe par le lien à jeton.
+        $signature = these_get_signatures($dossier->id)['conclusions:president'];
+        $this->assertEmpty($signature->timesigned);
+        $this->assertNotNull($signature->token);
     }
 
     /**

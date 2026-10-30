@@ -4,7 +4,7 @@
 
 % Version du guide : à mettre à jour à chaque modification, avec une ligne dans l'historique.
 \newcommand{\titreguide}{Guide de la gestion des thèses}
-\newcommand{\versionguide}{2.19}
+\newcommand{\versionguide}{2.20}
 \newcommand{\dateguide}{30 octobre 2026}
 \newcommand{\versionthese}{0.23.1}
 
@@ -160,6 +160,10 @@ refaites. \\
 2.19 & 30 octobre 2026 & Dépôt du sujet : le titre du directeur et celui de
 l'examinateur interne ne sont plus demandés, ils sont toujours repris de
 l'annuaire des enseignants. \\
+2.20 & 30 octobre 2026 & Directeur extérieur : lien de signature envoyé après
+la validation de l'examinateur interne, adresse affichée au validateur ; « Mes
+signatures » réservé aux signatures de compte ; import limité aux comptes
+inscrits ; manuscrit en PDF. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -456,7 +460,8 @@ servent qu'aux fichiers CSV.
 \toprule
 \textbf{Colonne} & \textbf{Contenu} \\
 \midrule
-\texttt{student} & Obligatoire. Identifiant de connexion, courriel ou numéro d'identification. \\
+\texttt{student} & Obligatoire. Identifiant de connexion, courriel ou numéro d'identification
+d'un compte inscrit au cours. \\
 \texttt{title} & Obligatoire. Titre du sujet. \\
 \texttt{director} & Directeur (même identification que l'étudiant). \\
 \texttt{devenumber}, \texttt{libraryref} & Numéro DEVE et référence de notice. \\
@@ -1377,8 +1382,8 @@ DEVE génère les documents de soutenance.}
   \item Ouvrez le lien \og signature\fg{} reçu par courriel : il couvre tous
         les documents qui vous attendent (fiche signalétique, conclusions) et
         vaut 60~jours ; passé ce délai, demandez-en un nouveau à la DEVE.
-        Si vous avez un compte Moodle à cette adresse, vous pouvez aussi les
-        retrouver dans \bouton{Mes signatures}.
+        Le lien est le seul moyen de signer, même si vous avez un compte
+        Moodle à cette adresse.
   \item Consultez chaque document en PDF.
   \item Tracez votre signature, ou, connecté, cochez \bouton{Utiliser ma
         signature enregistrée} ; cochez la certification et cliquez sur
@@ -1387,8 +1392,6 @@ DEVE génère les documents de soutenance.}
 \ensuite{le lien cesse de fonctionner une fois utilisé ; la DEVE voit votre
 signature dans le suivi des signatures.}
 \end{procedure}
-
-\capture[0.8\linewidth]{66_president_mes_signatures}{Président du jury ayant un compte : signature depuis « Mes signatures ».}
 
 % ===========================================================================
 \section{Documents de l'établissement et signatures}
@@ -1619,7 +1622,8 @@ Le président du jury, le CCEM, la présidence de l'université et un éventuel
 directeur extérieur n'ont pas de compte Moodle (la direction générale, elle, est
 signée par délégation par les agents DEVE, section~\ref{sec:agent}).
 À la validation du dossier de soutenance par la DEVE (et, pour le directeur
-extérieur, à la soumission du sujet), chacun reçoit \textbf{un seul lien}
+extérieur, à la validation du sujet par le directeur, qui voit l'adresse saisie
+par l'étudiant avant de valider), chacun reçoit \textbf{un seul lien}
 couvrant tous les documents qui l'attendent : il les consulte en PDF puis signe
 une fois. Le lien est personnel, vaut 60~jours et cesse de fonctionner une fois
 utilisé ; un nouvel envoi par la DEVE remplace le précédent. Seule une empreinte

@@ -506,7 +506,7 @@ class jurors {
             ];
         }
         return [
-            'today' => userdate(time(), '%d/%m/%Y'),
+            'today' => userdate(time(), get_string('strftimedatefullshort', 'langconfig')),
             'establishment' => ['name' => $name, 'city' => (string) ($activity->establishmentcity ?? '')],
             'count' => array_sum(array_map(function ($group) {
                 return count($group['members']);

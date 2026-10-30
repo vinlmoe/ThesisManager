@@ -36,6 +36,7 @@ require_once(__DIR__ . '/these_testcase.php');
  * @covers     ::these_get_jury_member_access
  * @covers     ::these_dossier_operation
  * @covers     \mod_these\pdf\html_document::restrict_images
+ * @covers     \mod_these\pdf\html_document::strip_tcpdf_tags
  */
 final class integrity_test extends these_testcase {
     /**
@@ -237,5 +238,17 @@ final class integrity_test extends these_testcase {
             '<p><img src="@QUJD" width="10"/><img src="data:image/png;base64,QUJD"/></p>',
             \mod_these\pdf\html_document::restrict_images($html)
         );
+    }
+
+    /**
+     * Les modèles ne peuvent pas appeler de méthode de TCPDF par la balise <tcpdf>, même insérée
+     * par une donnée du modèle.
+     */
+    public function test_template_tcpdf_tags_are_stripped(): void {
+        $html = '<p>Avant <tcpdf method="Output" params="..." /> milieu <TCPDF method="x">x</tcpdf> après</p>';
+        $this->assertSame('<p>Avant  milieu x après</p>', \mod_these\pdf\html_document::strip_tcpdf_tags($html));
+
+        $filled = \mod_these\pdf\html_document::fill('<p>{{{raw}}}</p>', ['raw' => '<tcpdf method="Output"/>Texte']);
+        $this->assertSame('<p>Texte</p>', $filled['body']);
     }
 }

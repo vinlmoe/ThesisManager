@@ -378,7 +378,7 @@ class doctemplates {
         $config = scopesettings::get_all($src['scope'] ?? these_settings_scope($these));
 
         $day = function ($time) {
-            return (int) $time ? userdate((int) $time, '%d/%m/%Y') : '';
+            return (int) $time ? userdate((int) $time, get_string('strftimedatefullshort', 'langconfig')) : '';
         };
         $up = function ($text) {
             return core_text::strtoupper(trim((string) $text));
@@ -678,7 +678,7 @@ class doctemplates {
         ] + $years;
 
         return [
-            'today' => userdate(time(), '%d/%m/%Y'),
+            'today' => userdate(time(), get_string('strftimedatefullshort', 'langconfig')),
             'settings' => [
                 'institution' => (string) ($config['institution'] ?? ''),
                 'institutionupper' => $up($config['institution'] ?? ''),

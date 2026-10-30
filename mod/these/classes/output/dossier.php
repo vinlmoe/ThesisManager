@@ -17,6 +17,7 @@
 namespace mod_these\output;
 
 use context;
+use mod_these\local\dossiers;
 use moodle_url;
 use stdClass;
 
@@ -132,11 +133,7 @@ class dossier implements \renderable, \templatable {
             $masked = [parts::em(get_string('confidentialtitle', 'mod_these'))];
             $title = $titleen = $summary = $keywords = $masked;
         }
-        $extdirector = null;
-        if (!empty($dossier->externaldirector)) {
-            $institution = trim((string) $dossier->extdirectorinstitution);
-            $extdirector = trim((string) $dossier->extdirectorname) . ($institution !== '' ? ' (' . $institution . ')' : '');
-        }
+        $extdirector = dossiers::external_director_summary($dossier);
         return new detail_section(get_string('subject', 'mod_these'), [
             get_string('student', 'mod_these') => [parts::text($student ? fullname($student) : '-')],
             get_string('subjecttitle', 'mod_these') => $title,
@@ -145,8 +142,10 @@ class dossier implements \renderable, \templatable {
             get_string('subjecttitleen', 'mod_these') => $titleen,
             get_string('subjectsummary', 'mod_these') => $summary,
             get_string('subjectkeywords', 'mod_these') => $keywords,
-            // Directeur extérieur : l'enseignant suivi dans le module est l'examinateur interne.
-            get_string('director', 'mod_these') => [parts::text($extdirector ?? ($director ? fullname($director) : '-'))],
+            // Directeur extérieur (nom, grade, établissement, adresse) : l'enseignant suivi dans le module est
+            // l'examinateur interne.
+            get_string('director', 'mod_these') => [parts::text($extdirector !== '' ? $extdirector
+                : ($director ? fullname($director) : '-'))],
             get_string('internalexaminer', 'mod_these') => !empty($dossier->externaldirector)
                 ? [parts::text($director ? fullname($director) : '-')] : null,
             // Pièces jointes des dépôts antérieurs : le dépôt n'en accepte plus, celles déposées restent consultables.

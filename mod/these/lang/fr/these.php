@@ -125,6 +125,7 @@ $string['backto'] = 'Retour : {$a}';
 $string['previouspage'] = 'Page précédente';
 $string['planningviewweek'] = 'Par semaine';
 $string['planningviewmonth'] = 'Par mois';
+$string['strftimemonthyear'] = '%B %Y';
 $string['planningweekof'] = 'Semaine du {$a->start} au {$a->end}';
 $string['planningprevweek'] = 'Semaine précédente';
 $string['planningthisweek'] = 'Cette semaine';
@@ -432,7 +433,8 @@ $string['importhelp'] = "Reprise de dossiers déjà engagés hors du module, dep
     . "(obligatoires), <code>titleen</code>, <code>summary</code>, <code>keywords</code>, <code>director</code>, "
     . "<code>codirector</code>, <code>devenumber</code>, <code>libraryref</code>, <code>status</code>, <code>defensedate</code>, "
     . "<code>defenselocation</code>, <code>mention</code>, <code>corrections</code>. Étudiant et directeur sont désignés par "
-    . "identifiant de connexion, adresse de courriel ou numéro d'identification. Un co-directeur dont le nom (« Claire Martin », "
+    . "identifiant de connexion, adresse de courriel ou numéro d'identification, et doivent être inscrits au cours. "
+    . "Un co-directeur dont le nom (« Claire Martin », "
     . "« Dr MARTIN Claire ») est celui d'un enseignant interne de l'annuaire y est rattaché ; sinon il est noté comme extérieur. "
     . "<code>status</code> : vide ou <code>active</code> (sujet enregistré), <code>corrections</code> (thèse soutenue, "
     . "corrections en cours) ou <code>closed</code> (dossier clôturé) ; les deux derniers exigent <code>defensedate</code> "
@@ -442,6 +444,7 @@ $string['csvfile'] = "Fichier (CSV, Excel ou OpenDocument)";
 $string['importdryrun'] = 'Simulation (ne rien créer)';
 $string['importline'] = 'Ligne';
 $string['importusernotfound'] = 'Utilisateur introuvable : {$a}';
+$string['importusernotenrolled'] = 'Utilisateur non inscrit au cours : {$a}';
 $string['importdossierexists'] = 'Cet étudiant a déjà un dossier.';
 $string['importtitlemissing'] = 'Titre manquant.';
 $string['importcreated'] = 'Dossier créé';
@@ -750,7 +753,8 @@ $string['hetoplink'] = 'Rechercher les mots-clés dans HeTOP';
 $string['keywordscount'] = 'Indiquez de 3 à 5 mots-clés, séparés par des points-virgules.';
 $string['subjectapproval'] = 'Approbation du sujet';
 $string['externaldirector'] = "Le directeur de thèse est extérieur à l'établissement";
-$string['externaldirector_help'] = "Le directeur extérieur, sans compte Moodle, signe le formulaire depuis un lien reçu par courriel. "
+$string['externaldirector_help'] = "Le directeur extérieur, sans compte Moodle, signe le formulaire depuis un lien reçu par courriel "
+    . "une fois le sujet validé par l'examinateur interne. "
     . "Choisissez alors un examinateur interne, enseignant-chercheur de l'établissement : c'est lui qui fait les démarches dans le "
     . "module (validation des étapes, rapport, signatures en qualité de membre).";
 $string['directortitle'] = 'Titre du directeur';
@@ -1477,3 +1481,30 @@ $string['settingsmindelayweeksinvalid'] = 'Indiquez un nombre de semaines positi
 $string['proposeddatehelp'] = "La date et l'heure de la soutenance doivent avoir été convenues au préalable avec les membres du jury et la DEVE. Elles doivent être fixées au moins {\$a} semaine(s) après le dépôt.";
 $string['proposeddatetoosoon'] = 'La soutenance doit avoir lieu au moins {$a->weeks} semaine(s) après le dépôt, soit à partir du {$a->date}.';
 $string['proposeddatehelpnodelay'] = "La date et l'heure de la soutenance doivent avoir été convenues au préalable avec les membres du jury et la DEVE.";
+$string['privacy:metadata:these_dossier:externaldirector'] = 'La thèse est-elle dirigée par un directeur extérieur.';
+$string['privacy:metadata:these_dossier:extdirectorname'] = 'Nom du directeur extérieur.';
+$string['privacy:metadata:these_dossier:extdirectorgrade'] = 'Grade du directeur extérieur.';
+$string['privacy:metadata:these_dossier:extdirectorinstitution'] = 'Établissement du directeur extérieur.';
+$string['privacy:metadata:these_dossier:extdirectoremail'] = 'Adresse de courriel du directeur extérieur.';
+$string['privacy:metadata:these_dossier:daterequestcomment'] = "Commentaire de la DEVE demandant une autre date de soutenance.";
+$string['privacy:metadata:these_dossier:correctionsnote'] = 'Corrections demandées par le jury.';
+$string['privacy:metadata:these_signature:token'] = "Empreinte du lien personnel de signature envoyé à un signataire sans compte.";
+$string['privacy:metadata:these_signature:contenthash'] = 'Empreinte du contenu signé.';
+$string['privacy:metadata:these_signature:verifiedby'] = "Compte DEVE qui a vérifié l'identité d'un signataire sur place, ou enregistré un scan.";
+$string['privacy:metadata:these_jury:eligibleby'] = "Compte DEVE qui a validé l'éligibilité du membre du jury.";
+$string['privacy:metadata:these_jury:accesstoken'] = 'Empreinte du lien personnel donnant au membre du jury accès aux documents du dossier.';
+$string['privacy:metadata:these_subjecthistory:directorid'] = 'Directeur du sujet précédent.';
+$string['privacy:metadata:these_subjecthistory:directorname'] = 'Nom du directeur du sujet précédent (directeur extérieur compris).';
+$string['privacy:metadata:university'] = "L'adresse de l'université renseignée dans l'activité reçoit par courriel les documents de soutenance après la soutenance.";
+$string['privacy:metadata:university:student'] = "Nom de l'étudiant.";
+$string['privacy:metadata:university:title'] = 'Titre de la thèse.';
+$string['privacy:metadata:university:defensedate'] = 'Date et résultat de la soutenance.';
+$string['privacy:metadata:university:documents'] = 'Documents de soutenance (fiche signalétique, conclusions, contrat de diffusion, procès-verbal).';
+$string['privacy:metadata:externalsigners'] = "Les signataires extérieurs (directeur extérieur, direction générale, présidence de la CCEM, université) reçoivent par courriel un lien personnel vers le document qu'ils signent, qu'ils peuvent lire.";
+$string['privacy:metadata:externalsigners:student'] = "Nom de l'étudiant.";
+$string['privacy:metadata:externalsigners:title'] = 'Titre de la thèse.';
+$string['privacy:metadata:externalsigners:document'] = "Document à signer, avec les données du dossier qu'il contient.";
+$string['privacy:metadata:servicemailboxes'] = "Les adresses de service de la DEVE et de la bibliothèque renseignées dans l'activité reçoivent les notifications du circuit.";
+$string['privacy:metadata:servicemailboxes:student'] = "Nom de l'étudiant.";
+$string['privacy:metadata:servicemailboxes:title'] = 'Titre de la thèse (remplacé quand la thèse est confidentielle).';
+$string['privacy:metadata:servicemailboxes:status'] = 'Étape du circuit atteinte et commentaires saisis avec elle.';

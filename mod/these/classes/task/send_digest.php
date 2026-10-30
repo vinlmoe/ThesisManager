@@ -35,7 +35,7 @@ class send_digest extends \core\task\scheduled_task {
     }
 
     /**
-     * Envoie les récapitulatifs.
+     * Envoie les récapitulatifs : une ligne de journal par activité, puis le total, même nul.
      *
      * @return void
      */
@@ -43,9 +43,9 @@ class send_digest extends \core\task\scheduled_task {
         global $CFG;
 
         require_once($CFG->dirroot . '/mod/these/locallib.php');
-        $sent = \mod_these\local\notifications::send_weekly_digests();
-        if ($sent > 0) {
-            mtrace("mod_these : $sent récapitulatif(s) envoyé(s).");
-        }
+        $sent = \mod_these\local\notifications::send_weekly_digests(null, function ($line) {
+            mtrace('mod_these : ' . $line);
+        });
+        mtrace("mod_these : $sent récapitulatif(s) envoyé(s).");
     }
 }

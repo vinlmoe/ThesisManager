@@ -63,4 +63,63 @@ final class upgrade_test extends these_testcase {
         $this->assertCount(1, these_get_files($this->context, 'pv', $dossier->id));
         $this->assertGreaterThan($previous, (int) get_config('mod_these', 'version'));
     }
+
+    /**
+     * 2026103001 : index et clé étrangère ajoutés, adresse de l'annuaire élargie, sur un schéma qui
+     * en est dépourvu comme sur un schéma déjà conforme (étape rejouable).
+     */
+    public function test_indexes_and_juror_email_length(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $dbman = $DB->get_manager();
+
+        $indexes = [
+            ['these_log', 'userid', ['userid']],
+            ['these_signature', 'userid', ['userid']],
+            ['these_dossier', 'defensedate', ['defensedate']],
+            ['these_subjecthistory', 'directorid', ['directorid']],
+            ['these_subjecthistory', 'changedby', ['changedby']],
+            ['these_question', 'theseid', ['theseid']],
+        ];
+        $exists = function () use ($dbman, $indexes) {
+            $missing = [];
+            foreach ($indexes as [$tablename, $name, $fields]) {
+                if (!$dbman->index_exists(new \xmldb_table($tablename), new \xmldb_index($name, XMLDB_INDEX_NOTUNIQUE, $fields))) {
+                    $missing[] = "$tablename.$name";
+                }
+            }
+            return $missing;
+        };
+        $this->assertSame([], $exists(), 'install.xml');
+
+        // Schéma de la version précédente : sans ces index, adresse à 100 caractères.
+        foreach ($indexes as [$tablename, $name, $fields]) {
+            $table = new \xmldb_table($tablename);
+            if ($tablename === 'these_question') {
+                $dbman->drop_key($table, new \xmldb_key($name, XMLDB_KEY_FOREIGN, $fields, 'these', ['id']));
+            } else {
+                $dbman->drop_index($table, new \xmldb_index($name, XMLDB_INDEX_NOTUNIQUE, $fields));
+            }
+        }
+        $table = new \xmldb_table('these_juror');
+        $emailindex = new \xmldb_index('email', XMLDB_INDEX_NOTUNIQUE, ['email']);
+        $dbman->drop_index($table, $emailindex);
+        $dbman->change_field_precision($table, new \xmldb_field('email', XMLDB_TYPE_CHAR, '100', null, null, null, null));
+        $dbman->add_index($table, $emailindex);
+        $this->assertCount(6, $exists());
+        $this->assertEquals(100, $DB->get_columns('these_juror')['email']->max_length);
+
+        $previous = 2026103000;
+        set_config('version', $previous, 'mod_these');
+        $this->assertTrue(xmldb_these_upgrade($previous));
+        $this->assertSame([], $exists(), 'après mise à jour');
+        $this->assertEquals(255, $DB->get_columns('these_juror')['email']->max_length);
+        $this->assertTrue($dbman->index_exists($table, $emailindex));
+        $this->assertGreaterThan($previous, (int) get_config('mod_these', 'version'));
+
+        // Rejouée sur un schéma déjà conforme : rien ne casse.
+        set_config('version', $previous, 'mod_these');
+        $this->assertTrue(xmldb_these_upgrade($previous));
+        $this->assertSame([], $exists(), 'rejouée');
+    }
 }

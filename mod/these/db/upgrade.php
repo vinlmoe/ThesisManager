@@ -29,21 +29,17 @@
  * @return bool
  */
 function xmldb_these_upgrade($oldversion) {
-    global $CFG, $DB;
+    global $DB;
 
     if ($oldversion < 2026102504) {
         // Les documents réservés au personnel (rapport du directeur, grille de conformité) ne sont
         // plus rangés dans la zone « generated », consultable par l'étudiant : retrait de ceux que
         // les générations précédentes y ont déposés. L'archive transmise à l'université les rend
         // désormais à la demande.
-        require_once($CFG->dirroot . '/mod/these/locallib.php');
-        // Le rapport du directeur, document réservé au personnel à cette version, n'est plus produit.
-        $filenames = [these_document_filename('report')];
-        foreach (these_document_definitions() as $doctype => $definition) {
-            if ($definition['staffonly']) {
-                $filenames[] = these_document_filename($doctype);
-            }
-        }
+        // Noms des documents réservés au personnel à cette version (rapport du directeur et grille de
+        // conformité, these_document_filename() de l'époque), figés : le code courant ne les produit
+        // plus sous ces noms.
+        $filenames = ['report.pdf', 'grid.pdf'];
         [$insql, $params] = $DB->get_in_or_equal($filenames, SQL_PARAMS_NAMED);
         $params['component'] = 'mod_these';
         $params['filearea'] = 'generated';
@@ -332,6 +328,44 @@ function xmldb_these_upgrade($oldversion) {
             }
         }
         upgrade_mod_savepoint(true, 2026102901, 'these');
+    }
+
+    if ($oldversion < 2026103001) {
+        $dbman = $DB->get_manager();
+        // Index des colonnes interrogées par la confidentialité, le planning, le récapitulatif et
+        // l'historique de sujet.
+        $indexes = [
+            ['these_log', 'userid', ['userid']],
+            ['these_signature', 'userid', ['userid']],
+            ['these_dossier', 'defensedate', ['defensedate']],
+            ['these_subjecthistory', 'directorid', ['directorid']],
+            ['these_subjecthistory', 'changedby', ['changedby']],
+        ];
+        foreach ($indexes as [$tablename, $name, $fields]) {
+            $table = new xmldb_table($tablename);
+            $index = new xmldb_index($name, XMLDB_INDEX_NOTUNIQUE, $fields);
+            if (!$dbman->index_exists($table, $index)) {
+                $dbman->add_index($table, $index);
+            }
+        }
+        // Clé étrangère de la question vers son activité « Gestion des thèses » (0 pour une question
+        // partagée) : un index simple sur theseid, comme pour les autres tables de paramètres.
+        $table = new xmldb_table('these_question');
+        $key = new xmldb_key('theseid', XMLDB_KEY_FOREIGN, ['theseid'], 'these', ['id']);
+        if (!$dbman->index_exists($table, new xmldb_index('theseid', XMLDB_INDEX_NOTUNIQUE, ['theseid']))) {
+            $dbman->add_key($table, $key);
+        }
+        // Adresse de l'annuaire du jury à 255 caractères, comme celle d'un membre du jury ; l'index
+        // est retiré le temps du changement.
+        $table = new xmldb_table('these_juror');
+        $index = new xmldb_index('email', XMLDB_INDEX_NOTUNIQUE, ['email']);
+        $field = new xmldb_field('email', XMLDB_TYPE_CHAR, '255', null, null, null, null, 'firstname');
+        if ($dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
+        }
+        $dbman->change_field_precision($table, $field);
+        $dbman->add_index($table, $index);
+        upgrade_mod_savepoint(true, 2026103001, 'these');
     }
 
     return true;

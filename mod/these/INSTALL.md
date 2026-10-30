@@ -67,7 +67,8 @@ l'étudiant comme directeurs.
 3. Reprendre les sujets déjà enregistrés : *Importer des dossiers* (CSV,
    colonnes `student`, `title`, `director`, `devenumber`, `libraryref`,
    `titleen`, `summary`, `keywords` ; étudiant et directeur
-   désignés par identifiant, courriel ou numéro d'identification). Les dossiers
+   désignés par identifiant, courriel ou numéro d'identification, et inscrits
+   au cours). Les dossiers
    importés sont créés « actifs ». Une simulation est proposée par défaut.
 4. Personnaliser au besoin les courriels (*Courriels*).
 
@@ -210,9 +211,13 @@ signés.
   utilisées par la recherche des thèses (`mod_thesesynthesis`).
 - **Numéro d'enregistrement DEVE** : attribué à la validation du dossier de
   soutenance (après le dépôt de la thèse), et non plus à l'enregistrement du sujet.
-- **Rapport du directeur** : rédigé sur sa propre page (*Rédiger le rapport*),
-  enregistrable en plusieurs fois, aperçu PDF, une page au plus ; la validation
-  de la soutenance exige un rapport rédigé avec avis favorable.
+- **Rapport du directeur** : déposé en fichier (PDF ou Word) sur sa propre page
+  (*Déposer le rapport*), rédigé à partir du modèle Word proposé dans les
+  paramètres du circuit (*Modèle du rapport du directeur*, téléchargeable
+  depuis la page de dépôt) ; la validation de la soutenance exige un rapport
+  déposé avec avis favorable. Il n'est plus rédigé dans le module ni généré
+  comme document signé ; le fichier est joint à l'archive de l'université et
+  communiqué à la DEVE, à la bibliothèque et au jury, jamais à l'étudiant.
 - **Procès-verbal** : PV signé scanné (PDF ou images) et décisions du jury
   (admis/ajourné, mention honorable, très honorable ou très honorable avec
   félicitations du jury, proposition pour un prix de thèse, corrections
@@ -231,9 +236,11 @@ signés.
   valide signe.
 - **Signature enregistrée** : tout utilisateur connecté peut enregistrer sa
   signature (fichier dans son contexte utilisateur, couvert par la confidentialité) ;
-  elle est reprise d'office aux signatures suivantes. Un signataire invité
-  connecté avec le compte de l'adresse invitée (président du jury, par exemple)
-  peut l'utiliser et retrouve ses documents dans *Mes signatures*.
+  elle est reprise d'office aux signatures suivantes. Un signataire invité par
+  lien (président du jury, directeur extérieur…) signe uniquement depuis son
+  lien, même s'il a un compte à cette adresse ; connecté, il peut y utiliser sa
+  signature enregistrée. Le directeur extérieur reçoit son lien à la validation
+  du sujet par le directeur, qui voit l'adresse saisie par l'étudiant.
 
 - **Changement de sujet** (*Changer de sujet de thèse*, étudiant, dossier
   actif) : motif obligatoire ; l'ancien sujet est archivé (table
@@ -298,7 +305,56 @@ production.
 `mod_these\task\send_reminders`, chaque jour à 7 h 15 : relance l'acteur
 attendu quand un dossier attend à la même étape depuis le délai de relance de
 son activité, puis à chaque nouveau délai écoulé. Brouillons et dossiers actifs
-ne sont jamais relancés.
+ne sont jamais relancés. Chaque relance est inscrite au journal de la tâche.
+
+`mod_these\task\send_digest`, le lundi matin : récapitulatif de la semaine à
+la DEVE de chaque activité qui l'a activé (*Paramètres du circuit*). La date du
+dernier envoi est conservée par activité (`lastdigest<id>` dans la
+configuration du module) : une exécution manuelle ou une reprise moins de six
+jours après ne renvoie rien. Le journal de la tâche indique, pour chaque
+activité, ce qui a été envoyé ou pourquoi rien ne l'a été.
+
+## 4 bis. Conservation des procès-verbaux
+
+Le module applique l'API de confidentialité de Moodle (export et suppression
+des données personnelles, *Administration du site* → *Utilisateurs* →
+*Confidentialité et règlements*). Son comportement actuel à la suppression est
+le suivant :
+
+- **étudiant** : son dossier est effacé en entier, procès-verbal scellé, PV
+  scanné, documents signés, jury et historique compris ;
+- **membre du personnel** (directeur, DEVE, bibliothèque, agent signataire) :
+  les dossiers des autres restent, mais ses références y sont dissociées (nom,
+  image et adresse de ses signatures effacés, comptes de validation remis à
+  zéro, commentaires supprimés) et tout document scellé qui portait sa
+  signature est **descellé**, puis reconstitué sans elle.
+
+Un procès-verbal de soutenance a une valeur d'archive publique que
+l'établissement peut être tenu de conserver au-delà du compte de l'étudiant ou
+de l'agent. Le délégué à la protection des données doit en tenir compte avant
+d'approuver une demande de suppression : exporter ou archiver hors du module
+le PV et les documents signés concernés, ou refuser la suppression du dossier
+pendant la durée légale de conservation. Le module ne propose pas encore
+d'anonymisation qui garderait le document en effaçant seulement l'identité.
+
+## 5 bis. Sauvegarde et restauration
+
+La sauvegarde d'un cours emporte, pour chaque activité, son paramétrage
+(établissement, adresses de service, courriels, modèles de documents, grille,
+questionnaire) et, si les données utilisateur sont incluses, les dossiers avec
+leur jury, leur historique, leurs signatures (image et empreintes, jeton d'un
+lien en attente exclu) et leurs fichiers, documents scellés compris.
+
+Deux tables sont **propres au site** et ne font partie d'aucune sauvegarde de
+cours : l'**annuaire du jury** (`these_juror`) et les **validations de l'A6 et
+du DEFV** (`these_a6`, liées à l'étudiant). Elles suivent la sauvegarde de la
+base du site. À la restauration d'un cours sur le même site, un membre du jury
+reste rattaché à sa fiche de l'annuaire si elle existe encore ; sur un autre
+site, la fiche est retrouvée par son adresse de courriel, à défaut le membre
+devient un membre saisi. De même, une réponse à une question définie dans une
+activité *Suivi des thèses* n'est conservée que sur le même site. Un dossier
+dont l'étudiant n'a pas été restauré, ou qui ferait doublon, est ignoré et
+signalé dans le journal de la restauration.
 
 ## 6. Développement
 
@@ -306,3 +362,7 @@ ne sont jamais relancés.
 phpcs --standard=phpcs.xml                         # depuis la racine du dépôt
 vendor/bin/phpunit --testsuite mod_these_testsuite # depuis la racine de Moodle
 ```
+
+Flux de travail, vérifications locales, organisation du code et publication
+des versions : voir [`CONTRIBUTING.md`](../../CONTRIBUTING.md) à la racine du
+dépôt.

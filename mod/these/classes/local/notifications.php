@@ -175,20 +175,18 @@ class notifications {
     }
 
     /**
-     * Remplace dans un texte personnalisé les jetons {{cle}} par les valeurs fournies.
+     * Remplace dans un texte personnalisé les jetons {{cle}} par les valeurs fournies, en une seule
+     * passe : une valeur qui contient elle-même {{...}} est insérée telle quelle, et un jeton inconnu
+     * est laissé tel quel.
      *
      * @param string $text
      * @param array $vars cle => valeur
      * @return string
      */
     public static function render_email_placeholders($text, array $vars) {
-        $search = [];
-        $replace = [];
-        foreach ($vars as $key => $value) {
-            $search[] = '{{' . $key . '}}';
-            $replace[] = (string) $value;
-        }
-        return str_replace($search, $replace, $text);
+        return preg_replace_callback('/\{\{([a-z0-9_]+)\}\}/i', function ($match) use ($vars) {
+            return array_key_exists($match[1], $vars) ? (string) $vars[$match[1]] : $match[0];
+        }, (string) $text);
     }
 
     /**
@@ -367,7 +365,10 @@ class notifications {
 
     /**
      * Indique si le destinataire d'un courriel peut connaître le sujet d'une thèse : un compte qui le
-     * connaît (voir these_user_knows_subject()), ou la boîte de service de la DEVE ou de la bibliothèque.
+     * connaît (voir these_user_knows_subject()), ou, sans compte, une adresse qui doit le connaître :
+     * boîtes de service de la DEVE et de la bibliothèque, université (archive de la soutenance), membres
+     * du jury, directeur extérieur et signataires de l'établissement (direction générale, CCEM,
+     * université), dont les documents citent le titre.
      *
      * @param stdClass $these
      * @param stdClass $dossier
@@ -383,9 +384,21 @@ class notifications {
             return these_user_knows_subject($dossier, context_module::instance($cm->id), $recipient->id);
         }
         $email = core_text::strtolower(trim((string) $recipient->email));
-        foreach (['deveemail', 'libraryemail'] as $field) {
-            $service = core_text::strtolower(trim((string) ($these->$field ?? '')));
-            if ($service !== '' && $email === $service) {
+        if ($email === '') {
+            return false;
+        }
+        $known = [];
+        foreach (['deveemail', 'libraryemail', 'universityemail'] as $field) {
+            $known[] = (string) ($these->$field ?? '');
+        }
+        foreach (these_get_jury($dossier->id) as $member) {
+            $known[] = (string) $member->email;
+        }
+        foreach (these_external_signers($dossier) as $signer) {
+            $known[] = (string) $signer['email'];
+        }
+        foreach ($known as $candidate) {
+            if ($candidate !== '' && $email === core_text::strtolower(trim($candidate))) {
                 return true;
             }
         }
@@ -543,12 +556,15 @@ class notifications {
      * délégation. La relance remet le délai à zéro ; elle est répétée tant que la signature manque.
      *
      * @param int|null $now
+     * @param callable|null $trace Reçoit une ligne par relance envoyée (mtrace dans la tâche).
      * @return int Signataires relancés.
      */
-    public static function send_signature_reminders($now = null) {
+    public static function send_signature_reminders($now = null, ?callable $trace = null) {
         global $DB;
 
         $now = $now ?? time();
+        $trace = $trace ?? function ($line) {
+        };
         [$statussql, $params] = $DB->get_in_or_equal(
             [THESE_STATUS_CLOSED, THESE_STATUS_CANCELLED],
             SQL_PARAMS_NAMED,
@@ -583,11 +599,14 @@ class notifications {
             $signers = these_external_signers($dossier);
             foreach (array_keys($slots) as $slot) {
                 $email = (string) ($signers[$slot]['email'] ?? '');
+                // Seuls les documents déjà demandés sont relancés (voir signatures::requested_documents_for_slot()).
+                $requested = isset($signers[$slot]) ? signatures::requested_documents_for_slot($dossier, $slot, $available) : [];
                 if (
-                    isset($signers[$slot]) && $email !== '' && validate_email($email)
-                        && these_request_signature($these, $cm, $dossier, $slot, $available) !== null
+                    $requested && $email !== '' && validate_email($email)
+                        && these_request_signature($these, $cm, $dossier, $slot, $requested) !== null
                 ) {
                     $sent++;
+                    $trace("Dossier $dossierid : signataire " . these_slot_label($slot) . " relancé ($email).");
                 }
             }
             if (
@@ -595,6 +614,7 @@ class notifications {
                     && these_request_agent_signatures($these, $cm, $dossier, $available) > 0
             ) {
                 $sent++;
+                $trace("Dossier $dossierid : agents DEVE signataires relancés.");
             }
         }
         return $sent;
@@ -659,29 +679,42 @@ class notifications {
 
     /**
      * Envoie à la DEVE de chaque activité son récapitulatif hebdomadaire (voir digest_content()), si
-     * le paramètre « weeklydigest » de la portée l'active et qu'il y a quelque chose à signaler.
+     * le paramètre « weeklydigest » de la portée l'active et qu'il y a quelque chose à signaler. La
+     * date du dernier envoi est conservée par activité (réglage lastdigest<id> du module) : rien
+     * n'est renvoyé moins de six jours après, même si la tâche est relancée à la main.
      *
      * @param int|null $now
+     * @param callable|null $trace Reçoit une ligne par activité traitée (mtrace dans la tâche).
      * @return int Activités pour lesquelles un récapitulatif est parti.
      */
-    public static function send_weekly_digests($now = null) {
+    public static function send_weekly_digests($now = null, ?callable $trace = null) {
         global $DB;
 
+        $now = $now ?? time();
+        $trace = $trace ?? function ($line) {
+        };
         $sent = 0;
         foreach ($DB->get_records('these') as $these) {
             $cm = get_coursemodule_from_instance('these', $these->id, 0, false, IGNORE_MISSING);
             if (!$cm || empty(scopesettings::for_these($these)['weeklydigest'])) {
                 continue;
             }
+            $name = format_string($these->name);
+            $last = (int) get_config('mod_these', 'lastdigest' . $these->id);
+            if ($last && $last > $now - 6 * DAYSECS) {
+                $trace("$name : récapitulatif déjà envoyé le " . userdate($last) . ', rien à renvoyer.');
+                continue;
+            }
             $content = self::digest_content($these, $now);
             if (!array_filter($content)) {
+                $trace("$name : rien à signaler.");
                 continue;
             }
             $lines = function (array $items) {
                 return $items ? '- ' . implode("\n- ", $items) : get_string('digestnone', 'mod_these');
             };
             $vars = [
-                'activity' => format_string($these->name),
+                'activity' => $name,
                 'todo' => $lines($content['todo']),
                 'signatures' => $lines($content['signatures']),
                 'defenses' => $lines($content['defenses']),
@@ -690,7 +723,11 @@ class notifications {
             ];
             $context = context_module::instance($cm->id);
             if (these_send_email($these, 'digest', these_get_service_recipients($these, $context, 'deve'), $vars)) {
+                set_config('lastdigest' . $these->id, $now, 'mod_these');
                 $sent++;
+                $trace("$name : récapitulatif envoyé à la DEVE.");
+            } else {
+                $trace("$name : aucun destinataire, récapitulatif non envoyé.");
             }
         }
         return $sent;

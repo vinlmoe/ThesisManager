@@ -339,10 +339,13 @@ class signatureagent {
     }
 
     /**
-     * Signatures qui attendent un utilisateur connecté : pour un agent DEVE désigné, celles qui
-     * attendent un agent, quel qu'il soit (direction générale par délégation comprise) ; et celles des
-     * signataires invités par courriel (président du jury, directeur extérieur...) dont l'adresse est
-     * celle de son compte.
+     * Signatures qui attendent un utilisateur connecté : celles qui lui sont attribuées par son compte
+     * et, pour un agent DEVE désigné, celles qui attendent un agent, quel qu'il soit (direction
+     * générale par délégation comprise).
+     *
+     * Les signatures des signataires invités par courriel (président du jury, directeur extérieur...)
+     * ne se signent que depuis le lien à jeton reçu (sign.php) : l'adresse d'un compte n'étant pas
+     * vérifiée par le module, l'égalité d'adresse ne suffit pas à les attribuer.
      *
      * @param stdClass $user
      * @return stdClass[] Signatures en attente, avec dossier, activité et module de cours.
@@ -353,8 +356,7 @@ class signatureagent {
         // Les agents sont désignés par activité : les signatures d'agent sont toutes lues, puis
         // gardées pour les activités dont l'utilisateur est agent.
         $agentslots = array_merge(these_agent_slots(), ['dg'], prerequisites::UNIVERSITY_SLOTS);
-        $email = core_text::strtolower(trim((string) $user->email));
-        $params = ['userid' => $user->id, 'email1' => $email, 'email2' => $email];
+        $params = ['userid' => $user->id];
         [$slotsql, $slotparams] = $DB->get_in_or_equal($agentslots, SQL_PARAMS_NAMED, 'agentslot');
         $agentsql = " OR (s.token IS NULL AND s.slot $slotsql)";
         $params += $slotparams;
@@ -364,8 +366,7 @@ class signatureagent {
                JOIN {these_dossier} d ON d.id = s.dossierid
               WHERE s.timesigned = 0
                 AND d.status <> " . THESE_STATUS_CANCELLED . "
-                AND ((s.token IS NULL AND s.userid = :userid)
-                     OR (s.token IS NOT NULL AND :email1 <> '' AND LOWER(s.signeremail) = :email2)$agentsql)
+                AND ((s.token IS NULL AND s.userid = :userid)$agentsql)
            ORDER BY s.dossierid, s.id",
             $params
         );

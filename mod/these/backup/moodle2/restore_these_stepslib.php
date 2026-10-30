@@ -151,7 +151,8 @@ class restore_these_activity_structure_step extends restore_activity_structure_s
 
     /**
      * Restaure une réponse au questionnaire. Une réponse à une question de l'activité « Suivi des
-     * thèses » est conservée si la question existe sur ce site (restauration sur le même site).
+     * thèses » n'est conservée que sur le même site, si la question y existe toujours : ailleurs,
+     * l'identifiant désignerait une question sans rapport.
      *
      * @param array $data
      */
@@ -161,7 +162,10 @@ class restore_these_activity_structure_step extends restore_activity_structure_s
         $data = (object) $data;
         $data->dossierid = $this->get_new_parentid('these_dossier');
         $questionid = $this->get_mappingid('these_question', $data->questionid, 0);
-        if (!$questionid && $DB->record_exists_select('these_question', 'id = ? AND synthesisid > 0', [$data->questionid])) {
+        if (
+            !$questionid && $this->task->is_samesite()
+                && $DB->record_exists_select('these_question', 'id = ? AND synthesisid > 0', [$data->questionid])
+        ) {
             $questionid = $data->questionid;
         }
         if (!$data->dossierid || !$questionid) {
@@ -205,7 +209,8 @@ class restore_these_activity_structure_step extends restore_activity_structure_s
 
     /**
      * Restaure un dossier. Un dossier dont l'étudiant n'a pas été restauré est ignoré, de même
-     * qu'un second dossier pour le même étudiant (index unique instance / étudiant).
+     * qu'un second dossier pour le même étudiant (index unique instance / étudiant) ; chaque dossier
+     * ignoré est signalé dans le journal de la restauration.
      *
      * @param array $data
      */
@@ -216,7 +221,12 @@ class restore_these_activity_structure_step extends restore_activity_structure_s
         $oldid = $data->id;
         $data->theseid = $this->get_new_parentid('these');
         $data->userid = $this->map_user($data->userid);
-        if (!$data->userid || $DB->record_exists('these_dossier', ['theseid' => $data->theseid, 'userid' => $data->userid])) {
+        if (!$data->userid) {
+            $this->log("Dossier de thèse $oldid ignoré : étudiant non restauré", backup::LOG_WARNING);
+            return;
+        }
+        if ($DB->record_exists('these_dossier', ['theseid' => $data->theseid, 'userid' => $data->userid])) {
+            $this->log("Dossier de thèse $oldid ignoré : l'étudiant {$data->userid} a déjà un dossier", backup::LOG_WARNING);
             return;
         }
         $data->directorid = $this->map_user($data->directorid);
@@ -238,14 +248,34 @@ class restore_these_activity_structure_step extends restore_activity_structure_s
         if (!$data->dossierid) {
             return;
         }
-        // L'annuaire du jury est propre au site : un enseignant absent de cet annuaire devient un
-        // membre saisi. Le jeton d'accès n'est pas sauvegardé (secret d'accès sans compte).
-        if (!empty($data->jurorid) && !$DB->record_exists('these_juror', ['id' => $data->jurorid])) {
-            $data->jurorid = 0;
-        }
+        // L'annuaire du jury est propre au site : sur le même site, la fiche est conservée si elle
+        // existe toujours ; sur un autre site, l'identifiant ne vaut rien et la fiche est retrouvée
+        // par l'adresse du membre, à défaut il devient un membre saisi. Le jeton d'accès n'est pas
+        // sauvegardé (secret d'accès sans compte).
+        $data->jurorid = $this->map_juror((int) ($data->jurorid ?? 0), (string) ($data->email ?? ''));
         $data->eligibleby = $this->map_user($data->eligibleby ?? 0);
         unset($data->accesstoken);
         $DB->insert_record('these_jury', $data);
+    }
+
+    /**
+     * Fiche de l'annuaire du jury à rattacher à un membre restauré, 0 s'il n'y en a pas.
+     *
+     * @param int $jurorid Identifiant d'origine.
+     * @param string $email Adresse du membre.
+     * @return int
+     */
+    protected function map_juror($jurorid, $email) {
+        global $DB;
+
+        if (!$jurorid) {
+            return 0;
+        }
+        if ($this->task->is_samesite()) {
+            return $DB->record_exists('these_juror', ['id' => $jurorid]) ? $jurorid : 0;
+        }
+        $juror = \mod_these\local\jurors::find_by_email($email);
+        return $juror ? (int) $juror->id : 0;
     }
 
     /**

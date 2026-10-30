@@ -112,4 +112,82 @@ final class backup_restore_test extends these_testcase {
         $this->assertCount(1, $files);
         $this->assertEquals('manuscrit.pdf', $files[0]->get_filename());
     }
+
+    /**
+     * Aller-retour complet : signatures (empreintes du contenu et du modèle, comptes, image), grille
+     * de conformité, questionnaire et réponses, fiche de l'annuaire du jury (même site).
+     */
+    public function test_backup_restore_signatures_grid_questions(): void {
+        global $DB;
+        $this->setup_activity();
+        $this->setAdminUser();
+        $scope = these_settings_scope($this->these);
+
+        these_save_grid_items($scope, [
+            (object) ['itemkey' => 'pagination', 'section' => 'forme', 'label' => 'Pages numérotées', 'conditional' => 0],
+            (object) ['itemkey' => '', 'section' => 'fond', 'label' => 'Bibliographie à jour', 'conditional' => 1],
+        ]);
+        $questionid = these_save_question($scope, (object) [
+            'qtype' => 'text', 'label' => 'Laboratoire', 'options' => '', 'required' => 1,
+        ]);
+
+        $jurorid = \mod_these\local\jurors::save((object) ['title' => 'Pr', 'lastname' => 'Président', 'firstname' => 'Paul',
+            'email' => 'president@example.com', 'status' => 'pr', 'institution' => '', 'active' => 1]);
+        $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
+            'status' => THESE_STATUS_SUBJECT_APPROVED, 'directorid' => $this->director->id,
+        ]);
+        $jury = $this->generator->default_jury();
+        $jury[0]->jurorid = $jurorid;
+        these_save_jury($dossier->id, $jury);
+        these_save_answers($dossier, these_get_questions($scope), ['q' . $questionid => 'Anatomie']);
+
+        $now = time();
+        $signatureid = $DB->insert_record('these_signature', (object) [
+            'dossierid' => $dossier->id, 'doctype' => 'subject', 'slot' => 'director', 'userid' => $this->director->id,
+            'signername' => 'Dora Directrice', 'signeremail' => '', 'token' => null, 'requesttime' => 0,
+            'timesigned' => $now, 'contenthash' => str_repeat('c', 64), 'templatehash' => str_repeat('t', 64),
+            'ipaddress' => '127.0.0.1', 'method' => 'inperson', 'delegated' => 0, 'verifiedby' => $this->deve->id,
+            'validatedby' => $this->deve->id, 'validatedtime' => $now, 'timecreated' => $now,
+        ]);
+        get_file_storage()->create_file_from_string([
+            'contextid' => $this->context->id, 'component' => 'mod_these', 'filearea' => 'signature',
+            'itemid' => $signatureid, 'filepath' => '/', 'filename' => 'signature.png',
+        ], 'PNG');
+
+        $newcourseid = $this->backup_and_restore($this->course);
+
+        $newthese = $DB->get_record('these', ['course' => $newcourseid], '*', MUST_EXIST);
+        $newscope = these_settings_scope($newthese);
+        $items = these_get_grid_items($newscope);
+        $this->assertSame('Pages numérotées', $items['forme']['pagination']->label);
+        $this->assertCount(1, $items['fond']);
+        $this->assertSame('Bibliographie à jour', reset($items['fond'])->label);
+
+        $questions = these_get_questions($newscope);
+        $this->assertCount(1, $questions);
+        $newquestion = reset($questions);
+        $this->assertNotEquals($questionid, $newquestion->id);
+        $this->assertSame('Laboratoire', $newquestion->label);
+
+        $newdossier = $DB->get_record('these_dossier', ['theseid' => $newthese->id], '*', MUST_EXIST);
+        $this->assertSame([$newquestion->id => 'Anatomie'], these_get_answers($newdossier->id));
+
+        $president = $DB->get_record('these_jury', ['dossierid' => $newdossier->id, 'juryrole' => 'president'], '*', MUST_EXIST);
+        $this->assertEquals($jurorid, $president->jurorid);
+        $this->assertNull($president->accesstoken);
+
+        $signature = $DB->get_record('these_signature', ['dossierid' => $newdossier->id], '*', MUST_EXIST);
+        $this->assertNotEquals($signatureid, $signature->id);
+        $this->assertSame(str_repeat('c', 64), $signature->contenthash);
+        $this->assertSame(str_repeat('t', 64), $signature->templatehash);
+        $this->assertNull($signature->token);
+        $this->assertEquals($this->director->id, $signature->userid);
+        $this->assertEquals($this->deve->id, $signature->verifiedby);
+        $this->assertEquals($this->deve->id, $signature->validatedby);
+        $this->assertEquals($now, $signature->validatedtime);
+        $this->assertSame('inperson', $signature->method);
+        $newcm = get_coursemodule_from_instance('these', $newthese->id);
+        $newcontext = \context_module::instance($newcm->id);
+        $this->assertNotNull(these_get_signature_image($newcontext->id, $signature->id));
+    }
 }

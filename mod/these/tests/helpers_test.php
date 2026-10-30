@@ -32,8 +32,22 @@ require_once(__DIR__ . '/these_testcase.php');
  * @covers     ::these_validate_jury
  * @covers     ::these_suggest_devenumber
  * @covers     ::these_render_dossier
+ * @covers     \mod_these\local\rendering::spreadsheet_safe
  */
 final class helpers_test extends these_testcase {
+    /**
+     * Export tableur : une cellule qui commence par =, +, - ou @ est précédée d'une apostrophe ; les
+     * autres valeurs restent telles quelles.
+     */
+    public function test_spreadsheet_safe(): void {
+        $this->assertSame(
+            ['title' => "'=HYPERLINK(\"http://x\")", 'student' => 'Camille', 'number' => "'-5", 'plus' => "'+1",
+                'at' => "'@SUM", 'empty' => '', 'int' => 3, 'date' => '12/03/2026'],
+            \mod_these\local\rendering::spreadsheet_safe(['title' => '=HYPERLINK("http://x")', 'student' => 'Camille',
+                'number' => '-5', 'plus' => '+1', 'at' => '@SUM', 'empty' => '', 'int' => 3, 'date' => '12/03/2026'])
+        );
+    }
+
     /**
      * Un et un seul président, un minimum de membres votants (directeur et invités exclus), des adresses valides.
      */

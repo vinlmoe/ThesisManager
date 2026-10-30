@@ -18,6 +18,7 @@ namespace mod_these\local;
 
 use context;
 use context_module;
+use core_text;
 use stdClass;
 
 /**
@@ -195,7 +196,9 @@ class settingstransfer {
             foreach ($source['griditems'] as $item) {
                 $items[] = (object) [
                     'itemkey' => clean_param((string) ($item['itemkey'] ?? ''), PARAM_ALPHANUM),
-                    'section' => (string) ($item['section'] ?? ''),
+                    // Longueur de these_griditem.section (install.xml) ; une section inconnue est ramenée par
+                    // these_save_grid_items() à la section par défaut.
+                    'section' => core_text::substr(clean_param((string) ($item['section'] ?? ''), PARAM_TEXT), 0, 10),
                     'label' => clean_param((string) ($item['label'] ?? ''), PARAM_TEXT),
                     'conditional' => !empty($item['conditional']),
                 ];

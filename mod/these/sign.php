@@ -52,7 +52,7 @@ if ($token !== '') {
     $pending = these_get_signatures_by_token($token);
     if (!$pending) {
         $PAGE->set_context(context_system::instance());
-        $PAGE->set_url(new moodle_url('/mod/these/sign.php', ['token' => $token]));
+        $PAGE->set_url(new moodle_url('/mod/these/sign.php'));
         $PAGE->set_pagelayout('embedded');
         $PAGE->set_title(get_string('signpagetitle', 'mod_these'));
         echo $OUTPUT->header();
@@ -110,7 +110,10 @@ if ($preview !== '' && in_array($preview, $doctypes, true)) {
 }
 
 $PAGE->set_context($context);
-$PAGE->set_url(new moodle_url('/mod/these/sign.php', $pageparams));
+// Le jeton reste hors de l'adresse de la page (journaux, navigation) : les formulaires et les liens le
+// reprennent par $formurl.
+$PAGE->set_url(new moodle_url('/mod/these/sign.php', $inperson ? $pageparams : []));
+$formurl = new moodle_url('/mod/these/sign.php', $pageparams);
 $PAGE->set_pagelayout($inperson ? 'incourse' : 'embedded');
 $PAGE->set_title(get_string('signpagetitle', 'mod_these'));
 $PAGE->set_heading(format_string($these->name));
@@ -147,7 +150,7 @@ $info = new output\detail_section(get_string('documentstosign', 'mod_these'), [
 // inscrite à l'historique à son nom, vaut pour cette page de signature (session).
 $verifiedkey = 'these_identity_' . $dossier->id . '_' . $slot;
 if ($inperson && $doctypes && empty($SESSION->$verifiedkey)) {
-    $identityform = new \mod_these\form\identity_form($PAGE->url);
+    $identityform = new \mod_these\form\identity_form($formurl);
     $identityform->set_data($pageparams);
     if ($identityform->is_cancelled()) {
         redirect($signaturesurl);
@@ -163,7 +166,7 @@ if ($inperson && $doctypes && empty($SESSION->$verifiedkey)) {
             these_slot_label($slot) . ($signer['name'] !== '' ? ' — ' . $signer['name'] : '') . ' — '
                 . get_string('signidentityverifiedby', 'mod_these', fullname($USER))
         );
-        redirect($PAGE->url);
+        redirect($formurl);
     }
     echo $OUTPUT->header();
     echo $OUTPUT->heading(get_string('signpagetitle', 'mod_these'));
@@ -179,7 +182,7 @@ if ($inperson && $doctypes && empty($SESSION->$verifiedkey)) {
 $signeremail = core_text::strtolower(trim((string) ($token !== '' ? $pending[0]->signeremail : '')));
 $allowsaved = !$inperson && $signeremail !== '' && isloggedin() && !isguestuser()
     && core_text::strtolower(trim((string) $USER->email)) === $signeremail;
-$mform = new \mod_these\form\sign_form($PAGE->url, [
+$mform = new \mod_these\form\sign_form($formurl, [
     // Direction générale : signée par délégation, la personne qui signe saisit son propre nom.
     'signername' => $slot !== 'dg' && $signer['name'] !== '' ? $signer['name'] : ($allowsaved ? fullname($USER) : ''),
     'allowsaved' => $allowsaved,
@@ -226,7 +229,7 @@ if ($doctypes && ($data = $mform->get_data())) {
         );
         redirect($signaturesurl, get_string('signaturesrecorded', 'mod_these'), null, \core\output\notification::NOTIFY_SUCCESS);
     }
-    redirect($PAGE->url, get_string('signaturesrecorded', 'mod_these'), null, \core\output\notification::NOTIFY_SUCCESS);
+    redirect($formurl, get_string('signaturesrecorded', 'mod_these'), null, \core\output\notification::NOTIFY_SUCCESS);
 }
 
 echo $OUTPUT->header();

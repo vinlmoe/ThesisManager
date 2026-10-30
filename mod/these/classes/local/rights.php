@@ -221,10 +221,57 @@ class rights {
         if ((int) $dossier->userid === (int) $userid || (int) $dossier->directorid === (int) $userid) {
             return true;
         }
+        return self::knows_every_subject($context, $userid) || these_user_in_jury($dossier->id, $userid);
+    }
+
+    /**
+     * Même réponse que user_knows_subject(), pour plusieurs dossiers d'une même activité : les droits
+     * de service, communs à tous les dossiers, sont vérifiés une fois, et les jurys où siège
+     * l'utilisateur sont lus en une requête.
+     *
+     * @param stdClass[] $dossiers
+     * @param context $context Contexte de l'activité des dossiers.
+     * @param int $userid
+     * @return bool[] dossierid => l'utilisateur connaît le sujet.
+     */
+    public static function user_knows_subjects(array $dossiers, context $context, $userid) {
+        $known = [];
+        $pending = [];
+        foreach ($dossiers as $dossier) {
+            $id = (int) $dossier->id;
+            if (empty($dossier->confidential)) {
+                $known[$id] = true;
+            } else if (!$userid) {
+                $known[$id] = false;
+            } else if ((int) $dossier->userid === (int) $userid || (int) $dossier->directorid === (int) $userid) {
+                $known[$id] = true;
+            } else {
+                $pending[] = $id;
+            }
+        }
+        if ($pending) {
+            $injury = self::knows_every_subject($context, $userid)
+                ? array_fill_keys($pending, true)
+                : self::user_in_juries($pending, $userid);
+            foreach ($pending as $id) {
+                $known[$id] = $injury[$id];
+            }
+        }
+        return $known;
+    }
+
+    /**
+     * Indique si l'utilisateur connaît le sujet de toutes les thèses d'une activité, confidentielles
+     * comprises : DEVE ou bibliothèque, par capacité ou liste des agents.
+     *
+     * @param context $context Contexte de l'activité.
+     * @param int $userid
+     * @return bool
+     */
+    private static function knows_every_subject(context $context, $userid) {
         return has_capability('mod/these:managedeve', $context, $userid)
             || scopesettings::is_library_agent($context, $userid)
-            || has_capability('mod/these:managelibrary', $context, $userid)
-            || these_user_in_jury($dossier->id, $userid);
+            || has_capability('mod/these:managelibrary', $context, $userid);
     }
 
     /**
@@ -250,6 +297,38 @@ class rights {
                     AND (LOWER(j.email) = :email1 OR LOWER(r.email) = :email2)",
             ['dossierid' => $dossierid, 'email1' => $email, 'email2' => $email]
         );
+    }
+
+    /**
+     * Même réponse que user_in_jury(), pour plusieurs dossiers en une requête.
+     *
+     * @param int[] $dossierids
+     * @param int $userid
+     * @return bool[] dossierid => l'utilisateur siège au jury.
+     */
+    public static function user_in_juries(array $dossierids, $userid) {
+        global $DB;
+
+        $injury = array_fill_keys(array_map('intval', $dossierids), false);
+        if (!$injury) {
+            return [];
+        }
+        $email = core_text::strtolower(trim((string) $DB->get_field('user', 'email', ['id' => $userid])));
+        if ($email === '') {
+            return $injury;
+        }
+        [$insql, $params] = $DB->get_in_or_equal(array_keys($injury), SQL_PARAMS_NAMED);
+        $params['email1'] = $email;
+        $params['email2'] = $email;
+        $sql = "SELECT DISTINCT j.dossierid
+                  FROM {these_jury} j
+             LEFT JOIN {these_juror} r ON r.id = j.jurorid
+                 WHERE j.dossierid $insql
+                       AND (LOWER(j.email) = :email1 OR LOWER(r.email) = :email2)";
+        foreach ($DB->get_fieldset_sql($sql, $params) as $dossierid) {
+            $injury[(int) $dossierid] = true;
+        }
+        return $injury;
     }
 
     /**
