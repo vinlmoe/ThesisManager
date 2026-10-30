@@ -49,7 +49,7 @@ $first = reset($links);
 \mod_these\page\planning_page::output(
     $links,
     $baseurl,
-    these_synthesis_scope($synthesis->id),
+    \mod_thesesynthesis\local\scope::for_synthesis($synthesis->id),
     $first ? $first->these : null,
     true,
     get_string('planning', 'mod_these') . ' — ' . format_string($synthesis->name),

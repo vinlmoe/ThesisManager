@@ -58,7 +58,7 @@ $links = thesesynthesis_get_active_links($synthesis->id, $USER->id);
         return (int) $link->these->id;
     }, $links)
 );
-$scope = these_synthesis_scope($synthesis->id);
+$scope = \mod_thesesynthesis\local\scope::for_synthesis($synthesis->id);
 $questions = $scope ? these_get_questions($scope) : [];
 $answerfilters = [];
 foreach ($questions as $question) {

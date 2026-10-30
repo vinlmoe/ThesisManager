@@ -17,6 +17,7 @@
 namespace mod_these\local;
 
 use context;
+use moodle_url;
 use stdClass;
 
 /**
@@ -155,15 +156,14 @@ class scopesettings {
      * @return context[]
      */
     public static function scope_contexts(stdClass $scope) {
-        global $DB;
-
         $cmids = $scope->cmid ? [(int) $scope->cmid] : [];
         if ($scope->shared) {
-            $cmids = array_merge($cmids, array_map('intval', $DB->get_fieldset_select(
-                'thesesynthesis_link',
-                'thesecmid',
-                'synthesisid = ?',
-                [$scope->synthesisid]
+            // Activités suivies, connues du module qui tient la portée (rappel <module>_these_scope_cmids()).
+            $cmids = array_merge($cmids, array_map('intval', (array) component_callback(
+                $scope->component,
+                'these_scope_cmids',
+                [$scope],
+                []
             )));
         }
         $contexts = [];
@@ -366,7 +366,7 @@ class scopesettings {
                 $cm = get_coursemodule_from_id('', $context->instanceid, 0, false, IGNORE_MISSING);
                 if ($cm && $cm->modname === 'these' && ($these = $DB->get_record('these', ['id' => $cm->instance]))) {
                     $values = self::for_these($these);
-                } else if ($cm && $cm->modname === 'thesesynthesis' && ($scope = doctemplates::synthesis_scope($cm->instance))) {
+                } else if ($cm && $cm->modname !== 'these' && ($scope = doctemplates::scope_for_cm($cm))) {
                     $values = self::get_all($scope);
                 }
             }
@@ -374,6 +374,23 @@ class scopesettings {
             self::cache()->set($key, $values);
         }
         return $values;
+    }
+
+    /**
+     * Pages où se tiennent les paramètres partagés d'une portée : l'activité « Gestion des thèses »
+     * elle-même, ou celles du module qui tient la portée (rappel <module>_these_scope_urls()).
+     *
+     * @param stdClass $scope Voir these_settings_scope().
+     * @return moodle_url[] {home (accueil de l'activité), settings (paramètres du circuit)}
+     */
+    public static function scope_urls(stdClass $scope) {
+        if (!$scope->shared) {
+            return [
+                'home' => new moodle_url('/mod/these/view.php', ['id' => $scope->cmid]),
+                'settings' => new moodle_url('/mod/these/parameters.php', ['id' => $scope->cmid]),
+            ];
+        }
+        return component_callback($scope->component, 'these_scope_urls', [$scope], []);
     }
 
     /**

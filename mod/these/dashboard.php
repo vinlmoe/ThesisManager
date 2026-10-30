@@ -70,9 +70,7 @@ if ($rights->deve) {
         return !$item['complete'] && !$item['optional'];
     }));
     if ($missing) {
-        $settingsurl = $scope->shared
-            ? new moodle_url('/mod/thesesynthesis/parameters.php', ['id' => $scope->cmid])
-            : new moodle_url('/mod/these/parameters.php', ['id' => $cm->id]);
+        $settingsurl = \mod_these\local\scopesettings::scope_urls($scope)['settings'];
         echo $renderer->render(new output\message([
             output\parts::text(get_string('settingsmissingnotice', 'mod_these', $missing) . ' '),
             output\parts::link($settingsurl, get_string('scopesettings', 'mod_these'), ''),

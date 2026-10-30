@@ -78,3 +78,23 @@ droits à la source.
 | `mod/thesesynthesis:managejurors` — tenir l'annuaire du jury | — | ✅ | ✅ |
 | `mod/thesesynthesis:managesettings` — modèles, grille, questionnaire, paramètres du circuit partagés | — | ✅ | ✅ |
 | `mod/thesesynthesis:search` — rechercher des thèses | ✅ | ✅ | ✅ |
+
+## Rappels fournis à mod_these
+
+`mod_these` ne connaît pas ce module : il interroge les modules présents par
+des rappels génériques (`get_plugins_with_function()` et `component_callback()`)
+pour savoir si les paramètres partagés d'une activité « Gestion des thèses »
+sont tenus ailleurs, et où. Ce module les fournit dans `lib.php` ; un autre
+module pourrait fournir les mêmes, préfixés de son nom. Le contrat :
+
+| Rappel | Appelé sur | Renvoie |
+|---|---|---|
+| `<module>_these_settings_scope(stdClass $these)` | chaque module qui le déclare, le premier résultat l'emporte | portée partagée en vigueur pour l'activité (`{theseid, synthesisid, shared, component, contextid, cmid, name}`, voir `\mod_these\local\doctemplates::local_scope()`), ou `null` |
+| `<module>_these_settings_scope_for_cm(stdClass $cm)` | le module du module de cours (`mod_<modname>`) | portée tenue par ce module de cours, ou `null` |
+| `<module>_these_scope_cmids(stdClass $scope)` | `$scope->component` | modules de cours des activités « Gestion des thèses » que la portée couvre (`int[]`) |
+| `<module>_these_scope_urls(stdClass $scope)` | `$scope->component` | `moodle_url` indexées par `home` (accueil) et `settings` (paramètres du circuit) |
+| `<module>_these_require_view(stdClass $cm, context $context)` | le module du module de cours | rien ; lève une exception si l'utilisateur ne peut pas consulter les documents communs (liste du corps enseignant) |
+
+Le rappel `these_settings_scope` doit renvoyer `null` tant que le module n'est
+pas installé (`get_config('mod_thesesynthesis', 'version')` vide) : ses tables
+n'existent pas encore.

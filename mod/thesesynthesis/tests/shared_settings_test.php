@@ -59,7 +59,7 @@ final class shared_settings_test extends \advanced_testcase {
         $synthcourse = $gen->create_course();
         $env->synthesis = $gen->create_module('thesesynthesis', ['course' => $synthcourse->id]);
         thesesynthesis_set_links($env->synthesis->id, [$env->activities[0]->these->cmid, $env->activities[1]->these->cmid]);
-        $env->scope = these_synthesis_scope($env->synthesis->id);
+        $env->scope = \mod_thesesynthesis\local\scope::for_synthesis($env->synthesis->id);
 
         // Dossiers : enregistré et public, enregistré mais confidentiel, sujet en cours de validation.
         $course = $env->activities[0]->course;

@@ -78,7 +78,7 @@ abstract class output_testcase extends \advanced_testcase {
         thesesynthesis_set_links($env->synthesis->id, array_map(function ($activity) {
             return $activity->these->cmid;
         }, $env->activities));
-        $env->scope = these_synthesis_scope($env->synthesis->id);
+        $env->scope = \mod_thesesynthesis\local\scope::for_synthesis($env->synthesis->id);
         $question = these_save_question($env->scope, (object) ['qtype' => 'text', 'label' => 'Laboratoire', 'options' => '',
             'required' => 0]);
         these_save_question($env->scope, (object) ['qtype' => 'list', 'label' => 'Espèce', 'options' => "Chien\nChat",

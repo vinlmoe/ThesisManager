@@ -19,6 +19,7 @@ namespace mod_these\output;
 use context;
 use mod_these\local\doctemplates;
 use mod_these\local\rights;
+use mod_these\local\scopesettings;
 use mod_these\local\signatureagent;
 use moodle_url;
 use stdClass;
@@ -102,7 +103,7 @@ class navlinks implements \renderable, \templatable {
         $scope = $these ? doctemplates::settings_scope($these) : null;
         if ($scope && $scope->shared) {
             $links[get_string('sharedsettingslink', 'mod_these', format_string($scope->name))] =
-                new moodle_url('/mod/thesesynthesis/parameters.php', ['id' => $scope->cmid]);
+                scopesettings::scope_urls($scope)['settings'];
         } else {
             $links[get_string('scopesettings', 'mod_these')] = new moodle_url('/mod/these/parameters.php', $id);
             $links[get_string('doctemplates', 'mod_these')] = new moodle_url('/mod/these/doctemplates.php', $id);

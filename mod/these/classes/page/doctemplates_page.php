@@ -22,6 +22,7 @@ use mod_these\local\backlinks;
 use mod_these\local\doctemplates;
 use mod_these\local\documentrenderer;
 use mod_these\local\documentsamples;
+use mod_these\local\scopesettings;
 use mod_these\output;
 use moodle_url;
 use stdClass;
@@ -240,7 +241,7 @@ class doctemplates_page {
     public static function shared_notice(stdClass $scope, $what) {
         global $OUTPUT, $PAGE;
 
-        $url = new moodle_url('/mod/thesesynthesis/view.php', ['id' => $scope->cmid]);
+        $url = scopesettings::scope_urls($scope)['home'];
         $link = new output\link($url, format_string($scope->name, true, ['escape' => false]));
         return $OUTPUT->notification(get_string('sharedsettings', 'mod_these', (object) [
             'what' => $what,

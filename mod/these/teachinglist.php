@@ -30,7 +30,9 @@ require_once($CFG->dirroot . '/mod/these/locallib.php');
 $cmid = required_param('cmid', PARAM_INT);
 
 $cm = get_coursemodule_from_id('', $cmid, 0, false, MUST_EXIST);
-if (!in_array($cm->modname, ['these', 'thesesynthesis'], true)) {
+// Activité « Gestion des thèses », ou module qui tient des paramètres partagés (activité de suivi,
+// rappel <module>_these_require_view()).
+if ($cm->modname !== 'these' && !component_callback_exists('mod_' . $cm->modname, 'these_require_view')) {
     throw new moodle_exception('invalidcoursemodule');
 }
 $course = get_course($cm->course);
@@ -42,9 +44,12 @@ if ($cm->modname === 'these') {
     $activity = $DB->get_record('these', ['id' => $cm->instance], '*', MUST_EXIST);
     $scope = these_settings_scope($activity);
 } else {
-    require_capability('mod/thesesynthesis:view', $context);
+    component_callback('mod_' . $cm->modname, 'these_require_view', [$cm, $context]);
     $activity = null;
-    $scope = these_synthesis_scope($cm->instance);
+    $scope = these_scope_for_cm($cm);
+    if (!$scope) {
+        throw new moodle_exception('invalidcoursemodule');
+    }
 }
 
 send_file(

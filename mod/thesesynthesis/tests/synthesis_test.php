@@ -231,7 +231,7 @@ final class synthesis_test extends \advanced_testcase {
             \mod_these\page\planning_page::output(
                 thesesynthesis_get_active_links($env->synthesis->id, $user->id),
                 new \moodle_url('/mod/thesesynthesis/planning.php', ['id' => $cm->id]),
-                these_synthesis_scope($env->synthesis->id),
+                \mod_thesesynthesis\local\scope::for_synthesis($env->synthesis->id),
                 $env->activities[0]->these,
                 true,
                 'Planning'

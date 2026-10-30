@@ -66,13 +66,13 @@ function these_local_scope(stdClass $these) {
 }
 
 /**
- * Voir \mod_these\local\doctemplates::synthesis_scope().
+ * Voir \mod_these\local\doctemplates::scope_for_cm().
  *
- * @param int $synthesisid
- * @return stdClass|null Voir these_local_scope().
+ * @param stdClass $cm
+ * @return stdClass|null
  */
-function these_synthesis_scope($synthesisid) {
-    return \mod_these\local\doctemplates::synthesis_scope($synthesisid);
+function these_scope_for_cm(stdClass $cm) {
+    return \mod_these\local\doctemplates::scope_for_cm($cm);
 }
 
 /**

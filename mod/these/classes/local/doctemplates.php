@@ -105,56 +105,40 @@ class doctemplates {
     }
 
     /**
-     * Portée d'une activité « Suivi des thèses » : ses modèles, images, grille et questionnaire valent
-     * pour toutes les activités « Gestion des thèses » qu'elle suit.
+     * Portée des paramètres d'un module de cours : celle de l'activité « Gestion des thèses »
+     * elle-même, ou celle qu'un autre module (une activité de suivi) tient pour lui-même (rappel
+     * <module>_these_settings_scope_for_cm(), voir settings_scope()).
      *
-     * @param int $synthesisid
-     * @return stdClass|null Voir these_local_scope().
+     * @param stdClass $cm
+     * @return stdClass|null Voir local_scope() ; null si le module de cours n'a pas de portée.
      */
-    public static function synthesis_scope($synthesisid) {
+    public static function scope_for_cm(stdClass $cm) {
         global $DB;
 
-        $synthesis = $DB->get_record('thesesynthesis', ['id' => $synthesisid]);
-        $cm = $synthesis ? get_coursemodule_from_instance('thesesynthesis', $synthesis->id, 0, false, IGNORE_MISSING) : null;
-        if (!$cm) {
-            return null;
+        if ($cm->modname === 'these') {
+            $these = $DB->get_record('these', ['id' => $cm->instance]);
+            return $these ? self::local_scope($these) : null;
         }
-        return (object) [
-            'theseid' => 0,
-            'synthesisid' => (int) $synthesis->id,
-            'shared' => true,
-            'component' => 'mod_thesesynthesis',
-            'contextid' => context_module::instance($cm->id)->id,
-            'cmid' => (int) $cm->id,
-            'name' => (string) $synthesis->name,
-        ];
+        $scope = component_callback('mod_' . $cm->modname, 'these_settings_scope_for_cm', [$cm], null);
+        return $scope instanceof stdClass ? $scope : null;
     }
 
     /**
-     * Portée des paramètres en vigueur pour une activité : l'activité « Suivi des thèses » qui la suit
-     * (la plus ancienne si plusieurs la suivent), sinon l'activité elle-même. Les modèles des documents,
-     * leurs images, la grille de conformité et le questionnaire préalable au jury sont ainsi définis une
-     * fois pour toutes les promotions suivies.
+     * Portée des paramètres en vigueur pour une activité : celle qu'un autre module fournit (une
+     * activité de suivi de plusieurs promotions, par le rappel <module>_these_settings_scope() de son
+     * lib.php : le premier module qui en renvoie une l'emporte), sinon l'activité elle-même. Les
+     * modèles des documents, leurs images, la grille de conformité et le questionnaire préalable au
+     * jury sont ainsi définis une fois pour toutes les promotions suivies.
      *
      * @param stdClass $these
      * @return stdClass Voir these_local_scope().
      */
     public static function settings_scope(stdClass $these) {
-        global $DB;
-
-        if (!empty($these->id) && get_config('mod_thesesynthesis', 'version')) {
-            $cm = get_coursemodule_from_instance('these', $these->id, 0, false, IGNORE_MISSING);
-            if ($cm) {
-                $synthesisids = $DB->get_fieldset_sql(
-                    "SELECT l.synthesisid
-                       FROM {thesesynthesis_link} l
-                       JOIN {thesesynthesis} t ON t.id = l.synthesisid
-                      WHERE l.thesecmid = :cmid
-                   ORDER BY l.synthesisid",
-                    ['cmid' => $cm->id]
-                );
-                foreach ($synthesisids as $synthesisid) {
-                    if ($scope = self::synthesis_scope($synthesisid)) {
+        if (!empty($these->id)) {
+            foreach (get_plugins_with_function('these_settings_scope') as $plugins) {
+                foreach ($plugins as $function) {
+                    $scope = $function($these);
+                    if ($scope instanceof stdClass) {
                         return $scope;
                     }
                 }

@@ -32,7 +32,7 @@ use stdClass;
 class planning {
     /**
      * Source du planning pour une activité « Gestion des thèses » : même forme que les liens d'une
-     * activité « Suivi des thèses » (voir thesesynthesis_get_active_links()).
+     * activité « Suivi des thèses » (toutes les promotions qu'elle suit).
      *
      * @param stdClass $these
      * @param stdClass $cm
