@@ -41,6 +41,7 @@ final class jury_test extends output_testcase {
         $first = reset($members);
         $DB->set_field('these_jury', 'eligible', 1, ['id' => $first->id]);
         $DB->set_field('these_jury', 'notifiedtime', make_timestamp(2026, 11, 2, 9), ['id' => $first->id]);
+        $DB->set_field('these_jury', 'userid', $this->director->id, ['id' => $first->id]);
         $members = these_get_jury($dossier->id);
 
         $public = (new jury($members, false))->export_for_template($this->renderer());
@@ -55,6 +56,11 @@ final class jury_test extends output_testcase {
         $this->assertSame('president@example.com', $cells[5]['parts'][0]['ptext']['value']);
         $this->assertSame('badge badge-success bg-success', $cells[6]['parts'][0]['pbadge']['class']);
         $this->assertNotFalse($cells[6]['parts'][1]['pmuted']);
+        // Compte rattaché, ou accès par lien sans compte.
+        $account = get_string('juryuseraccount', 'mod_these', fullname($this->director));
+        $this->assertSame($account, $cells[6]['parts'][2]['pmuted']['value']);
+        $guest = end($staff['table']['rows'])['cells'][6];
+        $this->assertSame(get_string('jurynoaccount', 'mod_these'), $guest['parts'][1]['pmuted']['value']);
         // Invité : pas d'éligibilité.
         $this->assertSame('-', end($staff['table']['rows'])['cells'][6]['parts'][0]['ptext']['value']);
 

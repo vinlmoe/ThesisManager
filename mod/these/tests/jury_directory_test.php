@@ -227,6 +227,59 @@ final class jury_directory_test extends these_testcase {
     }
 
     /**
+     * Compte rattaché à un membre : au choix dans l'annuaire et à la validation d'éligibilité par la
+     * DEVE, jamais par la seule saisie de l'étudiant ; conservé d'une saisie à l'autre, recalculé
+     * quand l'adresse change ; aucun pour une adresse partagée par plusieurs comptes.
+     */
+    public function test_member_account_attachment(): void {
+        $this->resetAfterTest();
+        $this->setup_activity();
+        $dossier = $this->generator->create_dossier($this->these, $this->student->id, ['status' => THESE_STATUS_DEFENSE_VALIDATED]);
+        $martin = $this->getDataGenerator()->create_user(['email' => 'Martin@example.org']);
+        $claire = $this->getDataGenerator()->create_user(['email' => 'claire@example.org']);
+        $claire2 = $this->getDataGenerator()->create_user(['email' => 'claire.dupont@example.org']);
+        $this->getDataGenerator()->create_user(['email' => 'double@example.org']);
+        $this->getDataGenerator()->create_user(['email' => 'double@example.org']);
+        $pr = $this->juror('Martin', 'pr');
+        $members = [
+            (object) ['juryrole' => 'president', 'fullname' => 'Jean MARTIN', 'jurytitle' => 'Pr', 'institution' => 'VetAgro Sup',
+                'email' => 'martin@example.org', 'jurorid' => $pr, 'jurystatus' => 'pr'],
+            (object) ['juryrole' => 'member', 'fullname' => 'Claire Dupont', 'jurytitle' => 'Dr', 'institution' => 'Clinique',
+                'email' => 'claire@example.org', 'jurorid' => 0, 'jurystatus' => 'other'],
+            (object) ['juryrole' => 'guest', 'fullname' => 'Luc Double', 'jurytitle' => '', 'institution' => '',
+                'email' => 'double@example.org', 'jurorid' => 0, 'jurystatus' => ''],
+        ];
+        $userids = function () use ($dossier) {
+            return array_map('intval', array_column(these_get_jury($dossier->id), 'userid'));
+        };
+
+        // Saisie de l'étudiant : seul l'enseignant choisi dans l'annuaire est rattaché.
+        these_save_jury($dossier->id, $members);
+        $this->assertSame([(int) $martin->id, 0, 0], $userids());
+
+        // Validation de l'éligibilité par la DEVE : le membre extérieur est rattaché, pas l'adresse ambiguë.
+        foreach ($members as $member) {
+            $member->eligible = true;
+        }
+        these_save_jury($dossier->id, $members, $this->deve->id);
+        $this->assertSame([(int) $martin->id, (int) $claire->id, 0], $userids());
+
+        // Nouvelle saisie de l'étudiant : rattachement conservé ; adresse changée : recalculé.
+        foreach ($members as $member) {
+            unset($member->eligible);
+        }
+        these_save_jury($dossier->id, $members);
+        $this->assertSame([(int) $martin->id, (int) $claire->id, 0], $userids());
+        $this->assertSame((int) $claire->id, \mod_these\local\jury::resolve_userid($members[1]));
+        $members[1]->email = 'claire.dupont@example.org';
+        these_save_jury($dossier->id, $members);
+        $this->assertSame([(int) $martin->id, 0, 0], $userids(), 'nouvelle adresse non validée');
+        $members[1]->eligible = true;
+        these_save_jury($dossier->id, $members, $this->deve->id);
+        $this->assertSame([(int) $martin->id, (int) $claire2->id, 0], $userids());
+    }
+
+    /**
      * Un enseignant retiré de l'annuaire reste dans les jurys, détaché de l'annuaire.
      */
     public function test_delete_juror_keeps_jury(): void {
