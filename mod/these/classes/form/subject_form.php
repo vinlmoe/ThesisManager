@@ -29,7 +29,7 @@ require_once($CFG->dirroot . '/mod/these/locallib.php');
  * Un directeur extérieur à l'établissement, sans compte, se saisit ; l'étudiant choisit alors un
  * examinateur interne, enseignant de l'établissement qui fait les démarches dans le module à la place
  * du directeur (il est enregistré comme directeur du dossier, voir get_data()). Le titre du directeur,
- * ou de l'examinateur, n'est demandé que s'il ne figure pas dans l'annuaire des enseignants.
+ * ou de l'examinateur, n'est pas demandé : il est repris de l'annuaire des enseignants.
  *
  * L'étudiant peut l'enregistrer en brouillon ou le soumettre à son directeur ; les champs, les
  * engagements et la signature ne sont exigés qu'à la soumission.
@@ -106,20 +106,11 @@ class subject_form extends \moodleform {
         $mform->setExpanded('directorheader');
         $mform->addElement('advcheckbox', 'externaldirector', '', get_string('externaldirector', 'mod_these'));
         $mform->addHelpButton('externaldirector', 'externaldirector', 'mod_these');
-        // Titre connu de l'annuaire : repris à l'enregistrement, l'étudiant n'a pas à le saisir.
-        $directorids = array_keys($this->_customdata['directors']);
-        $knowntitles = array_keys(\mod_these\local\jurors::titles_for_users($directorids));
-        // Directeur interne : il fait lui-même les démarches.
+        // Directeur interne : il fait lui-même les démarches. Son titre est repris de l'annuaire à
+        // l'enregistrement.
         $mform->addElement('select', 'directorid', get_string('director', 'mod_these'), $this->_customdata['directors']);
         $mform->addHelpButton('directorid', 'director', 'mod_these');
         $mform->hideIf('directorid', 'externaldirector', 'checked');
-        $mform->addElement('text', 'directortitle', get_string('directortitle', 'mod_these'), ['size' => 10]);
-        $mform->setType('directortitle', PARAM_TEXT);
-        $mform->addHelpButton('directortitle', 'directortitle', 'mod_these');
-        $mform->hideIf('directortitle', 'externaldirector', 'checked');
-        if ($knowntitles) {
-            $mform->hideIf('directortitle', 'directorid', 'in', $knowntitles);
-        }
         // Directeur extérieur : saisi, et suppléé dans le module par un examinateur interne.
         foreach (['extdirectorname', 'extdirectorgrade', 'extdirectorinstitution', 'extdirectoremail'] as $field) {
             $mform->addElement('text', $field, get_string($field, 'mod_these'), ['size' => 64]);
@@ -129,13 +120,6 @@ class subject_form extends \moodleform {
         $mform->addElement('select', 'examinerid', get_string('internalexaminer', 'mod_these'), $this->_customdata['directors']);
         $mform->addHelpButton('examinerid', 'internalexaminer', 'mod_these');
         $mform->hideIf('examinerid', 'externaldirector', 'notchecked');
-        $mform->addElement('text', 'examinertitle', get_string('internalexaminertitle', 'mod_these'), ['size' => 10]);
-        $mform->setType('examinertitle', PARAM_TEXT);
-        $mform->addHelpButton('examinertitle', 'directortitle', 'mod_these');
-        $mform->hideIf('examinertitle', 'externaldirector', 'notchecked');
-        if ($knowntitles) {
-            $mform->hideIf('examinertitle', 'examinerid', 'in', $knowntitles);
-        }
 
         $mform->addElement('header', 'commitheader', get_string('commitments', 'mod_these'));
         $mform->setExpanded('commitheader');
@@ -173,7 +157,6 @@ class subject_form extends \moodleform {
         $defaultvalues = (object) $defaultvalues;
         if (!empty($defaultvalues->externaldirector)) {
             $defaultvalues->examinerid = $defaultvalues->directorid ?? 0;
-            $defaultvalues->examinertitle = $defaultvalues->directortitle ?? '';
         }
         parent::set_data($defaultvalues);
     }
@@ -201,9 +184,8 @@ class subject_form extends \moodleform {
     public static function apply_examiner(\stdClass $data) {
         if (!empty($data->externaldirector) && property_exists($data, 'examinerid')) {
             $data->directorid = (int) $data->examinerid;
-            $data->directortitle = (string) ($data->examinertitle ?? '');
         }
-        unset($data->examinerid, $data->examinertitle);
+        unset($data->examinerid);
         return $data;
     }
 

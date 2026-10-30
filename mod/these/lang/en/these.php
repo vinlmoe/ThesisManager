@@ -744,8 +744,6 @@ $string['externaldirector_help'] = 'The external director, without a Moodle acco
     . 'Then choose an internal examiner, a teacher of the institution: this examiner handles the procedure in the module '
     . '(step validations, report, signatures as member).';
 $string['directortitle'] = 'Director title';
-$string['directortitle_help'] = 'Dr, Pr… as it must appear on the documents. Asked only if the director is not in the teacher '
-    . 'directory, which otherwise gives the title.';
 $string['extdirectorname'] = 'External director: title, name';
 $string['extdirectorgrade'] = 'Grade';
 $string['extdirectorinstitution'] = 'Institution';
@@ -1392,7 +1390,6 @@ $string['privacy:metadata:these_subjecthistory:timecreated'] = 'Time of the chan
 $string['internalexaminer'] = 'Internal examiner';
 $string['internalexaminer_help'] = 'Teacher of the institution who handles the procedure in the module instead of the external '
     . 'director: validates the steps, uploads the report and signs as member.';
-$string['internalexaminertitle'] = 'Internal examiner title';
 $string['exportextdirector'] = 'External director';
 $string['teachinglistreminder'] = 'Reminder: your manuscript must include the page with the up-to-date teaching staff list, to download '
     . 'on the day of submission.';

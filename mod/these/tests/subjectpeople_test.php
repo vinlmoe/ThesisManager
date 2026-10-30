@@ -37,7 +37,7 @@ require_once(__DIR__ . '/these_testcase.php');
  */
 final class subjectpeople_test extends these_testcase {
     /**
-     * Titre du directeur : celui de l'annuaire s'il y figure, sinon celui saisi.
+     * Titre du directeur : celui de l'annuaire s'il y figure, sinon celui des données transmises (import).
      */
     public function test_director_title(): void {
         $this->setup_activity();
@@ -60,17 +60,18 @@ final class subjectpeople_test extends these_testcase {
 
     /**
      * Directeur extérieur : l'examinateur interne choisi devient le directeur du dossier, avec son
-     * titre ; directeur interne : l'examinateur éventuellement choisi auparavant est ignoré.
+     * titre de l'annuaire ; directeur interne : l'examinateur éventuellement choisi auparavant est ignoré.
      */
     public function test_internal_examiner(): void {
         $this->setup_activity();
         $examiner = $this->getDataGenerator()->create_and_enrol($this->course, 'teacher');
+        jurors::save((object) ['title' => 'Dr', 'lastname' => $examiner->lastname,
+            'firstname' => $examiner->firstname, 'email' => $examiner->email, 'status' => 'mcf',
+            'institution' => 'École nationale vétérinaire', 'active' => 1]);
 
         $data = subject_form::apply_examiner((object) ['externaldirector' => 1, 'directorid' => $this->director->id,
-            'directortitle' => 'Pr', 'examinerid' => $examiner->id, 'examinertitle' => 'Dr',
-            'extdirectorname' => 'Pr Durand']);
+            'examinerid' => $examiner->id, 'extdirectorname' => 'Pr Durand']);
         $this->assertEquals($examiner->id, $data->directorid);
-        $this->assertSame('Dr', $data->directortitle);
         $this->assertFalse(property_exists($data, 'examinerid'));
 
         $dossier = $this->generator->create_dossier($this->these, $this->student->id);
@@ -79,11 +80,11 @@ final class subjectpeople_test extends these_testcase {
         $this->assertEquals($examiner->id, $saved->directorid);
         $this->assertEquals(1, $saved->externaldirector);
         $this->assertSame('Pr Durand', $saved->extdirectorname);
+        $this->assertSame('Dr', $saved->directortitle);
 
         $data = subject_form::apply_examiner((object) ['externaldirector' => 0, 'directorid' => $this->director->id,
-            'directortitle' => 'Pr', 'examinerid' => $examiner->id, 'examinertitle' => 'Dr']);
+            'examinerid' => $examiner->id]);
         $this->assertEquals($this->director->id, $data->directorid);
-        $this->assertSame('Pr', $data->directortitle);
         $this->assertFalse(property_exists($data, 'examinerid'));
     }
 }
