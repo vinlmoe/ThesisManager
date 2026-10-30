@@ -352,25 +352,38 @@ activité, ce qui a été envoyé ou pourquoi rien ne l'a été.
 
 Le module applique l'API de confidentialité de Moodle (export et suppression
 des données personnelles, *Administration du site* → *Utilisateurs* →
-*Confidentialité et règlements*). Son comportement actuel à la suppression est
-le suivant :
+*Confidentialité et règlements*).
 
-- **étudiant** : son dossier est effacé en entier, procès-verbal scellé, PV
-  scanné, documents signés, jury et historique compris ;
-- **membre du personnel** (directeur, DEVE, bibliothèque, agent signataire) :
-  les dossiers des autres restent, mais ses références y sont dissociées (nom,
-  image et adresse de ses signatures effacés, comptes de validation et compte
-  rattaché à un membre du jury remis à zéro, commentaires supprimés) et tout
-  document scellé qui portait sa signature est **descellé**, puis reconstitué
-  sans elle.
+**Règle.** Le procès-verbal de soutenance est un acte administratif, archive
+publique que l'établissement doit conserver (code du patrimoine, livre II) :
+au titre de l'article 17, paragraphe 3, b) et d) du RGPD, il échappe au droit
+à l'effacement. Il n'est donc **ni effacé ni anonymisé** lors d'une
+suppression de données personnelles. Un dossier a un procès-verbal enregistré
+dès que la DEVE a déposé le PV scanné, qu'un PV d'ajournement a été archivé ou
+qu'une décision du jury a été reportée.
 
-Un procès-verbal de soutenance a une valeur d'archive publique que
-l'établissement peut être tenu de conserver au-delà du compte de l'étudiant ou
-de l'agent. Le délégué à la protection des données doit en tenir compte avant
-d'approuver une demande de suppression : exporter ou archiver hors du module
-le PV et les documents signés concernés, ou refuser la suppression du dossier
-pendant la durée légale de conservation. Le module ne propose pas encore
-d'anonymisation qui garderait le document en effaçant seulement l'identité.
+- **étudiant** : sans procès-verbal enregistré, son dossier est effacé en
+  entier. Avec un procès-verbal enregistré, le module conserve
+  l'enregistrement du dossier réduit aux champs du PV (étudiant, titre,
+  directeur, date et lieu de soutenance, numéro DEVE, décisions du jury :
+  résultat, mention, proposition de prix, corrections demandées), le jury et
+  les fichiers du PV (PV scanné, PV d'ajournement archivés), intacts ; tout le
+  reste est effacé : résumé, mots-clés, bordereau, grille, agrément,
+  conclusions, commentaires, autres fichiers déposés ou générés, documents
+  scellés et signatures électroniques, réponses au questionnaire, historique
+  et journaux, liens d'accès du jury ;
+- **membre du personnel** (directeur, DEVE, bibliothèque, agent signataire,
+  membre du jury ayant un compte rattaché) : les dossiers des autres restent,
+  mais ses références y sont dissociées (nom, image et adresse de ses
+  signatures effacés, comptes de validation et compte rattaché à un membre du
+  jury remis à zéro, commentaires supprimés) et tout document scellé qui
+  portait sa signature est **descellé**, puis reconstitué sans elle. Le PV,
+  document papier signé par le jury puis scanné, ne porte ni signature ni
+  scellé du module : il n'est jamais modifié.
+
+L'export des données de l'étudiant continue d'inclure son procès-verbal (PV
+scanné et décisions). La durée de conservation du PV et son versement aux
+archives relèvent de l'établissement, hors du module.
 
 ## 5 bis. Sauvegarde et restauration
 

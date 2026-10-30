@@ -2085,7 +2085,11 @@ désactive dans les \bouton{Paramètres du circuit}, rubrique
 Le module implémente l'API de confidentialité de Moodle : l'étudiant peut
 exporter son dossier (sans le rapport du directeur) et sa validation des études,
 et en demander l'effacement ; un membre du personnel supprimé est dissocié des dossiers qu'il a
-traités, sans que ceux-ci disparaissent. La sauvegarde et la restauration de
+traités, sans que ceux-ci disparaissent. Le procès-verbal de soutenance, acte
+administratif à conserver comme archive publique, n'est jamais effacé ni
+anonymisé : à l'effacement d'un étudiant dont le procès-verbal est enregistré,
+le module garde le PV scanné, les décisions du jury, le jury et les champs du
+dossier qu'il cite (titre, date de soutenance), et efface tout le reste. La sauvegarde et la restauration de
 cours recopient le paramétrage (réglages, courriels, modèles et images, grille,
 questionnaire) et, si les données utilisateur sont incluses, les dossiers, leur
 jury, leur historique, leurs fichiers, leurs signatures et leurs documents

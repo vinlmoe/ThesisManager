@@ -288,4 +288,150 @@ final class privacy_provider_test extends these_testcase {
         provider::delete_data_for_all_users_in_context($this->context);
         $this->assertEquals(0, $DB->count_records('these_dossier', ['theseid' => $this->these->id]));
     }
+
+    /**
+     * Dossier de make_dossier() dont le procès-verbal est enregistré : PV scanné et PV d'ajournement
+     * archivé, décisions du jury, plus une signature du directeur avec son image, un document scellé,
+     * une réponse au questionnaire et un lien d'accès du jury.
+     *
+     * @return \stdClass Dossier.
+     */
+    private function make_dossier_with_minutes(): \stdClass {
+        global $DB;
+
+        $dossier = $this->make_dossier();
+        $DB->update_record('these_dossier', (object) ['id' => $dossier->id, 'status' => THESE_STATUS_CLOSED,
+            'title' => 'Sujet de test', 'summary' => 'Résumé personnel', 'devenumber' => '2026-042',
+            'defensedate' => make_timestamp(2026, 6, 15, 14), 'defenseresult' => THESE_RESULT_ADMITTED,
+            'mention' => 'honorable', 'bordereau' => json_encode(['birthname' => 'MARTIN'])]);
+        $fs = get_file_storage();
+        $record = ['contextid' => $this->context->id, 'component' => 'mod_these', 'itemid' => $dossier->id, 'filepath' => '/'];
+        $fs->create_file_from_string($record + ['filearea' => 'pv', 'filename' => 'pv.pdf'], '%PDF-pv-signe');
+        $fs->create_file_from_string($record + ['filearea' => 'pvadjourned', 'filename' => 'ajournement-pv.pdf'], '%PDF-ajourne');
+        $fs->create_file_from_string($record + ['filearea' => 'sealed', 'filename' => 'conclusions.pdf'], '%PDF-scelle');
+        $this->cite_staff($dossier, $this->deve);
+        $DB->set_field('these_jury', 'accesstoken', str_repeat('a', 64), ['dossierid' => $dossier->id]);
+        $DB->insert_record('these_answer', (object) ['dossierid' => $dossier->id, 'questionid' => 1, 'value' => 'Réponse',
+            'timemodified' => time()]);
+        return $this->reload($dossier->id);
+    }
+
+    /**
+     * Empreintes des fichiers d'une zone du dossier.
+     *
+     * @param int $dossierid
+     * @param string $filearea
+     * @return string[] nom => empreinte SHA-1
+     */
+    private function area_hashes(int $dossierid, string $filearea): array {
+        $hashes = [];
+        foreach (get_file_storage()->get_area_files($this->context->id, 'mod_these', $filearea, $dossierid, 'id', false) as $file) {
+            $hashes[$file->get_filename()] = $file->get_contenthash();
+        }
+        return $hashes;
+    }
+
+    /**
+     * Suppression d'un étudiant dont le procès-verbal est enregistré, par chacun des trois chemins :
+     * le PV (fichiers intacts, champs du dossier, jury) est conservé ; le reste est effacé.
+     */
+    public function test_delete_student_keeps_minutes(): void {
+        global $DB;
+        $this->setup_activity();
+        foreach (['user', 'users', 'context'] as $path) {
+            $dossier = $this->make_dossier_with_minutes();
+            $pv = $this->area_hashes($dossier->id, 'pv');
+            $adjourned = $this->area_hashes($dossier->id, 'pvadjourned');
+            $this->assertCount(1, $pv);
+
+            if ($path === 'user') {
+                provider::delete_data_for_user(new approved_contextlist($this->student, 'mod_these', [$this->context->id]));
+            } else if ($path === 'users') {
+                provider::delete_data_for_users(new approved_userlist($this->context, 'mod_these', [$this->student->id]));
+            } else {
+                provider::delete_data_for_all_users_in_context($this->context);
+            }
+
+            // Le procès-verbal : fichiers inchangés, champs du PV et jury conservés.
+            $this->assertSame($pv, $this->area_hashes($dossier->id, 'pv'), $path);
+            $this->assertSame($adjourned, $this->area_hashes($dossier->id, 'pvadjourned'), $path);
+            $kept = $this->reload($dossier->id);
+            $this->assertEquals($this->student->id, $kept->userid);
+            $this->assertSame('Sujet de test', $kept->title);
+            $this->assertSame('2026-042', $kept->devenumber);
+            $this->assertEquals($dossier->defensedate, $kept->defensedate);
+            $this->assertEquals(THESE_RESULT_ADMITTED, $kept->defenseresult);
+            $this->assertSame('honorable', $kept->mention);
+            $this->assertEquals(THESE_STATUS_CLOSED, $kept->status);
+            $this->assertEquals(4, $DB->count_records('these_jury', ['dossierid' => $dossier->id]), $path);
+
+            // Le reste est effacé.
+            $this->assertSame('', (string) $kept->summary);
+            $this->assertEmpty($kept->bordereau);
+            $this->assertSame('', (string) $kept->returncomment);
+            $this->assertEquals(0, $kept->returnedby);
+            foreach (['manuscript', 'sealed'] as $filearea) {
+                $this->assertSame([], $this->area_hashes($dossier->id, $filearea), "$path $filearea");
+            }
+            foreach (['these_signature', 'these_log', 'these_answer', 'these_subjecthistory'] as $table) {
+                $this->assertEquals(0, $DB->count_records($table, ['dossierid' => $dossier->id]), "$path $table");
+            }
+            $tokens = $DB->count_records_select('these_jury', 'dossierid = ? AND accesstoken IS NOT NULL', [$dossier->id]);
+            $this->assertEquals(0, $tokens, $path);
+            $this->assertTrue(get_file_storage()->is_area_empty($this->context->id, 'mod_these', 'signature'));
+
+            // Rejouée : rien de plus ne disparaît.
+            provider::delete_data_for_user(new approved_contextlist($this->student, 'mod_these', [$this->context->id]));
+            $this->assertSame($pv, $this->area_hashes($dossier->id, 'pv'));
+            $DB->delete_records('these_jury', ['dossierid' => $dossier->id]);
+            $DB->delete_records('these_dossier', ['id' => $dossier->id]);
+            get_file_storage()->delete_area_files($this->context->id, 'mod_these', 'pv', $dossier->id);
+            get_file_storage()->delete_area_files($this->context->id, 'mod_these', 'pvadjourned', $dossier->id);
+        }
+    }
+
+    /**
+     * Une simple décision du jury reportée suffit à conserver le dossier ; sans aucun procès-verbal,
+     * le dossier est effacé en entier.
+     */
+    public function test_delete_student_minutes_by_decision_only(): void {
+        global $DB;
+        $this->setup_activity();
+        $dossier = $this->make_dossier();
+        $DB->set_field('these_dossier', 'defenseresult', THESE_RESULT_ADJOURNED, ['id' => $dossier->id]);
+        provider::delete_data_for_user(new approved_contextlist($this->student, 'mod_these', [$this->context->id]));
+        $this->assertTrue($DB->record_exists('these_dossier', ['id' => $dossier->id]));
+        $this->assertTrue(get_file_storage()->is_area_empty($this->context->id, 'mod_these', 'manuscript', $dossier->id));
+
+        $DB->set_field('these_dossier', 'defenseresult', 0, ['id' => $dossier->id]);
+        provider::delete_data_for_user(new approved_contextlist($this->student, 'mod_these', [$this->context->id]));
+        $this->assertFalse($DB->record_exists('these_dossier', ['id' => $dossier->id]));
+        $this->assertFalse($DB->record_exists('these_jury', ['dossierid' => $dossier->id]));
+    }
+
+    /**
+     * Suppression d'un membre du personnel signataire, d'un dossier dont le procès-verbal est
+     * enregistré : le PV et les décisions sont inchangés ; ses références ailleurs sont dissociées.
+     */
+    public function test_delete_staff_keeps_minutes(): void {
+        global $DB;
+        $this->setup_activity();
+        $dossier = $this->make_dossier_with_minutes();
+        $pv = $this->area_hashes($dossier->id, 'pv');
+        $adjourned = $this->area_hashes($dossier->id, 'pvadjourned');
+
+        provider::delete_data_for_users(new approved_userlist($this->context, 'mod_these', [
+            $this->director->id, $this->deve->id,
+        ]));
+
+        $this->assertSame($pv, $this->area_hashes($dossier->id, 'pv'));
+        $this->assertSame($adjourned, $this->area_hashes($dossier->id, 'pvadjourned'));
+        $kept = $this->reload($dossier->id);
+        $this->assertEquals(THESE_RESULT_ADMITTED, $kept->defenseresult);
+        $this->assertSame('honorable', $kept->mention);
+        $this->assertEquals(4, $DB->count_records('these_jury', ['dossierid' => $dossier->id]));
+        $this->assertEquals(0, $kept->directorid);
+        $signatures = ['dossierid' => $dossier->id, 'userid' => $this->director->id];
+        $this->assertEquals(0, $DB->count_records('these_signature', $signatures));
+    }
 }

@@ -39,6 +39,7 @@ use mod_these\local\questionnaire;
 use mod_these\local\signatureagent;
 use mod_these\local\signatures;
 use mod_these\local\subjectchange;
+use mod_these\local\university;
 use mod_these\local\workflow;
 use mod_these\local\bordereau;
 use mod_these\local\seals;
@@ -54,7 +55,8 @@ require_once($CFG->dirroot . '/mod/these/lib.php');
  * traitement :
  *
  * - **l'étudiant**, propriétaire du dossier (these_dossier.userid) : sa suppression efface le
- *   dossier entier (sujet, soutenance, jury, historique, fichiers) ;
+ *   dossier entier (sujet, soutenance, jury, historique, fichiers), sauf si son procès-verbal de
+ *   soutenance est enregistré (voir ci-dessous) ;
  * - **le personnel** (directeur, DEVE, bibliothèque), simplement *cité* dans le dossier d'un
  *   étudiant (directeur, auteur d'un renvoi ou d'une action de l'historique) : ses références sont
  *   dissociées et les commentaires qu'il a rédigés effacés, le dossier de l'étudiant restant
@@ -62,11 +64,30 @@ require_once($CFG->dirroot . '/mod/these/lib.php');
  *
  * Les membres du jury, souvent extérieurs, n'ont pas de compte Moodle : leurs coordonnées font
  * partie du dossier de l'étudiant et suivent son sort.
+ *
+ * **Conservation des procès-verbaux.** Le procès-verbal de soutenance est un acte administratif :
+ * archive publique que l'établissement est tenu de conserver (code du patrimoine, livre II, et
+ * règles de gestion des archives des établissements d'enseignement supérieur), ce qui, au sens de
+ * l'article 17, paragraphe 3, b) et d) du RGPD, fait exception au droit à l'effacement. Il n'est
+ * donc ni effacé ni anonymisé. Le procès-verbal d'un dossier est enregistré dès que la DEVE a
+ * déposé le PV scanné (zone pv), qu'un PV d'ajournement a été archivé (zone pvadjourned) ou qu'une
+ * décision du jury est reportée (these_dossier.defenseresult). Pour un tel dossier, la suppression
+ * de l'étudiant conserve l'enregistrement du dossier réduit aux champs du procès-verbal (étudiant,
+ * titre, directeur, date et lieu de soutenance, numéro DEVE, décisions du jury), son jury et les
+ * fichiers du PV ; tout le reste est effacé (résumé, mots-clés, bordereau, grille, agrément,
+ * conclusions, commentaires, autres fichiers déposés ou générés, documents scellés et signatures,
+ * réponses au questionnaire, historique et journaux, liens d'accès du jury). Le PV, document papier
+ * signé par le jury puis scanné, ne porte aucune signature ni aucun scellé du module : la
+ * suppression d'un membre du personnel ne le modifie donc jamais. Sans procès-verbal enregistré, le
+ * dossier est effacé en entier.
  */
 class provider implements
     \core_privacy\local\metadata\provider,
     \core_privacy\local\request\core_userlist_provider,
     \core_privacy\local\request\plugin\provider {
+    /** @var string[] Zones de fichiers du procès-verbal, conservées à la suppression de l'étudiant. */
+    const MINUTES_FILEAREAS = ['pv', 'pvadjourned'];
+
     /**
      * Décrit les données personnelles stockées par le plugin.
      *
@@ -542,7 +563,7 @@ class provider implements
         if (!$cm) {
             return;
         }
-        dossiers::delete_dossiers($DB->get_fieldset_select('these_dossier', 'id', 'theseid = ?', [$cm->instance]), $context);
+        self::delete_student_dossiers($context, $DB->get_fieldset_select('these_dossier', 'id', 'theseid = ?', [$cm->instance]));
     }
 
     /**
@@ -598,10 +619,10 @@ class provider implements
         [$insql, $inparams] = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED);
         $params = array_merge($inparams, ['theseid' => $cm->instance]);
 
-        // Dossiers propres : supprimés intégralement.
-        dossiers::delete_dossiers(
-            $DB->get_fieldset_select('these_dossier', 'id', "theseid = :theseid AND userid $insql", $params),
-            $context
+        // Dossiers propres : supprimés intégralement, sauf le procès-verbal enregistré.
+        self::delete_student_dossiers(
+            $context,
+            $DB->get_fieldset_select('these_dossier', 'id', "theseid = :theseid AND userid $insql", $params)
         );
 
         // Références de personnel dans les dossiers restants.
@@ -651,6 +672,74 @@ class provider implements
                 'id' => $signature->id, 'userid' => 0, 'signername' => '', 'signeremail' => '', 'ipaddress' => '',
             ]);
         }
+    }
+
+    /**
+     * Efface des dossiers d'étudiants : en entier, ou, si leur procès-verbal est enregistré, tout
+     * sauf ce procès-verbal (voir la description de la classe).
+     *
+     * @param context_module $context
+     * @param int[] $dossierids
+     * @return void
+     */
+    protected static function delete_student_dossiers(context_module $context, array $dossierids) {
+        $withminutes = array_filter($dossierids, function ($dossierid) use ($context) {
+            return self::has_minutes($context, (int) $dossierid);
+        });
+        dossiers::delete_dossiers(array_values(array_diff($dossierids, $withminutes)), $context);
+        foreach ($withminutes as $dossierid) {
+            self::keep_minutes_only($context, (int) $dossierid);
+        }
+    }
+
+    /**
+     * Le procès-verbal de soutenance du dossier est-il enregistré : PV scanné, PV d'ajournement
+     * archivé ou décision du jury reportée ?
+     *
+     * @param context_module $context
+     * @param int $dossierid
+     * @return bool
+     */
+    protected static function has_minutes(context_module $context, int $dossierid): bool {
+        global $DB;
+
+        $fs = get_file_storage();
+        return !$fs->is_area_empty($context->id, 'mod_these', 'pv', $dossierid)
+            || !$fs->is_area_empty($context->id, 'mod_these', 'pvadjourned', $dossierid)
+            || (int) $DB->get_field('these_dossier', 'defenseresult', ['id' => $dossierid]) !== 0;
+    }
+
+    /**
+     * Réduit le dossier d'un étudiant supprimé à son procès-verbal : enregistrement du dossier limité
+     * aux champs du PV, jury et fichiers du PV conservés ; le reste est effacé.
+     *
+     * @param context_module $context
+     * @param int $dossierid
+     * @return void
+     */
+    protected static function keep_minutes_only(context_module $context, int $dossierid) {
+        global $DB;
+
+        $fs = get_file_storage();
+        $areas = array_diff(array_merge(THESE_FILEAREAS, ['sealed', university::FILEAREA]), self::MINUTES_FILEAREAS);
+        foreach ($areas as $filearea) {
+            $fs->delete_area_files($context->id, 'mod_these', $filearea, $dossierid);
+        }
+        foreach ($DB->get_fieldset_select('these_signature', 'id', 'dossierid = ?', [$dossierid]) as $signatureid) {
+            $fs->delete_area_files($context->id, 'mod_these', 'signature', $signatureid);
+        }
+        $DB->delete_records('these_signature', ['dossierid' => $dossierid]);
+        $DB->delete_records('these_answer', ['dossierid' => $dossierid]);
+        $DB->delete_records('these_subjecthistory', ['dossierid' => $dossierid]);
+        $DB->delete_records('these_log', ['dossierid' => $dossierid]);
+        $DB->set_field('these_jury', 'accesstoken', null, ['dossierid' => $dossierid]);
+        $DB->update_record('these_dossier', (object) [
+            'id' => $dossierid, 'titleen' => '', 'summary' => '', 'keywords' => '', 'commitments' => 0,
+            'ethicsnumber' => '', 'bordereau' => null, 'conclusions' => null, 'conformitygrid' => null,
+            'agreement' => null, 'extdirectoremail' => '', 'libraryref' => '', 'correctionsdone' => '',
+            'returnstatus' => 0, 'returncomment' => '', 'returnedby' => 0, 'returntime' => 0, 'remindertime' => 0,
+            'daterequested' => 0, 'timemodified' => time(),
+        ]);
     }
 
     /**
