@@ -16,9 +16,9 @@
 
 namespace mod_these\form;
 
-use mod_these\local\dossiers;
 use mod_these\local\signatures;
 use mod_these\local\signaturefields;
+use mod_these\local\subjects;
 
 /**
  * Formulaire de dépôt de sujet de thèse (phase 1, étape 1), reprenant le formulaire papier de
@@ -210,7 +210,7 @@ class subject_form extends base_form {
                 $errors[$field === 'studyyear' ? 'studyyeargroup' : $field] = get_string('required');
             }
         }
-        $keywords = dossiers::split_keywords((string) ($data['keywords'] ?? ''));
+        $keywords = subjects::split_keywords((string) ($data['keywords'] ?? ''));
         if (!isset($errors['keywords']) && (count($keywords) < 3 || count($keywords) > 5)) {
             $errors['keywords'] = get_string('keywordscount', 'mod_these');
         }

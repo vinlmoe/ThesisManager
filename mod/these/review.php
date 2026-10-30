@@ -212,7 +212,7 @@ if ($mform->is_cancelled()) {
 
 $student = $DB->get_record('user', ['id' => $dossier->userid]);
 $director = $dossier->directorid ? $DB->get_record('user', ['id' => $dossier->directorid]) : null;
-$extdirector = \mod_these\local\dossiers::external_director_summary($dossier);
+$extdirector = \mod_these\local\subjects::external_director_summary($dossier);
 
 $renderer = $PAGE->get_renderer('mod_these');
 // Résumé du dossier au-dessus de la décision ; le dossier complet suit, replié, pour ne pas

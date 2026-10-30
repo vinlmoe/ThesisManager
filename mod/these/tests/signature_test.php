@@ -235,7 +235,7 @@ final class signature_test extends these_testcase {
         $this->assertArrayNotHasKey('subject:extdirector', these_get_signatures($dossier->id));
         $this->assertSame(
             'Dr Jean Externe (Docteur vétérinaire, Clinique du Lac) — externe@example.com',
-            \mod_these\local\dossiers::external_director_summary($dossier)
+            \mod_these\local\subjects::external_director_summary($dossier)
         );
 
         $dossier = these_validate_step($this->these, $this->cm, $dossier, $this->director->id, [], '', $this->signature());

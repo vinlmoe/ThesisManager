@@ -136,7 +136,7 @@ class subjectchange {
             foreach (['directorid', 'confidential', 'externaldirector'] as $field) {
                 $fields[$field] = (int) dossiers::submitted_value($data, $dossier, $field);
             }
-            $fields = dossiers::people_fields($fields, $data);
+            $fields = subjects::people_fields($fields, $data);
             // Dossier abandonné relancé par le nouveau sujet : le statut atteint lors de l'abandon ne vaut plus.
             $fields['cancelledfromstatus'] = 0;
             if (property_exists($data, 'commitguide')) {

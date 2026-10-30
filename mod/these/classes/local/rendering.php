@@ -221,18 +221,18 @@ class rendering {
         $status = (int) $dossier->status;
         $links = [];
 
-        if ($rights->student && dossiers::subject_editable($dossier)) {
+        if ($rights->student && subjects::subject_editable($dossier)) {
             $links[get_string('editsubject', 'mod_these')] = new moodle_url('/mod/these/subject.php', $params);
         }
         // Questionnaire préalable au jury : rempli par l'étudiant avant le dépôt de la soutenance,
         // corrigé au besoin par la DEVE.
-        if (($rights->student && dossiers::defense_editable($dossier)) || ($rights->deve && $status >= THESE_STATUS_ACTIVE)) {
+        if (($rights->student && defenses::defense_editable($dossier)) || ($rights->deve && $status >= THESE_STATUS_ACTIVE)) {
             $these = (object) ['id' => $cm->instance, 'name' => ''];
             if (questionnaire::get_questions(doctemplates::settings_scope($these))) {
                 $links[get_string('questionnaire', 'mod_these')] = new moodle_url('/mod/these/questionnaire.php', $params);
             }
         }
-        if ($rights->student && dossiers::defense_editable($dossier)) {
+        if ($rights->student && defenses::defense_editable($dossier)) {
             $links[get_string('depositdefense', 'mod_these')] = new moodle_url('/mod/these/defense.php', $params);
         }
         if ($rights->student && daterequest::pending($dossier)) {
@@ -244,7 +244,7 @@ class rendering {
         if ($rights->student && $status === THESE_STATUS_CORRECTIONS) {
             $links[get_string('depositcorrections', 'mod_these')] = new moodle_url('/mod/these/corrections.php', $params);
         }
-        if ($rights->director && dossiers::report_editable($dossier)) {
+        if ($rights->director && defenses::report_editable($dossier)) {
             $links[get_string('depositreport', 'mod_these')] = new moodle_url('/mod/these/report.php', $params);
         }
         $steps = workflow::review_steps();

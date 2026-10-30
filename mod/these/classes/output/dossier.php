@@ -17,9 +17,10 @@
 namespace mod_these\output;
 
 use context;
-use mod_these\local\dossiers;
+use mod_these\local\minutes;
 use mod_these\local\rendering;
 use mod_these\local\rights;
+use mod_these\local\subjects;
 use mod_these\local\workflow;
 use moodle_url;
 use stdClass;
@@ -136,7 +137,7 @@ class dossier implements \renderable, \templatable {
             $masked = [parts::em(get_string('confidentialtitle', 'mod_these'))];
             $title = $titleen = $summary = $keywords = $masked;
         }
-        $extdirector = dossiers::external_director_summary($dossier);
+        $extdirector = subjects::external_director_summary($dossier);
         return new detail_section(get_string('subject', 'mod_these'), [
             get_string('student', 'mod_these') => [parts::text($student ? fullname($student) : '-')],
             get_string('subjecttitle', 'mod_these') => $title,
@@ -256,7 +257,7 @@ class dossier implements \renderable, \templatable {
                 . get_string('since', 'mod_these', userdate($dossier->statustime, get_string('strftimedate', 'langconfig')));
         }
         $adjourned = false;
-        if (dossiers::is_adjourned($dossier)) {
+        if (minutes::is_adjourned($dossier)) {
             $adjourned = get_string(
                 $rights->student ? 'adjournednoticestudent' : 'adjournednotice',
                 'mod_these',
