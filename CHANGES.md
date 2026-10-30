@@ -13,6 +13,61 @@ de version recalés sur la date. Les numéros entre parenthèses des sections de
 développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
 été étiquetée.
 
+## mod_these 0.24.0 (2026103001) et mod_thesesynthesis 0.7.3 (2026103001) — corrections de l'analyse qualité du 30 octobre
+
+Mise en œuvre des actions 1 à 3 et 5 à 11 du plan de
+`docs/qualite/analyse-qualite-2026-10-30.tex`.
+
+- **Directeur extérieur** : le lien de signature n'est plus envoyé à la
+  soumission du sujet par l'étudiant, mais à la validation de l'examinateur
+  interne, qui voit l'adresse, le nom, le grade et l'établissement saisis. La
+  relance groupée et les rappels automatiques ne redemandent que les documents
+  déjà demandés. « Mes signatures » ne propose plus les signatures à lien
+  (directeur extérieur, université) sur simple égalité d'adresse : elles se
+  signent par le lien reçu. Chaîne `externaldirector_help` revue.
+- **Droits et courriels** : `mod/these:managedeve` déclare le risque XSS
+  (édition et import du HTML des modèles) ; balises `<tcpdf>` retirées des
+  modèles avant rendu ; balises `{{...}}` des courriels substituées en une
+  seule passe ; tous les envois reçoivent le dossier. Le titre d'une thèse
+  confidentielle reste en clair pour l'université, le jury et les signataires
+  extérieurs, qui doivent le connaître.
+- **Constats faibles** : noms échappés dans les messages de redirection ;
+  l'import CSV n'accepte que des comptes inscrits au cours (chaîne
+  `importusernotenrolled`) ; cellules commençant par `=`, `+`, `-` ou `@`
+  neutralisées dans les exports ; jeton retiré de l'URL de page ; manuscrit
+  limité au PDF ; 2 Mo au plus pour les fichiers d'import ; section des
+  éléments de grille contrôlée au transfert des paramètres.
+- **Sauvegarde et restauration** : empreinte du modèle (`templatehash`) et
+  agent validateur conservés ; sur un autre site, la fiche d'annuaire est
+  retrouvée par adresse et la question de suivi détachée ; dossiers ignorés
+  journalisés ; règles de décodage renommées `THESESYNTHESIS*`. Tests
+  d'aller-retour pour les deux modules.
+- **Schéma** (étape 2026103001) : index sur `these_log.userid`,
+  `these_signature.userid`, `these_dossier.defensedate`,
+  `these_subjecthistory.directorid` et `changedby` ; clé étrangère
+  `these_question.theseid` ; `these_juror.email` à 255 caractères. L'étape
+  2026102504 ne dépend plus du code courant.
+- **Confidentialité** : métadonnées complétées (directeur extérieur,
+  commentaires, `eligibleby`, jetons, empreintes, historique du sujet),
+  destinations externes déclarées (université, signataires extérieurs, boîtes
+  de service), comptes cités par `eligibleby`, `verifiedby`, `validatedby`
+  et l'historique du sujet trouvés et dissociés. Conservation des
+  procès-verbaux décrite dans INSTALL (comportement inchangé).
+- **Tâches** : le récapitulatif hebdomadaire n'est envoyé qu'une fois par
+  semaine et par activité ; journal systématique des deux tâches.
+- **Suivi des thèses** : étudiants, directeurs et connaissance du sujet
+  chargés par lot, le nombre de requêtes ne croît plus avec le nombre de
+  dossiers.
+- **CI** : annulation des exécutions limitée aux demandes de fusion, job du
+  guide sans droit d'écriture, `moodle-cs` épinglé (`^3.7`), délais par job,
+  Moodle 5.0 avec PHP 8.3 ajouté à la matrice, couverture Clover en artefact,
+  publication refusée si la première section de `CHANGES.md` ne porte pas la
+  version.
+- **Dépôt et documentation** : fichier `LICENSE` (GPL v3) ; README et INSTALL
+  mis à jour (tests, badge PHP, embargo d'un an, rapport déposé, renvoi vers
+  CONTRIBUTING) ; 11 captures inutilisées retirées ; formats de date
+  localisés (chaîne `strftimemonthyear`). Guide 2.20.
+
 ## mod_these 0.23.1 (2026103000) — titre des enseignants internes repris de l'annuaire
 
 - **Plus de titre à saisir pour le directeur ou l'examinateur interne** au

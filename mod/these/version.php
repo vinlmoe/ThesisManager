@@ -28,4 +28,4 @@ $plugin->component = 'mod_these';
 $plugin->version   = 2026103001;
 $plugin->requires  = 2022041900; // Moodle 4.0+.
 $plugin->maturity  = MATURITY_ALPHA;
-$plugin->release   = '0.23.1';
+$plugin->release   = '0.24.0';
