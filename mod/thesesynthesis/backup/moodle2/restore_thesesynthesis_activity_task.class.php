@@ -73,9 +73,9 @@ class restore_thesesynthesis_activity_task extends restore_activity_task {
     public static function define_decode_rules() {
         $rules = [];
 
-        $rules[] = new restore_decode_rule('STAGESYNTHESISINDEX', '/mod/thesesynthesis/index.php?id=$1', 'course');
+        $rules[] = new restore_decode_rule('THESESYNTHESISINDEX', '/mod/thesesynthesis/index.php?id=$1', 'course');
         $rules[] = new restore_decode_rule(
-            'STAGESYNTHESISVIEWBYID',
+            'THESESYNTHESISVIEWBYID',
             '/mod/thesesynthesis/view.php?id=$1',
             'course_module'
         );

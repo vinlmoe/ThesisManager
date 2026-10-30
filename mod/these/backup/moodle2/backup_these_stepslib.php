@@ -99,7 +99,8 @@ class backup_these_activity_structure_step extends backup_activity_structure_ste
         $signatures = new backup_nested_element('signatures');
         $signature = new backup_nested_element('signature', ['id'], [
             'doctype', 'slot', 'userid', 'signername', 'signeremail', 'requesttime', 'timesigned', 'contenthash',
-            'ipaddress', 'method', 'delegated', 'verifiedby', 'validatedby', 'validatedtime', 'timecreated',
+            'templatehash', 'ipaddress', 'method', 'delegated', 'verifiedby', 'validatedby', 'validatedtime',
+            'timecreated',
         ]);
 
         $logs = new backup_nested_element('logs');
@@ -155,6 +156,7 @@ class backup_these_activity_structure_step extends backup_activity_structure_ste
         $jurymember->annotate_ids('user', 'eligibleby');
         $signature->annotate_ids('user', 'userid');
         $signature->annotate_ids('user', 'verifiedby');
+        $signature->annotate_ids('user', 'validatedby');
         $signature->annotate_files('mod_these', 'signature', 'id');
 
         $these->annotate_files('mod_these', 'intro', null);

@@ -304,6 +304,25 @@ attendu quand un dossier attend à la même étape depuis le délai de relance d
 son activité, puis à chaque nouveau délai écoulé. Brouillons et dossiers actifs
 ne sont jamais relancés.
 
+## 5 bis. Sauvegarde et restauration
+
+La sauvegarde d'un cours emporte, pour chaque activité, son paramétrage
+(établissement, adresses de service, courriels, modèles de documents, grille,
+questionnaire) et, si les données utilisateur sont incluses, les dossiers avec
+leur jury, leur historique, leurs signatures (image et empreintes, jeton d'un
+lien en attente exclu) et leurs fichiers, documents scellés compris.
+
+Deux tables sont **propres au site** et ne font partie d'aucune sauvegarde de
+cours : l'**annuaire du jury** (`these_juror`) et les **validations de l'A6 et
+du DEFV** (`these_a6`, liées à l'étudiant). Elles suivent la sauvegarde de la
+base du site. À la restauration d'un cours sur le même site, un membre du jury
+reste rattaché à sa fiche de l'annuaire si elle existe encore ; sur un autre
+site, la fiche est retrouvée par son adresse de courriel, à défaut le membre
+devient un membre saisi. De même, une réponse à une question définie dans une
+activité *Suivi des thèses* n'est conservée que sur le même site. Un dossier
+dont l'étudiant n'a pas été restauré, ou qui ferait doublon, est ignoré et
+signalé dans le journal de la restauration.
+
 ## 6. Développement
 
 ```bash

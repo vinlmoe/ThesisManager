@@ -64,13 +64,13 @@ class backup_thesesynthesis_activity_task extends backup_activity_task {
 
         $content = preg_replace(
             '/(' . $base . '\/mod\/thesesynthesis\/index.php\?id\=)([0-9]+)/',
-            '$@STAGESYNTHESISINDEX*$2@$',
+            '$@THESESYNTHESISINDEX*$2@$',
             $content
         );
 
         $content = preg_replace(
             '/(' . $base . '\/mod\/thesesynthesis\/view.php\?id\=)([0-9]+)/',
-            '$@STAGESYNTHESISVIEWBYID*$2@$',
+            '$@THESESYNTHESISVIEWBYID*$2@$',
             $content
         );
 
