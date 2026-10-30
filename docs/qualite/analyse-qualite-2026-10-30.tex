@@ -1,0 +1,418 @@
+% Analyse qualité du dépôt ThesisManager (mod_these, mod_thesesynthesis), suivi de l'analyse du
+% 25 octobre 2026.
+% Compilation : pdflatex analyse-qualite-2026-10-30.tex (deux passes), paquets TeX Live
+% latex-recommended, latex-extra, lang-french.
+\documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[french]{babel}
+\usepackage[margin=2.2cm]{geometry}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage[colorlinks=true,linkcolor=blue!50!black,urlcolor=blue!50!black]{hyperref}
+
+\setlist{nosep}
+\sloppy
+\setlength{\emergencystretch}{3em}
+\newcommand{\fichier}[1]{\texttt{\small #1}}
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\sev}[1]{\textbf{#1}}
+\newcommand{\corrige}{\textcolor{green!45!black}{\textbf{corrigé}}}
+\newcommand{\partiel}{\textcolor{orange!80!black}{\textbf{partiel}}}
+\newcommand{\present}{\textcolor{red!70!black}{\textbf{présent}}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+
+\title{ThesisManager : analyse qualité du projet\\
+  \large \code{mod\_these} 0.23.1 (2026103000) et \code{mod\_thesesynthesis} 0.7.2 (2026102901)}
+\author{Sébastien Lefebvre}
+\date{30 octobre 2026 --- commit \code{5ccadce} (fusion de la demande n\textsuperscript{o}~31)}
+
+\begin{document}
+\maketitle
+
+\section*{Synthèse}
+
+En cinq jours, le dépôt est passé de 0.13.0 à 0.23.1 : 79 commits, 21 demandes de fusion, +30~\%
+de code (45~900 lignes de PHP), dix classes de domaine nouvelles, deux tables, onze étapes de
+mise à niveau. La tenue générale reste remarquable : \code{phpcs} sans erreur ni avertissement,
+aucune erreur de syntaxe, parité parfaite des 1~112 chaînes français/anglais, 233 tests PHPUnit
+(contre 183) et 16 scénarios Behat (contre 9), \fichier{db/upgrade.php} cohérent avec
+\fichier{install.xml}, \code{main} verte. Toutes les pages nouvelles contrôlent connexion, droits,
+appartenance du dossier à l'activité et \code{sesskey}.
+
+Le constat de sécurité élevé de l'analyse précédente (rapport et grille lisibles par l'étudiant)
+est \corrige, ainsi que le calendrier des soutenances, les noms de personnes dans les valeurs par
+défaut et le texte d'aide de l'embargo. En revanche, la quasi-totalité des autres constats est
+encore présente : la vitesse de développement fonctionnel a primé sur la résorption de la dette.
+Par ordre d'importance :
+
+\begin{enumerate}
+  \item \sev{Sécurité (moyen, aggravé)} : la demande de signature du directeur extérieur part
+    toujours, avant toute validation, vers l'adresse saisie par l'étudiant ; la nouvelle action
+    groupée « relancer » la renvoie avec un jeton neuf, et « Mes signatures » permet de signer et
+    de prévisualiser sans jeton sur simple égalité d'adresse (§\ref{sec:securite}).
+  \item \sev{Droits} : \code{managedeve} ne porte toujours pas \code{RISK\_XSS} alors qu'elle
+    permet d'éditer et désormais d'importer le HTML des modèles ; la substitution des balises de
+    courriel reste faite en plusieurs passes.
+  \item \sev{Processus} : deux fusions sur huit ont encore rendu \code{main} rouge (demandes
+    n\textsuperscript{os}~25 et 28) ; la protection de branche n'est toujours pas active
+    (§\ref{sec:processus}).
+  \item \sev{Données} : sauvegarde (\code{templatehash}, \code{validatedby} non annoté,
+    remappage entre sites), métadonnées et requêtes RGPD incomplètes, politique de conservation du
+    procès-verbal absente, index manquants (§\ref{sec:donnees}).
+  \item \sev{Architecture} : la dette mesurée a augmenté : 715 appels aux façades depuis
+    \fichier{classes/} (606), 20 méthodes de plus de 80 lignes (12), requêtes par ligne dans le
+    suivi multi-promotions (§\ref{sec:architecture}).
+\end{enumerate}
+
+\section{Méthode et périmètre}
+
+L'analyse porte sur l'arbre de travail au commit \code{5ccadce} (identique à \code{origin/main}),
+hors \fichier{mod/these/thirdparty}. Elle combine :
+\begin{itemize}
+  \item l'exécution locale de \code{php -l} (PHP 8.3) sur tous les fichiers et de
+    \code{phpcs --standard=phpcs.xml} avec \code{moodlehq/moodle-cs} 3.7 : aucun écart ;
+  \item l'état des huit dernières exécutions de la CI sur \code{main} (n\textsuperscript{os}~71
+    à 93) ;
+  \item un script fondé sur le \emph{tokenizer} PHP, appliqué à l'arbre actuel et à l'arbre
+    0.13.0 (\code{a0e555c}), pour des mesures comparables d'une analyse à l'autre ;
+  \item trois lectures ciblées : sécurité, architecture, puis tests, données, CI et
+    documentation ; chaque constat de l'analyse du 25 octobre est requalifié (\corrige,
+    \partiel, \present) et les constats marquants ont été revérifiés dans le source.
+\end{itemize}
+Aucun test PHPUnit ni Behat n'a été exécuté ici (pas de Moodle installé) ; la CI les exécute et
+ils passent sur \code{main}.
+
+\section{Chiffres clés}
+
+\begin{center}
+\begin{tabular}{lrr}
+\toprule
+ & \textbf{0.13.0 (25/10)} & \textbf{0.23.1 (30/10)} \\
+\midrule
+PHP hors bibliothèque tierce & 35~150 lignes & 45~860 lignes \\
+dont tests & --- & 10~400 lignes \\
+Chaînes de langue \code{en} / \code{fr} (les deux modules) & 912, 0 écart & 1~159, 0 écart \\
+Façades \code{these\_*()} (\fichier{locallib/}) & 240 & 244 \\
+Appels aux façades / appels directs aux classes & 1~610 / 34 & 1~964 / 557 \\
+Appels aux façades depuis \fichier{classes/} & 606 & 715 \\
+Classes \fichier{classes/local/} (100~\% statiques) & 23 (264 méthodes) & 33 (405 méthodes) \\
+Méthodes de plus de 80 lignes & 12 & 20 \\
+Tests PHPUnit & 183 & 233 (209 + 24) \\
+Scénarios Behat (dont JavaScript) & 9 (1) & 16 (2) \\
+Gabarits Mustache, tous référencés & 33 + 8 & 37 + 9 \\
+Tables & 12 + 2 & 14 + 2 \\
+Écarts \code{phpcs} & 30 & 0 \\
+Images du guide (non citées) & 78 (11), 13~Mo & 97 (11), 15~Mo \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{État du dépôt et processus de livraison}\label{sec:processus}
+
+\paragraph{CI.}
+\code{main} est verte depuis la demande n\textsuperscript{o}~29. Mais les fusions
+n\textsuperscript{os}~25 et 28 ont produit une exécution en échec sur \code{main} : la règle
+« CI verte et relecture avant fusion » de CONTRIBUTING n'est toujours pas imposée par une
+protection de branche. C'est la mesure la moins coûteuse et la plus efficace du plan d'action.
+
+\paragraph{Publication.} \partiel. La première section de \fichier{CHANGES.md} porte bien la
+version de \code{version.php} (0.23.1), mais rien ne le vérifie : le job « Publication »
+extrait toujours la première section sans contrôle. \code{mod\_thesesynthesis} n'a pas
+d'étiquette propre ; ses versions ne se lisent que dans les titres de \fichier{CHANGES.md}.
+
+\paragraph{Gouvernance.} \present. Pas de \fichier{LICENSE} (exigé par le répertoire des
+plugins Moodle), ni de \fichier{SECURITY.md}, ni de \fichier{CODEOWNERS}.
+
+\paragraph{Rythme.} 79 commits en cinq jours, jusqu'à sept montées de version mineure. Les
+commits restent bien découpés, mais ce rythme laisse peu de place à la relecture humaine que
+CONTRIBUTING exige, et la maturité \code{ALPHA} de \code{mod\_these} doit être maintenue tant
+que les constats moyens de sécurité ne sont pas traités.
+
+\section{Sécurité}\label{sec:securite}
+
+\subsection*{Ce qui est fait correctement}
+
+Tout ce que l'analyse précédente relevait est maintenu, et le code nouveau suit les mêmes règles :
+\code{require\_login} et contrôle de droit sur les quatorze pages ajoutées ou refondues
+(\fichier{daterequest.php}, \fichier{newdate.php}, \fichier{corrections.php}, \fichier{a6.php},
+\fichier{a6import.php}, \fichier{bulk.php}, \fichier{griditems.php},
+\fichier{settingstransfer.php}, \fichier{import.php}, \fichier{scan.php}, \fichier{refuse.php},
+\fichier{report.php}, \fichier{reporttemplate.php}, \fichier{questionnaire.php}) ; dossier chargé
+avec \code{theseid} ; actions modifiantes par \code{moodleform} ou \code{confirm\_sesskey} ; SQL
+toujours paramétré ; aucun \code{unserialize}, \code{eval}, \code{exec} ni accès direct à
+\code{\$\_GET} ; triple moustache alimentée seulement par \code{format\_text} ou des rendus ;
+téléchargement forcé des fichiers. Le transfert de paramètres valide modèles et images et borne
+les activités sources à celles où l'utilisateur est DEVE. \fichier{sign.php} exige désormais le
+jeton.
+
+\subsection*{Suivi des constats du 25 octobre}
+
+\begin{longtable}{@{}p{4.6cm}p{1.6cm}p{9.3cm}@{}}
+\toprule
+\textbf{Constat} & \textbf{État} & \textbf{Preuve} \\
+\midrule
+\endhead
+Rapport et grille dans la zone \code{generated} (élevé) & \corrige &
+  \fichier{classes/local/documents.php} 126--133 ne copie que les documents non
+  \code{staffonly} ; la grille n'est rendue que pour l'archive de l'université ; le rapport reste
+  dans \code{directorreport}, filtré par \fichier{rights.php} 166--168. \\
+Signature du directeur extérieur contrôlée par l'étudiant & \present{} (aggravé) &
+  Demande émise à la soumission (\fichier{dossiers.php} 431--433,
+  \fichier{subjectchange.php} 163--165) ; signature sans jeton par égalité d'adresse
+  (\fichier{signatureagent.php} 367--368, \fichier{mysignatures.php} 122--139) ; renvoi par
+  l'action groupée (\fichier{classes/local/bulk.php} 72--81). \\
+Identité par égalité d'adresse & \present &
+  \fichier{rights.php} 239--252, \fichier{jury.php} 787--799, \fichier{signatureagent.php} 368,
+  \fichier{thesesynthesis/locallib.php} 330--338 ; aucun \code{userid} stocké, aucun contrôle
+  \code{suspended}/\code{deleted}. \\
+Sujet non masqué dans certains courriels & \corrige{} (requalifié) &
+  La plupart des envois passent le dossier. Les envois encore faits sans dossier n'exposent le
+  titre qu'à des destinataires qui doivent le connaître : convocations et archive de
+  l'université (\fichier{documents.php} 226 et 260), désignation du jury (\fichier{jury.php}
+  742), demande de signature aux signataires de l'université et au directeur extérieur
+  (\fichier{signatures.php} 1070, \fichier{sign.php} 139). Il n'y a pas de fuite ; passer tout
+  de même le dossier à ces appels, par cohérence, pour qu'un futur destinataire ne reçoive pas le
+  titre par défaut. \\
+Double substitution des balises & \present &
+  \code{str\_replace} en tableau toujours utilisé (\fichier{notifications.php} 184--191) : une
+  valeur substituée tôt contenant \code{\{\{...\}\}} est elle-même substituée. \\
+\code{RISK\_XSS} sur \code{managedeve} ; balises \code{<tcpdf>} & \present &
+  \fichier{db/access.php} 82 ; \fichier{classes/pdf/html\_document.php} 134--142 ne retire que les
+  images. Le transfert de paramètres permet désormais d'\emph{importer} ce HTML. \\
+Constats faibles & \present &
+  Noms non échappés dans les redirections (\fichier{jurynotify.php} 47, \fichier{review.php} 209,
+  \fichier{documents.php} 84) ; énumération par l'import CSV ; formules dans les exports
+  (\fichier{export.php} 80, \fichier{planning\_page.php} 119) ; jeton dans
+  \code{\$PAGE->set\_url} (\fichier{jury.php} 57, \fichier{sign.php} 55 et 113) ; annuaire
+  global modifiable par toute DEVE. \\
+\bottomrule
+\end{longtable}
+
+\subsection*{Nouveaux constats}
+
+\begin{description}[style=nextline]
+  \item[Moyen --- l'action groupée étend le constat sur le directeur extérieur.]
+    « Relancer » (\fichier{classes/local/bulk.php} 72--81) émet un jeton neuf, valable 60 jours,
+    pour chaque signataire extérieur de chaque dossier coché, adresse \code{extdirectoremail}
+    saisie par l'étudiant comprise. Un étudiant qui a saisi une adresse qu'il contrôle reçoit un
+    lien de signature à chaque relance de la DEVE.
+  \item[Faible --- prévisualisation dans « Mes signatures ».]
+    \fichier{mysignatures.php} 56--73 sert le PDF complet de toute signature dont l'adresse
+    correspond au compte connecté, sans jeton : conséquence du constat sur l'identité par
+    égalité d'adresse.
+  \item[Faible --- import CSV vers des comptes non inscrits.]
+    \fichier{classes/local/import.php} 265--300 rattache un dossier, voire un directeur, à
+    n'importe quel compte du site (adresse ou \code{idnumber}), sans \code{is\_enrolled},
+    contrairement à l'import A6 (\fichier{a6.php} 529).
+  \item[Faible --- fichiers tableur sans limite.]
+    \fichier{classes/local/a6.php} 437--468 charge entièrement le classeur (archive zip) par
+    PhpSpreadsheet, sans \code{maxbytes} ni plafond de lignes : un fichier piégé peut épuiser la
+    mémoire (réservé à la DEVE).
+  \item[Faible --- dépôts sans restriction de type.]
+    \fichier{classes/local/files.php} 41--45 (\code{accepted\_types '*'}) : le téléchargement
+    forcé empêche le XSS direct, mais des fichiers \code{.html} ou \code{.svg} sont transmis au
+    jury. Limiter le manuscrit au PDF.
+  \item[Faible --- transfert de paramètres.]
+    \code{section} des éléments de grille importée sans contrôle
+    (\fichier{settingstransfer.php} 198).
+\end{description}
+
+\section{Architecture et maintenabilité}\label{sec:architecture}
+
+\paragraph{Amélioré.}
+Les appels directs aux classes passent de 34 à 557 (dont 333 par \code{use}) : les pages
+commencent à contourner les façades. Plus aucune classe de \fichier{classes/local/} ne fait
+\code{require\_once locallib.php}. \code{these\_deve\_agents} n'est plus mort. Aucun \code{TODO},
+\code{print\_error} ni API dépréciée. Gabarits tous référencés, parité des langues parfaite.
+
+\paragraph{Inchangé.}
+Les 244 façades restent l'API principale (1~008 appels hors tests) et les classes de domaine
+continuent de les consommer : la dépendance circulaire classe~$\rightarrow$~façade~$\rightarrow$
+classe s'étend (715 appels depuis \fichier{classes/}, dont 228 vers les façades du même
+domaine). Neuf constantes métier vivent toujours dans \fichier{locallib/}.
+\code{mod\_thesesynthesis} n'a toujours pas de \fichier{classes/local/} (\fichier{locallib.php} :
+528 lignes, 14 fonctions ; \code{thesesynthesis\_search}, 94 lignes, imbrication 6).
+\code{build\_document\_context} reste à 372 lignes. Années d'étude dupliquées
+(\fichier{subject\_form.php} 49, \fichier{doctemplates.php} 649). \code{catch} FPDI muet
+(\fichier{doctemplates.php} 814).
+
+\paragraph{Dégradé ou nouveau.}
+\begin{itemize}
+  \item Classes plus larges : \fichier{signatures.php} 1~258 lignes et 47 méthodes,
+    \fichier{doctemplates.php} 1~143, \fichier{dossiers.php} 953, \fichier{jury.php} 850 (+64~\%).
+    20 méthodes de plus de 80 lignes (12), dont trois contrôleurs \code{*\_page::output} ; six
+    contrôleurs HTTP dans l'espace de noms de domaine (cinq).
+  \item Code mort : \code{these\_render\_file\_links}, \code{these\_render\_actions},
+    \code{these\_render\_progress}, \code{these\_sign\_from\_form} (façade et méthode),
+    \code{these\_import\_columns} ; sept façades ne servent qu'aux tests ; deux chaînes inutilisées
+    (\code{closedossier}, \code{ba6notyet}).
+  \item Performance : \code{thesesynthesis\_get\_dossiers} fait désormais deux requêtes
+    \code{user} et un appel à \code{these\_user\_knows\_subject} par ligne
+    (\fichier{thesesynthesis/locallib.php} 170, 173, 189) ; même motif dans
+    \code{thesesynthesis\_search} (473--474). Sur plusieurs promotions, la page du suivi coûte
+    plusieurs centaines de requêtes.
+  \item Dépendance inversée accrue : huit fichiers de \code{mod\_these} lisent tables,
+    configuration ou capacités de \code{mod\_thesesynthesis} (trois auparavant), dont
+    \fichier{scopesettings.php} 163 sans garde de version.
+  \item Erreurs perdues : \fichier{backlinks.php} 105 renvoie \code{null} sans trace,
+    \fichier{a6import.php} 62 remplace l'exception par un message générique sans journalisation.
+  \item Amorce de page recopiée dans 38 pages sur 46 (29) ; prologue des formulaires dans 29
+    classes (22).
+  \item \fichier{db/upgrade.php} 39--45 appelle le code courant (\code{these\_document\_definitions},
+    \code{these\_document\_filename}) : une refonte future cassera la montée depuis les anciennes
+    versions. Figer les valeurs dans l'étape.
+\end{itemize}
+
+\section{Tests}
+
+\paragraph{Progrès.}
+233 tests (+50), environ 1~540 assertions, 16 scénarios Behat dont un dépôt de fichier ; test
+du calendrier, de la nouvelle date, de la révocation des signatures au renvoi, du double passage
+des relances.
+
+\paragraph{Zones toujours minces.}
+\begin{itemize}
+  \item Sauvegarde/restauration : un seul test (\fichier{backup\_restore\_test.php} 79), sans
+    signatures, scellés, grille ni questions ; rien pour \code{mod\_thesesynthesis}.
+  \item Confidentialité : cinq tests, ni signature enregistrée, ni \code{these\_a6}, ni
+    descellement (\fichier{provider.php} 546).
+  \item Formulaires : 23 \code{validation()}, deux testées.
+  \item Import CSV : ni encodage, ni BOM, ni séparateur, ni guillemets.
+  \item Sécurité : aucun test pour les constats ouverts (relance du directeur extérieur,
+    signature sans jeton).
+  \item Environ 50 assertions sur du HTML exact ; \code{@covers} en docblock dans les 71 fichiers
+    (attributs \code{\#[CoversClass]} attendus par PHPUnit 11) ; \code{upgrade\_test.php} : un
+    seul test pour douze étapes ; aucun Behat pour \code{mod\_thesesynthesis}.
+\end{itemize}
+
+\section{Base de données, sauvegarde, confidentialité, tâches}\label{sec:donnees}
+
+\paragraph{Schéma.}
+\fichier{db/upgrade.php} (douze étapes, de 2026102504 à 2026102901) est cohérent avec
+\fichier{install.xml} : tables et champs ajoutés présents, champs retirés absents, défaut de
+\code{minjury} traité, savepoints dans l'ordre, aucune version datée dans le futur. Restent
+\present : index sur \code{these\_log.userid}, \code{these\_signature.userid},
+\code{these\_dossier.defensedate}, \code{these\_subjecthistory.directorid} et \code{changedby} ;
+recherches par \code{LOWER(email)} ; clé étrangère \code{these\_question.theseid} ;
+\code{these\_juror.email} à 100 caractères contre 255.
+
+\paragraph{Sauvegarde et restauration.}
+Les colonnes et tables nouvelles sont incluses (\code{these\_setting}). Restent \present :
+\code{templatehash} absent (\fichier{backup\_these\_stepslib.php} 100--103) ; \code{jurorid} et
+\code{questionid} conservés sans \code{is\_samesite} (\fichier{restore\_these\_stepslib.php} 243
+et 164) ; dossiers ignorés sans trace (219--221) ; règles \code{STAGESYNTHESIS*}. Nouveau :
+\code{validatedby} est remappé (284) mais pas annoté (149--157), il retombe à 0 sur un autre
+site ; \code{these\_a6}, table de site comme l'annuaire, n'est sauvegardée nulle part, sans que ce
+soit documenté.
+
+\paragraph{API de confidentialité.} \partiel.
+Métadonnées ajoutées pour \code{these\_juror}, \code{these\_a6} et \code{validatedby}. Toujours
+absents : directeur extérieur (nom, grade, établissement, adresse), \code{correctionsnote},
+\code{daterequestcomment}, \code{eligibleby}, \code{accesstoken}, \code{token},
+\code{contenthash}, \code{verifiedby}, historique de sujet ; ces colonnes manquent aussi aux
+requêtes de contexte, de liste et de suppression. Seul le jury est déclaré comme destination
+externe. Surtout, la politique de conservation du procès-verbal n'est toujours pas écrite : la
+suppression d'un étudiant efface le PV scellé, celle d'un membre du personnel le descelle.
+
+\paragraph{Tâches.}
+\code{send\_reminders} reste idempotente et testée. La nouvelle \code{send\_digest} (le lundi,
+\fichier{db/tasks.php} 39--46) n'enregistre aucun horodatage d'envoi
+(\fichier{notifications.php} 667--698) : une exécution manuelle ou une reprise renvoie le
+récapitulatif. Journalisation conditionnelle dans les deux tâches. Calendrier : \corrige{}
+(\fichier{classes/local/calendar.php}, testé). Toujours \code{email\_to\_user} sans
+\fichier{db/messages.php}, et aucun événement Moodle.
+
+\section{CI/CD et outillage}
+
+Aucun des points de l'analyse précédente n'a été traité : \code{cancel-in-progress}
+inconditionnel (y compris sur \code{main}) ; \code{contents: write} sur tout le job « Guide PDF »
+et publication sur étiquette avec \fichier{CHANGES.md} entier ; \code{moodle-cs} non épinglé ;
+pas d'étape \code{grunt}, ni \fichier{.map}, ni \fichier{Gruntfile.js} ; couverture dans le
+journal seulement ; pas de \code{timeout-minutes} ; actions épinglées par étiquette majeure ;
+matrice limitée à Moodle 4.1/PHP 8.0 et 4.5/PHP 8.2, sans Moodle 5.x ni PHP 8.3/8.4, alors que
+\code{requires} annonce encore Moodle 4.0, non testé.
+
+\section{Documentation et internationalisation}
+
+\begin{itemize}
+  \item \corrige{} : noms et adresses réels retirés des valeurs par défaut
+    (\fichier{settings.php} supprimé, défauts vides dans \fichier{scopesettings.php}) ;
+    \code{embargo\_help} dit « au plus un an ». Les anciennes valeurs restent dans l'historique
+    \code{git} d'un dépôt public.
+  \item README \present{} et désormais contradictoire avec le code : « 90 + 7 tests » (233),
+    badge « PHP 8.2 » (8.0 et 8.2 testés), embargo de « 5 ans » (12 mois au plus,
+    \code{THESE\_EMBARGO\_MAX\_MONTHS}), rapport « rédigé dans un formulaire » (déposé depuis
+    0.23.0).
+  \item INSTALL \partiel{} : embargo à jour, section « Rapport du directeur : rédigé sur sa propre
+    page » obsolète (213--215), pas de renvoi vers CONTRIBUTING.
+  \item Guide : 11 captures sur 97 non citées (2,4~Mo) ; 15~Mo d'images PNG dans le dépôt.
+  \item Sept formats de date en dur (\code{\%d/\%m/\%Y}, \code{\%B \%Y}) dans
+    \fichier{doctemplates.php}, \fichier{planning.php}, \fichier{planning\_page.php},
+    \fichier{jurors.php}.
+\end{itemize}
+
+\section{Plan d'action proposé}
+
+Le plan reprend celui du 25 octobre, réordonné ; les actions déjà faites sont retirées.
+
+\begin{longtable}{@{}p{0.6cm}p{11.2cm}p{1.6cm}p{1.6cm}@{}}
+\toprule
+\textbf{N\textsuperscript{o}} & \textbf{Action} & \textbf{Effort} & \textbf{Impact} \\
+\midrule
+\endhead
+1 & Activer la protection de \code{main} (fusion obligatoire, quatre contrôles requis, une
+    approbation) ; contrôle de la première section de CHANGES dans le job « Publication » ;
+    fichier \fichier{LICENSE}. & Petit & Élevé \\
+2 & Directeur extérieur : demande émise seulement après validation du directeur interne ou de la
+    DEVE, adresse affichée au validateur, exclusion des relances groupées avant validation ;
+    jeton exigé dans « Mes signatures » ; tests de non-régression. & Petit & Élevé \\
+3 & \code{RISK\_XSS} sur \code{managedeve} ; retrait des balises \code{<tcpdf>} ;
+    substitution des balises en une passe ; passer le dossier aux derniers envois faits sans
+    lui, par cohérence (le titre reste en clair pour l'université, le jury et le directeur
+    extérieur, qui doivent le connaître). & Petit & Moyen \\
+4 & Confidentialité : compléter métadonnées, requêtes et destinations externes ; rédiger la
+    politique de conservation du PV (anonymisation plutôt que suppression). & Moyen & Élevé \\
+5 & Sauvegarde : \code{templatehash}, annotation de \code{validatedby}, \code{is\_samesite} pour
+    \code{jurorid} et \code{questionid}, journal des dossiers ignorés ; documenter
+    \code{these\_a6} et l'annuaire ; test d'aller-retour complet (les deux modules). & Petit &
+    Moyen \\
+6 & Étape de mise à niveau : index manquants, clé étrangère \code{these\_question.theseid},
+    adresse normalisée, \code{these\_juror.email} à 255 ; figer les valeurs de l'étape
+    2026102504. & Petit & Moyen \\
+7 & Suivi multi-promotions : charger étudiants et directeurs en une requête
+    (\code{get\_in\_or\_equal}) dans \code{thesesynthesis\_get\_dossiers} et
+    \code{thesesynthesis\_search}. & Petit & Moyen \\
+8 & Horodatage d'envoi pour \code{send\_digest} ; trace par envoi dans les deux tâches. & Petit
+    & Faible \\
+9 & Faibles : \code{s()} dans les redirections, \code{is\_enrolled} dans l'import CSV, préfixe
+    des cellules dangereuses dans les exports, jeton hors de \code{set\_url}, manuscrit limité au
+    PDF, \code{maxbytes} sur les imports tableur, contrôle de \code{section}. & Petit & Moyen \\
+10 & CI : concurrence conditionnelle, permissions du job guide, \code{moodle-cs} épinglé,
+    \code{timeout-minutes}, ligne Moodle 5.x/PHP 8.3, plancher \code{requires} aligné sur 4.1,
+    étape \code{grunt}, couverture en artefact. & Petit & Moyen \\
+11 & README et INSTALL mis à jour (tests, badges, embargo, rapport déposé) ; élagage des
+    captures ; formats de date localisés. & Petit & Faible \\
+12 & Supprimer le code mort ; sortir les constantes de \fichier{locallib/} ; dans
+    \fichier{classes/}, appeler les classes plutôt que les façades ; helper d'amorce de page et
+    classe de base des formulaires. & Moyen & Moyen \\
+13 & Scinder \code{signatures}, \code{doctemplates} et \code{jury} ; découper
+    \code{build\_document\_context} ; sortir les contrôleurs \code{*\_page} ; créer
+    \code{mod\_thesesynthesis\textbackslash local} et supprimer la dépendance inverse. & Grand &
+    Moyen \\
+14 & Notifications par l'API de messagerie, événements Moodle. & Grand & Moyen \\
+\bottomrule
+\end{longtable}
+
+\paragraph{Recommandation de méthode.}
+Les actions 1 à 3 tiennent en une demande de fusion chacune et ferment tous les constats de
+sécurité moyens (le seul restant est celui du directeur extérieur, action 2). Il est conseillé de les livrer avant toute nouvelle fonctionnalité, puis de
+réserver une demande de fusion de dette sur trois aux actions 4 à 13 : au rythme actuel, la
+dette progresse plus vite qu'elle ne se résorbe.
+
+\end{document}
