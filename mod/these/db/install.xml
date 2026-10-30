@@ -158,6 +158,8 @@
         <FIELD NAME="accesstoken" TYPE="char" LENGTH="64" NOTNULL="false" SEQUENCE="false"
             COMMENT="Empreinte SHA-256 du jeton d'accès du membre aux documents du dossier"/>
         <FIELD NAME="notifiedtime" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
+            COMMENT="Compte Moodle rattaché au membre (fiche de l'annuaire ou compte unique à son adresse), à la validation d'éligibilité ou au choix dans l'annuaire ; 0 sans compte (accès par lien à jeton)"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
@@ -166,6 +168,7 @@
       <INDEXES>
         <INDEX NAME="accesstoken" UNIQUE="false" FIELDS="accesstoken"/>
         <INDEX NAME="jurorid" UNIQUE="false" FIELDS="jurorid"/>
+        <INDEX NAME="userid" UNIQUE="false" FIELDS="userid"/>
       </INDEXES>
     </TABLE>
 

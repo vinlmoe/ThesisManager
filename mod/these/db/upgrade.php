@@ -368,5 +368,58 @@ function xmldb_these_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2026103001, 'these');
     }
 
+    if ($oldversion < 2026103100) {
+        $dbman = $DB->get_manager();
+        // Compte Moodle rattaché au membre du jury : les droits (sujet d'une thèse confidentielle,
+        // jurys du suivi) ne reconnaissent plus un membre à l'égalité de son adresse avec celle d'un
+        // compte.
+        $table = new xmldb_table('these_jury');
+        $field = new xmldb_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'notifiedtime');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        $index = new xmldb_index('userid', XMLDB_INDEX_NOTUNIQUE, ['userid']);
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+        // Rattachement des membres existants : le compte de leur fiche de l'annuaire, sinon l'unique
+        // compte confirmé, actif et non supprimé portant leur adresse ; aucun si l'adresse est
+        // inconnue ou partagée par plusieurs comptes.
+        $accounts = [];
+        $account = function ($email) use ($DB, &$accounts) {
+            $email = core_text::strtolower(trim((string) $email));
+            if ($email === '') {
+                return 0;
+            }
+            if (!array_key_exists($email, $accounts)) {
+                $users = $DB->get_records_select(
+                    'user',
+                    'LOWER(email) = :email AND confirmed = 1 AND suspended = 0 AND deleted = 0',
+                    ['email' => $email],
+                    '',
+                    'id',
+                    0,
+                    2
+                );
+                $accounts[$email] = count($users) === 1 ? (int) key($users) : 0;
+            }
+            return $accounts[$email];
+        };
+        $members = $DB->get_recordset_sql(
+            "SELECT j.id, j.email, r.email AS juroremail
+               FROM {these_jury} j
+          LEFT JOIN {these_juror} r ON r.id = j.jurorid
+              WHERE j.userid = 0"
+        );
+        foreach ($members as $member) {
+            $userid = $account($member->juroremail) ?: $account($member->email);
+            if ($userid) {
+                $DB->set_field('these_jury', 'userid', $userid, ['id' => $member->id]);
+            }
+        }
+        $members->close();
+        upgrade_mod_savepoint(true, 2026103100, 'these');
+    }
+
     return true;
 }

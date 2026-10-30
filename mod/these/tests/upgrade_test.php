@@ -122,4 +122,60 @@ final class upgrade_test extends these_testcase {
         $this->assertTrue(xmldb_these_upgrade($previous));
         $this->assertSame([], $exists(), 'rejouée');
     }
+
+    /**
+     * 2026103100 : colonne userid du jury ajoutée et remplie : compte de la fiche de l'annuaire, sinon
+     * unique compte actif portant l'adresse du membre ; aucun pour une adresse ambiguë, inconnue ou
+     * celle d'un compte suspendu.
+     */
+    public function test_jury_userid_backfill(): void {
+        global $DB;
+        $this->setup_activity();
+        $dbman = $DB->get_manager();
+        $dossier = $this->generator->create_dossier($this->these, $this->student->id, ['directorid' => $this->director->id]);
+
+        $teacher = $this->getDataGenerator()->create_user(['email' => 'Fiche@Example.com']);
+        $external = $this->getDataGenerator()->create_user(['email' => 'externe@example.com']);
+        $this->getDataGenerator()->create_user(['email' => 'double@example.com']);
+        $this->getDataGenerator()->create_user(['email' => 'double@example.com']);
+        $this->getDataGenerator()->create_user(['email' => 'suspendu@example.com', 'suspended' => 1]);
+        $jurorid = \mod_these\local\jurors::save((object) ['title' => 'Pr', 'lastname' => 'Fiche', 'firstname' => 'Félix',
+            'email' => 'fiche@example.com', 'status' => 'pr', 'active' => 1]);
+        $member = function ($email, $jurorid = 0) use ($DB, $dossier) {
+            return (int) $DB->insert_record('these_jury', (object) ['dossierid' => $dossier->id, 'juryrole' => 'member',
+                'fullname' => $email, 'email' => $email, 'timecreated' => time(), 'jurorid' => $jurorid]);
+        };
+        $ids = [
+            'fiche' => $member('ancienne@example.com', $jurorid),
+            'externe' => $member('EXTERNE@example.com'),
+            'ambigu' => $member('double@example.com'),
+            'suspendu' => $member('suspendu@example.com'),
+            'inconnu' => $member('inconnu@example.com'),
+            'sansadresse' => $member(''),
+        ];
+
+        // Schéma de la version précédente : sans la colonne ni son index.
+        $table = new \xmldb_table('these_jury');
+        $index = new \xmldb_index('userid', XMLDB_INDEX_NOTUNIQUE, ['userid']);
+        $dbman->drop_index($table, $index);
+        $dbman->drop_field($table, new \xmldb_field('userid'));
+        $this->assertArrayNotHasKey('userid', $DB->get_columns('these_jury', false));
+
+        $previous = 2026103002;
+        set_config('version', $previous, 'mod_these');
+        $this->assertTrue(xmldb_these_upgrade($previous));
+        $this->assertTrue($dbman->index_exists($table, $index));
+        $userids = array_map(function ($id) use ($DB) {
+            return (int) $DB->get_field('these_jury', 'userid', ['id' => $id]);
+        }, $ids);
+        $this->assertSame(['fiche' => (int) $teacher->id, 'externe' => (int) $external->id, 'ambigu' => 0,
+            'suspendu' => 0, 'inconnu' => 0, 'sansadresse' => 0], $userids);
+        $this->assertGreaterThan($previous, (int) get_config('mod_these', 'version'));
+
+        // Rejouée : un rattachement existant est conservé.
+        $DB->set_field('these_jury', 'userid', $this->director->id, ['id' => $ids['externe']]);
+        set_config('version', $previous, 'mod_these');
+        $this->assertTrue(xmldb_these_upgrade($previous));
+        $this->assertEquals($this->director->id, $DB->get_field('these_jury', 'userid', ['id' => $ids['externe']]));
+    }
 }
