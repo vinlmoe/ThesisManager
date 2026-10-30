@@ -16,6 +16,7 @@
 
 namespace mod_these\local;
 
+use context_course;
 use core_text;
 use csv_import_reader;
 use moodle_exception;
@@ -223,8 +224,9 @@ class import {
      * colonne « status » reprend aussi une thèse soutenue dont les corrections sont en cours
      * (corrections) ou une thèse close (closed), avec sa date et son lieu de soutenance, sa mention
      * et les corrections demandées. Un co-directeur qui est un enseignant interne de l'annuaire y
-     * est rattaché. Les lignes en erreur sont ignorées et signalées ; aucune ligne n'écrase un
-     * dossier existant.
+     * est rattaché. L'étudiant et le directeur doivent être inscrits au cours : l'import ne rattache
+     * pas un dossier à un compte quelconque du site. Les lignes en erreur sont ignorées et signalées ;
+     * aucune ligne n'écrase un dossier existant.
      *
      * Les documents du circuit ne sont pas repris (agréments, fiche signalétique...) : un dossier
      * importé n'attend donc aucune signature pour avancer.
@@ -251,6 +253,7 @@ class import {
         $seen = [];
         $numbers = [];
         $line = 1;
+        $coursecontext = context_course::instance($these->course);
         foreach ($rows as $row) {
             $line++;
             $values = [];
@@ -270,6 +273,8 @@ class import {
             $mention = self::parse_mention($values['mention']);
             if (!$student) {
                 $result['message'] = get_string('importusernotfound', 'mod_these', s($values['student']));
+            } else if (!is_enrolled($coursecontext, $student)) {
+                $result['message'] = get_string('importusernotenrolled', 'mod_these', s($values['student']));
             } else if (
                 isset($seen[$student->id])
                     || $DB->record_exists('these_dossier', ['theseid' => $these->id, 'userid' => $student->id])
@@ -279,6 +284,8 @@ class import {
                 $result['message'] = get_string('importtitlemissing', 'mod_these');
             } else if ($values['director'] !== '' && !$director) {
                 $result['message'] = get_string('importusernotfound', 'mod_these', s($values['director']));
+            } else if ($director && !is_enrolled($coursecontext, $director)) {
+                $result['message'] = get_string('importusernotenrolled', 'mod_these', s($values['director']));
             } else if (
                 $values['devenumber'] !== ''
                     && (isset($numbers[$values['devenumber']]) || these_devenumber_taken($these->id, $values['devenumber']))

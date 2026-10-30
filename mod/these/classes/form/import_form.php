@@ -46,7 +46,8 @@ class import_form extends \moodleform {
             'csvfile',
             get_string('csvfile', 'mod_these'),
             null,
-            ['accepted_types' => ['.csv', '.txt', '.xlsx', '.xls', '.ods']]
+            // Le classeur est chargé entièrement en mémoire par PhpSpreadsheet : taille bornée.
+            ['accepted_types' => ['.csv', '.txt', '.xlsx', '.xls', '.ods'], 'maxbytes' => 2 * 1024 * 1024]
         );
         $mform->addRule('csvfile', null, 'required', null, 'client');
         $mform->addElement(

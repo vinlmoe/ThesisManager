@@ -81,7 +81,7 @@ if ($action === 'transmit' && confirm_sesskey()) {
     $result = these_transmit_documents($these, $cm, $context, $dossier, $USER->id);
     $message = get_string('transmitsummary', 'mod_these', $result);
     if ($result->missing) {
-        $message .= ' ' . get_string('transmitmissing', 'mod_these', implode(', ', $result->missing));
+        $message .= ' ' . get_string('transmitmissing', 'mod_these', s(implode(', ', $result->missing)));
     }
     redirect(
         backlinks::after_action($cm, $dossierurl),

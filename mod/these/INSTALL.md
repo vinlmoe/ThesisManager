@@ -67,7 +67,8 @@ l'étudiant comme directeurs.
 3. Reprendre les sujets déjà enregistrés : *Importer des dossiers* (CSV,
    colonnes `student`, `title`, `director`, `devenumber`, `libraryref`,
    `titleen`, `summary`, `keywords` ; étudiant et directeur
-   désignés par identifiant, courriel ou numéro d'identification). Les dossiers
+   désignés par identifiant, courriel ou numéro d'identification, et inscrits
+   au cours). Les dossiers
    importés sont créés « actifs ». Une simulation est proposée par défaut.
 4. Personnaliser au besoin les courriels (*Courriels*).
 

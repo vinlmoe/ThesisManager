@@ -205,8 +205,10 @@ if ($mform->is_cancelled()) {
     if ($step['key'] === 'devedefense') {
         // Éligibilité validée : les membres du jury sont prévenus et reçoivent l'accès aux documents.
         $notified = these_notify_jury($these, $cm, $DB->get_record('these_dossier', ['id' => $dossier->id]));
-        $message .= ' ' . get_string('jurynotified', 'mod_these', $notified->sent)
-            . ($notified->missing ? ' ' . get_string('jurynotifiedmissing', 'mod_these', implode(', ', $notified->missing)) : '');
+        $message .= ' ' . get_string('jurynotified', 'mod_these', $notified->sent);
+        if ($notified->missing) {
+            $message .= ' ' . get_string('jurynotifiedmissing', 'mod_these', s(implode(', ', $notified->missing)));
+        }
     }
     redirect(backlinks::after_action($cm, $dossierurl), $message, null, \core\output\notification::NOTIFY_SUCCESS);
 }

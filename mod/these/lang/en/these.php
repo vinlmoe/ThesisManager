@@ -425,7 +425,7 @@ $string['importhelp'] = 'Import of files already under way outside the module, f
     . '<code>titleen</code>, <code>summary</code>, <code>keywords</code>, <code>director</code>, <code>codirector</code>, '
     . '<code>devenumber</code>, <code>libraryref</code>, <code>status</code>, <code>defensedate</code>, '
     . '<code>defenselocation</code>, <code>mention</code>, <code>corrections</code>. Student and director are identified by '
-    . 'username, email address or ID number. A co-director whose name ("Claire Martin", "Dr MARTIN Claire") matches an '
+    . 'username, email address or ID number, and must be enrolled in the course. A co-director whose name ("Claire Martin", "Dr MARTIN Claire") matches an '
     . 'internal teacher of the directory is linked to them; otherwise they are recorded as external. <code>status</code>: '
     . 'empty or <code>active</code> (subject registered), <code>corrections</code> (thesis defended, corrections under way) '
     . 'or <code>closed</code> (thesis closed); the last two require <code>defensedate</code> (dd/mm/yyyy [hh:mm], yyyy-mm-dd '
@@ -435,6 +435,7 @@ $string['csvfile'] = 'File (CSV, Excel or OpenDocument)';
 $string['importdryrun'] = 'Dry run (create nothing)';
 $string['importline'] = 'Line';
 $string['importusernotfound'] = 'User not found: {$a}';
+$string['importusernotenrolled'] = 'User not enrolled in the course: {$a}';
 $string['importdossierexists'] = 'This student already has a file.';
 $string['importtitlemissing'] = 'Missing title.';
 $string['importcreated'] = 'File created';

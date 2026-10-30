@@ -39,9 +39,12 @@ class files {
         $options = ['subdirs' => 0, 'maxbytes' => 0, 'maxfiles' => 1, 'accepted_types' => ['.pdf']];
         switch ($filearea) {
             case 'subjectdocs':
-            case 'defensedocs':
                 $options['maxfiles'] = 10;
                 $options['accepted_types'] = '*';
+                break;
+            case 'defensedocs':
+                // Documents transmis au jury : PDF seulement (pas de .html ou .svg).
+                $options['maxfiles'] = 10;
                 break;
             case 'directorreport':
                 $options['accepted_types'] = ['.pdf', '.doc', '.docx', '.odt'];

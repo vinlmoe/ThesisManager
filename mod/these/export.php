@@ -83,7 +83,9 @@ if ($dataformat !== '') {
         $context
     ) {
         $director = $directors[$dossier->directorid] ?? null;
-        return these_register_row($dossier, $context, $students[$dossier->userid] ?? null, $director);
+        return \mod_these\local\rendering::spreadsheet_safe(
+            these_register_row($dossier, $context, $students[$dossier->userid] ?? null, $director)
+        );
     });
     die();
 }

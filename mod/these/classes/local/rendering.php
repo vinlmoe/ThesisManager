@@ -451,6 +451,24 @@ class rendering {
     }
 
     /**
+     * Neutralise les cellules d'une ligne d'export tableur qui seraient interprétées comme une formule
+     * par Excel ou LibreOffice (valeur commençant par =, +, - ou @) : un titre ou un nom saisi par un
+     * utilisateur ne doit pas exécuter de formule au poste de qui ouvre l'export. La valeur est
+     * précédée d'une apostrophe, que les tableurs affichent comme marque de texte.
+     *
+     * @param array $row Colonne => valeur.
+     * @return array La ligne, cellules neutralisées.
+     */
+    public static function spreadsheet_safe(array $row) {
+        foreach ($row as $key => $value) {
+            if (is_string($value) && $value !== '' && strpbrk($value[0], '=+-@') !== false) {
+                $row[$key] = "'" . $value;
+            }
+        }
+        return $row;
+    }
+
+    /**
      * Diffusion de la thèse choisie au dépôt de la soutenance : mode de diffusion et demande d'embargo,
      * avec sa date de fin (voir these_embargo_until()). Le motif de l'embargo, qui peut révéler le sujet,
      * n'est montré qu'à qui connaît le sujet.

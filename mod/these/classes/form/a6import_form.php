@@ -38,8 +38,10 @@ class a6import_form extends \moodleform {
         $mform->addElement('hidden', 'id');
         $mform->setType('id', PARAM_INT);
 
+        // Le classeur est chargé entièrement en mémoire par PhpSpreadsheet : taille bornée.
         $mform->addElement('filepicker', 'a6file', get_string('a6file', 'mod_these'), null, [
             'accepted_types' => ['.xlsx', '.xls', '.ods', '.csv', '.txt'],
+            'maxbytes' => 2 * 1024 * 1024,
         ]);
         $mform->addRule('a6file', null, 'required', null, 'client');
         $mform->addHelpButton('a6file', 'a6file', 'mod_these');

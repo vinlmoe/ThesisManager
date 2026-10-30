@@ -433,7 +433,8 @@ $string['importhelp'] = "Reprise de dossiers déjà engagés hors du module, dep
     . "(obligatoires), <code>titleen</code>, <code>summary</code>, <code>keywords</code>, <code>director</code>, "
     . "<code>codirector</code>, <code>devenumber</code>, <code>libraryref</code>, <code>status</code>, <code>defensedate</code>, "
     . "<code>defenselocation</code>, <code>mention</code>, <code>corrections</code>. Étudiant et directeur sont désignés par "
-    . "identifiant de connexion, adresse de courriel ou numéro d'identification. Un co-directeur dont le nom (« Claire Martin », "
+    . "identifiant de connexion, adresse de courriel ou numéro d'identification, et doivent être inscrits au cours. "
+    . "Un co-directeur dont le nom (« Claire Martin », "
     . "« Dr MARTIN Claire ») est celui d'un enseignant interne de l'annuaire y est rattaché ; sinon il est noté comme extérieur. "
     . "<code>status</code> : vide ou <code>active</code> (sujet enregistré), <code>corrections</code> (thèse soutenue, "
     . "corrections en cours) ou <code>closed</code> (dossier clôturé) ; les deux derniers exigent <code>defensedate</code> "
@@ -443,6 +444,7 @@ $string['csvfile'] = "Fichier (CSV, Excel ou OpenDocument)";
 $string['importdryrun'] = 'Simulation (ne rien créer)';
 $string['importline'] = 'Ligne';
 $string['importusernotfound'] = 'Utilisateur introuvable : {$a}';
+$string['importusernotenrolled'] = 'Utilisateur non inscrit au cours : {$a}';
 $string['importdossierexists'] = 'Cet étudiant a déjà un dossier.';
 $string['importtitlemissing'] = 'Titre manquant.';
 $string['importcreated'] = 'Dossier créé';
