@@ -26,12 +26,12 @@
 
 // Documents signés.
 
-/** Engagement de l'étudiant : avoir pris connaissance du guide des thèses. */
-define('THESE_COMMIT_GUIDE', 1);
-/** Engagement de l'étudiant : avoir vérifié que le sujet n'a pas déjà été traité. */
-define('THESE_COMMIT_DUPLICATE', 2);
-/** Engagement de l'étudiant : soumettre le protocole au comité d'éthique (si nécessaire). */
-define('THESE_COMMIT_ETHICS', 4);
+/** Alias de \mod_these\local\signatures::COMMIT_GUIDE. */
+define('THESE_COMMIT_GUIDE', \mod_these\local\signatures::COMMIT_GUIDE);
+/** Alias de \mod_these\local\signatures::COMMIT_DUPLICATE. */
+define('THESE_COMMIT_DUPLICATE', \mod_these\local\signatures::COMMIT_DUPLICATE);
+/** Alias de \mod_these\local\signatures::COMMIT_ETHICS. */
+define('THESE_COMMIT_ETHICS', \mod_these\local\signatures::COMMIT_ETHICS);
 
 /**
  * Voir \mod_these\local\signatures::document_definitions().
@@ -197,8 +197,8 @@ function these_bordereau_fields() {
     return \mod_these\local\signatures::bordereau_fields();
 }
 
-/** Durée maximale de l'embargo de diffusion qu'un étudiant peut demander, en mois après la soutenance. */
-define('THESE_EMBARGO_MAX_MONTHS', 12);
+/** Alias de \mod_these\local\signatures::EMBARGO_MAX_MONTHS. */
+define('THESE_EMBARGO_MAX_MONTHS', \mod_these\local\signatures::EMBARGO_MAX_MONTHS);
 
 /**
  * Voir \mod_these\local\signatures::embargo_until().
@@ -210,11 +210,11 @@ function these_embargo_until(stdClass $dossier) {
     return \mod_these\local\signatures::embargo_until($dossier);
 }
 
-/** Longueur maximale d'un résumé du bordereau, espaces compris. */
-define('THESE_BORDEREAU_SUMMARY_MAX', 1700);
+/** Alias de \mod_these\local\signatures::BORDEREAU_SUMMARY_MAX. */
+define('THESE_BORDEREAU_SUMMARY_MAX', \mod_these\local\signatures::BORDEREAU_SUMMARY_MAX);
 
-/** Nombre de mots-clés du bordereau. */
-define('THESE_BORDEREAU_KEYWORDS', 8);
+/** Alias de \mod_these\local\signatures::BORDEREAU_KEYWORDS. */
+define('THESE_BORDEREAU_KEYWORDS', \mod_these\local\signatures::BORDEREAU_KEYWORDS);
 
 /**
  * Voir \mod_these\local\signatures::grid_items().

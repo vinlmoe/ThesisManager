@@ -140,9 +140,9 @@ class subjectchange {
             // Dossier abandonné relancé par le nouveau sujet : le statut atteint lors de l'abandon ne vaut plus.
             $fields['cancelledfromstatus'] = 0;
             if (property_exists($data, 'commitguide')) {
-                $fields['commitments'] = (!empty($data->commitguide) ? THESE_COMMIT_GUIDE : 0)
-                    | (!empty($data->commitduplicate) ? THESE_COMMIT_DUPLICATE : 0)
-                    | (!empty($data->commitethics) ? THESE_COMMIT_ETHICS : 0);
+                $fields['commitments'] = (!empty($data->commitguide) ? signatures::COMMIT_GUIDE : 0)
+                    | (!empty($data->commitduplicate) ? signatures::COMMIT_DUPLICATE : 0)
+                    | (!empty($data->commitethics) ? signatures::COMMIT_ETHICS : 0);
             }
             if (empty($fields['externaldirector'])) {
                 foreach (['extdirectorname', 'extdirectorgrade', 'extdirectorinstitution', 'extdirectoremail'] as $field) {

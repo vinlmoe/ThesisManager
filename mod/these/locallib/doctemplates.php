@@ -208,8 +208,8 @@ function these_build_document_context(array $src) {
     return \mod_these\local\doctemplates::build_document_context($src);
 }
 
-/** Longueur maximale des conclusions, espaces compris : elles doivent tenir sur une page avec les signatures. */
-define('THESE_CONCLUSIONS_MAX', 2200);
+/** Alias de \mod_these\local\doctemplates::CONCLUSIONS_MAX. */
+define('THESE_CONCLUSIONS_MAX', \mod_these\local\doctemplates::CONCLUSIONS_MAX);
 
 /**
  * Voir \mod_these\local\doctemplates::signature_caption().

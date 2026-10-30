@@ -820,7 +820,7 @@ class jury {
     }
 
     /**
-     * Indique si l'accès d'un membre du jury aux documents est ouvert : jusqu'à THESE_TOKEN_LIFETIME
+     * Indique si l'accès d'un membre du jury aux documents est ouvert : jusqu'à rights::TOKEN_LIFETIME
      * après la soutenance (ou après le dernier envoi du lien, s'il est plus tardif), et tant que le
      * dossier n'est ni clos ni abandonné.
      *
@@ -833,7 +833,7 @@ class jury {
             return false;
         }
         $from = max((int) $member->notifiedtime, (int) ($dossier->defensedate ?: $dossier->proposeddate));
-        return $from > 0 && time() <= $from + THESE_TOKEN_LIFETIME;
+        return $from > 0 && time() <= $from + rights::TOKEN_LIFETIME;
     }
 
     /**

@@ -31,6 +31,9 @@ use stdClass;
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class settingstransfer {
+    /** Format du fichier de paramètres exporté. */
+    public const SETTINGS_FORMAT = 'mod_these_settings';
+
     /**
      * Paramètres de l'activité transférables (formulaire de l'activité), avec leur type.
      *
@@ -72,7 +75,7 @@ class settingstransfer {
     public static function export_settings(stdClass $these, context $context, array $groups) {
         global $DB;
 
-        $data = ['format' => THESE_SETTINGS_FORMAT, 'version' => 1, 'name' => (string) $these->name, 'groups' => []];
+        $data = ['format' => self::SETTINGS_FORMAT, 'version' => 1, 'name' => (string) $these->name, 'groups' => []];
         if (in_array('activity', $groups, true)) {
             $data['groups']['activity'] = [];
             foreach (array_keys(these_settings_activity_fields()) as $field) {
@@ -129,7 +132,7 @@ class settingstransfer {
      */
     public static function parse_settings_file($json) {
         $data = json_decode((string) $json, true);
-        if (!is_array($data) || ($data['format'] ?? '') !== THESE_SETTINGS_FORMAT || !is_array($data['groups'] ?? null)) {
+        if (!is_array($data) || ($data['format'] ?? '') !== self::SETTINGS_FORMAT || !is_array($data['groups'] ?? null)) {
             return null;
         }
         return $data;

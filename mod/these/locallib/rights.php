@@ -91,8 +91,8 @@ function these_user_can_act(stdClass $dossier, stdClass $rights) {
     return \mod_these\local\rights::user_can_act($dossier, $rights);
 }
 
-/** Durée de validité d'un lien à jeton (signature sans compte, accès du jury), en secondes. */
-define('THESE_TOKEN_LIFETIME', 60 * DAYSECS);
+/** Alias de \mod_these\local\rights::TOKEN_LIFETIME. */
+define('THESE_TOKEN_LIFETIME', \mod_these\local\rights::TOKEN_LIFETIME);
 
 /**
  * Voir \mod_these\local\rights::new_token().

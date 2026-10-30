@@ -16,6 +16,9 @@
 
 namespace mod_these\form;
 
+use mod_these\local\doctemplates;
+use mod_these\local\signatures;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/formslib.php');
@@ -135,11 +138,11 @@ class defense_form extends \moodleform {
             $mform->addHelpButton('b' . $field, 'bsummary', 'mod_these');
         }
         $keywords = [];
-        for ($i = 0; $i < THESE_BORDEREAU_KEYWORDS; $i++) {
+        for ($i = 0; $i < signatures::BORDEREAU_KEYWORDS; $i++) {
             $keywords[] = $mform->createElement('text', "bkeyword[$i]", '', ['size' => 22]);
         }
         $mform->addGroup($keywords, 'bkeywordgroup', get_string('bkeywords', 'mod_these'), ' ', false);
-        for ($i = 0; $i < THESE_BORDEREAU_KEYWORDS; $i++) {
+        for ($i = 0; $i < signatures::BORDEREAU_KEYWORDS; $i++) {
             $mform->setType("bkeyword[$i]", PARAM_TEXT);
         }
         $mform->addHelpButton('bkeywordgroup', 'bkeywords', 'mod_these');
@@ -170,7 +173,7 @@ class defense_form extends \moodleform {
         $mform->addElement('textarea', 'conclusions', get_string('conclusionstext', 'mod_these'), [
             'rows' => 14,
             'cols' => 80,
-            'maxlength' => THESE_CONCLUSIONS_MAX,
+            'maxlength' => doctemplates::CONCLUSIONS_MAX,
         ]);
         $mform->setType('conclusions', PARAM_TEXT);
         $mform->addHelpButton('conclusions', 'conclusionstext', 'mod_these');
@@ -182,16 +185,17 @@ class defense_form extends \moodleform {
             'optional' => true, 'startyear' => (int) date('Y'), 'stopyear' => (int) date('Y') + 30,
         ]);
         $mform->addHelpButton('bconfidentialuntil', 'bconfidentialuntil', 'mod_these');
-        // Embargo : diffusion différée d'au plus THESE_EMBARGO_MAX_MONTHS mois après la soutenance, sur demande motivée.
-        $mform->addElement('advcheckbox', 'bembargo', '', get_string('bembargo', 'mod_these', THESE_EMBARGO_MAX_MONTHS));
+        // Embargo : diffusion différée d'au plus signatures::EMBARGO_MAX_MONTHS mois après la soutenance,
+        // sur demande motivée.
+        $mform->addElement('advcheckbox', 'bembargo', '', get_string('bembargo', 'mod_these', signatures::EMBARGO_MAX_MONTHS));
         $mform->addHelpButton('bembargo', 'embargo', 'mod_these');
         $months = [];
-        for ($n = 1; $n <= THESE_EMBARGO_MAX_MONTHS; $n++) {
+        for ($n = 1; $n <= signatures::EMBARGO_MAX_MONTHS; $n++) {
             $months[$n] = get_string('embargomonthsoption', 'mod_these', $n);
         }
         $mform->addElement('select', 'bembargomonths', get_string('bembargomonths', 'mod_these'), $months);
         $mform->setType('bembargomonths', PARAM_INT);
-        $mform->setDefault('bembargomonths', THESE_EMBARGO_MAX_MONTHS);
+        $mform->setDefault('bembargomonths', signatures::EMBARGO_MAX_MONTHS);
         $mform->hideIf('bembargomonths', 'bembargo', 'notchecked');
         $mform->addElement('textarea', 'bembargoreason', get_string('bembargoreason', 'mod_these'), ['rows' => 3, 'cols' => 80]);
         $mform->setType('bembargoreason', PARAM_TEXT);
@@ -286,8 +290,8 @@ class defense_form extends \moodleform {
             $errors['bpersonalemail'] = get_string('invalidemail');
         }
         foreach (['bsummaryfr', 'bsummaryen'] as $field) {
-            if (\core_text::strlen((string) ($data[$field] ?? '')) > THESE_BORDEREAU_SUMMARY_MAX) {
-                $errors[$field] = get_string('summarytoolong', 'mod_these', THESE_BORDEREAU_SUMMARY_MAX);
+            if (\core_text::strlen((string) ($data[$field] ?? '')) > signatures::BORDEREAU_SUMMARY_MAX) {
+                $errors[$field] = get_string('summarytoolong', 'mod_these', signatures::BORDEREAU_SUMMARY_MAX);
             }
         }
         if (!array_filter(array_map('trim', (array) ($data['bkeyword'] ?? [])), 'strlen')) {

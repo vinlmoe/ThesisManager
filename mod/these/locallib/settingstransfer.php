@@ -26,8 +26,8 @@
 
 // Transfert des paramètres.
 
-/** Format du fichier de paramètres exporté. */
-define('THESE_SETTINGS_FORMAT', 'mod_these_settings');
+/** Alias de \mod_these\local\settingstransfer::SETTINGS_FORMAT. */
+define('THESE_SETTINGS_FORMAT', \mod_these\local\settingstransfer::SETTINGS_FORMAT);
 
 /**
  * Voir \mod_these\local\settingstransfer::settings_activity_fields().

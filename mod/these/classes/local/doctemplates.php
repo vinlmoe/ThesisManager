@@ -32,6 +32,9 @@ use stdClass;
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class doctemplates {
+    /** Longueur maximale des conclusions, espaces compris : elles doivent tenir sur une page avec les signatures. */
+    public const CONCLUSIONS_MAX = 2200;
+
     /**
      * Documents produits à partir d'un modèle modifiable (doctemplates/, page d'administration
      * « Modèles des documents »), dans l'ordre de présentation.
@@ -451,7 +454,7 @@ class doctemplates {
 
         // Thèse.
         $keywords = these_split_keywords((string) $d->keywords);
-        $abeskeywords = array_slice(array_values((array) ($b['keywords'] ?? [])), 0, THESE_BORDEREAU_KEYWORDS);
+        $abeskeywords = array_slice(array_values((array) ($b['keywords'] ?? [])), 0, signatures::BORDEREAU_KEYWORDS);
         $thesis = [
             'title' => (string) $d->title,
             'titleupper' => $up($d->title),
@@ -469,7 +472,7 @@ class doctemplates {
             'ethicsnumber' => trim((string) $d->ethicsnumber),
         ];
         $summary = function ($field) use ($b) {
-            return core_text::substr((string) ($b[$field] ?? ''), 0, THESE_BORDEREAU_SUMMARY_MAX);
+            return core_text::substr((string) ($b[$field] ?? ''), 0, signatures::BORDEREAU_SUMMARY_MAX);
         };
         $abes = [
             'nbvolumes' => (string) (int) ($b['nbvolumes'] ?? 1 ?: 1),
@@ -479,7 +482,7 @@ class doctemplates {
             'summaryfrhtml' => these_doctemplate_text($summary('summaryfr')),
             'summaryenhtml' => these_doctemplate_text($summary('summaryen')),
         ];
-        for ($i = 1; $i <= THESE_BORDEREAU_KEYWORDS; $i++) {
+        for ($i = 1; $i <= signatures::BORDEREAU_KEYWORDS; $i++) {
             $abes['kw' . $i] = (string) ($abeskeywords[$i - 1] ?? '');
         }
 
@@ -665,9 +668,9 @@ class doctemplates {
             'restricted' => $contract['restricted'],
             'favorable' => !empty($d->reportfavorable),
             'emailconsent' => $student['emailconsent'],
-            'commitguide' => (bool) ($commitments & THESE_COMMIT_GUIDE),
-            'commitduplicate' => (bool) ($commitments & THESE_COMMIT_DUPLICATE),
-            'commitethics' => (bool) ($commitments & THESE_COMMIT_ETHICS),
+            'commitguide' => (bool) ($commitments & signatures::COMMIT_GUIDE),
+            'commitduplicate' => (bool) ($commitments & signatures::COMMIT_DUPLICATE),
+            'commitethics' => (bool) ($commitments & signatures::COMMIT_ETHICS),
             'admitted' => (int) $d->defenseresult === THESE_RESULT_ADMITTED,
             'adjourned' => (int) $d->defenseresult === THESE_RESULT_ADJOURNED,
             'honorable' => (string) $d->mention === 'honorable',
@@ -804,8 +807,8 @@ class doctemplates {
      */
     public static function conclusions_error(stdClass $these, ?context $context, $text) {
         $length = core_text::strlen(trim((string) $text));
-        if ($length > THESE_CONCLUSIONS_MAX) {
-            return get_string('conclusionstoolong', 'mod_these', (object) ['max' => THESE_CONCLUSIONS_MAX, 'length' => $length]);
+        if ($length > self::CONCLUSIONS_MAX) {
+            return get_string('conclusionstoolong', 'mod_these', (object) ['max' => self::CONCLUSIONS_MAX, 'length' => $length]);
         }
         $data = these_sample_document_context(these_settings_scope($these), $these);
         $data['conclusions'] = these_conclusions_context((string) $text);
@@ -1000,7 +1003,8 @@ class doctemplates {
             'summary' => 'Résumé du sujet.', 'keywords' => 'Chien ; Douleur chronique ; Gériatrie ; Analgésie',
             'studyyear' => 'A5', 'confidential' => 0, 'directortitle' => 'Pr',
             'externaldirector' => 0, 'extdirectorname' => '', 'extdirectorgrade' => '', 'extdirectorinstitution' => '',
-            'extdirectoremail' => '', 'commitments' => THESE_COMMIT_GUIDE | THESE_COMMIT_DUPLICATE, 'ethicsnumber' => '2526',
+            'extdirectoremail' => '', 'commitments' => signatures::COMMIT_GUIDE | signatures::COMMIT_DUPLICATE,
+            'ethicsnumber' => '2526',
             'bordereau' => json_encode($bordereau),
             'conclusions' => "Premier paragraphe des conclusions.\n\n"
                 . "Dernier paragraphe des conclusions, qui reste avec les signatures.",

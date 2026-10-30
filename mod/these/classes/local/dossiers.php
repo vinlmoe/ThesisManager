@@ -423,9 +423,9 @@ class dossiers {
             }
             $fields = self::people_fields($fields, $data);
             if (property_exists($data, 'commitguide')) {
-                $fields['commitments'] = (!empty($data->commitguide) ? THESE_COMMIT_GUIDE : 0)
-                    | (!empty($data->commitduplicate) ? THESE_COMMIT_DUPLICATE : 0)
-                    | (!empty($data->commitethics) ? THESE_COMMIT_ETHICS : 0);
+                $fields['commitments'] = (!empty($data->commitguide) ? signatures::COMMIT_GUIDE : 0)
+                    | (!empty($data->commitduplicate) ? signatures::COMMIT_DUPLICATE : 0)
+                    | (!empty($data->commitethics) ? signatures::COMMIT_ETHICS : 0);
             }
             if (empty($fields['externaldirector'])) {
                 foreach (['extdirectorname', 'extdirectorgrade', 'extdirectorinstitution', 'extdirectoremail'] as $field) {

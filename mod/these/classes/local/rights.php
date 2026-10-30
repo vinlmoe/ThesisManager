@@ -30,6 +30,9 @@ use stdClass;
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class rights {
+    /** Durée de validité d'un lien à jeton (signature sans compte, accès du jury), en secondes. */
+    public const TOKEN_LIFETIME = 60 * DAYSECS;
+
     /**
      * Droits de l'utilisateur sur un dossier (ou sur l'activité, si aucun dossier n'est donné).
      *

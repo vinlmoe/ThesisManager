@@ -34,6 +34,24 @@ use stdClass;
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class signatures {
+    /** Engagement de l'étudiant : avoir pris connaissance du guide des thèses. */
+    public const COMMIT_GUIDE = 1;
+
+    /** Engagement de l'étudiant : avoir vérifié que le sujet n'a pas déjà été traité. */
+    public const COMMIT_DUPLICATE = 2;
+
+    /** Engagement de l'étudiant : soumettre le protocole au comité d'éthique (si nécessaire). */
+    public const COMMIT_ETHICS = 4;
+
+    /** Durée maximale de l'embargo de diffusion qu'un étudiant peut demander, en mois après la soutenance. */
+    public const EMBARGO_MAX_MONTHS = 12;
+
+    /** Longueur maximale d'un résumé du bordereau, espaces compris. */
+    public const BORDEREAU_SUMMARY_MAX = 1700;
+
+    /** Nombre de mots-clés du bordereau. */
+    public const BORDEREAU_KEYWORDS = 8;
+
     /**
      * Documents de l'établissement produits par le module, et qui les signe.
      *
@@ -363,7 +381,7 @@ class signatures {
     }
 
     /**
-     * Fin de l'embargo de diffusion d'une thèse : la durée demandée, en mois (THESE_EMBARGO_MAX_MONTHS
+     * Fin de l'embargo de diffusion d'une thèse : la durée demandée, en mois (self::EMBARGO_MAX_MONTHS
      * au plus, et par défaut), après la soutenance (date arrêtée, à défaut date proposée). Un embargo
      * enregistré avec une date garde sa date, sans dépasser un an après la soutenance.
      *
@@ -376,7 +394,7 @@ class signatures {
             return 0;
         }
         $defense = (int) ($dossier->defensedate ?: $dossier->proposeddate);
-        $max = $defense ? self::add_months($defense, THESE_EMBARGO_MAX_MONTHS) : 0;
+        $max = $defense ? self::add_months($defense, self::EMBARGO_MAX_MONTHS) : 0;
         if (!empty($bordereau['embargountil'])) {
             $until = (int) $bordereau['embargountil'];
             return $max ? min($until, $max) : $until;
@@ -388,7 +406,7 @@ class signatures {
     }
 
     /**
-     * Durée de l'embargo demandée, en mois : de 1 à THESE_EMBARGO_MAX_MONTHS, cette durée maximale à
+     * Durée de l'embargo demandée, en mois : de 1 à self::EMBARGO_MAX_MONTHS, cette durée maximale à
      * défaut (demandes antérieures au choix de la durée).
      *
      * @param array $bordereau Voir these_get_bordereau().
@@ -396,7 +414,7 @@ class signatures {
      */
     public static function embargo_months(array $bordereau) {
         $months = (int) ($bordereau['embargomonths'] ?? 0);
-        return $months >= 1 && $months <= THESE_EMBARGO_MAX_MONTHS ? $months : THESE_EMBARGO_MAX_MONTHS;
+        return $months >= 1 && $months <= self::EMBARGO_MAX_MONTHS ? $months : self::EMBARGO_MAX_MONTHS;
     }
 
     /**
@@ -1132,7 +1150,7 @@ class signatures {
 
     /**
      * Signatures en attente correspondant à un jeton d'invitation : tous les documents qu'un même
-     * signataire doit signer dans un dossier. Le lien vaut THESE_TOKEN_LIFETIME à partir de
+     * signataire doit signer dans un dossier. Le lien vaut rights::TOKEN_LIFETIME à partir de
      * l'invitation ; la DEVE peut en envoyer un nouveau depuis le suivi des signatures.
      *
      * @param string $token
@@ -1148,7 +1166,7 @@ class signatures {
         return array_values($DB->get_records_select(
             'these_signature',
             'token = :token AND timesigned = 0 AND requesttime > :since',
-            ['token' => these_token_hash($token), 'since' => time() - THESE_TOKEN_LIFETIME],
+            ['token' => these_token_hash($token), 'since' => time() - rights::TOKEN_LIFETIME],
             'id ASC'
         ));
     }
