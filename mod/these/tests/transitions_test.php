@@ -32,6 +32,9 @@ require_once(__DIR__ . '/these_testcase.php');
  * @covers     ::these_transition_allowed
  * @covers     ::these_set_status
  */
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_status_transitions')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_transition_allowed')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_set_status')]
 final class transitions_test extends these_testcase {
     /**
      * Chaque statut a son entrée, chaque cible est un statut connu, et chaque étape de validation

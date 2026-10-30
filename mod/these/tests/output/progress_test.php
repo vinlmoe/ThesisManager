@@ -29,6 +29,7 @@ require_once(__DIR__ . '/output_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_these\output\progress
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\output\progress::class)]
 final class progress_test extends output_testcase {
     /**
      * Contexte : étapes faites, en cours, à venir, résumé de l'étape en cours ; un dossier abandonné

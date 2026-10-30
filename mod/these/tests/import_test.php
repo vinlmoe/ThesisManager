@@ -32,6 +32,9 @@ require_once(__DIR__ . '/these_testcase.php');
  * @covers     \mod_these\local\import
  * @covers     \mod_these\local\rendering::register_row
  */
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_import_dossiers')]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\import::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\rendering::class)]
 final class import_test extends these_testcase {
     /**
      * Contenu CSV de test : une ligne valide, un étudiant inconnu, un doublon, un directeur

@@ -34,6 +34,8 @@ require_once(__DIR__ . '/form_testcase.php');
  * @covers     \mod_these\form\review_form
  * @covers     \mod_these\local\jury
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\form\review_form::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\jury::class)]
 final class review_form_test extends form_testcase {
     /**
      * Formulaire d'examen d'une étape.

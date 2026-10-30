@@ -29,6 +29,7 @@ require_once(__DIR__ . '/output_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_these\output\dossier_filter
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\output\dossier_filter::class)]
 final class dossier_filter_test extends output_testcase {
     /**
      * Contexte : liste des statuts avec « tous », statut choisi, texte.

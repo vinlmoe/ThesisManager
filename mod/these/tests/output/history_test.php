@@ -29,6 +29,7 @@ require_once(__DIR__ . '/output_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_these\output\history
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\output\history::class)]
 final class history_test extends output_testcase {
     /**
      * Prépare un dossier avec un renvoi au directeur et un changement de sujet dans l'historique.

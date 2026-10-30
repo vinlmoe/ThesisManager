@@ -40,6 +40,14 @@ require_once(__DIR__ . '/these_testcase.php');
  * @covers     \mod_these\local\notifications::digest_content
  * @covers     \mod_these\local\notifications::send_weekly_digests
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\defenseconflicts::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\rendering::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\bulk::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\scopesettings::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\rights::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\calendar::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\notifications::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\task\send_digest::class)]
 final class deve_tools_test extends these_testcase {
     /**
      * Même salle (casse et espaces ignorés) sur des soutenances qui se chevauchent ; une autre salle,

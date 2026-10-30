@@ -29,6 +29,7 @@ require_once(__DIR__ . '/output_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_these\output\subject_history
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\output\subject_history::class)]
 final class subject_history_test extends output_testcase {
     /**
      * Contexte : ancien titre, directeur, motif ; lien vers le PDF archivé quand il existe.

@@ -34,6 +34,11 @@ require_once(__DIR__ . '/form_testcase.php');
  * @covers     \mod_these\form\identity_form
  * @covers     \mod_these\local\signaturefields
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\form\sign_form::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\form\mysignatures_form::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\form\refuse_form::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\form\identity_form::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\signaturefields::class)]
 final class signature_forms_test extends form_testcase {
     /**
      * Signature par lien : tracé lisible, nom et certification obligatoires.

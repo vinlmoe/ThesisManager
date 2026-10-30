@@ -32,6 +32,8 @@ require_once(__DIR__ . '/these_testcase.php');
  * @covers     ::these_return_dossier
  * @covers     ::these_submission_target
  */
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_return_dossier')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_submission_target')]
 final class return_test extends these_testcase {
     /**
      * Le directeur renvoie le sujet : l'étudiant le corrige et le soumet de nouveau au directeur.

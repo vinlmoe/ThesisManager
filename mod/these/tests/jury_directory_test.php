@@ -35,6 +35,11 @@ use mod_these\local\jurors;
  * @covers     ::these_save_jury
  * @covers     ::these_notify_jury
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\jurors::class)]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_extract_submitted_jury')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_validate_jury')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_save_jury')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_notify_jury')]
 final class jury_directory_test extends these_testcase {
     /**
      * Enseignant de l'annuaire.

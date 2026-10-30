@@ -30,6 +30,7 @@ require_once(__DIR__ . '/these_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     ::these_change_subject
  */
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_change_subject')]
 final class subjectchange_test extends these_testcase {
     /**
      * Changement de sujet d'un dossier actif, avec un nouveau directeur.

@@ -29,6 +29,7 @@ require_once(__DIR__ . '/output_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_these\output\planning_nav
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\output\planning_nav::class)]
 final class planning_nav_test extends output_testcase {
     /**
      * Composant de la vue par semaine (semaine du 2 novembre 2026, période en cours), date demandée le 12.

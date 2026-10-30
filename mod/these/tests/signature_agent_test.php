@@ -34,6 +34,11 @@ require_once(__DIR__ . '/these_testcase.php');
  * @covers     \mod_these\local\notifications::send_signature_reminders
  * @covers     ::these_signature_from_form
  */
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_request_agent_signatures')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_get_user_pending_signatures')]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\signatureagent::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\notifications::class)]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_signature_from_form')]
 final class signature_agent_test extends these_testcase {
     /**
      * L'équipe DEVE valide sans signer ; l'agent est prévenu, retrouve le document dans « Mes

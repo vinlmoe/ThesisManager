@@ -32,6 +32,7 @@ require_once($CFG->dirroot . '/mod/these/db/upgrade.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     ::xmldb_these_upgrade
  */
+#[\PHPUnit\Framework\Attributes\CoversFunction('xmldb_these_upgrade')]
 final class upgrade_test extends these_testcase {
     /**
      * 2026102504 : les documents réservés au personnel déposés dans la zone « generated » par les

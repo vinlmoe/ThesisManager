@@ -52,6 +52,19 @@ require_once(__DIR__ . '/these_testcase.php');
  * @covers     ::these_send_email
  * @covers     ::these_recipient_knows_subject
  */
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_user_knows_subject')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_get_rights')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_can_view_dossier')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_can_view_filearea')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_can_view_document')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_render_dossier')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_render_dossier_table')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_get_dossiers')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_register_row')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_defense_row')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_planning_document_context')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_send_email')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_recipient_knows_subject')]
 final class confidentiality_access_test extends these_testcase {
     /** @var string[] Marqueurs de chaque donnée qui révèle le sujet. */
     const SECRETS = [

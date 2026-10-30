@@ -29,6 +29,7 @@ require_once(__DIR__ . '/output_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_these\output\link
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\output\link::class)]
 final class link_test extends output_testcase {
     /**
      * Contexte : adresse, libellé, options.

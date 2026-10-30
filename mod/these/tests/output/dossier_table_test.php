@@ -29,6 +29,7 @@ require_once(__DIR__ . '/output_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_these\output\dossier_table
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\output\dossier_table::class)]
 final class dossier_table_test extends output_testcase {
     /**
      * Contexte : le titre d'une thèse confidentielle n'est présent que pour qui connaît le sujet.

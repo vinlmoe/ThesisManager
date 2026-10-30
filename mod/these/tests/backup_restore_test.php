@@ -33,6 +33,8 @@ require_once($CFG->dirroot . '/backup/util/includes/restore_includes.php');
  * @covers     \backup_these_activity_structure_step
  * @covers     \restore_these_activity_structure_step
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\backup_these_activity_structure_step::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\restore_these_activity_structure_step::class)]
 final class backup_restore_test extends these_testcase {
     /**
      * Sauvegarde un cours puis le restaure dans un nouveau cours, données utilisateur comprises.

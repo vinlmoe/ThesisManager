@@ -29,6 +29,7 @@ require_once(__DIR__ . '/output_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_these\output\doctemplate_variables
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\output\doctemplate_variables::class)]
 final class doctemplate_variables_test extends output_testcase {
     /**
      * Contexte : nom de la variable entre accolades et valeur d'exemple, en texte brut.

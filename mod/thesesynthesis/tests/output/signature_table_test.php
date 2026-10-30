@@ -31,6 +31,8 @@ require_once(__DIR__ . '/output_testcase.php');
  * @covers     \mod_thesesynthesis\output\signature_table
  * @covers     ::thesesynthesis_get_signatures
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_thesesynthesis\output\signature_table::class)]
+#[\PHPUnit\Framework\Attributes\CoversFunction('thesesynthesis_get_signatures')]
 final class signature_table_test extends output_testcase {
     /**
      * Demande de signature du formulaire de sujet adressée au juré (signataire invité par lien).

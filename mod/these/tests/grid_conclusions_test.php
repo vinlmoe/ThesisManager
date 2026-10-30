@@ -31,6 +31,9 @@ require_once(__DIR__ . '/these_testcase.php');
  * @covers     ::these_save_grid_items
  * @covers     ::these_conclusions_error
  */
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_get_grid_items')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_save_grid_items')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_conclusions_error')]
 final class grid_conclusions_test extends these_testcase {
     /**
      * Éléments d'origine enregistrés à la première consultation, puis modifiés : libellé changé,

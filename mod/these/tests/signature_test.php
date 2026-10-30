@@ -34,6 +34,10 @@ require_once(__DIR__ . '/these_testcase.php');
  * @covers     ::these_request_signature
  * @covers     ::these_signed_document_pdf
  */
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_sign_document')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_refresh_signatures')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_request_signature')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_signed_document_pdf')]
 final class signature_test extends these_testcase {
     /**
      * Signature tracée factice : une image PNG.

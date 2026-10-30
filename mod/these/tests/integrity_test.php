@@ -38,6 +38,13 @@ require_once(__DIR__ . '/these_testcase.php');
  * @covers     \mod_these\pdf\html_document::restrict_images
  * @covers     \mod_these\pdf\html_document::strip_tcpdf_tags
  */
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_seal_document')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_signature_template_changed')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_get_signatures_by_token')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_jury_access_open')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_get_jury_member_access')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_dossier_operation')]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\pdf\html_document::class)]
 final class integrity_test extends these_testcase {
     /**
      * Modèle d'origine d'un document, complété d'un paragraphe.

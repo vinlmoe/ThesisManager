@@ -36,6 +36,7 @@ require_once(__DIR__ . '/these_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_these\privacy\provider
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\privacy\provider::class)]
 final class privacy_provider_test extends these_testcase {
     /**
      * Dossier complet : directeur, jury, historique, renvoi par la DEVE, fichier.

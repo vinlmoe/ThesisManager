@@ -29,6 +29,7 @@ require_once(__DIR__ . '/output_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_these\output\jury
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\output\jury::class)]
 final class jury_test extends output_testcase {
     /**
      * Contexte : adresse et éligibilité seulement si demandées ; badges d'éligibilité ; jury vide.

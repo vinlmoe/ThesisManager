@@ -31,6 +31,7 @@ require_once(__DIR__ . '/form_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_these\form\subject_form
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\form\subject_form::class)]
 final class subject_form_test extends form_testcase {
     /**
      * Formulaire du dépôt du sujet.

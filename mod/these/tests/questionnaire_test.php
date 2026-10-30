@@ -32,6 +32,9 @@ require_once($CFG->dirroot . '/mod/these/locallib.php');
  * @covers     ::these_save_answers
  * @covers     ::these_questionnaire_missing
  */
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_save_question')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_save_answers')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_questionnaire_missing')]
 final class questionnaire_test extends \advanced_testcase {
     /**
      * Questions : ajout en fin de liste, modification, ordre, suppression avec les réponses.

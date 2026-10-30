@@ -29,6 +29,7 @@ require_once(__DIR__ . '/output_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_thesesynthesis\output\search_results
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_thesesynthesis\output\search_results::class)]
 final class search_results_test extends output_testcase {
     /**
      * Résultats d'une recherche sans critère pour un utilisateur.

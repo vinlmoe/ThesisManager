@@ -33,6 +33,10 @@ require_once(__DIR__ . '/these_testcase.php');
  * @covers     ::these_planning_month_start
  * @covers     ::these_planning_document_context
  */
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_get_defenses')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_planning_week_start')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_planning_month_start')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_planning_document_context')]
 final class planning_test extends these_testcase {
     /**
      * Semaines du lundi au dimanche et mois civils, y compris autour d'un changement d'heure.

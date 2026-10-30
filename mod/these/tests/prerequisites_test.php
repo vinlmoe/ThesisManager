@@ -35,6 +35,9 @@ require_once(__DIR__ . '/these_testcase.php');
  * @covers     \mod_these\local\university
  * @covers     \mod_these\local\signatureagent
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\prerequisites::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\university::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\signatureagent::class)]
 final class prerequisites_test extends these_testcase {
     /**
      * Signe un emplacement d'un document.

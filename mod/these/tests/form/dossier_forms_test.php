@@ -34,6 +34,11 @@ require_once(__DIR__ . '/form_testcase.php');
  * @covers     \mod_these\form\newdate_form
  * @covers     \mod_these\form\dossier_edit_form
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\form\create_form::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\form\a6_form::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\form\daterequest_form::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\form\newdate_form::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\form\dossier_edit_form::class)]
 final class dossier_forms_test extends form_testcase {
     /**
      * Création : l'étudiant doit être choisi parmi ceux proposés.

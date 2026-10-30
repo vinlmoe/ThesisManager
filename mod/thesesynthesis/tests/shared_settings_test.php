@@ -34,6 +34,11 @@ require_once($CFG->dirroot . '/mod/thesesynthesis/locallib.php');
  * @covers     ::thesesynthesis_render_search_results
  * @covers     ::thesesynthesis_delete_instance
  */
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_settings_scope')]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\scopesettings::class)]
+#[\PHPUnit\Framework\Attributes\CoversFunction('thesesynthesis_search')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('thesesynthesis_render_search_results')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('thesesynthesis_delete_instance')]
 final class shared_settings_test extends \advanced_testcase {
     /**
      * Deux promotions suivies par une activité de suivi ; une troisième activité non suivie.

@@ -33,6 +33,10 @@ require_once(__DIR__ . '/form_testcase.php');
  * @covers     \mod_these\form\report_form
  * @covers     \mod_these\form\scan_form
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\form\corrections_form::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\form\minutes_form::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\form\report_form::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\form\scan_form::class)]
 final class deposit_forms_test extends form_testcase {
     /**
      * Manuscrit corrigé : fichier et description des corrections obligatoires.

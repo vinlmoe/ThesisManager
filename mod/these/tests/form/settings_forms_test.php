@@ -38,6 +38,12 @@ require_once(__DIR__ . '/form_testcase.php');
  * @covers     \mod_these\form\doctemplate_form
  * @covers     \mod_these\form\settings_transfer_form
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\form\scopesettings_form::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\form\question_form::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\form\questionnaire_form::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\form\juror_form::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\form\doctemplate_form::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\form\settings_transfer_form::class)]
 final class settings_forms_test extends form_testcase {
     /**
      * Paramètres du circuit : durée d'une soutenance d'au moins une minute, délai minimal positif ou nul.

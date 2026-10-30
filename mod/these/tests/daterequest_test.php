@@ -32,6 +32,7 @@ require_once(__DIR__ . '/these_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_these\local\daterequest
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\daterequest::class)]
 final class daterequest_test extends these_testcase {
     /**
      * Demande, puis nouvelle proposition de l'étudiant.

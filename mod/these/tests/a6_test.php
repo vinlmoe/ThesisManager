@@ -32,6 +32,7 @@ require_once(__DIR__ . '/these_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_these\local\a6
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\a6::class)]
 final class a6_test extends these_testcase {
     /**
      * Dates d'un tableur, jj/mm/aaaa, aaaa-mm-jj, « non » ; écoles par clé ou libellé.

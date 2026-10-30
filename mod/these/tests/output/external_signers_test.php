@@ -29,6 +29,7 @@ require_once(__DIR__ . '/output_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_these\output\external_signers
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\output\external_signers::class)]
 final class external_signers_test extends output_testcase {
     /**
      * Dossier programmé avec bordereau : le président et la direction ont des documents à signer.

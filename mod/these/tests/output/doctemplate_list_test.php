@@ -29,6 +29,7 @@ require_once(__DIR__ . '/output_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_these\output\doctemplate_list
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\output\doctemplate_list::class)]
 final class doctemplate_list_test extends output_testcase {
     /**
      * Contexte : un modèle par type ; badge et bouton de retour à l'origine pour un modèle modifié.

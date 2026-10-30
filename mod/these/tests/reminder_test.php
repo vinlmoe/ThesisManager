@@ -31,6 +31,8 @@ require_once(__DIR__ . '/these_testcase.php');
  * @covers     ::these_get_dossiers_needing_reminder
  * @covers     \mod_these\task\send_reminders
  */
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_get_dossiers_needing_reminder')]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\task\send_reminders::class)]
 final class reminder_test extends these_testcase {
     /**
      * Sélection des dossiers à relancer.

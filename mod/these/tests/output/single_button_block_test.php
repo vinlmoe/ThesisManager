@@ -29,6 +29,7 @@ require_once(__DIR__ . '/output_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_these\output\single_button_block
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\output\single_button_block::class)]
 final class single_button_block_test extends output_testcase {
     /**
      * Contexte : bloc et contexte du bouton du cœur.

@@ -34,6 +34,11 @@ require_once(__DIR__ . '/these_testcase.php');
  * @covers     ::these_render_dossier
  * @covers     \mod_these\local\rendering::spreadsheet_safe
  */
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_get_email_definitions')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_validate_jury')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_suggest_devenumber')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_render_dossier')]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\rendering::class)]
 final class helpers_test extends these_testcase {
     /**
      * Export tableur : une cellule qui commence par =, +, - ou @ est précédée d'une apostrophe ; les

@@ -29,6 +29,7 @@ require_once(__DIR__ . '/output_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_thesesynthesis\output\navlinks
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_thesesynthesis\output\navlinks::class)]
 final class navlinks_test extends output_testcase {
     /**
      * Libellés des boutons et du menu « Paramètres » pour l'utilisateur courant.

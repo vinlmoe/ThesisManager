@@ -29,6 +29,7 @@ require_once(__DIR__ . '/output_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_these\output\planning_upcoming
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\output\planning_upcoming::class)]
 final class planning_upcoming_test extends output_testcase {
     /**
      * Contexte : une entrée par semaine, avec ses dates et son nombre de soutenances.

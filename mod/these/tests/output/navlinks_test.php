@@ -29,6 +29,7 @@ require_once(__DIR__ . '/output_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_these\output\navlinks
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\output\navlinks::class)]
 final class navlinks_test extends output_testcase {
     /**
      * Contexte : la DEVE a les liens de gestion ; le directeur le tableau de bord, le planning et

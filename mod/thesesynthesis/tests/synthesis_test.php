@@ -33,6 +33,10 @@ require_once($CFG->dirroot . '/mod/thesesynthesis/locallib.php');
  * @covers     ::thesesynthesis_get_available_activities
  * @covers     \mod_these\page\planning_page
  */
+#[\PHPUnit\Framework\Attributes\CoversFunction('thesesynthesis_get_dossiers')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('thesesynthesis_get_juries')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('thesesynthesis_get_available_activities')]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\page\planning_page::class)]
 final class synthesis_test extends \advanced_testcase {
     /**
      * Deux promotions (deux cours), un directeur dans les deux, une DEVE dans la première seulement,

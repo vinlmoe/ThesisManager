@@ -36,6 +36,13 @@ require_once(__DIR__ . '/these_testcase.php');
  * @covers     ::these_embargo_until
  * @covers     ::these_extract_bordereau
  */
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_user_knows_subject')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_subject_field')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_can_view_filearea')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_can_view_document')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_send_email')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_embargo_until')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_extract_bordereau')]
 final class confidentiality_test extends these_testcase {
     /** @var string Titre de la thèse confidentielle des tests. */
     const TITLE = 'Vaccin expérimental contre la maladie de Carré';

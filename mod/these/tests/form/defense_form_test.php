@@ -38,6 +38,9 @@ require_once(__DIR__ . '/form_testcase.php');
  * @covers     \mod_these\local\jury
  * @covers     \mod_these\local\juryform
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\form\defense_form::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\jury::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\juryform::class)]
 final class defense_form_test extends form_testcase {
     /**
      * Formulaire du dépôt de la soutenance.

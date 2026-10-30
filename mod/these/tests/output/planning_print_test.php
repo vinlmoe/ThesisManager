@@ -29,6 +29,7 @@ require_once(__DIR__ . '/output_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_these\output\planning_print
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\output\planning_print::class)]
 final class planning_print_test extends output_testcase {
     /**
      * Contexte : adresse du PDF de la période, libellé selon la vue.
