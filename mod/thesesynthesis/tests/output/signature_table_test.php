@@ -47,8 +47,9 @@ final class signature_table_test extends output_testcase {
     }
 
     /**
-     * Le juré signe depuis « Mes signatures » ; la DEVE suit la signature attendue depuis le suivi des
-     * signatures du dossier ; le directeur n'a rien.
+     * Une signature à lien ne se signe que par le lien reçu : « Mes signatures » du juré ne la propose
+     * pas, même si l'adresse est celle de son compte ; la DEVE suit la signature attendue depuis le
+     * suivi des signatures du dossier ; le directeur n'a rien.
      */
     public function test_get_signatures(): void {
         $this->setup_env();
@@ -56,11 +57,8 @@ final class signature_table_test extends output_testcase {
         $label = these_document_label('subject') . ' (' . these_slot_label('extdirector') . ')';
 
         $juror = thesesynthesis_get_signatures($this->links_for($this->env->juror), $this->env->juror);
-        $this->assertCount(1, $juror['mine']);
+        $this->assertSame([], $juror['mine']);
         $this->assertSame([], $juror['awaited']);
-        $this->assertSame([$label], $juror['mine'][0]->documents);
-        $this->assertSame('/mod/these/mysignatures.php', $juror['mine'][0]->url->out_as_local_url(false));
-        $this->assertEquals(make_timestamp(2026, 5, 2), $juror['mine'][0]->since);
 
         $deve = thesesynthesis_get_signatures($this->links_for($this->env->deve), $this->env->deve);
         $this->assertSame([], $deve['mine']);

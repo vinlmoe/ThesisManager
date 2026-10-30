@@ -118,6 +118,7 @@ final class upgrade_test extends these_testcase {
         $this->assertGreaterThan($previous, (int) get_config('mod_these', 'version'));
 
         // Rejouée sur un schéma déjà conforme : rien ne casse.
+        set_config('version', $previous, 'mod_these');
         $this->assertTrue(xmldb_these_upgrade($previous));
         $this->assertSame([], $exists(), 'rejouée');
     }

@@ -449,7 +449,7 @@ final class confidentiality_access_test extends these_testcase {
         $this->setup_confidential();
         $this->these->universityemail = 'archives@universite.example.org';
         $DB->update_record('these', $this->these);
-        \mod_these\local\scopesettings::set(these_settings_scope($this->these), ['dgemail' => 'dg@example.org']);
+        \mod_these\local\scopesettings::set(these_settings_scope($this->these), ['ccememail' => 'ccem@example.org']);
         $DB->update_record('these_dossier', (object) ['id' => $this->dossier->id, 'externaldirector' => 1,
             'extdirectorname' => 'Dr Externe', 'extdirectoremail' => 'Externe@example.org']);
         $dossier = $this->reload($this->dossier->id);
@@ -459,7 +459,7 @@ final class confidentiality_access_test extends these_testcase {
         $this->assertTrue($knows('president@example.com'));
         $this->assertTrue($knows('ARCHIVES@universite.example.org'));
         $this->assertTrue($knows('externe@example.org'));
-        $this->assertTrue($knows('dg@example.org'));
+        $this->assertTrue($knows('ccem@example.org'));
         $this->assertFalse($knows('inconnu@example.org'));
         $this->assertFalse($knows(''));
 
