@@ -76,8 +76,11 @@ class bulk {
                 }
                 $sent = these_request_agent_signatures($these, $cm, $dossier, $available) > 0;
                 foreach (these_external_slots() as $slot) {
-                    if (these_pending_documents_for_slot($dossier, $slot, $available)) {
-                        $sent = these_request_signature($these, $cm, $dossier, $slot, $available) !== null || $sent;
+                    // Seules les demandes déjà émises par le circuit sont relancées : un nouveau lien n'est pas
+                    // envoyé au directeur extérieur avant la validation du sujet par le directeur.
+                    $requested = signatures::requested_documents_for_slot($dossier, $slot, $available);
+                    if ($requested) {
+                        $sent = these_request_signature($these, $cm, $dossier, $slot, $requested) !== null || $sent;
                     }
                 }
                 return $sent;

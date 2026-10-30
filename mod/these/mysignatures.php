@@ -16,8 +16,12 @@
 
 /**
  * Mes signatures : documents qui attendent la signature de l'utilisateur connecté, toutes
- * activités confondues (agent responsable de la DEVE, membre du jury ou autre signataire invité
- * ayant un compte), et gestion de sa signature enregistrée.
+ * activités confondues (agent responsable de la DEVE, signatures attribuées à son compte), et
+ * gestion de sa signature enregistrée.
+ *
+ * Les signataires invités par courriel (président du jury, directeur extérieur...) signent depuis
+ * leur lien à jeton (sign.php), même s'ils ont un compte à cette adresse : la page ne sert ni ne
+ * signe un document sur simple égalité d'adresse.
  *
  * Chaque document se consulte en PDF avant d'être signé ; la signature enregistrée est reprise
  * d'office, sans nouveau tracé.

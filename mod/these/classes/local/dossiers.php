@@ -335,6 +335,33 @@ class dossiers {
     }
 
     /**
+     * Directeur extérieur déclaré par l'étudiant, en une ligne : nom, grade, établissement et adresse
+     * (celle à laquelle son lien de signature sera envoyé), pour que le validateur la vérifie avant de
+     * valider le sujet. Chaîne vide si le directeur n'est pas extérieur.
+     *
+     * @param stdClass $dossier
+     * @return string Texte brut.
+     */
+    public static function external_director_summary(stdClass $dossier) {
+        if (empty($dossier->externaldirector)) {
+            return '';
+        }
+        $details = array_values(array_filter(array_map('trim', [
+            (string) ($dossier->extdirectorgrade ?? ''),
+            (string) ($dossier->extdirectorinstitution ?? ''),
+        ]), 'strlen'));
+        $summary = trim((string) ($dossier->extdirectorname ?? ''));
+        if ($details) {
+            $summary .= ' (' . implode(', ', $details) . ')';
+        }
+        $email = trim((string) ($dossier->extdirectoremail ?? ''));
+        if ($email !== '') {
+            $summary .= ' — ' . $email;
+        }
+        return trim($summary);
+    }
+
+    /**
      * Statut atteint à la soumission, compte tenu des signatures que les modifications viennent
      * d'invalider : un dossier renvoyé revient normalement à l'étape qui l'a renvoyé, mais si un
      * document signé par le directeur a changé, il repart chez le directeur pour qu'il le signe de
@@ -360,7 +387,9 @@ class dossiers {
      *
      * Toute modification du contenu invalide les signatures déjà apposées sur le formulaire de dépôt
      * de sujet (voir these_refresh_signatures()). À la soumission, la signature de l'étudiant est
-     * apposée et, si le directeur est extérieur, sa signature lui est demandée par courriel.
+     * apposée ; si le directeur est extérieur, sa signature ne lui est demandée par courriel qu'une
+     * fois le sujet validé par le directeur interne (voir these_review_steps()), l'adresse saisie par
+     * l'étudiant n'étant pas vérifiée avant.
      *
      * @param stdClass $these Instance.
      * @param stdClass $cm Course module.
@@ -427,9 +456,6 @@ class dossiers {
             );
             if ($signature !== null) {
                 these_sign_document($context, $dossier, 'subject', 'student', $userid, $signature->name, $signature->png);
-            }
-            if (!empty($dossier->externaldirector)) {
-                these_request_external_signatures($these, $cm, $dossier, 'subject');
             }
             these_notify_actor($these, $cm, $dossier);
             return $dossier;

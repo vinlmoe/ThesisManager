@@ -213,6 +213,7 @@ if ($mform->is_cancelled()) {
 
 $student = $DB->get_record('user', ['id' => $dossier->userid]);
 $director = $dossier->directorid ? $DB->get_record('user', ['id' => $dossier->directorid]) : null;
+$extdirector = \mod_these\local\dossiers::external_director_summary($dossier);
 
 $renderer = $PAGE->get_renderer('mod_these');
 // Résumé du dossier au-dessus de la décision ; le dossier complet suit, replié, pour ne pas
@@ -229,6 +230,8 @@ $summary = new output\detail_section(get_string('reviewsummary', 'mod_these'), [
     ))],
     get_string('status') => [parts::text(these_status_label($dossier->status))],
     get_string('slotdirector', 'mod_these') => $director ? [parts::text(fullname($director))] : null,
+    // Directeur extérieur : son adresse, saisie par l'étudiant, reçoit le lien de signature à la validation.
+    get_string('slotextdirector', 'mod_these') => $extdirector !== '' ? [parts::text($extdirector)] : null,
     get_string('signinfonumber', 'mod_these') => trim((string) $dossier->devenumber) !== ''
         ? [parts::text($dossier->devenumber)] : null,
     get_string('signinfodefense', 'mod_these') => $date ? [parts::text(

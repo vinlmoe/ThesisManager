@@ -160,9 +160,7 @@ class subjectchange {
             if ($signature !== null) {
                 these_sign_document($context, $dossier, 'subject', 'student', $userid, $signature->name, $signature->png);
             }
-            if (!empty($dossier->externaldirector)) {
-                these_request_external_signatures($these, $cm, $dossier, 'subject');
-            }
+            // Un directeur extérieur n'est invité à signer qu'à la validation du nouveau sujet par le directeur.
 
             // Avertissement de l'ancien directeur, de la DEVE et de la bibliothèque.
             $recipients = [];

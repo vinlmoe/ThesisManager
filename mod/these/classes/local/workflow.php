@@ -195,7 +195,8 @@ class workflow {
             THESE_STATUS_SUBJECT_SUBMITTED => [
                 'key' => 'directorsubject', 'actor' => 'director',
                 'next' => THESE_STATUS_SUBJECT_APPROVED, 'returnto' => ['student'],
-                'sign' => ['director' => ['subject']], 'request' => [],
+                // Le directeur extérieur n'est invité à signer qu'une fois le sujet validé par le directeur interne.
+                'sign' => ['director' => ['subject']], 'request' => ['subject'],
             ],
             THESE_STATUS_SUBJECT_APPROVED => [
                 'key' => 'devesubject', 'actor' => 'deve',

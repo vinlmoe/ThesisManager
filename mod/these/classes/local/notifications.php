@@ -586,9 +586,11 @@ class notifications {
             $signers = these_external_signers($dossier);
             foreach (array_keys($slots) as $slot) {
                 $email = (string) ($signers[$slot]['email'] ?? '');
+                // Seuls les documents déjà demandés sont relancés (voir signatures::requested_documents_for_slot()).
+                $requested = isset($signers[$slot]) ? signatures::requested_documents_for_slot($dossier, $slot, $available) : [];
                 if (
-                    isset($signers[$slot]) && $email !== '' && validate_email($email)
-                        && these_request_signature($these, $cm, $dossier, $slot, $available) !== null
+                    $requested && $email !== '' && validate_email($email)
+                        && these_request_signature($these, $cm, $dossier, $slot, $requested) !== null
                 ) {
                     $sent++;
                     $trace("Dossier $dossierid : signataire " . these_slot_label($slot) . " relancé ($email).");

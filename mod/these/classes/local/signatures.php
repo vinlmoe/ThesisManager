@@ -1009,6 +1009,28 @@ class signatures {
     }
 
     /**
+     * Documents en attente d'un signataire sans compte dont la demande de signature a déjà été émise
+     * (lien envoyé, ou signature attendue sur place) : ceux qu'une relance peut redemander. Les
+     * documents dont la demande n'a pas encore été émise par le circuit (voir these_review_steps())
+     * n'en font pas partie : le directeur extérieur, par exemple, n'est pas relancé avant que le
+     * directeur interne ait validé le sujet.
+     *
+     * @param stdClass $dossier
+     * @param string $slot
+     * @param string[]|null $doctypes Documents à considérer (tous par défaut).
+     * @return string[]
+     */
+    public static function requested_documents_for_slot(stdClass $dossier, $slot, ?array $doctypes = null) {
+        $signatures = these_get_signatures($dossier->id);
+        return array_values(array_filter(
+            these_pending_documents_for_slot($dossier, $slot, $doctypes),
+            function ($doctype) use ($signatures, $slot) {
+                return !empty($signatures[$doctype . ':' . $slot]->requesttime);
+            }
+        ));
+    }
+
+    /**
      * Invite un signataire sans compte à signer, en une seule fois, les documents qui l'attendent :
      * chaque emplacement reçoit le même nouveau jeton, et le lien de signature est envoyé au
      * signataire s'il a une adresse. Sans adresse, les signatures restent en attente et peuvent être

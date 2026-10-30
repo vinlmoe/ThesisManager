@@ -235,9 +235,11 @@ signés.
   valide signe.
 - **Signature enregistrée** : tout utilisateur connecté peut enregistrer sa
   signature (fichier dans son contexte utilisateur, couvert par la confidentialité) ;
-  elle est reprise d'office aux signatures suivantes. Un signataire invité
-  connecté avec le compte de l'adresse invitée (président du jury, par exemple)
-  peut l'utiliser et retrouve ses documents dans *Mes signatures*.
+  elle est reprise d'office aux signatures suivantes. Un signataire invité par
+  lien (président du jury, directeur extérieur…) signe uniquement depuis son
+  lien, même s'il a un compte à cette adresse ; connecté, il peut y utiliser sa
+  signature enregistrée. Le directeur extérieur reçoit son lien à la validation
+  du sujet par le directeur, qui voit l'adresse saisie par l'étudiant.
 
 - **Changement de sujet** (*Changer de sujet de thèse*, étudiant, dossier
   actif) : motif obligatoire ; l'ancien sujet est archivé (table
