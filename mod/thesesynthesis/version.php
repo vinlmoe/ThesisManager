@@ -26,7 +26,7 @@ defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'mod_thesesynthesis';
 $plugin->version   = 2026103001;
-$plugin->requires  = 2022041900; // Moodle 4.0+.
+$plugin->requires  = 2022112800; // Moodle 4.1+.
 $plugin->maturity  = MATURITY_BETA;
 $plugin->release   = '0.7.3';
 $plugin->dependencies = [

@@ -1,7 +1,7 @@
 # ThesisManager
 
 [![CI](https://github.com/vinlmoe/ThesisManager/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/vinlmoe/ThesisManager/actions/workflows/ci.yml)
-[![Moodle 4.0+](https://img.shields.io/badge/Moodle-4.0%2B-f98012?logo=moodle&logoColor=white)](https://moodle.org)
+[![Moodle 4.1+](https://img.shields.io/badge/Moodle-4.1%2B-f98012?logo=moodle&logoColor=white)](https://moodle.org)
 [![PHP 8.0–8.3](https://img.shields.io/badge/PHP-8.0%E2%80%938.3-777bb4?logo=php&logoColor=white)](https://www.php.net)
 [![Licence GPL v3+](https://img.shields.io/badge/licence-GPL%20v3%2B-blue)](https://www.gnu.org/licenses/gpl-3.0)
 

@@ -3,7 +3,7 @@
 Module d'activité Moodle pour le circuit des thèses d'exercice vétérinaire :
 dépôt et validation du sujet, puis dépôt, validation et soutenance.
 
-- **Prérequis** : Moodle 4.0 ou supérieur, PHP 7.4+.
+- **Prérequis** : Moodle 4.1 ou supérieur, PHP 7.4+.
 - **Dépendances** : aucune à installer. Les PDF sont produits avec TCPDF (fourni
   par Moodle) et FPDI 2.6 (fourni dans `thirdparty/`, comme pour `mod_stage`).
 - **PHP compilé avec musl** (Alpine) : le module est vérifié sur l'image Docker
