@@ -58,6 +58,7 @@ if ($mform->is_cancelled()) {
     } catch (moodle_exception $e) {
         $error = $e->getMessage();
     } catch (\Throwable $e) {
+        debugging('Import A6 illisible : ' . $e->getMessage(), DEBUG_DEVELOPER);
         $error = get_string('a6importunreadable', 'mod_these');
     }
     @unlink($path);

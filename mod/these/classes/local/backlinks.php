@@ -102,7 +102,9 @@ class backlinks {
         }
         try {
             return self::target(new moodle_url($origin['url']), (string) $origin['label']);
-        } catch (\Throwable $e) {
+        } catch (\moodle_exception $e) {
+            // Adresse mémorisée invalide : pas de lien de retour.
+            debugging('Page d\'origine invalide : ' . $e->getMessage(), DEBUG_DEVELOPER);
             return null;
         }
     }

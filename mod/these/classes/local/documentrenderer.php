@@ -55,6 +55,8 @@ class documentrenderer {
         try {
             $pages = \mod_these\pdf\html_document::page_count(self::render_doctemplate($these, 'conclusions', $data));
         } catch (\Throwable $e) {
+            // Mise en page impossible (modèle de l'activité défaillant) : seule la longueur est vérifiée.
+            debugging('Mise en page des conclusions impossible : ' . $e->getMessage(), DEBUG_DEVELOPER);
             return null;
         }
         return $pages > 1 ? get_string('conclusionsonepage', 'mod_these') : null;
@@ -168,6 +170,9 @@ class documentrenderer {
         try {
             self::merge_pdfs([$template]);
         } catch (\Throwable $e) {
+            // Le détail de l'erreur est tracé quand le contrat est produit (voir render_document_pdf()) ;
+            // cette vérification, faite à chaque affichage des documents signés et avant chaque scellé, n'en dit
+            // pas plus.
             return 'contracttemplateunreadable';
         }
         return null;
