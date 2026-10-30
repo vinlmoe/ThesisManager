@@ -281,15 +281,13 @@ function thesesynthesis_get_signatures(array $links, stdClass $user) {
            ORDER BY d.id, s.id",
             ['theseid' => $link->these->id, 'cancelled' => THESE_STATUS_CANCELLED, 'closed' => THESE_STATUS_CLOSED]
         );
-        $dossiers = [];
+        // Les dossiers concernés sont lus en une requête par activité.
+        $dossiers = $DB->get_records_list('these_dossier', 'id', array_unique(array_column($signatures, 'dossierid')));
         foreach ($signatures as $signature) {
             if (isset($mineids[(int) $signature->id])) {
                 continue;
             }
-            if (!isset($dossiers[$signature->dossierid])) {
-                $dossiers[$signature->dossierid] = $DB->get_record('these_dossier', ['id' => $signature->dossierid]);
-            }
-            $dossier = $dossiers[$signature->dossierid];
+            $dossier = $dossiers[(int) $signature->dossierid];
             if (!these_document_available($dossier, $signature->doctype)) {
                 continue;
             }
@@ -299,12 +297,16 @@ function thesesynthesis_get_signatures(array $links, stdClass $user) {
             $row->label = get_string('managesignatures', 'mod_these');
         }
     }
+    thesesynthesis_fill_signature_rows($mine, $user->id);
+    thesesynthesis_fill_signature_rows($awaited, $user->id);
     return ['mine' => array_values($mine), 'awaited' => array_values($awaited)];
 }
 
 /**
  * Ligne d'un dossier dans une liste de signatures (voir thesesynthesis_get_signatures()), créée au
- * premier document ; la date retenue est celle de la plus ancienne demande.
+ * premier document ; la date retenue est celle de la plus ancienne demande. L'étudiant et la
+ * connaissance du sujet sont renseignés ensuite, pour toutes les lignes à la fois (voir
+ * thesesynthesis_fill_signature_rows()).
  *
  * @param array $groups Lignes, indexées par dossier.
  * @param stdClass $dossier
@@ -314,14 +316,12 @@ function thesesynthesis_get_signatures(array $links, stdClass $user) {
  * @return stdClass La ligne du dossier.
  */
 function thesesynthesis_signature_row(array &$groups, stdClass $dossier, stdClass $link, $userid, $requesttime) {
-    global $DB;
-
     if (!isset($groups[$dossier->id])) {
         $groups[$dossier->id] = (object) [
             'dossier' => $dossier,
             'link' => $link,
-            'student' => $DB->get_record('user', ['id' => $dossier->userid]),
-            'knowssubject' => these_user_knows_subject($dossier, $link->context, $userid),
+            'student' => null,
+            'knowssubject' => false,
             'documents' => [],
             'since' => 0,
             'url' => null,
@@ -334,6 +334,39 @@ function thesesynthesis_signature_row(array &$groups, stdClass $dossier, stdClas
         $row->since = $requesttime;
     }
     return $row;
+}
+
+/**
+ * Renseigne l'étudiant et la connaissance du sujet des lignes d'une liste de signatures : les
+ * étudiants sont lus en une requête, la connaissance du sujet calculée une fois par activité (voir
+ * rights::user_knows_subjects()).
+ *
+ * @param array $rows Lignes (voir thesesynthesis_signature_row()), modifiées en place.
+ * @param int $userid
+ * @return void
+ */
+function thesesynthesis_fill_signature_rows(array $rows, $userid) {
+    if (!$rows) {
+        return;
+    }
+    $dossiers = array_map(function ($row) {
+        return $row->dossier;
+    }, $rows);
+    $users = thesesynthesis_load_users($dossiers);
+    $bylink = [];
+    foreach ($rows as $row) {
+        $bylink[(int) $row->link->cm->id][] = $row;
+    }
+    foreach ($bylink as $linkrows) {
+        $link = $linkrows[0]->link;
+        $knows = \mod_these\local\rights::user_knows_subjects(array_map(function ($row) {
+            return $row->dossier;
+        }, $linkrows), $link->context, $userid);
+        foreach ($linkrows as $row) {
+            $row->student = $users[(int) $row->dossier->userid] ?? null;
+            $row->knowssubject = $knows[(int) $row->dossier->id];
+        }
+    }
 }
 
 /**
@@ -486,6 +519,11 @@ function thesesynthesis_search(array $links, $userid, array $filters, array $que
         }
         $users = thesesynthesis_load_users(array_column($candidates, 0));
         $knowssubjects = \mod_these\local\rights::user_knows_subjects(array_column($candidates, 0), $link->context, $userid);
+        // Réponses au questionnaire et jurys lus en une requête chacun, seulement si la recherche
+        // les utilise.
+        $dossierids = array_keys($candidates);
+        $allanswers = \mod_these\local\questionnaire::get_answers_for($dossierids);
+        $juries = $words ? \mod_these\local\jury::get_juries($dossierids) : [];
         foreach ($candidates as [$dossier, $year, $directs]) {
             // Thèse confidentielle dont l'utilisateur ne connaît pas le sujet : ni le sujet ni les
             // réponses au questionnaire n'entrent dans la recherche.
@@ -493,7 +531,7 @@ function thesesynthesis_search(array $links, $userid, array $filters, array $que
             if (!$knows && $answerfilters) {
                 continue;
             }
-            $answers = these_get_answers($dossier->id);
+            $answers = $allanswers[(int) $dossier->id];
             $matches = true;
             foreach ($answerfilters as $questionid => $value) {
                 $answer = $answers[(int) $questionid] ?? '';
@@ -522,7 +560,7 @@ function thesesynthesis_search(array $links, $userid, array $filters, array $que
                     $haystack[] = $dossier->devenumber;
                     $haystack[] = $dossier->libraryref;
                 }
-                foreach (these_get_jury($dossier->id) as $member) {
+                foreach ($juries[(int) $dossier->id] as $member) {
                     $haystack[] = $member->fullname;
                 }
                 foreach ($knows ? $answers : [] as $answer) {

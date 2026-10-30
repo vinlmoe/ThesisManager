@@ -144,12 +144,26 @@ class questionnaire {
      * @return array questionid => valeur (texte, ou liste de choix pour un QCM)
      */
     public static function get_answers($dossierid) {
+        return self::get_answers_for([$dossierid])[(int) $dossierid];
+    }
+
+    /**
+     * Réponses de plusieurs dossiers au questionnaire, lues en une requête.
+     *
+     * @param int[] $dossierids
+     * @return array dossierid => (questionid => valeur), un tableau (vide au besoin) par dossier demandé.
+     */
+    public static function get_answers_for(array $dossierids) {
         global $DB;
 
-        $answers = [];
-        foreach ($DB->get_records('these_answer', ['dossierid' => $dossierid]) as $answer) {
+        $answers = array_fill_keys(array_map('intval', $dossierids), []);
+        if (!$answers) {
+            return [];
+        }
+        [$insql, $params] = $DB->get_in_or_equal(array_keys($answers), SQL_PARAMS_NAMED);
+        foreach ($DB->get_records_select('these_answer', "dossierid $insql", $params, 'id ASC') as $answer) {
             $decoded = json_decode((string) $answer->value, true);
-            $answers[(int) $answer->questionid] = is_array($decoded) ? $decoded : (string) $answer->value;
+            $answers[(int) $answer->dossierid][(int) $answer->questionid] = is_array($decoded) ? $decoded : (string) $answer->value;
         }
         return $answers;
     }

@@ -83,6 +83,27 @@ class jury {
     }
 
     /**
+     * Jurys de plusieurs dossiers, lus en une requête, chacun dans son ordre.
+     *
+     * @param int[] $dossierids
+     * @return array dossierid => membres (liste vide au besoin), un tableau par dossier demandé.
+     */
+    public static function get_juries(array $dossierids) {
+        global $DB;
+
+        $juries = array_fill_keys(array_map('intval', $dossierids), []);
+        if (!$juries) {
+            return [];
+        }
+        [$insql, $params] = $DB->get_in_or_equal(array_keys($juries), SQL_PARAMS_NAMED);
+        $members = $DB->get_records_select('these_jury', "dossierid $insql", $params, 'dossierid ASC, sortorder ASC, id ASC');
+        foreach ($members as $member) {
+            $juries[(int) $member->dossierid][] = $member;
+        }
+        return $juries;
+    }
+
+    /**
      * Clé d'identité d'un membre du jury, pour reconnaître le même membre d'une saisie à l'autre.
      *
      * @param stdClass $member
