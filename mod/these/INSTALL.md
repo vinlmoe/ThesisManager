@@ -150,9 +150,10 @@ dessous). La direction générale peut signer par délégation. Au dépôt du sc
 d'un document signé à la main, la DEVE coche les signataires couverts, sans
 saisir leur nom : PDF et suivi des signatures sont mis à jour. Le lien d'accès du
 jury vaut jusqu'à 60 jours après la soutenance et cesse à la clôture ou à
-l'abandon du dossier ; un membre du jury qui a un compte Moodle à la même adresse
-consulte aussi les documents depuis *Suivi des thèses*, sans lien. Seule
-l'empreinte des jetons de ces liens est conservée en base.
+l'abandon du dossier ; un membre du jury dont le compte Moodle lui est rattaché
+(voir *Éligibilité* ci-dessous) consulte aussi les documents depuis *Suivi des
+thèses*, sans lien. Seule l'empreinte des jetons de ces liens est conservée en
+base.
 
 **Valeur des signatures.** Le tracé apposé dans le module est une signature
 électronique *simple* au sens du règlement eIDAS : elle identifie le signataire
@@ -196,6 +197,19 @@ signés.
   vers les documents du dossier (manuscrit, rapport, grille, conclusions, fiche
   signalétique), sans compte Moodle. La DEVE peut renvoyer cet accès depuis le
   dossier.
+- **Compte rattaché** : un membre du jury est reconnu par **son compte Moodle**,
+  jamais par la seule égalité de son adresse avec celle d'un compte. Ce compte
+  lui est rattaché quand il est choisi dans l'annuaire et quand la DEVE valide
+  son éligibilité : celui de sa fiche de l'annuaire, sinon l'unique compte
+  confirmé, non suspendu et non supprimé portant son adresse (aucun si
+  l'adresse est inconnue ou partagée par plusieurs comptes). Il est conservé
+  d'une saisie à l'autre et recalculé si l'adresse change. La vue du dossier
+  de la DEVE indique, pour chaque membre, le compte rattaché ou l'accès par
+  lien seul. Le compte rattaché donne la connaissance du sujet d'une thèse
+  confidentielle, *Mes jurys* et l'accès aux documents depuis *Suivi des
+  thèses* tant qu'il n'est ni suspendu ni supprimé. Un membre sans compte
+  rattaché accède aux documents par son lien à jeton. À la mise à jour vers la
+  version 2026103100, les membres existants sont rattachés selon la même règle.
 - **Suivi multi-promotions** : voir le module `mod_thesesynthesis`.
 
 ## 3 bis (compléments). Thèse confidentielle, embargo
@@ -204,8 +218,8 @@ signés.
   anglais, résumé, mots-clés) n'est connu que de l'étudiant, de la DEVE (rôle ou
   `mod/these:managedeve`), de la bibliothèque (rôle ou
   `mod/these:managelibrary`, et sa boîte de service), du directeur de thèse et
-  des membres du jury (reconnus à leur adresse ou à celle de leur fiche de
-  l'annuaire). Pour tous les autres, dont les détenteurs de `mod/these:viewall`
+  des membres du jury (reconnus au compte qui leur est rattaché, voir
+  *Compte rattaché*). Pour tous les autres, dont les détenteurs de `mod/these:viewall`
   sans rôle de service, il est remplacé par « Thèse confidentielle » dans le
   dossier (titre, titre anglais, résumé et mots-clés), les listes, le planning,
   la recherche (y compris dans *Suivi des thèses*, où la thèse se trouve par
@@ -345,9 +359,10 @@ le suivant :
   scanné, documents signés, jury et historique compris ;
 - **membre du personnel** (directeur, DEVE, bibliothèque, agent signataire) :
   les dossiers des autres restent, mais ses références y sont dissociées (nom,
-  image et adresse de ses signatures effacés, comptes de validation remis à
-  zéro, commentaires supprimés) et tout document scellé qui portait sa
-  signature est **descellé**, puis reconstitué sans elle.
+  image et adresse de ses signatures effacés, comptes de validation et compte
+  rattaché à un membre du jury remis à zéro, commentaires supprimés) et tout
+  document scellé qui portait sa signature est **descellé**, puis reconstitué
+  sans elle.
 
 Un procès-verbal de soutenance a une valeur d'archive publique que
 l'établissement peut être tenu de conserver au-delà du compte de l'étudiant ou
@@ -371,7 +386,9 @@ du DEFV** (`these_a6`, liées à l'étudiant). Elles suivent la sauvegarde de la
 base du site. À la restauration d'un cours sur le même site, un membre du jury
 reste rattaché à sa fiche de l'annuaire si elle existe encore ; sur un autre
 site, la fiche est retrouvée par son adresse de courriel, à défaut le membre
-devient un membre saisi. De même, une réponse à une question définie dans une
+devient un membre saisi. Le compte rattaché à un membre suit les comptes
+restaurés ; s'il n'est pas restauré, le membre n'a plus de compte rattaché
+(accès par lien). De même, une réponse à une question définie dans une
 activité *Suivi des thèses* n'est conservée que sur le même site. Un dossier
 dont l'étudiant n'a pas été restauré, ou qui ferait doublon, est ignoré et
 signalé dans le journal de la restauration.

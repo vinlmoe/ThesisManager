@@ -942,7 +942,10 @@ le dépôt de sujet. Le numéro d'enregistrement n'est pas encore attribué.}
         \bouton{Éligibilité de \ldots{} vérifiée (DEVE)} ; elle est déjà validée
         pour les enseignants de l'annuaire dont le statut convient. Pour changer
         un membre, cochez \bouton{Modifier la composition du jury} : la saisie
-        complète s'ouvre.
+        complète s'ouvre. La validation rattache à chaque membre son compte
+        Moodle (celui de sa fiche de l'annuaire, sinon l'unique compte actif à
+        son adresse) ; le tableau du jury du dossier indique ce compte, ou
+        l'accès par lien seul.
   \item Complétez l'agrément administratif (mobilité). L'obtention du DEFV et
         la validation de l'A6 y sont rappelées : elles se saisissent sur la page
         \og Validation des études\fg{} (section~\ref{sec:a6}), que
@@ -1364,9 +1367,9 @@ DEVE génère les documents de soutenance.}
 \begin{procedure}{Consulter les documents du dossier}{Membre du jury}
 \begin{etapes}
   \item Après la validation du jury par la DEVE, ouvrez le lien personnel reçu
-        par courriel (aucun compte n'est nécessaire), ou, si vous avez un
-        compte, la rubrique \bouton{Mes jurys} de l'activité \og Suivi des
-        thèses\fg{}. Le lien vaut jusqu'à 60~jours après la soutenance ; un
+        par courriel (aucun compte n'est nécessaire), ou, si votre compte vous
+        a été rattaché par la DEVE à la validation du jury, la rubrique
+        \bouton{Mes jurys} de l'activité \og Suivi des thèses\fg{}. Le lien vaut jusqu'à 60~jours après la soutenance ; un
         nouvel envoi par la DEVE le remplace, et il cesse à la clôture du
         dossier.
   \item Consultez le manuscrit, le rapport du directeur, la grille, les
@@ -1629,9 +1632,13 @@ une fois. Le lien est personnel, vaut 60~jours et cesse de fonctionner une fois
 utilisé ; un nouvel envoi par la DEVE remplace le précédent. Seule une empreinte
 du lien est conservée en base. Le lien d'accès du jury aux documents vaut
 jusqu'à 60~jours après la soutenance et cesse à la clôture ou à l'abandon du
-dossier ; un membre du jury qui a un compte Moodle à la même adresse consulte
+dossier ; un membre du jury dont le compte Moodle lui est rattaché consulte
 aussi les documents depuis \bouton{Mes jurys} de l'activité \og Suivi des
-thèses\fg{}.
+thèses\fg{}. Ce compte est rattaché quand le membre est choisi dans l'annuaire
+et quand la DEVE valide son éligibilité (compte de sa fiche, sinon l'unique
+compte actif à son adresse) ; la seule égalité d'adresse ne suffit pas, et un
+compte suspendu ou supprimé perd cet accès. Sans compte rattaché, le membre
+utilise son lien.
 
 La page \bouton{Suivi des signatures} du dossier (DEVE) montre l'état de chaque
 emplacement, permet de \bouton{Envoyer le lien} ou de \bouton{signer sur place}
