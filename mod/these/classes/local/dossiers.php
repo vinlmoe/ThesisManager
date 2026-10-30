@@ -19,6 +19,12 @@ namespace mod_these\local;
 use coding_exception;
 use context;
 use context_module;
+use mod_these\event\defense_scheduled;
+use mod_these\event\dossier_created;
+use mod_these\event\dossier_event;
+use mod_these\event\dossier_status_changed;
+use mod_these\event\minutes_recorded;
+use mod_these\event\subject_submitted;
 use moodle_exception;
 use résultat;
 use stdClass;
@@ -74,7 +80,11 @@ class dossiers {
         $dossier->id = $DB->insert_record('these_dossier', $dossier);
         self::log($dossier->id, $actorid, 'created', THESE_STATUS_DRAFT, THESE_STATUS_DRAFT);
 
-        return $DB->get_record('these_dossier', ['id' => $dossier->id], '*', MUST_EXIST);
+        $dossier = $DB->get_record('these_dossier', ['id' => $dossier->id], '*', MUST_EXIST);
+        if ($context = dossier_event::context_for($dossier)) {
+            dossier_created::create_from_dossier($dossier, $context, $actorid)->trigger();
+        }
+        return $dossier;
     }
 
     /**
@@ -141,6 +151,11 @@ class dossiers {
         }
         // Soutenance au calendrier : date arrêtée, déplacée, ajournée ou dossier abandonné.
         calendar::sync($dossier);
+        if ((int) $tostatus !== $fromstatus && ($context = dossier_event::context_for($dossier))) {
+            dossier_status_changed::create_from_dossier($dossier, $context, $userid, [
+                'from' => $fromstatus, 'to' => (int) $tostatus, 'action' => $action,
+            ])->trigger();
+        }
         return $dossier;
     }
 
@@ -457,6 +472,7 @@ class dossiers {
             if ($signature !== null) {
                 signatures::sign_document($context, $dossier, 'subject', 'student', $userid, $signature->name, $signature->png);
             }
+            subject_submitted::create_from_dossier($dossier, $context, $userid, ['resubmitted' => $resubmitted])->trigger();
             notifications::notify_actor($these, $cm, $dossier);
             return $dossier;
         });
@@ -618,6 +634,12 @@ class dossiers {
                 $remark,
                 array_merge($fields, self::cleared_return_fields())
             );
+            if ($step['key'] === 'devedefense') {
+                // La DEVE arrête la date de soutenance en validant le dossier.
+                defense_scheduled::create_from_dossier($dossier, $context, $userid, [
+                    'defensedate' => (int) $dossier->defensedate,
+                ])->trigger();
+            }
             signatures::refresh_signatures($context, $dossier);
             $agentdoctypes = [];
             foreach ($step['sign'] as $slot => $doctypes) {
@@ -772,31 +794,35 @@ class dossiers {
         return self::dossier_operation($dossier, function () use ($these, $cm, $dossier, $userid, $decision, $remark) {
             $admitted = (int) $decision->result === THESE_RESULT_ADMITTED;
             $mention = (string) ($decision->mention ?? '');
-            if ((int) $decision->result === THESE_RESULT_ADJOURNED) {
-                return self::adjourn_dossier($these, $cm, $dossier, $userid, $remark);
-            }
             $corrections = $admitted && !empty($decision->correctionsrequested);
-            $fields = [
-                'defenseresult' => (int) $decision->result,
-                'mention' => $admitted && array_key_exists($mention, workflow::mention_options()) ? $mention : '',
-                'prizeproposal' => $admitted && !empty($decision->prizeproposal) ? 1 : 0,
-                'correctionsrequested' => $corrections ? 1 : 0,
-                'correctionsnote' => $corrections ? trim((string) ($decision->correctionsnote ?? '')) : '',
-            ];
-            if ($corrections) {
-                $dossier = self::set_status(
-                    $dossier,
-                    THESE_STATUS_CORRECTIONS,
-                    $userid,
-                    'minutescorrections',
-                    $remark,
-                    array_merge($fields, self::cleared_return_fields())
-                );
-                notifications::notify_actor($these, $cm, $dossier);
-                return $dossier;
+            if ((int) $decision->result === THESE_RESULT_ADJOURNED) {
+                $dossier = self::adjourn_dossier($these, $cm, $dossier, $userid, $remark);
+            } else {
+                $fields = [
+                    'defenseresult' => (int) $decision->result,
+                    'mention' => $admitted && array_key_exists($mention, workflow::mention_options()) ? $mention : '',
+                    'prizeproposal' => $admitted && !empty($decision->prizeproposal) ? 1 : 0,
+                    'correctionsrequested' => $corrections ? 1 : 0,
+                    'correctionsnote' => $corrections ? trim((string) ($decision->correctionsnote ?? '')) : '',
+                ];
+                if ($corrections) {
+                    $dossier = self::set_status(
+                        $dossier,
+                        THESE_STATUS_CORRECTIONS,
+                        $userid,
+                        'minutescorrections',
+                        $remark,
+                        array_merge($fields, self::cleared_return_fields())
+                    );
+                    notifications::notify_actor($these, $cm, $dossier);
+                } else {
+                    $dossier = self::set_status($dossier, THESE_STATUS_CLOSED, $userid, 'closed', $remark, $fields);
+                    notifications::notify_closed($these, $cm, $dossier);
+                }
             }
-            $dossier = self::set_status($dossier, THESE_STATUS_CLOSED, $userid, 'closed', $remark, $fields);
-            notifications::notify_closed($these, $cm, $dossier);
+            minutes_recorded::create_from_dossier($dossier, context_module::instance($cm->id), $userid, [
+                'result' => (int) $decision->result, 'corrections' => $corrections,
+            ])->trigger();
             return $dossier;
         });
     }

@@ -16,6 +16,7 @@
 
 namespace mod_these\local;
 
+use mod_these\event\document_signed;
 use mod_these\output;
 use coding_exception;
 use context;
@@ -720,6 +721,9 @@ class signatures {
             $remark
         );
         self::seal_document($context, $dossier, $doctype);
+        document_signed::create_from_dossier($dossier, $context, $record->verifiedby ?: $userid, [
+            'doctype' => $doctype, 'slot' => $slot, 'method' => $method, 'signatureid' => (int) $record->id,
+        ])->trigger();
         return $DB->get_record('these_signature', ['id' => $record->id]);
     }
 

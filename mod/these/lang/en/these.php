@@ -1493,6 +1493,14 @@ $string['privacy:metadata:servicemailboxes:title'] = 'Thesis title (replaced whe
 $string['privacy:metadata:servicemailboxes:status'] = 'Workflow step reached and comments entered with it.';
 $string['privacy:metadata:core_message'] = 'Workflow notifications sent to users who have an account (file waiting, returned, registered or closed, signatures, defence notices, weekly digest).';
 
+// Events.
+$string['eventdossiercreated'] = 'Thesis file created';
+$string['eventsubjectsubmitted'] = 'Thesis subject submitted';
+$string['eventdossierstatuschanged'] = 'Thesis file status changed';
+$string['eventdocumentsigned'] = 'Thesis document signed';
+$string['eventdefensescheduled'] = 'Thesis defence scheduled';
+$string['eventminutesrecorded'] = 'Defence minutes recorded';
+
 // Message providers (user notification preferences).
 $string['messageprovider:dossierawaiting'] = 'Thesis file waiting for you, and reminders';
 $string['messageprovider:statuschanged'] = 'Thesis file returned, registered, closed or adjourned, subject or date changed';

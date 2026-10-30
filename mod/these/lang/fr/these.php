@@ -1508,6 +1508,14 @@ $string['privacy:metadata:servicemailboxes:title'] = 'Titre de la thèse (rempla
 $string['privacy:metadata:servicemailboxes:status'] = 'Étape du circuit atteinte et commentaires saisis avec elle.';
 $string['privacy:metadata:core_message'] = 'Notifications du circuit adressées aux utilisateurs qui ont un compte (dossier en attente, renvoyé, enregistré ou clôturé, signatures, convocations, récapitulatif hebdomadaire).';
 
+// Événements.
+$string['eventdossiercreated'] = 'Dossier de thèse créé';
+$string['eventsubjectsubmitted'] = 'Sujet de thèse soumis';
+$string['eventdossierstatuschanged'] = 'Statut du dossier de thèse modifié';
+$string['eventdocumentsigned'] = 'Document de thèse signé';
+$string['eventdefensescheduled'] = 'Soutenance de thèse programmée';
+$string['eventminutesrecorded'] = 'Procès-verbal de soutenance enregistré';
+
 // Fournisseurs de messages (préférences de notification de l'utilisateur).
 $string['messageprovider:dossierawaiting'] = 'Dossier de thèse en attente de votre action, et relances';
 $string['messageprovider:statuschanged'] = 'Dossier de thèse renvoyé, enregistré, clôturé ou ajourné, sujet ou date modifiés';
