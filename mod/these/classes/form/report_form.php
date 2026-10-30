@@ -22,12 +22,10 @@ require_once($CFG->libdir . '/formslib.php');
 require_once($CFG->dirroot . '/mod/these/locallib.php');
 
 /**
- * Rapport du directeur sur le manuscrit, rédigé directement dans le module : texte imprimé dans le
- * rapport PDF (une page, signature comprise), avis favorable, pièces jointes facultatives.
- * Le rapport peut être enregistré en plusieurs fois et prévisualisé ; il est signé à la validation
- * de la soutenance.
+ * Rapport du directeur sur le manuscrit : fichier déposé (rédigé à partir du modèle des paramètres du
+ * circuit, s'il y en a un) et avis favorable. Le rapport est obligatoire pour valider la soutenance.
  *
- * customdata : these.
+ * customdata : templateurl (lien de téléchargement du modèle, ou null).
  *
  * @package   mod_these
  * @copyright 2026 Sébastien Lefebvre
@@ -45,10 +43,13 @@ class report_form extends \moodleform {
         $mform->addElement('hidden', 'dossierid');
         $mform->setType('dossierid', PARAM_INT);
 
-        $mform->addElement('textarea', 'reporttext', get_string('reporttext', 'mod_these'), ['rows' => 22, 'cols' => 90]);
-        $mform->setType('reporttext', PARAM_TEXT);
-        $mform->addHelpButton('reporttext', 'reporttext', 'mod_these');
-        $mform->addElement('advcheckbox', 'reportfavorable', '', get_string('reportfavorable', 'mod_these'));
+        if (!empty($this->_customdata['templateurl'])) {
+            $mform->addElement('static', 'reporttemplate', get_string('reporttemplate', 'mod_these'), \html_writer::link(
+                $this->_customdata['templateurl'],
+                get_string('reporttemplatedownload', 'mod_these'),
+                ['class' => 'btn btn-secondary']
+            ));
+        }
         $mform->addElement(
             'filemanager',
             'directorreport',
@@ -57,18 +58,13 @@ class report_form extends \moodleform {
             these_filemanager_options('directorreport')
         );
         $mform->addHelpButton('directorreport', 'directorreport', 'mod_these');
+        $mform->addElement('advcheckbox', 'reportfavorable', '', get_string('reportfavorable', 'mod_these'));
 
-        $buttons = [
-            $mform->createElement('submit', 'submitbutton', get_string('reportsave', 'mod_these')),
-            $mform->createElement('submit', 'previewbutton', get_string('doctplpreview', 'mod_these')),
-            $mform->createElement('cancel'),
-        ];
-        $mform->addGroup($buttons, 'buttonar', '', [' '], false);
-        $mform->closeHeaderBefore('buttonar');
+        $this->add_action_buttons(true, get_string('reportsave', 'mod_these'));
     }
 
     /**
-     * Le rapport doit tenir sur une page avec la signature.
+     * Le rapport déposé.
      *
      * @param array $data
      * @param array $files
@@ -76,12 +72,8 @@ class report_form extends \moodleform {
      */
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
-        $text = (string) ($data['reporttext'] ?? '');
-        if (trim($text) !== '') {
-            $error = these_report_error($this->_customdata['these'], $text, !empty($data['reportfavorable']));
-            if ($error !== null) {
-                $errors['reporttext'] = $error;
-            }
+        if (these_count_draft_files($data['directorreport'] ?? 0) < 1) {
+            $errors['directorreport'] = get_string('directorreportrequired', 'mod_these');
         }
         return $errors;
     }

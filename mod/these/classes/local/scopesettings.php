@@ -35,6 +35,9 @@ class scopesettings {
     /** @var string[] Paramètres contenant une adresse de courriel. */
     const EMAILS = ['ccememail', 'ucblemail'];
 
+    /** @var array Options du dépôt du modèle de rapport du directeur (document Word). */
+    const REPORT_TEMPLATE_OPTIONS = ['subdirs' => 0, 'maxfiles' => 1, 'accepted_types' => ['.docx']];
+
     /**
      * Cache des paramètres lus pendant la requête, par portée et par contexte (vidé entre deux tests).
      *
@@ -80,9 +83,23 @@ class scopesettings {
             'ccemagent' => '',
             'ucblagent' => '',
             'defenseduration' => 60,
+            'mindelayweeks' => 4,
             'defenserooms' => '',
             'weeklydigest' => 1,
         ] + self::text_defaults();
+    }
+
+    /**
+     * Date de soutenance la plus proche que l'étudiant peut proposer : le délai minimal des paramètres
+     * du circuit (en semaines) après le dépôt.
+     *
+     * @param \context $context Contexte de l'activité.
+     * @param int|null $now Instant du dépôt, maintenant par défaut.
+     * @return int
+     */
+    public static function earliest_defense(\context $context, $now = null) {
+        $weeks = max(0, (int) self::for_context($context)['mindelayweeks']);
+        return (int) ($now ?? time()) + $weeks * WEEKSECS;
     }
 
     /**
@@ -378,6 +395,9 @@ class scopesettings {
             if ($name === 'defenseduration' && (int) $value < 1) {
                 $value = (string) $defaults[$name];
             }
+            if ($name === 'mindelayweeks' && (int) $value < 0) {
+                $value = '0';
+            }
             $conditions = self::conditions($scope) + ['name' => $name];
             if ($id = $DB->get_field('these_setting', 'id', $conditions)) {
                 $DB->set_field('these_setting', 'value', $value, ['id' => $id]);
@@ -462,6 +482,21 @@ class scopesettings {
             'url' => $page('doctemplates.php'),
         ];
         return $list;
+    }
+
+    /**
+     * Modèle du rapport du directeur (document Word) déposé dans la portée : le directeur le
+     * télécharge, le remplit et dépose son rapport (voir report.php).
+     *
+     * @param stdClass $scope
+     * @return \stored_file|null
+     */
+    public static function report_template(stdClass $scope) {
+        if (empty($scope->contextid)) {
+            return null;
+        }
+        $files = get_file_storage()->get_area_files($scope->contextid, $scope->component, 'reporttemplate', 0, 'id', false);
+        return reset($files) ?: null;
     }
 
     /**

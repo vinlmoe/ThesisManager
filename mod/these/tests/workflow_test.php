@@ -270,7 +270,8 @@ final class workflow_test extends these_testcase {
     }
 
     /**
-     * Rapport du directeur : enregistré sans changer le statut, limité à une page.
+     * Rapport du directeur : avis enregistré sans changer le statut (le rapport est un fichier
+     * déposé) ; modèle de rapport proposé quand il est déposé dans les paramètres.
      */
     public function test_director_report(): void {
         $this->setup_activity();
@@ -278,16 +279,18 @@ final class workflow_test extends these_testcase {
             'status' => THESE_STATUS_DEFENSE_SUBMITTED, 'directorid' => $this->director->id,
         ]);
         $this->assertTrue(these_report_editable($dossier));
-        $dossier = these_save_report($dossier, $this->director->id, "  Travail rigoureux.  ", true);
+        $dossier = these_save_report($dossier, $this->director->id, true);
         $dossier = $this->reload($dossier->id);
         $this->assertEquals(THESE_STATUS_DEFENSE_SUBMITTED, $dossier->status);
-        $this->assertSame('Travail rigoureux.', $dossier->reporttext);
         $this->assertEquals(1, $dossier->reportfavorable);
-
-        $this->assertNull(these_report_error($this->these, str_repeat('Une phrase du rapport. ', 40)));
-        $this->assertNotNull(these_report_error($this->these, str_repeat('Une phrase du rapport. ', 150)));
-        $this->assertNotNull(these_report_error($this->these, str_repeat("Paragraphe.\n\n", 60)));
         $this->assertFalse(these_report_editable((object) ['status' => THESE_STATUS_DEFENSE_APPROVED]));
+        $this->assertArrayNotHasKey('report', these_document_definitions());
+
+        $scope = these_settings_scope($this->these);
+        $this->assertNull(\mod_these\local\scopesettings::report_template($scope));
+        get_file_storage()->create_file_from_string(['contextid' => $scope->contextid, 'component' => $scope->component,
+            'filearea' => 'reporttemplate', 'itemid' => 0, 'filepath' => '/', 'filename' => 'rapport.docx'], 'PK');
+        $this->assertSame('rapport.docx', \mod_these\local\scopesettings::report_template($scope)->get_filename());
     }
 
     /**
@@ -300,14 +303,14 @@ final class workflow_test extends these_testcase {
         $sink = $this->redirectEmails();
         $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
             'status' => THESE_STATUS_SCHEDULED, 'directorid' => $this->director->id, 'devenumber' => '2026-004',
-            'reporttext' => 'Rapport.', 'reportfavorable' => 1, 'documentstime' => time(), 'senttime' => time(),
+            'reportfavorable' => 1, 'documentstime' => time(), 'senttime' => time(),
         ]);
         these_save_jury($dossier->id, $this->generator->default_jury());
         $DB->set_field('these_jury', 'notifiedtime', time(), ['dossierid' => $dossier->id]);
         $DB->set_field('these_jury', 'accesstoken', 'jeton', ['dossierid' => $dossier->id]);
         $png = these_sample_signature_image();
         these_sign_document($this->context, $dossier, 'subject', 'student', $this->student->id, 'Étudiant', $png);
-        these_sign_document($this->context, $dossier, 'report', 'director', $this->director->id, 'Directeur', $png);
+        these_sign_document($this->context, $dossier, 'conclusions', 'director', $this->director->id, 'Directeur', $png);
         $fs = get_file_storage();
         $file = ['contextid' => $this->context->id, 'component' => 'mod_these', 'itemid' => $dossier->id, 'filepath' => '/'];
         $fs->create_file_from_string($file + ['filearea' => 'pv', 'filename' => 'pv.pdf'], '%PDF-1.4');
@@ -327,7 +330,6 @@ final class workflow_test extends these_testcase {
         $this->assertEquals(0, $dossier->reportfavorable);
         $this->assertEquals(0, $dossier->documentstime);
         $this->assertSame('2026-004', $dossier->devenumber);
-        $this->assertSame('Rapport.', $dossier->reporttext);
 
         // PV archivé, documents générés supprimés.
         $this->assertCount(0, these_get_files($this->context, 'pv', $dossier->id));
@@ -335,7 +337,7 @@ final class workflow_test extends these_testcase {
         $archived = these_get_files($this->context, 'pvadjourned', $dossier->id);
         $this->assertCount(1, $archived);
         $this->assertStringStartsWith('ajournement-', $archived[0]->get_filename());
-        // Signature du sujet conservée, celle du rapport supprimée ; jury à prévenir de nouveau.
+        // Signature du sujet conservée, celle des conclusions supprimée ; jury à prévenir de nouveau.
         $this->assertSame(['subject:student'], array_keys(these_get_signatures($dossier->id)));
         foreach (these_get_jury($dossier->id) as $member) {
             $this->assertEquals(0, $member->notifiedtime);
@@ -407,12 +409,15 @@ final class workflow_test extends these_testcase {
         $missing = function (array $data) use ($form) {
             return array_column($form->section_progress($data), 'missing', 'name');
         };
-        $empty = $missing(['proposeddate' => 0, 'defenselocation' => '', 'manuscript' => 0]);
+        $empty = $missing(['proposeddate' => 0, 'manuscript' => 0]);
         $this->assertArrayNotHasKey('signatureheader', $empty);
-        $this->assertSame(2, $empty['dateheader']);
+        // Date seule : la salle est attribuée par la DEVE.
+        $this->assertSame(1, $empty['dateheader']);
+        // Cursus saisi par la DEVE : rien à compléter par l'étudiant.
+        $this->assertSame(0, $empty['cursusheader']);
         $this->assertGreaterThan(0, $empty['gridheader']);
 
-        $data = ['proposeddate' => time() + WEEKSECS, 'defenselocation' => 'Salle du conseil', 'manuscript' => 0,
+        $data = ['proposeddate' => time() + WEEKSECS, 'manuscript' => 0,
             'conclusions' => 'Conclusions.'];
         foreach (these_get_grid_items(these_settings_scope($this->these)) as $items) {
             foreach (array_keys($items) as $key) {
@@ -424,5 +429,75 @@ final class workflow_test extends these_testcase {
         $this->assertSame(0, $progress['gridheader']);
         $this->assertSame(0, $progress['conclusionsheader']);
         $this->assertSame(1, $progress['documentsheader']);
+    }
+
+    /**
+     * Questionnaire préalable au jury rempli dans le dépôt de la soutenance : ses questions figurent
+     * dans le formulaire, reprennent les réponses enregistrées, et les obligatoires bloquent la
+     * soumission tant qu'elles sont sans réponse (pas un simple brouillon).
+     */
+    public function test_defense_questionnaire(): void {
+        global $PAGE;
+        $this->setup_activity();
+        $this->setUser($this->student);
+        $PAGE->set_url('/mod/these/defense.php', ['id' => $this->cm->id]);
+        $scope = these_settings_scope($this->these);
+        $required = these_save_question($scope, (object) ['qtype' => 'text', 'label' => 'Laboratoire', 'options' => '',
+            'required' => 1]);
+        $optional = these_save_question($scope, (object) ['qtype' => 'multi', 'label' => 'Méthodes',
+            'options' => "Enquête\nEssai", 'required' => 0]);
+        $questions = these_get_questions($scope);
+        $form = new \mod_these\form\defense_form(null, [
+            'minjury' => $this->these->minjury,
+            'these' => $this->these,
+            'context' => $this->context,
+            'submitlabel' => 'submitdefense',
+            'signername' => fullname($this->student),
+            'questions' => $questions,
+        ]);
+        $progress = array_column($form->section_progress(['manuscript' => 0]), 'missing', 'name');
+        $this->assertSame(1, $progress['questionnaireheader']);
+        $progress = array_column($form->section_progress(['manuscript' => 0, 'q' . $required => 'Virologie']), 'missing', 'name');
+        $this->assertSame(0, $progress['questionnaireheader']);
+
+        $dossier = $this->generator->create_dossier($this->these, $this->student->id, ['status' => THESE_STATUS_ACTIVE]);
+        these_save_answers($dossier, $questions, ['q' . $required => 'Virologie', 'q' . $optional . '_1' => 1]);
+        $data = \mod_these\form\questionnaire_form::answers_data($questions, these_get_answers($dossier->id));
+        $this->assertSame('Virologie', $data['q' . $required]);
+        $this->assertSame(0, $data['q' . $optional . '_0']);
+        $this->assertSame(1, $data['q' . $optional . '_1']);
+    }
+
+    /**
+     * Délai minimal entre le dépôt et la soutenance (paramètres du circuit, 4 semaines par défaut) :
+     * une date plus proche est refusée au dépôt et à la nouvelle date demandée par la DEVE.
+     */
+    public function test_minimum_defense_delay(): void {
+        global $PAGE;
+        $this->setup_activity();
+        $this->setUser($this->student);
+        $PAGE->set_url('/mod/these/defense.php', ['id' => $this->cm->id]);
+        $now = time();
+        $this->assertSame($now + 4 * WEEKSECS, \mod_these\local\scopesettings::earliest_defense($this->context, $now));
+        \mod_these\local\scopesettings::set(these_settings_scope($this->these), ['mindelayweeks' => 6]);
+        $earliest = \mod_these\local\scopesettings::earliest_defense($this->context);
+        $this->assertGreaterThanOrEqual($now + 6 * WEEKSECS, $earliest);
+        \mod_these\local\scopesettings::set(these_settings_scope($this->these), ['mindelayweeks' => -2]);
+        $this->assertSame(0, (int) \mod_these\local\scopesettings::for_context($this->context)['mindelayweeks']);
+        \mod_these\local\scopesettings::set(these_settings_scope($this->these), ['mindelayweeks' => 6]);
+
+        $customdata = ['minjury' => $this->these->minjury, 'these' => $this->these, 'context' => $this->context,
+            'submitlabel' => 'submitdefense', 'signername' => fullname($this->student), 'mindelayweeks' => 6,
+            'earliestdate' => $earliest];
+        $form = new \mod_these\form\defense_form(null, $customdata);
+        $errors = $form->validation(['submitdefense' => 1, 'manuscript' => 0, 'proposeddate' => $now + 2 * WEEKSECS], []);
+        $this->assertSame(\mod_these\form\defense_form::too_soon_error($customdata), $errors['proposeddate']);
+        $errors = $form->validation(['submitdefense' => 1, 'manuscript' => 0, 'proposeddate' => $earliest + DAYSECS], []);
+        $this->assertArrayNotHasKey('proposeddate', $errors);
+        $this->assertStringContainsString('6', \mod_these\form\defense_form::date_help($customdata));
+
+        $newdate = new \mod_these\form\newdate_form(null, ['refuseddate' => 0, 'mindelayweeks' => 6, 'earliestdate' => $earliest]);
+        $this->assertArrayHasKey('proposeddate', $newdate->validation(['proposeddate' => $now + WEEKSECS], []));
+        $this->assertArrayNotHasKey('proposeddate', $newdate->validation(['proposeddate' => $earliest + DAYSECS], []));
     }
 }

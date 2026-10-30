@@ -188,4 +188,46 @@ final class a6_test extends these_testcase {
         $this->assertEquals($other->id, $url->get_param('userid'));
         $this->assertStringStartsWith('/mod/these/edit.php', $url->get_param('returnurl'));
     }
+
+    /**
+     * Obtention du DEFV : saisie par la DEVE avec l'A6, sinon déclaration de l'étudiant ; gardée quand
+     * seule l'A6 est enregistrée, reprise dans les documents, et importable par fichier.
+     */
+    public function test_defv(): void {
+        $this->setup_activity();
+        $declared = make_timestamp(2023, 7, 3, 12);
+        $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
+            'status' => THESE_STATUS_ACTIVE,
+            'bordereau' => json_encode(['defvdate' => $declared, 'defvschool' => 'lyon']),
+        ]);
+        $this->assertSame($declared, a6::get($dossier)['defvdate']);
+        $this->assertSame('lyon', a6::get($dossier)['defvschool']);
+        $this->assertSame(0, a6::get_for_user($this->student->id)['defvdate']);
+
+        // A6 seule : le DEFV connu par le dossier est enregistré avec elle.
+        a6::set($dossier, make_timestamp(2025, 7, 1, 12), 'lyon', $this->deve->id);
+        $this->assertSame($declared, a6::get_for_user($this->student->id)['defvdate']);
+
+        $recorded = make_timestamp(2023, 7, 10, 12);
+        a6::set($dossier, make_timestamp(2025, 7, 1, 12), 'lyon', $this->deve->id, ['date' => $recorded, 'school' => 'alfort']);
+        $a6 = a6::get_for_user($this->student->id);
+        $this->assertSame($recorded, $a6['defvdate']);
+        $this->assertSame('alfort', $a6['defvschool']);
+        $this->assertStringContainsString('2023', a6::defv_label($dossier));
+        $documents = a6::for_documents($this->student->id, [], []);
+        $this->assertSame($recorded, $documents['defvdate']);
+
+        $rows = [['etudiant', 'date', 'defv', 'ecole defv'], [$this->student->username, '01/07/2025', '04/07/2023', 'Nantes']];
+        $report = a6::import($this->these, $rows, false, $this->deve->id);
+        $this->assertTrue($report[0]['ok']);
+        $this->assertSame(make_timestamp(2023, 7, 4, 12), a6::get_for_user($this->student->id)['defvdate']);
+        $this->assertSame('nantes', a6::get_for_user($this->student->id)['defvschool']);
+        $report = a6::import(
+            $this->these,
+            [['etudiant', 'date', 'defv'], [$this->student->username, '01/07/2025', 'demain']],
+            true,
+            $this->deve->id
+        );
+        $this->assertFalse($report[0]['ok']);
+    }
 }

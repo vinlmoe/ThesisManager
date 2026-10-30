@@ -53,7 +53,7 @@ $PAGE->set_context($context);
 $jury = these_get_jury($dossier->id);
 $mform = new \mod_these\form\dossier_edit_form($PAGE->url, [
     'directors' => these_director_options($context, $dossier->directorid),
-    'codirectors' => \mod_these\local\jurors::internal_options($context, (int) $dossier->codirectorjurorid),
+    'externaldirector' => !empty($dossier->externaldirector),
     'theseid' => $these->id,
     'minjury' => $these->minjury,
     'rooms' => these_defense_rooms($these),
@@ -68,7 +68,6 @@ $mform = new \mod_these\form\dossier_edit_form($PAGE->url, [
 $formdata = (object) array_merge((array) $dossier, these_jury_form_data($jury));
 $formdata->id = $cm->id;
 $formdata->dossierid = $dossier->id;
-$formdata->codirectortype = \mod_these\form\subject_form::codirector_type($dossier);
 // Jury présenté en lecture : la saisie ne s'ouvre que pour le modifier.
 $formdata->juryedit = empty($jury) ? 1 : 0;
 $mform->set_data($formdata);
@@ -81,7 +80,6 @@ if ($mform->is_cancelled()) {
     foreach ($textfields as $field) {
         $fields[$field] = trim((string) $data->$field);
     }
-    $fields += \mod_these\local\dossiers::codirector_fields($data);
     $fields['directorid'] = (int) $data->directorid;
     $fields['defensedate'] = (int) ($data->defensedate ?? 0);
 

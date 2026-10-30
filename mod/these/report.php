@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Rédaction du rapport du directeur sur le manuscrit (phase 2, étape 2), avant la validation de la
- * soutenance : le texte, enregistrable en plusieurs fois, est imprimé dans le rapport PDF que le
- * directeur signe en validant la soutenance.
+ * Dépôt du rapport du directeur sur le manuscrit (phase 2, étape 2), avant la validation de la
+ * soutenance : un fichier, rédigé à partir du modèle déposé dans les paramètres du circuit, et l'avis
+ * favorable du directeur.
  *
  * @package   mod_these
  * @copyright 2026 Sébastien Lefebvre
@@ -54,11 +54,14 @@ if (!these_report_editable($dossier)) {
 }
 
 $PAGE->set_url('/mod/these/report.php', $params);
-$PAGE->set_title(format_string($these->name) . ' - ' . get_string('writereport', 'mod_these'));
+$PAGE->set_title(format_string($these->name) . ' - ' . get_string('depositreport', 'mod_these'));
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($context);
 
-$mform = new report_form($PAGE->url, ['these' => $these]);
+$template = \mod_these\local\scopesettings::report_template(these_settings_scope($these));
+$mform = new report_form($PAGE->url, [
+    'templateurl' => $template ? new moodle_url('/mod/these/reporttemplate.php', $params) : null,
+]);
 $draftitemid = file_get_submitted_draft_itemid('directorreport');
 file_prepare_draft_area(
     $draftitemid,
@@ -69,7 +72,6 @@ file_prepare_draft_area(
     these_filemanager_options('directorreport')
 );
 $mform->set_data($params + [
-    'reporttext' => $dossier->reporttext,
     'reportfavorable' => $dossier->reportfavorable,
     'directorreport' => $draftitemid,
 ]);
@@ -77,21 +79,6 @@ $mform->set_data($params + [
 if ($mform->is_cancelled()) {
     redirect(backlinks::to_dossier($cm, $dossier)->url);
 } else if ($data = $mform->get_data()) {
-    if (!empty($data->previewbutton)) {
-        // Aperçu du rapport tel qu'il sera imprimé, sans l'enregistrer.
-        $preview = clone $dossier;
-        $preview->reporttext = trim((string) $data->reporttext);
-        $preview->reportfavorable = (int) !empty($data->reportfavorable);
-        send_file(
-            these_signed_document_pdf($these, $context, $preview, 'report'),
-            'rapport.pdf',
-            0,
-            0,
-            true,
-            false,
-            'application/pdf'
-        );
-    }
     file_save_draft_area_files(
         $data->directorreport,
         $context->id,
@@ -100,7 +87,7 @@ if ($mform->is_cancelled()) {
         $dossier->id,
         these_filemanager_options('directorreport')
     );
-    these_save_report($dossier, $USER->id, (string) $data->reporttext, !empty($data->reportfavorable));
+    these_save_report($dossier, $USER->id, !empty($data->reportfavorable));
     redirect(
         backlinks::after_action($cm, $dossierurl),
         get_string('reportsaved', 'mod_these'),
@@ -112,13 +99,13 @@ if ($mform->is_cancelled()) {
 $student = $DB->get_record('user', ['id' => $dossier->userid]);
 $renderer = $PAGE->get_renderer('mod_these');
 echo $OUTPUT->header();
-echo $OUTPUT->heading(get_string('writereport', 'mod_these'));
+echo $OUTPUT->heading(get_string('depositreport', 'mod_these'));
 echo backlinks::render(backlinks::to_dossier($cm, $dossier));
 echo $OUTPUT->box($renderer->render(new output\fragment([
     parts::text(get_string('dossierof', 'mod_these', $student ? fullname($student) : '-')),
     parts::br(),
     parts::html(format_string($dossier->title)),
 ])), 'generalbox my-3');
-echo $renderer->render(new output\message(get_string('writereport_desc', 'mod_these'), 'mb-3'));
+echo $renderer->render(new output\message(get_string('depositreport_desc', 'mod_these'), 'mb-3'));
 $mform->display();
 echo $OUTPUT->footer();

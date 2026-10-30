@@ -50,8 +50,9 @@ class dossier_edit_form extends \moodleform {
         $mform->setType('summary', PARAM_TEXT);
         $mform->addElement('text', 'keywords', get_string('subjectkeywords', 'mod_these'), ['size' => 80]);
         $mform->setType('keywords', PARAM_TEXT);
-        $mform->addElement('select', 'directorid', get_string('director', 'mod_these'), $this->_customdata['directors']);
-        subject_form::add_codirector_fields($mform, $this->_customdata['codirectors'] ?? []);
+        // Directeur extérieur : le directeur du dossier dans le module est l'examinateur interne.
+        $directorlabel = !empty($this->_customdata['externaldirector']) ? 'internalexaminer' : 'director';
+        $mform->addElement('select', 'directorid', get_string($directorlabel, 'mod_these'), $this->_customdata['directors']);
 
         $mform->addElement('header', 'registrationheader', get_string('registration', 'mod_these'));
         $mform->addElement('text', 'devenumber', get_string('devenumber', 'mod_these'), ['size' => 20]);
@@ -104,7 +105,7 @@ class dossier_edit_form extends \moodleform {
      * @return array
      */
     public function validation($data, $files) {
-        $errors = array_merge(parent::validation($data, $files), subject_form::codirector_errors($data));
+        $errors = parent::validation($data, $files);
         $number = trim((string) $data['devenumber']);
         if ($number !== '' && these_devenumber_taken($this->_customdata['theseid'], $number, $data['dossierid'])) {
             $errors['devenumber'] = get_string('devenumbertaken', 'mod_these');

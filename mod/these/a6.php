@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Validation de l'A6, page à part de la DEVE (voir \mod_these\local\a6) : les étudiants de
- * l'activité avec leur validation, la saisie d'un étudiant, l'enregistrement groupé pour les
- * étudiants cochés et le lien vers l'import d'un fichier.
+ * Validation des études (DEFV et A6), page à part de la DEVE (voir \mod_these\local\a6) : les
+ * étudiants de l'activité avec leur validation, la saisie d'un étudiant, l'enregistrement groupé de
+ * l'A6 pour les étudiants cochés et le lien vers l'import d'un fichier.
  *
  * @package   mod_these
  * @copyright 2026 Sébastien Lefebvre
@@ -46,7 +46,7 @@ these_require_service($context, 'deve');
 
 $listurl = a6::url($cm);
 $PAGE->set_url($userid ? a6::url($cm, $userid) : $listurl);
-$PAGE->set_title(format_string($these->name) . ' - ' . get_string('a6validation', 'mod_these'));
+$PAGE->set_title(format_string($these->name) . ' - ' . get_string('studiesvalidation', 'mod_these'));
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($context);
 $renderer = $PAGE->get_renderer('mod_these');
@@ -69,20 +69,23 @@ if ($userid) {
         'aga6notyet' => (int) ($student->a6['notyet'] || !$student->a6['date']),
         'aga6date' => $student->a6['date'],
         'aga6school' => $student->a6['school'],
+        'defvdate' => $student->a6['defvdate'],
+        'defvschool' => $student->a6['defvschool'],
     ]);
     if ($mform->is_cancelled()) {
         redirect($backurl);
     } else if ($data = $mform->get_data()) {
         $date = !empty($data->aga6notyet) ? 0 : (int) $data->aga6date;
-        a6::record($these, $userid, $date, (string) ($data->aga6school ?? ''), $USER->id);
+        $defv = ['date' => (int) ($data->defvdate ?? 0), 'school' => (string) ($data->defvschool ?? '')];
+        a6::record($these, $userid, $date, (string) ($data->aga6school ?? ''), $USER->id, $defv);
         redirect($backurl, get_string('a6saved', 'mod_these'), null, \core\output\notification::NOTIFY_SUCCESS);
     }
     echo $OUTPUT->header();
-    echo $OUTPUT->heading(get_string('a6validation', 'mod_these'));
+    echo $OUTPUT->heading(get_string('studiesvalidation', 'mod_these'));
     // Retour à la page d'où la saisie a été ouverte (dossier, validation...), à défaut à la liste.
     echo \mod_these\local\backlinks::render(\mod_these\local\backlinks::target(
         $backurl,
-        get_string($returnurl !== '' ? 'previouspage' : 'a6validation', 'mod_these')
+        get_string($returnurl !== '' ? 'previouspage' : 'studiesvalidation', 'mod_these')
     ));
     $mform->display();
     echo $OUTPUT->footer();
@@ -114,7 +117,7 @@ if ($userids && confirm_sesskey()) {
 }
 
 echo $OUTPUT->header();
-echo $OUTPUT->heading(get_string('a6validation', 'mod_these'));
+echo $OUTPUT->heading(get_string('studiesvalidation', 'mod_these'));
 echo these_render_navlinks($cm, $context);
 echo $renderer->render(output\message::help(get_string('a6page_desc', 'mod_these')));
 echo $renderer->render(new output\a6_list($cm, a6::students($these, $context, $state, $search), $state, $search));

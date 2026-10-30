@@ -168,17 +168,8 @@ $string['subjectkeywords'] = 'Keywords';
 $string['subjectkeywords_help'] = '3 to 5 keywords separated by semicolons, preferably from the HeTOP terminology.';
 $string['director'] = 'Thesis director';
 $string['director_help'] = 'Teacher directing the thesis. Only teachers enrolled in this course and allowed to direct theses are '
-    . 'listed: if yours is missing, contact the registrar.';
-$string['codirector'] = 'Co-director';
-$string['codirector_help'] = 'Optional. Possible co-director: a teacher of the institution, to choose from the list, or an external '
-    . 'person, whose name and position you enter. The co-director does not approve the file in the module.';
-$string['codirectornone'] = 'None';
-$string['codirectorinternal'] = 'Internal to the institution';
-$string['codirectorexternal'] = 'External to the institution';
-$string['codirectorjuror'] = 'Internal co-director';
-$string['codirectorname'] = 'External co-director: title, name and position';
+    . 'listed: if yours is missing, contact the registrar. An external director is declared with the box above.';
 $string['subjectdocs'] = 'Subject attachments';
-$string['subjectdocs_help'] = 'Optional: bibliography, protocol, partner agreement...';
 $string['savedraft'] = 'Save draft';
 $string['submitsubject'] = 'Submit to the thesis director';
 $string['resubmitsubject'] = 'Submit again';
@@ -200,15 +191,15 @@ $string['depositdefense'] = 'Submit the defence documents';
 $string['defenseprogress'] = 'Progress: {$a->complete} of {$a->total} sections complete. Sections still to complete are expanded below.';
 $string['defensesectioncomplete'] = 'Complete';
 $string['defensesectionmissing'] = '{$a} field(s) to complete';
-$string['defenseintro'] = 'Upload your manuscript and defence documents and propose a date, a location and the jury (at least '
-    . '{$a} voting members, chair included; your director sits without voting). You can prepare this submission in several steps ("Save draft"); submitting '
-    . 'sends it to your director, who will approve it and attach a report.';
+$string['defenseintro'] = 'Upload your manuscript and propose a date and the jury (at least {$a} voting members, chair '
+    . 'included; your director sits without voting). The room is assigned by the registrar, who also records your DEFV and A6. '
+    . 'You can prepare this submission in several steps ("Save draft"); submitting sends it to your director, who will approve it '
+    . 'and attach a report.';
 $string['defensedocuments'] = 'Defence documents';
 $string['manuscript'] = 'Manuscript (PDF)';
 $string['manuscript_help'] = 'Complete version of the manuscript, as a single PDF file.';
 $string['manuscriptrequired'] = 'The manuscript is required to submit.';
 $string['defensedocs'] = 'Other defence documents';
-$string['defensedocs_help'] = 'Optional: abstract, dissemination authorisation, appendices...';
 $string['defenseproposal'] = 'Defence proposal';
 $string['proposeddaterequired'] = 'Tick « Enable », then choose the proposed date and time.';
 $string['defenseroomshelp'] = 'Suggested rooms: {$a}. You may also enter another location.';
@@ -222,9 +213,9 @@ $string['defensesubmittedmsg'] = 'Defence file submitted.';
 $string['defensenoteditable'] = 'Defence documents can be submitted once the subject is registered, or when the defence file has '
     . 'been returned to you.';
 $string['directorreport'] = 'Director report';
-$string['directorreport_help'] = 'Report of the thesis director on the manuscript, required to approve the defence proposal. It is '
-    . 'shared with the registrar, the library and the jury, but not with the student.';
-$string['directorreportrequired'] = 'The director report is required to approve.';
+$string['directorreport_help'] = 'Report of the thesis director on the manuscript, uploaded as a file (PDF or Word document), '
+    . 'required to approve the defence proposal. It is shared with the registrar, the library and the jury, but not with the student.';
+$string['directorreportrequired'] = 'Upload the director report.';
 $string['generateddocuments'] = 'Generated documents';
 $string['defenseresult'] = 'Result';
 $string['resultadmitted'] = 'Admitted';
@@ -242,9 +233,10 @@ $string['roomconflicts'] = 'Room already booked for this slot (overlapping defen
 $string['roomconflict'] = '{$a->location}: defence of {$a->student} on {$a->date} ({$a->activity}).';
 $string['roomconflictshort'] = 'Room booked: {$a->student}, {$a->time}';
 $string['juryhelpdeve'] = "One row per member, preferably chosen from the jury directory.";
-$string['juryhelp'] = 'One row per member. Preferably choose the teacher from the jury directory: title, status, institution '
+$string['juryhelp'] = 'One row per member: the first is the chair, the second the thesis director (who sits without voting); '
+    . 'the following ones are jury members or guests. Preferably choose the teacher from the jury directory: title, status, institution '
     . 'and address are taken from it. For an external member or a guest, choose "External member or guest" and fill in the row '
-    . '(the status is required for a voting member; the thesis director sits without voting). Only HDR associate professors, professors and emeriti may chair. The registrar '
+    . '(the status is required for a voting member). Only HDR associate professors, professors and emeriti may chair. The registrar '
     . 'then validates the eligibility of each member; members are then notified by email and receive a link to the file documents.';
 $string['juryrole'] = 'Role';
 $string['juryrolepresident'] = 'Chair';
@@ -352,10 +344,11 @@ $string['reviewlibrarysubject'] = 'Record the subject (library)';
 $string['reviewlibrarysubject_help'] = 'Enter the reference of the record created in the library catalogue. This opens the file, '
     . 'which stays active until the defence documents are submitted.';
 $string['reviewdirectordefense'] = 'Approve the defence and upload the report';
-$string['reviewdirectordefense_help'] = 'Approve the defence proposal (date, jury) once your report on the manuscript is written '
-    . '("Write the report"): your signature is applied to the report on approval. You can also return the file to the student with your comments.';
+$string['reviewdirectordefense_help'] = 'Approve the defence proposal (date, jury) once your report on the manuscript is uploaded '
+    . '("Upload the report") and the compliance checklist is filled in. You can also return the file to the student with your comments.';
 $string['reviewdevedefense'] = 'Validate the defence file (registrar)';
-$string['reviewdevedefense_help'] = "Assign the number, set the date, location and jury: the manuscript then goes to the library.";
+$string['reviewdevedefense_help'] = 'Assign the number, set the date, room and jury: the manuscript then goes to the library. '
+    . 'If the proposed time is not available, ask the student for another date ("Request another date") without returning the file.';
 $string['reviewlibraryconformity'] = 'Check manuscript compliance';
 $string['reviewlibraryconformity_help'] = 'Check the manuscript format, presentation standards and legal deposit requirements. '
     . 'Validation issues the compliance certificate; a non-compliant manuscript is returned to the student with the reason.';
@@ -409,7 +402,7 @@ $string['dossierclosed'] = 'Minutes uploaded: file closed.';
 
 // Registrar management.
 $string['editdossier'] = 'Edit the file';
-$string['editdossierhelp'] = "No effect on the status. If the date, location or jury change, regenerate the defence documents.";
+$string['editdossierhelp'] = "No effect on the status. If the date, room or jury change, regenerate the defence documents.";
 $string['dossiersaved'] = 'File saved.';
 $string['canceldossier'] = 'Abandon the file';
 $string['cancelhelp'] = 'The file is kept as is and can be reopened later at the status it had reached.';
@@ -452,7 +445,6 @@ $string['importmissingcolumn'] = 'Missing required column: {$a}';
 $string['importbadstatus'] = 'Status cannot be imported: {$a} (active, corrections or closed).';
 $string['importbaddefensedate'] = 'Missing or unreadable defence date: {$a}';
 $string['importbadmention'] = 'Unknown mention: {$a}';
-$string['importcodirectorinternal'] = 'internal co-director: {$a}';
 
 // Export.
 $string['export'] = 'Register export';
@@ -679,10 +671,10 @@ $string['agentuniversity'] = 'Delegates — {$a}';
 $string['settingsagentsnone'] = 'No agent selected';
 $string['settingschecklibraryagents'] = 'Library agents';
 $string['scopesettings'] = 'Workflow settings';
-$string['scopesettings_desc'] = 'Registrar signing agents, library agents, institution, university, document signatories and standard '
-    . 'distribution contract of this activity. None of them is a site setting.';
-$string['scopesettingsshared_desc'] = 'Registrar signing agents, library agents, institution, university, document signatories and '
-    . 'standard distribution contract shared by all the followed thesis activities. None of them is a site setting.';
+$string['scopesettings_desc'] = 'Registrar signing agents, library agents, institution, university, document signatories, standard '
+    . 'distribution contract and director report template of this activity. None of them is a site setting.';
+$string['scopesettingsshared_desc'] = 'Registrar signing agents, library agents, institution, university, document signatories, '
+    . 'standard distribution contract and director report template shared by all the followed thesis activities. None of them is a site setting.';
 
 // Documents (workflow settings).
 $string['settingsdefenses'] = 'Defences';
@@ -690,7 +682,7 @@ $string['settingsdefenseduration'] = 'Duration of a defence (minutes)';
 $string['settingsdefenseduration_help'] = 'Used to detect jury conflicts: a member sitting on two overlapping defences is flagged in '
     . 'the schedule and on the file. 60 minutes by default.';
 $string['settingsdefenserooms'] = 'Defence rooms';
-$string['settingsdefenserooms_help'] = 'One room per line. They are suggested when entering the location (student deposit, DEVE validation and editing); the first one is the default. Another location remains possible.';
+$string['settingsdefenserooms_help'] = 'One room per line. They are offered to the registrar when assigning the room (validation and editing of the file); another location remains possible.';
 $string['settingsdefensedurationinvalid'] = 'Enter a duration of at least one minute.';
 $string['settingsdocuments'] = 'Documents and signatories';
 $string['doctplimages'] = 'Template images';
@@ -749,8 +741,8 @@ $string['keywordscount'] = 'Enter 3 to 5 keywords, separated by semicolons.';
 $string['subjectapproval'] = 'Subject approval';
 $string['externaldirector'] = 'The thesis director is external to the institution';
 $string['externaldirector_help'] = 'The external director, without a Moodle account, signs the form from a link received by email. '
-    . 'Then choose below, as director in the module, the member of the institution who follows the thesis: this member validates '
-    . 'the steps and signs as member.';
+    . 'Then choose an internal examiner, a teacher of the institution: this examiner handles the procedure in the module '
+    . '(step validations, report, signatures as member).';
 $string['directortitle'] = 'Director title';
 $string['directortitle_help'] = 'Dr, Pr… as it must appear on the documents. Asked only if the director is not in the teacher '
     . 'directory, which otherwise gives the title.';
@@ -808,7 +800,6 @@ $string['signdocuments'] = 'Sign the documents';
 // Documents and signature slots.
 $string['docsubject'] = 'Thesis subject form';
 $string['docbordereau'] = 'Thesis record form (ABES)';
-$string['docreport'] = 'Director report';
 $string['docgrid'] = 'Thesis compliance grid';
 $string['docagreement'] = 'Administrative and scientific approval form';
 $string['docsignaletique'] = 'Student information form';
@@ -858,7 +849,7 @@ $string['a6validation'] = 'A6 validation';
 $string['a6notvalidated'] = 'not validated';
 $string['a6bydeve'] = 'Entered by the registrar.';
 $string['a6bydevestatus'] = '{$a} (entered by the registrar)';
-$string['loga6recorded'] = 'A6 validation recorded';
+$string['loga6recorded'] = 'Studies validation recorded';
 $string['loguniversitysealed'] = 'Document sealed for the university';
 $string['loguniversitydownloaded'] = 'Documents for the university downloaded';
 $string['prerequisitesmissing'] = 'Step blocked: documents of the previous steps are still waiting for these signatures.';
@@ -866,7 +857,7 @@ $string['prerequisitesuniversity'] = 'Step blocked: the documents sent to the un
 $string['validatedbyname'] = 'validated by {$a}';
 $string['refusetitle'] = 'Refuse to sign';
 $string['refusesign'] = 'Refuse to sign…';
-$string['refuse_help'] = 'Refused documents are not signed: the file goes back, with your reason, to the step where they were created (the student for the subject form, the thesis record, the distribution contract and the conclusions; the registrar validation for the approval form). Several refused documents: the earliest of these steps. The registrar team and the account that validated are notified; the signatures will be requested from you again at the next validation.';
+$string['refuse_help'] = 'Refused documents are not signed: the file goes back, with your reason, to the step where they were created (the student for the subject form, the thesis record, the distribution contract and the conclusions; the registrar validation for the approval form). Several refused documents: the earliest of these steps. The registrar team and the account that validated are notified. The signatures of the steps done again are revoked and requested again along the workflow: returned to the student, the file goes through its whole phase again.';
 $string['refusedocuments'] = 'Refused documents';
 $string['refusereason'] = 'Reason for refusal';
 $string['refusesubmit'] = 'Refuse and return the file';
@@ -899,7 +890,7 @@ $string['universitydownloadagain'] = 'Download the documents for the university 
 $string['universityreturn'] = 'Documents sent to the university: when they come back, upload the signed scans, ticking the university signatories they cover.';
 $string['universityaddscan'] = 'Upload the scans back from the university';
 $string['universitynothing'] = 'No document waits only for the university.';
-$string['a6page_desc'] = 'The A6 validation belongs to the student, not to the file: it can be recorded before the file is created and applies to all of the student\'s files. The administrative approval and the thesis record reuse it. Edit a student, tick several to record the same validation for all of them, or import a file.';
+$string['a6page_desc'] = 'The studies validation (DEFV and A6) is recorded by the registrar and belongs to the student, not to the file: it can be recorded before the file is created and applies to all of the student\'s files. The administrative approval and the thesis record reuse it; the student does not fill it in. Edit a student, tick several to record the same A6 validation for all of them, or import a file.';
 $string['a6edit'] = 'Record A6';
 $string['a6nodossier'] = 'No file';
 $string['a6stateall'] = 'All students';
@@ -912,13 +903,13 @@ $string['a6bulknotyet'] = 'A6 not validated yet';
 $string['a6bulksubmit'] = 'Record the validation';
 $string['a6bulkdaterequired'] = 'Enter the A6 validation date, or tick "A6 not validated yet".';
 $string['a6bulkdone'] = 'A6 validation recorded for {$a} student(s).';
-$string['a6saved'] = 'A6 validation recorded.';
-$string['a6import'] = 'Import A6 validations';
+$string['a6saved'] = 'Studies validation recorded.';
+$string['a6import'] = 'Import studies validations';
 $string['a6dryrunresult'] = 'Dry run: {$a->ok} student(s) to record, {$a->errors} row(s) with errors.';
 $string['a6result'] = 'Import complete: {$a->ok} validation(s) recorded, {$a->errors} row(s) with errors.';
-$string['a6import_desc'] = "An Excel (.xlsx), OpenDocument (.ods) or CSV file, one row per student, with a header row: column \"etudiant\" (username, email address or student number), column \"date\" (A6 validation date, dd/mm/yyyy, or \"non\" if not validated) and, optionally, column \"ecole\" (Lyon, Alfort, Nantes, Toulouse, Rouen). The A6 validation belongs to the student, not to their thesis file: any student enrolled in the course may be listed, with or without a thesis file, and it applies to all their files. The dry run checks the file without saving anything.";
+$string['a6import_desc'] = "An Excel (.xlsx), OpenDocument (.ods) or CSV file, one row per student, with a header row: column \"etudiant\" (username, email address or student number), column \"date\" (A6 validation date, dd/mm/yyyy, or \"non\" if not validated) and, optionally, column \"ecole\" (Lyon, Alfort, Nantes, Toulouse, Rouen), column \"defv\" (DEFV date) and column \"ecole defv\". The studies validation belongs to the student, not to their thesis file: any student enrolled in the course may be listed, with or without a thesis file, and it applies to all their files. The dry run checks the file without saving anything.";
 $string['a6file'] = 'Validations file';
-$string['a6file_help'] = 'Excel (.xlsx), OpenDocument (.ods) or CSV (semicolon or comma separated). Recognised headers: etudiant, date, ecole.';
+$string['a6file_help'] = 'Excel (.xlsx), OpenDocument (.ods) or CSV (semicolon or comma separated). Recognised headers: etudiant, date, ecole, defv, ecole defv.';
 $string['a6importformat'] = 'Unrecognised file format: Excel (.xlsx), OpenDocument (.ods) or CSV.';
 $string['a6importunreadable'] = 'The file cannot be read.';
 $string['a6notenrolled'] = "The student is not enrolled in the course of this activity.";
@@ -948,16 +939,15 @@ $string['contracttemplatemissing'] = 'The standard distribution contract has not
 $string['contracttemplateunreadable'] = 'The standard distribution contract uploaded in the workflow settings could not be read (unsupported PDF format): the contract only contains the module\'s pages and will not be sealed. Upload the contract saved in an older PDF format (PDF 1.4).';
 $string['bconfidentialuntil'] = 'Confidential until';
 $string['bconfidentialuntil_help'] = 'Only for theses declared confidential with the subject.';
-$string['bembargo'] = 'I request a {$a}-year distribution embargo from the defence date';
-$string['embargo_help'] = 'During the embargo, the thesis is registered and listed, but its full text is neither distributed online nor available for consultation until the end, 5 years after the defence date. The request must be justified (patent, publication in progress, sensitive data, partnership...). It is stated in the distribution contract, which the thesis director endorses.';
+$string['bembargo'] = 'I request a distribution embargo from the defence date ({$a} months at most)';
+$string['embargo_help'] = 'During the embargo, the thesis is registered and listed, but its full text is neither distributed online nor available for consultation until the end, at most one year after the defence date. The request must be justified (patent, publication in progress, sensitive data, partnership...). It is stated in the distribution contract, which the thesis director endorses.';
 $string['bembargoreason'] = 'Reason for the embargo request';
 $string['bembargoreasonrequired'] = 'Give the reason for the embargo request.';
 $string['embargo'] = 'Distribution embargo';
-$string['embargorequested'] = 'Requested: {$a->years} years after the defence, until {$a->until}';
-$string['embargorequestednodate'] = 'Requested: {$a} years after the defence (defence date to be set)';
+$string['embargorequested'] = 'Requested: {$a->months} months after the defence, until {$a->until}';
+$string['embargorequestednodate'] = 'Requested: {$a} months after the defence (defence date to be set)';
 $string['embargoreason'] = 'Embargo reason';
 $string['embargoexport'] = 'Embargo until';
-$string['exportcodirectortype'] = 'Internal or external co-director';
 $string['exportmissingsignatures'] = 'Signatures missing to move to the next step';
 $string['exportuniversitytoseal'] = 'to seal and send';
 $string['exportlastrefusal'] = 'Last refusal by a registrar agent';
@@ -969,8 +959,6 @@ $string['diffusioninternet'] = 'I authorise the full-text distribution of the th
 $string['diffusionrestricted'] = 'I do not authorise internet distribution, only paper consultation and the intranet';
 
 // Director and registrar steps.
-$string['reporttext'] = 'Director report';
-$string['reporttext_help'] = 'One-page argument presenting the thesis work (work done, main results, student involvement…).';
 $string['reportfavorable'] = 'I give a favourable opinion for the defence and the award of the Doctor of Veterinary Medicine title';
 $string['reportfavorablerequired'] = 'A favourable opinion is required to approve the defence.';
 $string['ethicsnumber'] = 'Ethics committee approval number (if any)';
@@ -990,12 +978,10 @@ $string['griditemconditional'] = 'Depending on the thesis (optional)';
 $string['griditemadd'] = 'Add {no} item(s)';
 $string['griditemssaved'] = 'The conformity grid has been saved.';
 $string['griditemsreset'] = 'Restore the original grid';
-$string['gridstudenthelp'] = 'Tick each point your manuscript complies with. Your supervisor will check this list, complete '
-    . 'it if needed and sign it when validating your defence.';
+$string['gridstudenthelp'] = 'Tick each point your manuscript complies with. Your supervisor will fill in their own checklist '
+    . 'and sign it when validating your defence.';
 $string['gridstudentconfirm'] = 'I certify that my manuscript complies with the ticked points of the compliance checklist';
 $string['gridstudentconfirmrequired'] = 'Certify the compliance checklist before submitting the file.';
-$string['gridprefilledbystudent'] = 'Checklist prefilled and certified by the student when submitting: check each point before '
-    . 'signing.';
 $string['gridrequired'] = 'Item to validate.';
 $string['gridquestion'] = 'The scientific question is clearly stated and identified.';
 $string['gridanswer'] = 'The bibliographic or experimental answer is satisfactory.';
@@ -1094,10 +1080,8 @@ $string['scanslots'] = 'Signatories of the scan';
 $string['scansignaturesrecorded'] = '{$a} signature(s) recorded as signed by hand.';
 $string['scanslots_desc'] = 'Tick the signatures on the scanned document: they are recorded as signed by hand on the date above, '
     . 'and the document PDF and the signature tracking are updated.';
-$string['pdfreportfavorable'] = 'Favourable opinion for the thesis defence and the award of the Doctor of Veterinary Medicine title.';
 $string['privacy:metadata:these_dossier:bordereau'] = 'Personal data entered with the defence (civil status, address, personal email, curriculum, distribution choices).';
 $string['privacy:metadata:these_dossier:conclusions'] = 'Thesis conclusions.';
-$string['privacy:metadata:these_dossier:reporttext'] = 'Director report.';
 $string['privacy:metadata:these_signature'] = 'Electronic signatures applied to the file documents (drawn image kept in the files).';
 $string['privacy:metadata:these_signature:userid'] = 'Signatory.';
 $string['privacy:metadata:these_signature:signername'] = 'Signatory name.';
@@ -1147,7 +1131,6 @@ $string['doctplsubject'] = 'Thesis subject form (E01)';
 $string['doctplagreement'] = 'Administrative and scientific agreement form (E02)';
 $string['doctplsignaletique'] = 'Identification form (E03)';
 $string['doctplbordereau'] = 'Thesis form (ABES)';
-$string['doctplreport'] = "Director's report";
 $string['doctplgrid'] = 'Conformity grid';
 $string['doctplconclusions'] = 'Conclusions';
 $string['doctplcontractdata'] = "Distribution contract (E04): author's data and choices page";
@@ -1160,7 +1143,6 @@ $string['doctplplanning'] = 'Defence schedule';
 $string['doctplteachinglist'] = 'Teaching staff list';
 $string['teachinglist'] = 'Teaching staff list (PDF)';
 $string['teachinglist_help'] = 'Active teachers of the jury directory whose institution is the one in the workflow settings, grouped by status, up to date on the day of download: the page is to be included in the thesis manuscript.';
-$string['teachinglistdefense'] = 'Up-to-date teaching staff list to include in your manuscript:';
 $string['teachinggrouppr'] = 'Professors';
 $string['teachinggrouppremerite'] = 'Emeritus professors';
 $string['teachinggroupprstag'] = 'Probationary professors';
@@ -1243,25 +1225,13 @@ $string['questionnaire_desc'] = 'Answer these questions before submitting the de
     . 'shown to the jury; they are also used to find theses.';
 $string['questionnairesaved'] = 'Answers saved.';
 $string['questionnaireunanswered'] = 'No answer';
-$string['questionnairemissing'] = 'Required questions without an answer: {$a}.';
-$string['questionnairecomplete'] = 'Questionnaire completed.';
-$string['questionnairefill'] = 'Fill in the questionnaire';
-$string['questionnairerequired'] = 'Fill in the pre-jury questionnaire before submitting the defence.';
 $string['transfergroupquestions'] = 'Pre-jury questionnaire (questions)';
 $string['transferdonequestions'] = '{$a} question(s);';
 
 // Director report written in the module.
-$string['writereport'] = 'Write the report';
-$string['writereport_desc'] = 'Write your report on the manuscript: it is printed in the PDF report, which must fit on one page with '
-    . 'your signature. You can save it several times and preview it; you sign it when approving the defence.';
 $string['reportsave'] = 'Save the report';
 $string['reportsaved'] = 'Report saved.';
 $string['reportnoteditable'] = 'The report can only be written before the director approves the defence.';
-$string['reportnotwritten'] = 'Report not written.';
-$string['reportwrittenfavorable'] = 'Report written, favourable opinion.';
-$string['reportwrittennotfavorable'] = 'Report written, without a favourable opinion.';
-$string['reporttoolong'] = 'The report has {$a->length} characters for at most {$a->max}: it must fit on one page with the signature.';
-$string['reportonepage'] = 'The report does not fit on one page with the signature: shorten it.';
 $string['logreportsaved'] = 'Director report saved';
 
 // Minutes: jury decisions.
@@ -1417,3 +1387,82 @@ $string['privacy:metadata:these_subjecthistory:summary'] = 'Summary of the previ
 $string['privacy:metadata:these_subjecthistory:reason'] = 'Reason for the change.';
 $string['privacy:metadata:these_subjecthistory:changedby'] = 'Author of the change.';
 $string['privacy:metadata:these_subjecthistory:timecreated'] = 'Time of the change.';
+
+// Internal examiner, uploaded report, studies validation, new date.
+$string['internalexaminer'] = 'Internal examiner';
+$string['internalexaminer_help'] = 'Teacher of the institution who handles the procedure in the module instead of the external '
+    . 'director: validates the steps, uploads the report and signs as member.';
+$string['internalexaminertitle'] = 'Internal examiner title';
+$string['exportextdirector'] = 'External director';
+$string['teachinglistreminder'] = 'Reminder: your manuscript must include the page with the up-to-date teaching staff list, to download '
+    . 'on the day of submission.';
+$string['roombydeve'] = 'The room is assigned by the registrar.';
+$string['studiesvalidation'] = 'Studies validation';
+$string['studiessummary'] = 'DEFV: {$a->defv}; A6: {$a->a6}';
+$string['defvvalidation'] = 'DEFV obtained';
+$string['defvnotrecorded'] = 'not recorded';
+$string['defvrequired'] = 'Record the student\'s DEFV on the studies validation page.';
+$string['privacy:metadata:these_a6:defvdate'] = 'Date the DEFV was obtained.';
+$string['privacy:metadata:these_a6:defvschool'] = 'School where the DEFV was obtained.';
+$string['settingsreporttemplate'] = 'Director report template (Word)';
+$string['settingsreporttemplate_help'] = 'Word document (.docx) offered to the director on the report upload page: they download it, '
+    . 'fill it in and upload their report.';
+$string['reporttemplate'] = 'Report template';
+$string['reporttemplatedownload'] = 'Download the template (Word)';
+$string['reporttemplatemissing'] = 'No report template is uploaded in the workflow settings.';
+$string['depositreport'] = 'Upload the report';
+$string['depositreport_desc'] = 'Write your report on the manuscript, from the template if one is offered, then upload it here (PDF '
+    . 'or Word document) with your opinion. It is required to approve the defence.';
+$string['reportnotdeposited'] = 'Report not uploaded.';
+$string['reportdepositedfavorable'] = 'Report uploaded, favourable opinion.';
+$string['reportdepositednotfavorable'] = 'Report uploaded, no favourable opinion.';
+$string['daterequest'] = 'Request another date';
+$string['daterequesthelp'] = 'The proposed time is not available: the student is asked to propose another date. The file is not '
+    . 'returned (documents and signatures are kept), but it cannot be validated before the new proposal.';
+$string['daterequestreason'] = 'Reason, shown to the student';
+$string['daterequestsent'] = 'New date requested from the student.';
+$string['daterequestnotallowed'] = 'A new date can only be requested for a submitted defence file, before its validation by the registrar, and if none is already awaited.';
+$string['datepending'] = 'A new defence date has been requested from the student: the file cannot be validated before their proposal.';
+$string['daterequestedlabel'] = 'New date';
+$string['daterequestedbadge'] = 'Requested by the registrar, awaiting the student';
+$string['newdate'] = 'Propose a new date';
+$string['newproposeddate'] = 'New proposed date';
+$string['newdatesubmit'] = 'Propose this date';
+$string['newdatesame'] = 'Propose a date different from the one that was not available.';
+$string['newdatenotexpected'] = 'No new date is requested for your defence.';
+$string['newdatesaved'] = 'New date sent to the registrar.';
+$string['newdaterequested'] = 'The registrar cannot keep the proposed date ({$a}): propose another one. The rest of your file is unchanged.';
+$string['logdaterequested'] = 'New defence date requested';
+$string['logdateproposed'] = 'New defence date proposed';
+$string['emailkeydaterequested'] = 'New date requested';
+$string['emailkeydateproposed'] = 'New date proposed';
+$string['emaildaterequestedsubject'] = 'Thesis of {$a->student}: propose another defence date';
+$string['emaildaterequestedbody'] = 'Hello,
+
+The proposed defence date ({$a->date}) is not available:
+
+{$a->comment}
+
+Propose another date; the rest of the file is unchanged.
+
+Subject: {$a->title}
+
+Propose a new date: {$a->url}';
+$string['emaildateproposedsubject'] = 'Thesis of {$a->student}: new defence date proposed';
+$string['emaildateproposedbody'] = 'Hello,
+
+{$a->student} proposes a new defence date: {$a->date}. The file can be validated again.
+
+Subject: {$a->title}
+
+Open the file: {$a->url}';
+$string['logsignaturesrevoked'] = 'Signatures revoked, to be requested again';
+$string['juryonedirector'] = 'The jury must include the thesis director (second row).';
+$string['bembargomonths'] = 'Embargo duration';
+$string['embargomonthsoption'] = '{$a} months';
+$string['settingsmindelayweeks'] = 'Minimum delay between submission and defence (weeks)';
+$string['settingsmindelayweeks_help'] = 'Minimum number of weeks between the student submitting the defence file and the date they propose; 0 for no delay. 4 weeks by default. The registrar can then set another date.';
+$string['settingsmindelayweeksinvalid'] = 'Enter a number of weeks greater than or equal to zero.';
+$string['proposeddatehelp'] = 'The defence date and time must have been agreed beforehand with the jury members and the registrar. They must be at least {$a} week(s) after the submission.';
+$string['proposeddatetoosoon'] = 'The defence must take place at least {$a->weeks} week(s) after the submission, that is from {$a->date}.';
+$string['proposeddatehelpnodelay'] = 'The defence date and time must have been agreed beforehand with the jury members and the registrar.';

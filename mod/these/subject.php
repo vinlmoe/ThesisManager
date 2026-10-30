@@ -56,27 +56,15 @@ $PAGE->set_context($context);
 
 $returned = $dossier && (int) $dossier->status === THESE_STATUS_SUBJECT_RETURNED;
 $mform = new subject_form($PAGE->url, [
-    'codirectors' => \mod_these\local\jurors::internal_options($context, $dossier ? (int) $dossier->codirectorjurorid : 0),
     'directors' => these_director_options($context, $dossier ? $dossier->directorid : 0),
     'submitlabel' => $returned ? 'resubmitsubject' : 'submitsubject',
     'allowdraft' => true,
     'signername' => fullname($USER),
 ]);
 
-$draftitemid = file_get_submitted_draft_itemid('subjectdocs');
-file_prepare_draft_area(
-    $draftitemid,
-    $context->id,
-    'mod_these',
-    'subjectdocs',
-    $dossier ? $dossier->id : 0,
-    these_filemanager_options('subjectdocs')
-);
 $formdata = $dossier ? clone $dossier : new stdClass();
 $formdata->id = $cm->id;
 $formdata->dossierid = $dossier ? $dossier->id : 0;
-$formdata->subjectdocs = $draftitemid;
-$formdata->codirectortype = subject_form::codirector_type($formdata);
 $commitments = $dossier ? (int) $dossier->commitments : 0;
 $formdata->commitguide = $commitments & THESE_COMMIT_GUIDE ? 1 : 0;
 $formdata->commitduplicate = $commitments & THESE_COMMIT_DUPLICATE ? 1 : 0;
@@ -90,14 +78,6 @@ if ($mform->is_cancelled()) {
     if (!$dossier) {
         $dossier = these_create_dossier($these->id, $USER->id, $USER->id);
     }
-    file_save_draft_area_files(
-        $data->subjectdocs,
-        $context->id,
-        'mod_these',
-        'subjectdocs',
-        $dossier->id,
-        these_filemanager_options('subjectdocs')
-    );
     $submit = !empty($data->submitsubject);
     these_save_subject($these, $cm, $dossier, $data, $submit, $USER->id, $submit ? these_signature_from_form($data) : null);
     redirect(

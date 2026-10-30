@@ -104,13 +104,13 @@ final class shared_settings_test extends \advanced_testcase {
         $this->assertEquals($env->activities[2]->these->id, $local->theseid);
 
         // Modèle de document.
-        these_set_doctemplate($env->scope, 'report', '<p>Rapport commun {{student.lastname}}</p>');
-        these_set_doctemplate(these_local_scope($env->activities[0]->these), 'report', '<p>Rapport local</p>');
-        $this->assertSame('<p>Rapport commun {{student.lastname}}</p>', these_get_doctemplate($followed, 'report'));
-        $this->assertSame(these_doctemplate_default('report'), these_get_doctemplate($local, 'report'));
+        these_set_doctemplate($env->scope, 'conclusions', '<p>Conclusions communes {{student.lastname}}</p>');
+        these_set_doctemplate(these_local_scope($env->activities[0]->these), 'conclusions', '<p>Conclusions locales</p>');
+        $this->assertSame('<p>Conclusions communes {{student.lastname}}</p>', these_get_doctemplate($followed, 'conclusions'));
+        $this->assertSame(these_doctemplate_default('conclusions'), these_get_doctemplate($local, 'conclusions'));
         $this->assertSame(
-            '<p>Rapport commun {{student.lastname}}</p>',
-            these_get_doctemplate(these_settings_scope($env->activities[0]->these), 'report')
+            '<p>Conclusions communes {{student.lastname}}</p>',
+            these_get_doctemplate(these_settings_scope($env->activities[0]->these), 'conclusions')
         );
 
         // Images : celles de l'activité de suivi.
@@ -144,7 +144,7 @@ final class shared_settings_test extends \advanced_testcase {
         $this->assertFalse($DB->record_exists('these_question', ['id' => $questionid]));
         $this->assertFalse($DB->record_exists('these_answer', ['questionid' => $questionid]));
         $scope = these_settings_scope($env->activities[0]->these);
-        $this->assertSame('<p>Rapport local</p>', these_get_doctemplate($scope, 'report'));
+        $this->assertSame('<p>Conclusions locales</p>', these_get_doctemplate($scope, 'conclusions'));
     }
 
     /**

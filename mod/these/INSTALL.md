@@ -66,7 +66,7 @@ l'étudiant comme directeurs.
    - **Délai de relance** en jours (14 par défaut, 0 pour désactiver).
 3. Reprendre les sujets déjà enregistrés : *Importer des dossiers* (CSV,
    colonnes `student`, `title`, `director`, `devenumber`, `libraryref`,
-   `titleen`, `summary`, `keywords`, `codirector` ; étudiant et directeur
+   `titleen`, `summary`, `keywords` ; étudiant et directeur
    désignés par identifiant, courriel ou numéro d'identification). Les dossiers
    importés sont créés « actifs ». Une simulation est proposée par défaut.
 4. Personnaliser au besoin les courriels (*Courriels*).
@@ -196,7 +196,7 @@ signés.
   pour un document destiné à d'autres personnes. Les signataires extérieurs
   (direction générale, CCEM, université) voient les documents qu'ils signent.
 - **Embargo de diffusion** : au dépôt de la soutenance, l'étudiant peut demander
-  un embargo de 5 ans (`THESE_EMBARGO_YEARS`), motif obligatoire. La fin de
+  un embargo d'un à douze mois (au plus `THESE_EMBARGO_MAX_MONTHS`), motif obligatoire. La fin de
   l'embargo est calculée à partir de la date de soutenance (arrêtée, à défaut
   proposée) et reportée au contrat de diffusion, que le directeur vise ; elle
   figure au dossier (rubrique *Diffusion*) et dans l'export du registre. Le motif

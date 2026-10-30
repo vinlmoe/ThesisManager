@@ -146,6 +146,7 @@ class restore_thesesynthesis_activity_structure_step extends restore_activity_st
         $this->add_related_files('mod_thesesynthesis', 'intro', null);
         $this->add_related_files('mod_thesesynthesis', 'docimages', null);
         $this->add_related_files('mod_thesesynthesis', 'contracttemplate', null);
+        $this->add_related_files('mod_thesesynthesis', 'reporttemplate', null);
     }
 
     /**

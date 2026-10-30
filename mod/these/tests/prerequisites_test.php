@@ -166,8 +166,8 @@ final class prerequisites_test extends these_testcase {
 
     /**
      * Refus de signer d'un agent DEVE : le dossier revient à l'étape de création des documents
-     * refusés (la première s'il y en a plusieurs), avec le motif ; les demandes de la même validation
-     * sont retirées, celles d'une étape antérieure restent.
+     * refusés (la première s'il y en a plusieurs), avec le motif ; les signatures des étapes refaites
+     * sont révoquées, demandes comprises, celles d'une phase antérieure restent.
      */
     public function test_agent_refusal(): void {
         global $DB;
@@ -207,13 +207,17 @@ final class prerequisites_test extends these_testcase {
         $this->assertSame(['subject'], array_column($pending($dossier), 'doctype'));
         $this->assertTrue($DB->record_exists('these_log', ['dossierid' => $dossier->id, 'logaction' => 'agentrefused']));
 
-        // Fiche d'agréments et conclusions : la première étape, l'étudiant, qui revient ensuite à la DEVE.
+        // Fiche d'agréments et conclusions : la première étape, l'étudiant ; la phase de soutenance est
+        // refaite (directeur, DEVE), ses signatures révoquées.
         $dossier = $make();
+        $this->sign($dossier, 'conclusions', 'director');
         these_request_agent_signatures($this->these, $this->cm, $dossier, ['agreement', 'conclusions'], $this->deve->id);
         $refused = $pending($dossier);
         $dossier = \mod_these\local\refusal::refuse($this->these, $this->cm, $dossier, $refused, $agent->id, 'À reprendre');
         $this->assertEquals(THESE_STATUS_DEFENSE_RETURNED, $dossier->status);
-        $this->assertEquals(THESE_STATUS_DEFENSE_APPROVED, $dossier->returnstatus);
+        $this->assertEquals(0, $dossier->returnstatus);
+        $this->assertSame([], these_get_signatures($dossier->id));
+        $this->assertSame(THESE_STATUS_DEFENSE_SUBMITTED, these_submission_target($dossier));
 
         // Plus rien à refuser une fois le dossier renvoyé ; motif obligatoire.
         $this->expectException(\moodle_exception::class);

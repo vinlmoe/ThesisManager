@@ -38,7 +38,7 @@ Feature: The registrar imports existing files and exports the register
     When I upload "mod/these/tests/fixtures/import_dossiers.csv" file to "File (CSV, Excel or OpenDocument)" filemanager
     And I press "Import"
     Then I should see "Dry run: 2 file(s) importable, 2 line(s) with errors."
-    And I should see "Ready to import — Corrections requested by the jury — internal co-director: Dr MARTIN Claire"
+    And I should see "Ready to import — Corrections requested by the jury"
     And I should see "User not found: nobody"
     And I should see "Status cannot be imported: scheduled"
     And I follow "Theses 2026"
@@ -52,7 +52,7 @@ Feature: The registrar imports existing files and exports the register
     And I should see "Canine leptospirosis"
     And I should see "Feline diabetes"
 
-  Scenario: The register export lists the A6, the co-director and the missing signatures
+  Scenario: The register export lists the A6, the external director and the missing signatures
     Given the following "mod_these > dossiers" exist:
       | activity | user     | status          | title                | director  |
       | these1   | student1 | subject_approved | Canine leptospirosis | director1 |
@@ -63,7 +63,7 @@ Feature: The registrar imports existing files and exports the register
     When I set the field "Format" to "HTML table"
     And I press "Download"
     Then I should see "A6 validation"
-    And I should see "Internal or external co-director"
+    And I should see "External director"
     And I should see "Signatures missing to move to the next step"
     And I should see "Last refusal by a registrar agent"
     And I should see "Canine leptospirosis"

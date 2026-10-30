@@ -51,7 +51,7 @@ final class subjectchange_test extends these_testcase {
 
         $data = (object) ['title' => 'Nouveau sujet', 'titleen' => 'New subject', 'summary' => 'Résumé',
             'keywords' => 'x ; y ; z', 'studyyear' => 'A5', 'directorid' => $newdirector->id, 'confidential' => 0,
-            'externaldirector' => 0, 'codirectorname' => '', 'commitguide' => 1, 'commitduplicate' => 1, 'commitethics' => 0];
+            'externaldirector' => 0, 'commitguide' => 1, 'commitduplicate' => 1, 'commitethics' => 0];
         $dossier = these_change_subject(
             $this->these,
             $this->cm,
@@ -97,13 +97,16 @@ final class subjectchange_test extends these_testcase {
 
     /**
      * Un dossier abandonné peut changer de sujet : le nouveau sujet le relance en phase 1 et le statut
-     * atteint lors de l'abandon ne vaut plus.
+     * atteint lors de l'abandon ne vaut plus ; tous ses documents signés sont révoqués.
      */
     public function test_change_subject_of_cancelled_dossier(): void {
         $this->setup_activity();
         $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
             'status' => THESE_STATUS_DEFENSE_SUBMITTED, 'directorid' => $this->director->id, 'title' => 'Sujet abandonné',
         ]);
+        $png = these_sample_signature_image();
+        these_sign_document($this->context, $dossier, 'subject', 'director', $this->director->id, 'Directeur', $png);
+        these_sign_document($this->context, $dossier, 'bordereau', 'student', $this->student->id, 'Étudiant', $png);
         $dossier = these_cancel_dossier($dossier, $this->deve->id, 'Abandon.');
         $this->assertTrue(these_subject_changeable($dossier));
         $student = these_get_rights($this->context, $dossier, $this->student->id);
@@ -114,12 +117,14 @@ final class subjectchange_test extends these_testcase {
 
         $data = (object) ['title' => 'Nouveau sujet', 'titleen' => 'New subject', 'summary' => 'Résumé',
             'keywords' => 'x ; y ; z', 'studyyear' => 'A5', 'directorid' => $this->director->id, 'confidential' => 0,
-            'externaldirector' => 0, 'codirectorname' => ''];
+            'externaldirector' => 0];
         these_change_subject($this->these, $this->cm, $dossier, $data, $this->student->id, 'Nouveau départ.');
         $dossier = $this->reload($dossier->id);
 
         $this->assertEquals(THESE_STATUS_SUBJECT_SUBMITTED, $dossier->status);
         $this->assertEquals(0, $dossier->cancelledfromstatus);
+        // Tous les documents signés de l'ancien sujet sont révoqués, soutenance comprise.
+        $this->assertSame([], these_get_signatures($dossier->id));
         $this->assertSame('Nouveau sujet', $dossier->title);
         $history = array_values(these_get_subject_history($dossier->id));
         $this->assertCount(1, $history);

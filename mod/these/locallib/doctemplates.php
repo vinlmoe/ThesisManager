@@ -243,32 +243,6 @@ function these_conclusions_error(stdClass $these, ?context $context, $text) {
     return \mod_these\local\doctemplates::conclusions_error($these, $context, $text);
 }
 
-/** Longueur maximale du rapport du directeur, qui doit tenir sur une page avec la signature. */
-define('THESE_REPORT_MAX', 4000);
-
-/**
- * Voir \mod_these\local\doctemplates::report_error().
- *
- * @param stdClass $these
- * @param string $text
- * @param bool $favorable Avis favorable (imprimé sous le rapport).
- * @return string|null Message d'erreur, ou null s'il tient.
- */
-function these_report_error(stdClass $these, $text, $favorable = true) {
-    return \mod_these\local\doctemplates::report_error($these, $text, $favorable);
-}
-
-/**
- * Voir \mod_these\local\doctemplates::report_context().
- *
- * @param string|null $text
- * @param bool $favorable
- * @return array {text, html, favorable, favorabletext}
- */
-function these_report_context($text, $favorable) {
-    return \mod_these\local\doctemplates::report_context($text, $favorable);
-}
-
 /**
  * Voir \mod_these\local\doctemplates::render_doctemplate().
  *

@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Dépôt des documents de soutenance par l'étudiant (phase 2, étape 1) : manuscrit, autres
- * documents, proposition de date, de lieu et de jury. Ouvert tant que le dossier est actif
- * (préparation en plusieurs fois) ou renvoyé en phase 2.
+ * Dépôt des documents de soutenance par l'étudiant (phase 2, étape 1) : manuscrit, proposition de
+ * date et de jury (la salle est attribuée par la DEVE), réponses au questionnaire préalable au jury.
+ * Ouvert tant que le dossier est actif (préparation en plusieurs fois) ou renvoyé en phase 2.
  *
  * @package   mod_these
  * @copyright 2026 Sébastien Lefebvre
@@ -56,29 +56,34 @@ $PAGE->set_context($context);
 
 $jury = these_get_jury($dossier->id);
 $returned = (int) $dossier->status === THESE_STATUS_DEFENSE_RETURNED;
-$rooms = these_defense_rooms($these);
+$questions = these_get_questions(these_settings_scope($these));
 $mform = new defense_form($PAGE->url, [
     'jurycount' => count($jury),
     'jurorids' => array_map('intval', array_column($jury, 'jurorid')),
     'minjury' => $these->minjury,
-    'rooms' => $rooms,
+    'defvlabel' => get_string('a6bydevestatus', 'mod_these', \mod_these\local\a6::defv_label($dossier)),
     'a6label' => get_string('a6bydevestatus', 'mod_these', \mod_these\local\a6::label($dossier)),
     'teachinglisturl' => new moodle_url('/mod/these/teachinglist.php', ['cmid' => $cm->id]),
     'these' => $these,
     'context' => $context,
     'submitlabel' => $returned ? 'resubmitdefense' : 'submitdefense',
     'signername' => fullname($USER),
-    'questionnaireurl' => these_get_questions(these_settings_scope($these))
-        ? new moodle_url('/mod/these/questionnaire.php', ['id' => $cm->id, 'dossierid' => $dossier->id]) : null,
-    'questionnairemissing' => these_questionnaire_missing($these, $dossier),
+    // Délai minimal entre le dépôt et la soutenance (paramètres du circuit).
+    'mindelayweeks' => (int) \mod_these\local\scopesettings::for_context($context)['mindelayweeks'],
+    'earliestdate' => \mod_these\local\scopesettings::earliest_defense($context),
+    // Questionnaire préalable au jury : rempli dans le dépôt.
+    'questions' => $questions,
 ]);
 
-$formdata = (object) array_merge(['id' => $cm->id, 'dossierid' => $dossier->id], these_jury_form_data($jury));
-foreach (['manuscript', 'defensedocs'] as $filearea) {
-    $draftitemid = file_get_submitted_draft_itemid($filearea);
-    file_prepare_draft_area($draftitemid, $context->id, 'mod_these', $filearea, $dossier->id, these_filemanager_options($filearea));
-    $formdata->$filearea = $draftitemid;
-}
+$formdata = (object) array_merge(
+    ['id' => $cm->id, 'dossierid' => $dossier->id],
+    these_jury_form_data($jury),
+    \mod_these\form\questionnaire_form::answers_data($questions, these_get_answers($dossier->id))
+);
+$draftitemid = file_get_submitted_draft_itemid('manuscript');
+$fileoptions = these_filemanager_options('manuscript');
+file_prepare_draft_area($draftitemid, $context->id, 'mod_these', 'manuscript', $dossier->id, $fileoptions);
+$formdata->manuscript = $draftitemid;
 $formdata->proposeddate = $dossier->proposeddate ?: null;
 $formdata->titleen = $dossier->titleen;
 $formdata->conclusions = $dossier->conclusions;
@@ -104,11 +109,14 @@ foreach ($bordereau as $field => $value) {
         $formdata->{'b' . $field} = $value;
     }
 }
-// Lieu : à défaut, la première salle des paramètres du circuit.
-$formdata->defenselocation = $dossier->defenselocation ?: (string) reset($rooms);
-// Le directeur figure presque toujours au jury : il est proposé d'office au premier dépôt.
-if (empty($jury) && $dossier->directorid && ($director = $DB->get_record('user', ['id' => $dossier->directorid]))) {
-    $formdata->juryrole = [1 => 'director'];
+// Ligne du directeur de thèse (la deuxième, figée) préremplie au premier dépôt : le directeur extérieur
+// s'il y en a un, sinon le directeur du dossier.
+if (empty($jury) && !empty($dossier->externaldirector) && trim((string) $dossier->extdirectorname) !== '') {
+    $formdata->juryname = [1 => trim($dossier->extdirectorname)];
+    $formdata->jurytitle = [1 => (string) $dossier->extdirectorgrade];
+    $formdata->juryemail = [1 => (string) $dossier->extdirectoremail];
+    $formdata->juryinstitution = [1 => (string) $dossier->extdirectorinstitution];
+} else if (empty($jury) && $dossier->directorid && ($director = $DB->get_record('user', ['id' => $dossier->directorid]))) {
     $juror = \mod_these\local\jurors::find_by_email($director->email);
     if ($juror) {
         // Directeur présent dans l'annuaire du jury : choisi dans la liste.
@@ -125,15 +133,17 @@ $mform->set_data($formdata);
 if ($mform->is_cancelled()) {
     redirect($viewurl);
 } else if ($data = $mform->get_data()) {
-    foreach (['manuscript', 'defensedocs'] as $filearea) {
-        file_save_draft_area_files(
-            $data->$filearea,
-            $context->id,
-            'mod_these',
-            $filearea,
-            $dossier->id,
-            these_filemanager_options($filearea)
-        );
+    file_save_draft_area_files(
+        $data->manuscript,
+        $context->id,
+        'mod_these',
+        'manuscript',
+        $dossier->id,
+        these_filemanager_options('manuscript')
+    );
+    // Réponses au questionnaire, enregistrées avec le brouillon comme à la soumission.
+    if ($questions) {
+        these_save_answers($dossier, $questions, $data);
     }
     $submit = !empty($data->submitdefense);
     these_save_defense($these, $cm, $dossier, $data, $submit, $USER->id, $submit ? these_signature_from_form($data) : null);

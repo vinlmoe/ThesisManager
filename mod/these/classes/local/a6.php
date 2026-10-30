@@ -21,13 +21,15 @@ use moodle_exception;
 use stdClass;
 
 /**
- * Validation de l'A6 (année d'approfondissement) d'un étudiant, saisie par la DEVE. Elle est liée à
+ * Validation des études d'un étudiant, saisie par la DEVE : obtention du DEFV (diplôme d'études
+ * fondamentales vétérinaires) et validation de l'A6 (année d'approfondissement). Elle est liée à
  * l'étudiant et non à son dossier de thèse (table these_a6, commune à toutes les activités) : elle
  * peut être enregistrée avant la création du dossier, et vaut pour chacun de ses dossiers. La DEVE la
- * saisit sur sa page à part (a6.php) : étudiant par étudiant, en lot pour les étudiants cochés, ou par
- * import d'un fichier (Excel, OpenDocument ou CSV). L'agrément administratif et
- * la fiche signalétique la reprennent. Faute de saisie, la valeur d'avant cette table : celle de
- * l'agrément du dossier, sinon celle que l'étudiant avait déclarée dans sa fiche.
+ * saisit sur sa page à part (a6.php) : étudiant par étudiant, en lot pour les étudiants cochés (A6),
+ * ou par import d'un fichier (Excel, OpenDocument ou CSV). L'agrément administratif et la fiche
+ * signalétique la reprennent ; l'étudiant ne la renseigne pas. Faute de saisie, la valeur d'avant
+ * cette table : celle de l'agrément du dossier, sinon celle que l'étudiant avait déclarée dans sa
+ * fiche.
  *
  * @package   mod_these
  * @copyright 2026 Sébastien Lefebvre
@@ -40,18 +42,39 @@ class a6 {
      * @param int $userid
      * @param stdClass|null $dossier Dossier dont reprendre l'ancienne valeur, à défaut de saisie.
      * @return array {date (int, 0 si inconnue ou non validée), notyet (bool), school (string),
-     *               recorded (saisie par la DEVE)}
+     *               recorded (saisie par la DEVE), defvdate (int, 0 si inconnue), defvschool (string)}
      */
     public static function get_for_user($userid, ?stdClass $dossier = null) {
         global $DB;
 
         $record = $userid ? $DB->get_record('these_a6', ['userid' => (int) $userid]) : null;
+        $agreement = $dossier ? these_get_agreement($dossier) : [];
+        $bordereau = $dossier ? these_get_bordereau($dossier) : [];
         if ($record) {
-            return ['date' => (int) $record->a6date, 'notyet' => empty($record->a6date),
+            $a6 = ['date' => (int) $record->a6date, 'notyet' => empty($record->a6date),
                 'school' => (string) $record->a6school, 'recorded' => true];
+        } else {
+            $a6 = self::legacy($agreement, $bordereau)
+                ?? ['date' => 0, 'notyet' => true, 'school' => '', 'recorded' => false];
         }
-        $legacy = $dossier ? self::legacy(these_get_agreement($dossier), these_get_bordereau($dossier)) : null;
-        return $legacy ?? ['date' => 0, 'notyet' => true, 'school' => '', 'recorded' => false];
+        return $a6 + self::defv($record ?: null, $agreement, $bordereau);
+    }
+
+    /**
+     * Obtention du DEFV : saisie de la DEVE, sinon valeur d'avant cette saisie (agrément du dossier,
+     * sinon déclaration de l'étudiant dans sa fiche).
+     *
+     * @param stdClass|null $record Enregistrement de these_a6.
+     * @param array $agreement
+     * @param array $bordereau
+     * @return array {defvdate, defvschool}
+     */
+    protected static function defv(?stdClass $record, array $agreement, array $bordereau) {
+        if ($record && !empty($record->defvdate)) {
+            return ['defvdate' => (int) $record->defvdate, 'defvschool' => (string) $record->defvschool];
+        }
+        $date = !empty($agreement['defvdate']) ? $agreement['defvdate'] : ($bordereau['defvdate'] ?? 0);
+        return ['defvdate' => (int) $date, 'defvschool' => (string) ($bordereau['defvschool'] ?? '')];
     }
 
     /**
@@ -93,23 +116,28 @@ class a6 {
      * @return array Voir get_for_user().
      */
     public static function for_documents($userid, array $agreement, array $bordereau) {
+        global $DB;
+
+        $record = $userid ? $DB->get_record('these_a6', ['userid' => (int) $userid]) : null;
+        $defv = self::defv($record ?: null, $agreement, $bordereau);
         $a6 = self::get_for_user($userid);
         if ($a6['recorded']) {
-            return $a6;
+            return array_merge($a6, $defv);
         }
-        return self::legacy($agreement, $bordereau) ?? $a6;
+        return array_merge(self::legacy($agreement, $bordereau) ?? $a6, $defv);
     }
 
     /**
-     * Enregistre la validation de l'A6 d'un étudiant et l'inscrit à l'historique de ses dossiers.
+     * Enregistre la validation des études d'un étudiant et l'inscrit à l'historique de ses dossiers.
      *
      * @param int $userid Étudiant.
-     * @param int $date Date de validation (0 : pas encore validée).
-     * @param string $school École (voir these_school_options()), vide pour garder celle connue.
+     * @param int $date Date de validation de l'A6 (0 : pas encore validée).
+     * @param string $school École de l'A6 (voir these_school_options()), vide pour garder celle connue.
      * @param int $actorid Compte de la DEVE.
+     * @param array|null $defv Obtention du DEFV {date, school} ; null pour garder celle connue.
      * @return void
      */
-    public static function set_for_user($userid, $date, $school, $actorid) {
+    public static function set_for_user($userid, $date, $school, $actorid, ?array $defv = null) {
         global $DB;
 
         $userid = (int) $userid;
@@ -118,6 +146,8 @@ class a6 {
             'userid' => $userid,
             'a6date' => (int) $date,
             'a6school' => (string) $school !== '' ? (string) $school : (string) ($existing->a6school ?? ''),
+            'defvdate' => $defv !== null ? (int) ($defv['date'] ?? 0) : (int) ($existing->defvdate ?? 0),
+            'defvschool' => $defv !== null ? (string) ($defv['school'] ?? '') : (string) ($existing->defvschool ?? ''),
             'usermodified' => (int) $actorid,
             'timemodified' => time(),
         ];
@@ -127,7 +157,10 @@ class a6 {
         } else {
             $DB->insert_record('these_a6', $record);
         }
-        $label = self::label_for_user($userid);
+        $label = get_string('studiessummary', 'mod_these', (object) [
+            'defv' => self::format_defv(self::get_for_user($userid)),
+            'a6' => self::label_for_user($userid),
+        ]);
         foreach ($DB->get_records('these_dossier', ['userid' => $userid], '', 'id, status') as $dossier) {
             these_log($dossier->id, $actorid, 'a6recorded', $dossier->status, $dossier->status, $label);
         }
@@ -140,13 +173,18 @@ class a6 {
      * @param int $date
      * @param string $school Vide pour garder celle connue (y compris celle du dossier, à défaut de saisie).
      * @param int $actorid
+     * @param array|null $defv Voir set_for_user() ; null pour garder celle connue (y compris celle du dossier).
      * @return stdClass Le dossier.
      */
-    public static function set(stdClass $dossier, $date, $school, $actorid) {
+    public static function set(stdClass $dossier, $date, $school, $actorid, ?array $defv = null) {
+        $known = self::get($dossier);
         if ((string) $school === '') {
-            $school = self::get($dossier)['school'];
+            $school = $known['school'];
         }
-        self::set_for_user($dossier->userid, $date, $school, $actorid);
+        if ($defv === null && $known['defvdate']) {
+            $defv = ['date' => $known['defvdate'], 'school' => $known['defvschool']];
+        }
+        self::set_for_user($dossier->userid, $date, $school, $actorid, $defv);
         return $dossier;
     }
 
@@ -166,6 +204,34 @@ class a6 {
             $label .= ' (' . $schools[$a6['school']] . ')';
         }
         return $label;
+    }
+
+    /**
+     * Libellé de l'obtention du DEFV (voir get_for_user()).
+     *
+     * @param array $a6
+     * @return string
+     */
+    protected static function format_defv(array $a6) {
+        if (empty($a6['defvdate'])) {
+            return get_string('defvnotrecorded', 'mod_these');
+        }
+        $schools = these_school_options();
+        $label = userdate($a6['defvdate'], get_string('strftimedate', 'langconfig'));
+        if ($a6['defvschool'] !== '' && isset($schools[$a6['defvschool']])) {
+            $label .= ' (' . $schools[$a6['defvschool']] . ')';
+        }
+        return $label;
+    }
+
+    /**
+     * Libellé de l'obtention du DEFV de l'étudiant d'un dossier.
+     *
+     * @param stdClass $dossier
+     * @return string
+     */
+    public static function defv_label(stdClass $dossier) {
+        return self::format_defv(self::get($dossier));
     }
 
     /**
@@ -196,7 +262,7 @@ class a6 {
      * @param \context $context Contexte de l'activité.
      * @param string $state '' (tous), 'validated' ou 'notvalidated'.
      * @param string $search Texte cherché dans le nom, l'adresse et le numéro d'identification.
-     * @return stdClass[] {user, dossier (ou null), a6 (voir get_for_user()), label}
+     * @return stdClass[] {user, dossier (ou null), a6 (voir get_for_user()), label, defvlabel}
      */
     public static function students(stdClass $these, \context $context, $state = '', $search = '') {
         global $DB;
@@ -227,7 +293,8 @@ class a6 {
             if (($state === 'validated' && !$validated) || ($state === 'notvalidated' && $validated)) {
                 continue;
             }
-            $rows[] = (object) ['user' => $user, 'dossier' => $dossier, 'a6' => $a6, 'label' => self::format($a6)];
+            $rows[] = (object) ['user' => $user, 'dossier' => $dossier, 'a6' => $a6, 'label' => self::format($a6),
+                'defvlabel' => self::format_defv($a6)];
         }
         usort($rows, function ($a, $b) {
             return [core_text::strtolower($a->user->lastname), core_text::strtolower($a->user->firstname)]
@@ -245,16 +312,17 @@ class a6 {
      * @param int $date 0 : pas encore validée.
      * @param string $school Vide pour garder celle connue.
      * @param int $actorid
+     * @param array|null $defv Voir set_for_user() ; null pour garder celle connue.
      * @return void
      */
-    public static function record(stdClass $these, $userid, $date, $school, $actorid) {
+    public static function record(stdClass $these, $userid, $date, $school, $actorid, ?array $defv = null) {
         global $DB;
 
         $dossier = $DB->get_record('these_dossier', ['theseid' => $these->id, 'userid' => (int) $userid]);
         if ($dossier) {
-            self::set($dossier, $date, $school, $actorid);
+            self::set($dossier, $date, $school, $actorid, $defv);
         } else {
-            self::set_for_user($userid, $date, $school, $actorid);
+            self::set_for_user($userid, $date, $school, $actorid, $defv);
         }
     }
 
@@ -278,15 +346,20 @@ class a6 {
     }
 
     /**
-     * Rappel de la validation de l'A6 dans un formulaire de la DEVE (validation du dossier de
-     * soutenance, modification d'un dossier), avec le lien vers sa page à part où elle se saisit.
+     * Rappel de la validation des études (DEFV et A6) dans un formulaire de la DEVE (validation du
+     * dossier de soutenance, modification d'un dossier), avec le lien vers sa page à part où elle se
+     * saisit.
      *
      * @param \MoodleQuickForm $mform
      * @param string $label Voir label().
      * @param \moodle_url|null $url Voir url().
+     * @param string $defvlabel Voir defv_label() ; vide pour ne rappeler que l'A6.
      * @return void
      */
-    public static function add_status_field(\MoodleQuickForm $mform, $label, ?\moodle_url $url = null) {
+    public static function add_status_field(\MoodleQuickForm $mform, $label, ?\moodle_url $url = null, $defvlabel = '') {
+        if ((string) $defvlabel !== '') {
+            $mform->addElement('static', 'defvstatus', get_string('defvvalidation', 'mod_these'), s($defvlabel));
+        }
         $html = s($label);
         if ($url) {
             $attributes = ['class' => 'btn btn-sm btn-secondary ml-2'];
@@ -418,6 +491,8 @@ class a6 {
             'student' => ['etudiant', 'student', 'identifiant', 'email', 'courriel', 'numero', 'idnumber'],
             'date' => ['date', 'datea6', 'a6', 'date a6', 'validation a6', 'date de validation'],
             'school' => ['ecole', 'school', 'etablissement'],
+            'defv' => ['defv', 'date defv', 'datedefv'],
+            'defvschool' => ['ecole defv', 'ecoledefv', 'defvschool'],
         ];
         $header = array_map([self::class, 'normalise'], (array) array_shift($rows));
         $columns = [];
@@ -445,6 +520,10 @@ class a6 {
             $student = these_find_user($identifier);
             $date = self::parse_date($row[$columns['date']] ?? '');
             $school = isset($columns['school']) ? self::parse_school($row[$columns['school']] ?? '') : '';
+            // DEFV facultatif : sans colonne ou sans date, celui déjà connu est gardé.
+            $rawdefv = isset($columns['defv']) ? trim((string) ($row[$columns['defv']] ?? '')) : '';
+            $defvdate = $rawdefv !== '' ? self::parse_date($rawdefv) : null;
+            $defvschool = isset($columns['defvschool']) ? self::parse_school($row[$columns['defvschool']] ?? '') : '';
             if (!$student) {
                 $result['message'] = get_string('importusernotfound', 'mod_these', s($identifier));
             } else if (!is_enrolled($coursecontext, $student)) {
@@ -453,11 +532,16 @@ class a6 {
                 $result['message'] = get_string('a6baddate', 'mod_these', s((string) ($row[$columns['date']] ?? '')));
             } else if ($school === null) {
                 $result['message'] = get_string('a6badschool', 'mod_these', s((string) ($row[$columns['school']] ?? '')));
+            } else if ($rawdefv !== '' && !$defvdate) {
+                $result['message'] = get_string('a6baddate', 'mod_these', s($rawdefv));
+            } else if ($defvschool === null) {
+                $result['message'] = get_string('a6badschool', 'mod_these', s((string) ($row[$columns['defvschool']] ?? '')));
             } else {
                 $result['ok'] = true;
                 $result['student'] = fullname($student);
                 if (!$dryrun) {
-                    self::set_for_user($student->id, $date, $school, $userid);
+                    $defv = $defvdate ? ['date' => $defvdate, 'school' => $defvschool] : null;
+                    self::set_for_user($student->id, $date, $school, $userid, $defv);
                 }
                 $day = $date ? userdate($date, get_string('strftimedate', 'langconfig')) : '';
                 $result['message'] = $date

@@ -37,7 +37,8 @@ function xmldb_these_upgrade($oldversion) {
         // les générations précédentes y ont déposés. L'archive transmise à l'université les rend
         // désormais à la demande.
         require_once($CFG->dirroot . '/mod/these/locallib.php');
-        $filenames = [];
+        // Le rapport du directeur, document réservé au personnel à cette version, n'est plus produit.
+        $filenames = [these_document_filename('report')];
         foreach (these_document_definitions() as $doctype => $definition) {
             if ($definition['staffonly']) {
                 $filenames[] = these_document_filename($doctype);
@@ -262,7 +263,9 @@ function xmldb_these_upgrade($oldversion) {
             '0',
             'codirectorname'
         );
-        if (!$dbman->field_exists($table, $field)) {
+        // Co-directeur supprimé depuis (2026102901) : rien à ajouter sans la colonne du nom, après
+        // laquelle le champ se place.
+        if ($dbman->field_exists($table, 'codirectorname') && !$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
         upgrade_mod_savepoint(true, 2026102800, 'these');
@@ -289,6 +292,46 @@ function xmldb_these_upgrade($oldversion) {
             $dbman->add_field($table, $field);
         }
         upgrade_mod_savepoint(true, 2026102803, 'these');
+    }
+
+    if ($oldversion < 2026102901) {
+        $dbman = $DB->get_manager();
+        // Plus de co-directeur : un directeur extérieur est suppléé par un examinateur interne,
+        // enregistré comme directeur du dossier. Plus de rapport rédigé dans le module : il est déposé.
+        $table = new xmldb_table('these_dossier');
+        foreach (['codirectorname', 'codirectorjurorid', 'reporttext'] as $name) {
+            $field = new xmldb_field($name);
+            if ($dbman->field_exists($table, $field)) {
+                $dbman->drop_field($table, $field);
+            }
+        }
+        // Nouvelle date de soutenance demandée par la DEVE, sans renvoyer le dossier.
+        $fields = [
+            new xmldb_field('daterequested', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'remindertime'),
+            new xmldb_field('daterequestcomment', XMLDB_TYPE_TEXT, null, null, null, null, null, 'daterequested'),
+        ];
+        foreach ($fields as $field) {
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+        }
+        $table = new xmldb_table('these_subjecthistory');
+        $field = new xmldb_field('codirectorname');
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->drop_field($table, $field);
+        }
+        // Validation des études : le DEFV est saisi par la DEVE avec l'A6.
+        $table = new xmldb_table('these_a6');
+        $fields = [
+            new xmldb_field('defvdate', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'a6school'),
+            new xmldb_field('defvschool', XMLDB_TYPE_CHAR, '20', null, null, null, null, 'defvdate'),
+        ];
+        foreach ($fields as $field) {
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+        }
+        upgrade_mod_savepoint(true, 2026102901, 'these');
     }
 
     return true;

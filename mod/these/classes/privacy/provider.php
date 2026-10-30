@@ -79,7 +79,6 @@ class provider implements
             'returnedby' => 'privacy:metadata:these_dossier:returnedby',
             'bordereau' => 'privacy:metadata:these_dossier:bordereau',
             'conclusions' => 'privacy:metadata:these_dossier:conclusions',
-            'reporttext' => 'privacy:metadata:these_dossier:reporttext',
             'correctionsdone' => 'privacy:metadata:these_dossier:correctionsdone',
             'timecreated' => 'privacy:metadata:these_dossier:timecreated',
         ], 'privacy:metadata:these_dossier');
@@ -115,6 +114,8 @@ class provider implements
             'userid' => 'privacy:metadata:these_a6:userid',
             'a6date' => 'privacy:metadata:these_a6:a6date',
             'a6school' => 'privacy:metadata:these_a6:a6school',
+            'defvdate' => 'privacy:metadata:these_a6:defvdate',
+            'defvschool' => 'privacy:metadata:these_a6:defvschool',
             'usermodified' => 'privacy:metadata:these_a6:usermodified',
             'timemodified' => 'privacy:metadata:these_a6:timemodified',
         ], 'privacy:metadata:these_a6');
@@ -248,7 +249,9 @@ class provider implements
             if ($context instanceof \context_user && (int) $context->instanceid === (int) $user->id) {
                 $a6 = $DB->get_record('these_a6', ['userid' => $user->id]);
                 if ($a6) {
-                    writer::with_context($context)->export_data([get_string('a6validation', 'mod_these')], (object) [
+                    writer::with_context($context)->export_data([get_string('studiesvalidation', 'mod_these')], (object) [
+                        'defvdate' => $a6->defvdate ? transform::date($a6->defvdate) : null,
+                        'defvschool' => (string) $a6->defvschool,
                         'a6date' => $a6->a6date ? transform::date($a6->a6date) : get_string('a6notvalidated', 'mod_these'),
                         'a6school' => (string) $a6->a6school,
                         'timemodified' => transform::datetime($a6->timemodified),
@@ -279,7 +282,6 @@ class provider implements
                     'titleen' => $dossier->titleen,
                     'summary' => $dossier->summary,
                     'keywords' => $dossier->keywords,
-                    'codirector' => $dossier->codirectorname,
                     'devenumber' => $dossier->devenumber,
                     'libraryref' => $dossier->libraryref,
                     'proposeddate' => $dossier->proposeddate ? transform::datetime($dossier->proposeddate) : null,

@@ -260,6 +260,9 @@ class rendering {
         if ($rights->student && these_defense_editable($dossier)) {
             $links[get_string('depositdefense', 'mod_these')] = new moodle_url('/mod/these/defense.php', $params);
         }
+        if ($rights->student && daterequest::pending($dossier)) {
+            $links[get_string('newdate', 'mod_these')] = daterequest::url($cm);
+        }
         if ($rights->student && these_subject_changeable($dossier)) {
             $links[get_string('subjectchange', 'mod_these')] = new moodle_url('/mod/these/subjectchange.php', ['id' => $cm->id]);
         }
@@ -267,11 +270,14 @@ class rendering {
             $links[get_string('depositcorrections', 'mod_these')] = new moodle_url('/mod/these/corrections.php', $params);
         }
         if ($rights->director && these_report_editable($dossier)) {
-            $links[get_string('writereport', 'mod_these')] = new moodle_url('/mod/these/report.php', $params);
+            $links[get_string('depositreport', 'mod_these')] = new moodle_url('/mod/these/report.php', $params);
         }
         $steps = these_review_steps();
         if (isset($steps[$status]) && !empty($rights->{$steps[$status]['actor']})) {
             $links[get_string('review' . $steps[$status]['key'], 'mod_these')] = new moodle_url('/mod/these/review.php', $params);
+        }
+        if ($rights->deve && daterequest::allowed($dossier)) {
+            $links[get_string('daterequest', 'mod_these')] = new moodle_url('/mod/these/daterequest.php', $params);
         }
         if ($rights->deve && in_array($status, [THESE_STATUS_CONFORM, THESE_STATUS_SCHEDULED], true)) {
             $links[get_string('documents', 'mod_these')] = new moodle_url('/mod/these/documents.php', $params);
@@ -380,7 +386,7 @@ class rendering {
             'titleen' => these_subject_field($dossier, 'titleen', $context),
             'keywords' => these_subject_field($dossier, 'keywords', $context),
             'director' => $director ? fullname($director) : '',
-            'codirector' => $dossier->codirectorname,
+            'extdirector' => !empty($dossier->externaldirector) ? (string) $dossier->extdirectorname : '',
             'libraryref' => $dossier->libraryref,
             'status' => these_status_label($dossier->status),
             'statustime' => userdate($dossier->statustime, $dateformat),
@@ -392,24 +398,12 @@ class rendering {
             'embargo' => $embargo ? userdate($embargo, get_string('strftimedatefullshort', 'langconfig')) : '',
             'a6' => a6::label($dossier),
             'directortitle' => (string) $dossier->directortitle,
-            'codirectortype' => self::codirector_type_label($dossier),
             'missingsignatures' => implode(' ; ', array_map(function ($item) {
                 return these_document_label($item['doctype']) . ' — ' . these_slot_label($item['slot']);
             }, prerequisites::missing($dossier))),
             'universitypieces' => self::university_pieces_label($context, $dossier),
             'lastrefusal' => self::last_refusal_label($dossier),
         ];
-    }
-
-    /**
-     * Co-directeur interne (annuaire) ou extérieur, pour l'export.
-     *
-     * @param stdClass $dossier
-     * @return string
-     */
-    protected static function codirector_type_label(stdClass $dossier) {
-        $type = \mod_these\form\subject_form::codirector_type($dossier);
-        return $type === '' ? '' : get_string('codirector' . $type, 'mod_these');
     }
 
     /**

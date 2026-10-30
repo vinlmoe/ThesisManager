@@ -94,25 +94,21 @@ final class import_test extends these_testcase {
      */
     public function test_import_states(): void {
         $this->setup_activity();
-        $jurorid = \mod_these\local\jurors::save((object) ['title' => 'Dr', 'lastname' => 'Martin', 'firstname' => 'Claire',
-            'email' => 'claire.martin@example.com', 'status' => 'mcf', 'institution' => 'École nationale vétérinaire',
-            'active' => 1]);
         $users = [];
         for ($i = 0; $i < 6; $i++) {
             $users[] = $this->getDataGenerator()->create_and_enrol($this->course, 'student')->username;
         }
         $rows = [
-            ['Student', 'Title', 'Codirector', 'Status', 'DefenseDate', 'DefenseLocation', 'Mention', 'Corrections'],
-            [$users[0], 'Soutenue', 'Dr MARTIN Claire', 'corrections', '12/06/2025 10:30', 'Amphi A', 'très honorable', 'Page 12'],
-            [$users[1], 'Close', 'Pr Durand (Lyon)', 'File closed', 45820, '', 'felicitations', ''],
-            [$users[2], 'En cours', 'claire martin', '', '', '', '', ''],
-            [$users[3], 'Statut', '', 'scheduled', '12/06/2025', '', '', ''],
-            [$users[4], 'Sans date', '', 'closed', '', '', '', ''],
-            [$users[5], 'Mention', '', 'closed', '2025-06-12', '', 'passable', ''],
+            ['Student', 'Title', 'Status', 'DefenseDate', 'DefenseLocation', 'Mention', 'Corrections'],
+            [$users[0], 'Soutenue', 'corrections', '12/06/2025 10:30', 'Amphi A', 'très honorable', 'Page 12'],
+            [$users[1], 'Close', 'File closed', 45820, '', 'felicitations', ''],
+            [$users[2], 'En cours', '', '', '', '', ''],
+            [$users[3], 'Statut', 'scheduled', '12/06/2025', '', '', ''],
+            [$users[4], 'Sans date', 'closed', '', '', '', ''],
+            [$users[5], 'Mention', 'closed', '2025-06-12', '', 'passable', ''],
         ];
         $report = \mod_these\local\import::import_rows($this->these, $rows, false, $this->deve->id);
         $this->assertEquals([true, true, true, false, false, false], array_column($report, 'ok'));
-        $this->assertStringContainsString('Dr MARTIN Claire', $report[0]['message']);
 
         $dossier = $this->dossier_of($users[0]);
         $this->assertEquals(THESE_STATUS_CORRECTIONS, $dossier->status);
@@ -122,26 +118,21 @@ final class import_test extends these_testcase {
         $this->assertSame('treshonorable', $dossier->mention);
         $this->assertEquals(1, $dossier->correctionsrequested);
         $this->assertSame('Page 12', $dossier->correctionsnote);
-        $this->assertEquals($jurorid, $dossier->codirectorjurorid);
-        $this->assertSame('Dr MARTIN Claire', $dossier->codirectorname);
 
-        // Date du tableur (12/06/2025), 14 h par défaut ; co-directeur extérieur.
+        // Date du tableur (12/06/2025), 14 h par défaut.
         $dossier = $this->dossier_of($users[1]);
         $this->assertEquals(THESE_STATUS_CLOSED, $dossier->status);
         $this->assertEquals(make_timestamp(2025, 6, 12, 14, 0), $dossier->defensedate);
         $this->assertSame('felicitations', $dossier->mention);
         $this->assertEquals(0, $dossier->correctionsrequested);
-        $this->assertEquals(0, $dossier->codirectorjurorid);
-        $this->assertSame('Pr Durand (Lyon)', $dossier->codirectorname);
 
         $dossier = $this->dossier_of($users[2]);
         $this->assertEquals(THESE_STATUS_ACTIVE, $dossier->status);
-        $this->assertEquals($jurorid, $dossier->codirectorjurorid);
         $this->assertEquals(0, $dossier->defenseresult);
 
         // Colonnes ajoutées à l'export.
         $row = these_register_row($this->dossier_of($users[0]), $this->context, null, null);
-        $this->assertSame(get_string('codirectorinternal', 'mod_these'), $row['codirectortype']);
+        $this->assertSame('', $row['extdirector']);
         $this->assertSame('', $row['missingsignatures']);
         $this->assertSame('', $row['lastrefusal']);
         foreach (['a6', 'directortitle', 'universitypieces'] as $column) {

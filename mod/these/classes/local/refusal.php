@@ -25,17 +25,19 @@ use stdClass;
  * Refus de signer d'un agent DEVE : au lieu de signer les documents que l'équipe DEVE a validés, il
  * les refuse avec un motif, et le dossier revient à l'étape où ces documents ont été créés.
  *
- * - dépôt de sujet : à l'étudiant (sujet renvoyé), qui le soumet de nouveau à l'enregistrement de
- *   la DEVE ;
+ * - dépôt de sujet : à l'étudiant (sujet renvoyé), qui le soumet de nouveau : la phase 1 est
+ *   refaite ;
  * - fiche signalétique, contrat de diffusion, conclusions : à l'étudiant (dossier de soutenance
- *   renvoyé), qui le soumet de nouveau à la validation de la DEVE ;
+ *   renvoyé), qui le soumet de nouveau : la phase 2 est refaite ;
  * - fiche d'agréments, dont l'agrément administratif est rempli par la DEVE : à la validation du
  *   dossier par la DEVE.
  *
+ * Comme pour tout renvoi, les signatures des étapes refaites sont révoquées et redemandées au fil
+ * du circuit (voir signatures::revoke_signatures()).
+ *
  * Plusieurs documents refusés ensemble : le dossier revient à la première de ces étapes. Le refus
  * n'est possible que tant que l'étape suivante n'a pas avancé (elle attend ces signatures, voir
- * prerequisites). Les demandes de signature aux agents sont retirées ; elles repartent à la
- * nouvelle validation de l'équipe. Le motif est inscrit à l'historique, montré au destinataire du
+ * prerequisites). Le motif est inscrit à l'historique, montré au destinataire du
  * renvoi et envoyé à l'équipe DEVE (validateur compris).
  *
  * @package   mod_these
@@ -46,29 +48,33 @@ class refusal {
     /**
      * Étape de création de chaque document signé par les agents : statut d'où le refus est possible
      * (celui qu'atteint le dossier à la validation de l'équipe), statut de retour, statut repris à la
-     * nouvelle soumission de l'étudiant, destinataire.
+     * nouvelle soumission de l'étudiant (0 : la phase est refaite), destinataire, emplacements dont
+     * les signatures sont conservées (étapes qui ne sont pas refaites).
      *
-     * @return array doctype => [from, to, returnstatus, target]
+     * @return array doctype => [from, to, returnstatus, target, keep]
      */
     public static function creation_steps() {
         $defense = [
             'from' => THESE_STATUS_DEFENSE_VALIDATED,
             'to' => THESE_STATUS_DEFENSE_RETURNED,
-            'returnstatus' => THESE_STATUS_DEFENSE_APPROVED,
+            'returnstatus' => 0,
             'target' => 'student',
+            'keep' => [],
         ];
         return [
             'subject' => [
                 'from' => THESE_STATUS_SUBJECT_REGISTERED,
                 'to' => THESE_STATUS_SUBJECT_RETURNED,
-                'returnstatus' => THESE_STATUS_SUBJECT_APPROVED,
+                'returnstatus' => 0,
                 'target' => 'student',
+                'keep' => [],
             ],
             'agreement' => [
                 'from' => THESE_STATUS_DEFENSE_VALIDATED,
                 'to' => THESE_STATUS_DEFENSE_APPROVED,
                 'returnstatus' => 0,
                 'target' => 'deve',
+                'keep' => ['student', 'director', 'extdirector'],
             ],
             'signaletique' => $defense,
             'contract' => $defense,
@@ -122,8 +128,6 @@ class refusal {
      * @return stdClass Le dossier à jour.
      */
     public static function refuse(stdClass $these, stdClass $cm, stdClass $dossier, array $signatures, $userid, $reason) {
-        global $DB;
-
         $reason = trim((string) $reason);
         $signatures = array_values(array_filter($signatures, function ($signature) use ($dossier) {
             return self::refusable($signature, $dossier);
@@ -131,24 +135,21 @@ class refusal {
         if ($reason === '' || !$signatures) {
             throw new moodle_exception('refusenothing', 'mod_these');
         }
-        return these_dossier_operation($dossier, function () use ($these, $cm, $dossier, $signatures, $userid, $reason, $DB) {
+        return these_dossier_operation($dossier, function () use ($these, $cm, $dossier, $signatures, $userid, $reason) {
             $step = self::return_step(array_column($signatures, 'doctype'));
             $labels = array_map(function ($signature) {
                 return signatureagent::document_label($signature->doctype, $signature->slot);
             }, $signatures);
             $validators = array_unique(array_filter(array_map('intval', array_column($signatures, 'validatedby'))));
 
-            // Demandes aux agents issues de la même validation retirées : elles repartent à la
-            // nouvelle validation de l'équipe. Celles d'une étape antérieure restent ouvertes.
-            $samestep = array_keys(array_filter(self::creation_steps(), function ($creation) use ($dossier) {
-                return $creation['from'] === (int) $dossier->status;
-            }));
-            [$slotsql, $params] = $DB->get_in_or_equal(signatureagent::slots_for($these), SQL_PARAMS_NAMED, 'slot');
-            [$docsql, $docparams] = $DB->get_in_or_equal($samestep, SQL_PARAMS_NAMED, 'doc');
-            $DB->delete_records_select(
-                'these_signature',
-                "dossierid = :dossierid AND token IS NULL AND timesigned = 0 AND slot $slotsql AND doctype $docsql",
-                $params + $docparams + ['dossierid' => $dossier->id]
+            // Signatures des étapes refaites révoquées, demandes aux agents comprises : elles sont
+            // redemandées au fil du circuit.
+            signatures::revoke_signatures(
+                context_module::instance($cm->id),
+                $dossier,
+                $userid,
+                signatures::phase_documents(these_phase($step['to'])),
+                $step['keep']
             );
 
             $remark = get_string('refusalremark', 'mod_these', (object) [

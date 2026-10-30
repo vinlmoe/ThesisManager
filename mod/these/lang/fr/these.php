@@ -170,17 +170,9 @@ $string['subjectkeywords'] = 'Mots-clés';
 $string['subjectkeywords_help'] = "3 à 5 mots-clés séparés par des points-virgules, choisis de préférence dans la terminologie HeTOP.";
 $string['director'] = 'Directeur de thèse';
 $string['director_help'] = "Enseignant qui dirige la thèse. Seuls les enseignants inscrits dans ce cours et autorisés à diriger des "
-    . "thèses sont proposés : si le vôtre n'apparaît pas, contactez la DEVE.";
-$string['codirector'] = 'Co-directeur';
-$string['codirector_help'] = "Facultatif. Co-directeur éventuel : un enseignant de l'établissement, à choisir dans la liste, ou une "
-    . "personne extérieure, dont vous indiquez le nom et la qualité. Il ne valide pas le dossier dans le module.";
-$string['codirectornone'] = 'Aucun';
-$string['codirectorinternal'] = "Interne à l'établissement";
-$string['codirectorexternal'] = "Extérieur à l'établissement";
-$string['codirectorjuror'] = 'Co-directeur interne';
-$string['codirectorname'] = 'Co-directeur extérieur : titre, nom et qualité';
+    . "thèses sont proposés : si le vôtre n'apparaît pas, contactez la DEVE. Un directeur extérieur à l'établissement se déclare "
+    . "avec la case ci-dessus.";
 $string['subjectdocs'] = 'Pièces jointes au sujet';
-$string['subjectdocs_help'] = 'Facultatif : bibliographie, protocole, accord de partenaire...';
 $string['savedraft'] = 'Enregistrer le brouillon';
 $string['submitsubject'] = 'Soumettre au directeur de thèse';
 $string['resubmitsubject'] = 'Soumettre de nouveau';
@@ -201,15 +193,15 @@ $string['depositdefense'] = 'Déposer les documents de soutenance';
 $string['defenseprogress'] = 'Avancement du dépôt : {$a->complete} rubrique(s) complète(s) sur {$a->total}. Les rubriques à compléter sont dépliées ci-dessous.';
 $string['defensesectioncomplete'] = 'Complète';
 $string['defensesectionmissing'] = '{$a} champ(s) à compléter';
-$string['defenseintro'] = "Déposez votre manuscrit et les documents de soutenance, et proposez une date, un lieu et la composition du "
-    . "jury (au moins {\$a} membres votants, président compris ; votre directeur siège sans voter). Vous pouvez préparer ce dépôt en plusieurs fois "
-    . "(« Enregistrer le brouillon ») ; la soumission l'envoie à votre directeur, qui le validera en y joignant son rapport.";
+$string['defenseintro'] = "Déposez votre manuscrit, et proposez une date et la composition du jury (au moins {\$a} membres "
+    . "votants, président compris ; votre directeur siège sans voter). La salle est attribuée par la DEVE ; votre DEFV et votre A6 "
+    . "sont saisis par elle. Vous pouvez préparer ce dépôt en plusieurs fois (« Enregistrer le brouillon ») ; la soumission l'envoie "
+    . "à votre directeur, qui le validera en y joignant son rapport.";
 $string['defensedocuments'] = 'Documents de soutenance';
 $string['manuscript'] = 'Manuscrit (PDF)';
 $string['manuscript_help'] = 'Version complète du manuscrit, en un seul fichier PDF.';
 $string['manuscriptrequired'] = 'Le manuscrit est obligatoire pour soumettre.';
 $string['defensedocs'] = 'Autres documents de soutenance';
-$string['defensedocs_help'] = 'Facultatif : résumé, autorisation de diffusion, annexes...';
 $string['defenseproposal'] = 'Proposition de soutenance';
 $string['proposeddaterequired'] = 'Cochez « Activer » puis choisissez la date et l\'heure proposées.';
 $string['defenseroomshelp'] = 'Salles proposées : {$a}. Vous pouvez aussi saisir un autre lieu.';
@@ -223,9 +215,10 @@ $string['defensesubmittedmsg'] = 'Dossier de soutenance soumis.';
 $string['defensenoteditable'] = "Le dépôt des documents de soutenance n'est possible qu'une fois le sujet enregistré, ou si le dossier "
     . "de soutenance vous a été renvoyé.";
 $string['directorreport'] = 'Rapport du directeur';
-$string['directorreport_help'] = "Rapport du directeur de thèse sur le manuscrit, obligatoire pour valider la proposition de soutenance. "
-    . "Il est communiqué à la DEVE, à la bibliothèque et au jury, mais pas à l'étudiant.";
-$string['directorreportrequired'] = 'Le rapport du directeur est obligatoire pour valider.';
+$string['directorreport_help'] = "Rapport du directeur de thèse sur le manuscrit, déposé en fichier (PDF ou document Word), "
+    . "obligatoire pour valider la proposition de soutenance. Il est communiqué à la DEVE, à la bibliothèque et au jury, mais pas à "
+    . "l'étudiant.";
+$string['directorreportrequired'] = 'Déposez le rapport du directeur.';
 $string['generateddocuments'] = 'Documents générés';
 $string['defenseresult'] = 'Résultat';
 $string['resultadmitted'] = 'Admis';
@@ -243,9 +236,10 @@ $string['roomconflicts'] = 'Salle déjà occupée sur ce créneau (soutenances q
 $string['roomconflict'] = '{$a->location} : soutenance de {$a->student} le {$a->date} ({$a->activity}).';
 $string['roomconflictshort'] = 'Salle occupée : {$a->student}, {$a->time}';
 $string['juryhelpdeve'] = "Une ligne par membre, choisi de préférence dans l'annuaire du jury.";
-$string['juryhelp'] = "Une ligne par membre. Choisissez de préférence l'enseignant dans l'annuaire du jury : son titre, son "
-    . "statut, son établissement et son adresse en sont repris. Pour un membre extérieur ou un invité, choisissez « Membre extérieur "
-    . "ou invité » et renseignez la ligne (le statut est demandé pour un membre votant ; le directeur de thèse siège sans voter). Seuls les maîtres de conférences HDR, les "
+$string['juryhelp'] = "Une ligne par membre : la première est celle du président, la deuxième celle du directeur de thèse (il siège "
+    . "sans voter) ; les suivantes, des membres du jury ou des invités. Choisissez de préférence l'enseignant dans l'annuaire du jury : son "
+    . "titre, son statut, son établissement et son adresse en sont repris. Pour un membre extérieur ou un invité, choisissez « Membre extérieur "
+    . "ou invité » et renseignez la ligne (le statut est demandé pour un membre votant). Seuls les maîtres de conférences HDR, les "
     . "professeurs et les émérites peuvent présider. La DEVE valide ensuite l'éligibilité de chaque membre ; les membres sont alors "
     . "prévenus par courriel et reçoivent un lien d'accès aux documents du dossier.";
 $string['juryrole'] = 'Rôle';
@@ -356,10 +350,12 @@ $string['reviewlibrarysubject'] = 'Enregistrer le sujet (bibliothèque)';
 $string['reviewlibrarysubject_help'] = "Indiquez la référence de la notice créée dans le référentiel documentaire. L'enregistrement ouvre "
     . "le dossier, qui reste actif jusqu'au dépôt des documents de soutenance.";
 $string['reviewdirectordefense'] = 'Valider la soutenance et déposer le rapport';
-$string['reviewdirectordefense_help'] = "Validez la proposition de soutenance (date, jury) après avoir rédigé votre rapport sur le "
-    . "manuscrit (« Rédiger le rapport ») : votre signature est apposée sur le rapport à la validation. Vous pouvez aussi renvoyer le dossier à l'étudiant avec vos commentaires.";
+$string['reviewdirectordefense_help'] = "Validez la proposition de soutenance (date, jury) après avoir déposé votre rapport sur "
+    . "le manuscrit (« Déposer le rapport ») et rempli la grille de conformité. Vous pouvez aussi renvoyer le dossier à l'étudiant avec vos commentaires.";
 $string['reviewdevedefense'] = 'Valider le dossier de soutenance (DEVE)';
-$string['reviewdevedefense_help'] = "Attribuez le numéro, arrêtez la date, le lieu et le jury : le manuscrit passe ensuite à la bibliothèque.";
+$string['reviewdevedefense_help'] = "Attribuez le numéro, arrêtez la date, la salle et le jury : le manuscrit passe ensuite à la "
+    . "bibliothèque. Si l'horaire proposé n'est pas disponible, demandez une autre date à l'étudiant (« Demander une autre date ») "
+    . "sans renvoyer le dossier.";
 $string['reviewlibraryconformity'] = 'Contrôler la conformité du manuscrit';
 $string['reviewlibraryconformity_help'] = "Vérifiez la forme du manuscrit, les normes de présentation et les conditions du dépôt légal. "
     . "La validation délivre l'attestation de conformité ; un manuscrit non conforme est renvoyé à l'étudiant avec le motif.";
@@ -414,7 +410,7 @@ $string['dossierclosed'] = 'Procès-verbal déposé : dossier clôturé.';
 
 // Gestion DEVE.
 $string['editdossier'] = 'Modifier le dossier';
-$string['editdossierhelp'] = "Sans effet sur le statut. Si la date, le lieu ou le jury changent, régénérez les documents de soutenance.";
+$string['editdossierhelp'] = "Sans effet sur le statut. Si la date, la salle ou le jury changent, régénérez les documents de soutenance.";
 $string['dossiersaved'] = 'Dossier enregistré.';
 $string['canceldossier'] = 'Abandonner le dossier';
 $string['cancelhelp'] = "Le dossier est conservé tel quel et peut être rouvert plus tard dans le statut qu'il avait atteint.";
@@ -457,7 +453,6 @@ $string['importmissingcolumn'] = 'Colonne obligatoire absente : {$a}';
 $string['importbadstatus'] = 'Statut non importable : {$a} (active, corrections ou closed).';
 $string['importbaddefensedate'] = 'Date de soutenance manquante ou illisible : {$a}';
 $string['importbadmention'] = 'Mention inconnue : {$a}';
-$string['importcodirectorinternal'] = 'co-directeur interne : {$a}';
 
 // Export.
 $string['export'] = 'Export du registre';
@@ -685,10 +680,11 @@ $string['agentuniversity'] = 'Délégataires — {$a}';
 $string['settingsagentsnone'] = 'Aucun agent choisi';
 $string['settingschecklibraryagents'] = 'Agents de la bibliothèque';
 $string['scopesettings'] = 'Paramètres du circuit';
-$string['scopesettings_desc'] = "Agents DEVE signataires et de la bibliothèque, établissement, université, signataires des documents et "
-    . "contrat type de diffusion de cette activité. Aucun n'est un réglage du site.";
-$string['scopesettingsshared_desc'] = "Agents DEVE signataires et de la bibliothèque, établissement, université, signataires des documents "
-    . "et contrat type de diffusion communs à toutes les activités « Gestion des thèses » suivies. Aucun n'est un réglage du site.";
+$string['scopesettings_desc'] = "Agents DEVE signataires et de la bibliothèque, établissement, université, signataires des documents, "
+    . "contrat type de diffusion et modèle du rapport du directeur de cette activité. Aucun n'est un réglage du site.";
+$string['scopesettingsshared_desc'] = "Agents DEVE signataires et de la bibliothèque, établissement, université, signataires des documents, "
+    . "contrat type de diffusion et modèle du rapport du directeur communs à toutes les activités « Gestion des thèses » suivies. "
+    . "Aucun n'est un réglage du site.";
 
 // Documents (paramètres du circuit).
 $string['settingsdefenses'] = 'Soutenances';
@@ -696,7 +692,7 @@ $string['settingsdefenseduration'] = "Durée d'une soutenance (minutes)";
 $string['settingsdefenseduration_help'] = "Sert à détecter les conflits de jury : un membre qui siège dans deux soutenances qui se chevauchent "
     . "est signalé dans le planning et sur le dossier. 60 minutes par défaut.";
 $string['settingsdefenserooms'] = 'Salles de soutenance';
-$string['settingsdefenserooms_help'] = 'Une salle par ligne. Elles sont proposées à la saisie du lieu (dépôt de l\'étudiant, validation et modification par la DEVE) ; la première est proposée par défaut. Un autre lieu reste possible.';
+$string['settingsdefenserooms_help'] = 'Une salle par ligne. Elles sont proposées à la DEVE quand elle attribue la salle (validation et modification du dossier) ; un autre lieu reste possible.';
 $string['settingsdefensedurationinvalid'] = 'Indiquez une durée d\'au moins une minute.';
 $string['settingsdocuments'] = 'Documents et signataires';
 $string['doctplimages'] = 'Images des modèles';
@@ -755,8 +751,8 @@ $string['keywordscount'] = 'Indiquez de 3 à 5 mots-clés, séparés par des poi
 $string['subjectapproval'] = 'Approbation du sujet';
 $string['externaldirector'] = "Le directeur de thèse est extérieur à l'établissement";
 $string['externaldirector_help'] = "Le directeur extérieur, sans compte Moodle, signe le formulaire depuis un lien reçu par courriel. "
-    . "Choisissez alors ci-dessous, comme directeur dans le module, le membre de l'établissement (enseignant-chercheur) qui suit la "
-    . "thèse : c'est lui qui valide les étapes et signe en qualité de membre.";
+    . "Choisissez alors un examinateur interne, enseignant-chercheur de l'établissement : c'est lui qui fait les démarches dans le "
+    . "module (validation des étapes, rapport, signatures en qualité de membre).";
 $string['directortitle'] = 'Titre du directeur';
 $string['directortitle_help'] = "Dr, Pr… tel qu'il doit figurer sur les documents. Demandé seulement si le directeur ne figure pas "
     . "dans l'annuaire des enseignants, qui donne sinon son titre.";
@@ -814,7 +810,6 @@ $string['signdocuments'] = 'Signer les documents';
 // Documents et emplacements de signature.
 $string['docsubject'] = 'Dépôt de sujet de thèse';
 $string['docbordereau'] = 'Bordereau de thèse (ABES)';
-$string['docreport'] = 'Rapport du directeur';
 $string['docgrid'] = 'Grille de conformité de la thèse';
 $string['docagreement'] = "Fiche d'agréments administratif et scientifique";
 $string['docsignaletique'] = 'Fiche signalétique';
@@ -863,7 +858,7 @@ $string['a6validation'] = "Validation de l'A6";
 $string['a6notvalidated'] = 'non validée';
 $string['a6bydeve'] = 'Saisie par la DEVE.';
 $string['a6bydevestatus'] = '{$a} (saisie par la DEVE)';
-$string['loga6recorded'] = "Validation de l'A6 enregistrée";
+$string['loga6recorded'] = 'Validation des études enregistrée';
 $string['loguniversitysealed'] = "Pièce scellée pour l'université";
 $string['loguniversitydownloaded'] = "Pièces pour l'université téléchargées";
 $string['prerequisitesmissing'] = "Étape bloquée : des documents des étapes précédentes attendent encore ces signatures.";
@@ -871,7 +866,7 @@ $string['prerequisitesuniversity'] = "Étape bloquée : les pièces envoyées à
 $string['validatedbyname'] = 'validé par {$a}';
 $string['refusetitle'] = 'Refuser de signer';
 $string['refusesign'] = 'Refuser de signer…';
-$string['refuse_help'] = "Les documents refusés ne sont pas signés : le dossier revient, avec votre motif, à l'étape où ils ont été créés (l'étudiant pour le dépôt de sujet, la fiche signalétique, le contrat de diffusion et les conclusions ; la validation de la DEVE pour la fiche d'agréments). Plusieurs documents refusés : la première de ces étapes. L'équipe DEVE et le compte qui avait validé sont prévenus ; les signatures vous seront demandées de nouveau à la prochaine validation.";
+$string['refuse_help'] = "Les documents refusés ne sont pas signés : le dossier revient, avec votre motif, à l'étape où ils ont été créés (l'étudiant pour le dépôt de sujet, la fiche signalétique, le contrat de diffusion et les conclusions ; la validation de la DEVE pour la fiche d'agréments). Plusieurs documents refusés : la première de ces étapes. L'équipe DEVE et le compte qui avait validé sont prévenus. Les signatures des étapes refaites sont révoquées et redemandées au fil du circuit : renvoyé à l'étudiant, le dossier refait toute sa phase.";
 $string['refusedocuments'] = 'Documents refusés';
 $string['refusereason'] = 'Motif du refus';
 $string['refusesubmit'] = 'Refuser et renvoyer le dossier';
@@ -904,7 +899,7 @@ $string['universitydownloadagain'] = "Télécharger de nouveau les pièces pour 
 $string['universityreturn'] = "Pièces envoyées à l'université : à leur retour, déposez les scans signés, en cochant les signataires de l'université qu'ils couvrent.";
 $string['universityaddscan'] = "Déposer les scans revenus de l'université";
 $string['universitynothing'] = "Aucun document n'attend seulement l'université.";
-$string['a6page_desc'] = "La validation de l'A6 est liée à l'étudiant, pas à son dossier : elle peut être saisie avant la création du dossier et vaut pour tous ses dossiers. L'agrément administratif et la fiche signalétique la reprennent. Modifiez un étudiant, cochez-en plusieurs pour leur enregistrer la même validation, ou importez un fichier.";
+$string['a6page_desc'] = "La validation des études (obtention du DEFV, validation de l'A6) est saisie par la DEVE et liée à l'étudiant, pas à son dossier : elle peut être saisie avant la création du dossier et vaut pour tous ses dossiers. L'agrément administratif et la fiche signalétique la reprennent ; l'étudiant ne la renseigne pas. Modifiez un étudiant, cochez-en plusieurs pour leur enregistrer la même validation de l'A6, ou importez un fichier.";
 $string['a6edit'] = "Saisir l'A6";
 $string['a6nodossier'] = 'Pas de dossier';
 $string['a6stateall'] = 'Tous les étudiants';
@@ -917,13 +912,13 @@ $string['a6bulknotyet'] = 'A6 pas encore validée';
 $string['a6bulksubmit'] = 'Enregistrer la validation';
 $string['a6bulkdaterequired'] = "Indiquez la date de validation de l'A6, ou cochez « A6 pas encore validée ».";
 $string['a6bulkdone'] = 'Validation de l\'A6 enregistrée pour {$a} étudiant(s).';
-$string['a6saved'] = "Validation de l'A6 enregistrée.";
-$string['a6import'] = "Importer les validations de l'A6";
+$string['a6saved'] = 'Validation des études enregistrée.';
+$string['a6import'] = 'Importer les validations des études';
 $string['a6dryrunresult'] = 'Simulation : {$a->ok} étudiant(s) à enregistrer, {$a->errors} ligne(s) en erreur.';
 $string['a6result'] = 'Import terminé : {$a->ok} validation(s) enregistrée(s), {$a->errors} ligne(s) en erreur.';
-$string['a6import_desc'] = "Un fichier Excel (.xlsx), OpenDocument (.ods) ou CSV, une ligne par étudiant, avec une ligne d'en-tête : colonne « etudiant » (identifiant, adresse de courriel ou numéro d'étudiant), colonne « date » (date de validation de l'A6, jj/mm/aaaa, ou « non » si elle n'est pas validée) et, facultative, colonne « ecole » (Lyon, Alfort, Nantes, Toulouse, Rouen). La validation de l'A6 est liée à l'étudiant, pas à son dossier : tout étudiant inscrit au cours peut figurer, qu'il ait déjà un dossier de thèse ou non, et elle vaudra pour tous ses dossiers. La simulation vérifie le fichier sans rien enregistrer.";
+$string['a6import_desc'] = "Un fichier Excel (.xlsx), OpenDocument (.ods) ou CSV, une ligne par étudiant, avec une ligne d'en-tête : colonne « etudiant » (identifiant, adresse de courriel ou numéro d'étudiant), colonne « date » (date de validation de l'A6, jj/mm/aaaa, ou « non » si elle n'est pas validée) et, facultatives, colonne « ecole » (Lyon, Alfort, Nantes, Toulouse, Rouen), colonne « defv » (date d'obtention du DEFV) et colonne « ecole defv ». La validation des études est liée à l'étudiant, pas à son dossier : tout étudiant inscrit au cours peut figurer, qu'il ait déjà un dossier de thèse ou non, et elle vaudra pour tous ses dossiers. La simulation vérifie le fichier sans rien enregistrer.";
 $string['a6file'] = 'Fichier des validations';
-$string['a6file_help'] = "Excel (.xlsx), OpenDocument (.ods) ou CSV (séparateur point-virgule ou virgule). En-têtes reconnues : etudiant, date, ecole.";
+$string['a6file_help'] = "Excel (.xlsx), OpenDocument (.ods) ou CSV (séparateur point-virgule ou virgule). En-têtes reconnues : etudiant, date, ecole, defv, ecole defv.";
 $string['a6importformat'] = 'Format de fichier non reconnu : Excel (.xlsx), OpenDocument (.ods) ou CSV.';
 $string['a6importunreadable'] = 'Le fichier ne peut pas être lu.';
 $string['a6notenrolled'] = "L'étudiant n'est pas inscrit au cours de cette activité.";
@@ -953,16 +948,15 @@ $string['contracttemplatemissing'] = 'Le contrat type de diffusion n\'a pas ét�
 $string['contracttemplateunreadable'] = 'Le contrat type de diffusion déposé dans les paramètres du circuit n\'a pas pu être lu (format PDF non pris en charge) : le contrat produit ne contient que les pages du module et ne sera pas scellé. Déposez le contrat type enregistré dans un format PDF plus ancien (PDF 1.4).';
 $string['bconfidentialuntil'] = "Confidentialité jusqu'au";
 $string['bconfidentialuntil_help'] = 'Ne concerne que les thèses déclarées confidentielles au dépôt du sujet.';
-$string['bembargo'] = 'Je demande un embargo de diffusion de {$a} ans à compter de la soutenance';
-$string['embargo_help'] = 'Pendant l\'embargo, la thèse est enregistrée et signalée, mais son texte intégral n\'est ni diffusé sur internet ni communiqué à la consultation avant son terme, 5 ans après la date de soutenance. La demande doit être motivée (brevet, publication en cours, données sensibles, partenariat...). Elle figure dans le contrat de diffusion, que le directeur de thèse vise.';
+$string['bembargo'] = 'Je demande un embargo de diffusion à compter de la soutenance ({$a} mois au plus)';
+$string['embargo_help'] = 'Pendant l\'embargo, la thèse est enregistrée et signalée, mais son texte intégral n\'est ni diffusé sur internet ni communiqué à la consultation avant son terme, au plus un an après la date de soutenance. La demande doit être motivée (brevet, publication en cours, données sensibles, partenariat...). Elle figure dans le contrat de diffusion, que le directeur de thèse vise.';
 $string['bembargoreason'] = 'Motif de la demande d\'embargo';
 $string['bembargoreasonrequired'] = 'Indiquez le motif de la demande d\'embargo.';
 $string['embargo'] = 'Embargo de diffusion';
-$string['embargorequested'] = 'Demandé : {$a->years} ans après la soutenance, jusqu\'au {$a->until}';
-$string['embargorequestednodate'] = 'Demandé : {$a} ans après la soutenance (date de soutenance à fixer)';
+$string['embargorequested'] = 'Demandé : {$a->months} mois après la soutenance, jusqu\'au {$a->until}';
+$string['embargorequestednodate'] = 'Demandé : {$a} mois après la soutenance (date de soutenance à fixer)';
 $string['embargoreason'] = 'Motif de l\'embargo';
 $string['embargoexport'] = 'Embargo jusqu\'au';
-$string['exportcodirectortype'] = 'Co-directeur interne ou extérieur';
 $string['exportmissingsignatures'] = "Signatures manquantes pour passer à l'étape suivante";
 $string['exportuniversitytoseal'] = 'à sceller et envoyer';
 $string['exportlastrefusal'] = "Dernier refus d'un agent DEVE";
@@ -975,9 +969,6 @@ $string['diffusioninternet'] = "J'autorise la diffusion de la thèse en texte in
 $string['diffusionrestricted'] = "Je n'autorise pas la diffusion sur internet, mais uniquement la consultation papier et l'intranet";
 
 // Étapes du directeur et de la DEVE.
-$string['reporttext'] = 'Rapport du directeur';
-$string['reporttext_help'] = "Argumentaire d'une page au plus présentant le travail de thèse (travail effectué, principaux résultats, "
-    . "implication de l'étudiant…).";
 $string['reportfavorable'] = "J'émets un avis favorable à la soutenance et à l'obtention du titre de Docteur vétérinaire";
 $string['reportfavorablerequired'] = "L'avis favorable est nécessaire pour valider la soutenance.";
 $string['ethicsnumber'] = "N° de l'avis favorable du comité d'éthique (si existant)";
@@ -998,12 +989,10 @@ $string['griditemadd'] = 'Ajouter {no} élément(s)';
 $string['griditemssaved'] = 'La grille de conformité est enregistrée.';
 $string['griditemsreset'] = "Rétablir la grille d'origine";
 $string['gridrequired'] = 'Élément à valider.';
-$string['gridstudenthelp'] = "Cochez chaque point que respecte votre manuscrit. Votre directeur vérifiera cette grille, la "
-    . "complétera au besoin et la signera en validant votre soutenance.";
+$string['gridstudenthelp'] = "Cochez chaque point que respecte votre manuscrit. Votre directeur remplira sa propre grille et la "
+    . "signera en validant votre soutenance.";
 $string['gridstudentconfirm'] = "J'atteste que mon manuscrit respecte les points cochés de la grille de conformité";
 $string['gridstudentconfirmrequired'] = "Attestez la grille de conformité avant de soumettre le dossier.";
-$string['gridprefilledbystudent'] = "Grille préremplie et attestée par l'étudiant à son dépôt : vérifiez chaque point avant "
-    . "de signer.";
 $string['gridquestion'] = 'La question scientifique est clairement posée et identifiée.';
 $string['gridanswer'] = 'La réponse bibliographique ou expérimentale est satisfaisante.';
 $string['gridbiblio'] = 'La bibliographie est complète, pertinente et actuelle.';
@@ -1100,10 +1089,8 @@ $string['scanslots'] = 'Signataires du scan';
 $string['scansignaturesrecorded'] = '{$a} signature(s) inscrite(s) comme signée(s) à la main.';
 $string['scanslots_desc'] = "Cochez les signatures portées sur le document scanné : elles sont inscrites comme signées à la main à la "
     . "date ci-dessus, le PDF du document et le suivi des signatures sont mis à jour.";
-$string['pdfreportfavorable'] = "Avis favorable à la soutenance de la thèse et à l'obtention du titre de Docteur vétérinaire.";
 $string['privacy:metadata:these_dossier:bordereau'] = "Données personnelles saisies avec la soutenance (état civil, adresse, courriel personnel, cursus, choix de diffusion).";
 $string['privacy:metadata:these_dossier:conclusions'] = 'Conclusions de la thèse.';
-$string['privacy:metadata:these_dossier:reporttext'] = 'Rapport du directeur.';
 $string['privacy:metadata:these_signature'] = 'Signatures électroniques apposées sur les documents du dossier (image tracée conservée dans les fichiers).';
 $string['privacy:metadata:these_signature:userid'] = 'Signataire.';
 $string['privacy:metadata:these_signature:signername'] = 'Nom du signataire.';
@@ -1153,7 +1140,6 @@ $string['doctplsubject'] = 'Dépôt de sujet de thèse (E01)';
 $string['doctplagreement'] = "Fiche d'agréments administratif et scientifique (E02)";
 $string['doctplsignaletique'] = 'Fiche signalétique (E03)';
 $string['doctplbordereau'] = 'Bordereau de thèse (ABES)';
-$string['doctplreport'] = 'Rapport du directeur';
 $string['doctplgrid'] = 'Grille de conformité';
 $string['doctplconclusions'] = 'Conclusions';
 $string['doctplcontractdata'] = "Contrat de diffusion (E04) : page des données et choix de l'auteur";
@@ -1166,7 +1152,6 @@ $string['doctplplanning'] = 'Planning des soutenances';
 $string['doctplteachinglist'] = 'Liste du corps enseignant';
 $string['teachinglist'] = 'Liste du corps enseignant (PDF)';
 $string['teachinglist_help'] = "Enseignants actifs de l'annuaire du jury dont l'établissement est celui des paramètres du circuit, groupés par statut, à jour au jour du téléchargement : la page est à inclure dans le manuscrit de la thèse.";
-$string['teachinglistdefense'] = 'Liste à jour du corps enseignant à inclure dans votre manuscrit :';
 $string['teachinggrouppr'] = 'Professeurs';
 $string['teachinggrouppremerite'] = 'Professeurs émérites';
 $string['teachinggroupprstag'] = 'Professeurs stagiaires';
@@ -1251,26 +1236,13 @@ $string['questionnaire_desc'] = 'Répondez à ces questions avant de déposer la
     . 'communiquées au jury ; elles servent aussi à retrouver les thèses.';
 $string['questionnairesaved'] = 'Réponses enregistrées.';
 $string['questionnaireunanswered'] = 'Sans réponse';
-$string['questionnairemissing'] = 'Questions obligatoires sans réponse : {$a}.';
-$string['questionnairecomplete'] = 'Questionnaire rempli.';
-$string['questionnairefill'] = 'Remplir le questionnaire';
-$string['questionnairerequired'] = 'Remplissez le questionnaire préalable au jury avant de déposer la soutenance.';
 $string['transfergroupquestions'] = 'Questionnaire préalable au jury (questions)';
 $string['transferdonequestions'] = '{$a} question(s) ;';
 
 // Rapport du directeur rédigé dans le module.
-$string['writereport'] = 'Rédiger le rapport';
-$string['writereport_desc'] = "Rédigez votre rapport sur le manuscrit : il est imprimé dans le rapport PDF, qui doit tenir sur une "
-    . "page avec votre signature. Vous pouvez l'enregistrer en plusieurs fois et le prévisualiser ; vous le signerez en validant la "
-    . 'soutenance.';
 $string['reportsave'] = 'Enregistrer le rapport';
 $string['reportsaved'] = 'Rapport enregistré.';
 $string['reportnoteditable'] = "Le rapport ne peut être rédigé qu'avant la validation de la soutenance par le directeur.";
-$string['reportnotwritten'] = 'Rapport non rédigé.';
-$string['reportwrittenfavorable'] = 'Rapport rédigé, avis favorable.';
-$string['reportwrittennotfavorable'] = 'Rapport rédigé, sans avis favorable.';
-$string['reporttoolong'] = 'Le rapport compte {$a->length} caractères pour {$a->max} au plus : il doit tenir sur une page avec la signature.';
-$string['reportonepage'] = 'Le rapport ne tient pas sur une page avec la signature : raccourcissez-le.';
 $string['logreportsaved'] = 'Rapport du directeur enregistré';
 
 // Procès-verbal : décisions du jury.
@@ -1429,3 +1401,82 @@ $string['privacy:metadata:these_subjecthistory:summary'] = 'Résumé du sujet pr
 $string['privacy:metadata:these_subjecthistory:reason'] = 'Motif du changement.';
 $string['privacy:metadata:these_subjecthistory:changedby'] = 'Auteur du changement.';
 $string['privacy:metadata:these_subjecthistory:timecreated'] = 'Date du changement.';
+
+// Examinateur interne, rapport déposé, validation des études, nouvelle date.
+$string['internalexaminer'] = 'Examinateur interne';
+$string['internalexaminer_help'] = "Enseignant-chercheur de l'établissement qui fait les démarches dans le module à la place du "
+    . "directeur extérieur : il valide les étapes, dépose le rapport et signe en qualité de membre.";
+$string['internalexaminertitle'] = "Titre de l'examinateur interne";
+$string['exportextdirector'] = 'Directeur extérieur';
+$string['teachinglistreminder'] = "Rappel : votre manuscrit doit inclure la page de la liste à jour du corps enseignant, à télécharger "
+    . "le jour du dépôt.";
+$string['roombydeve'] = 'La salle est attribuée par la DEVE.';
+$string['studiesvalidation'] = 'Validation des études';
+$string['studiessummary'] = 'DEFV : {$a->defv} ; A6 : {$a->a6}';
+$string['defvvalidation'] = 'Obtention du DEFV';
+$string['defvnotrecorded'] = 'non saisie';
+$string['defvrequired'] = "Saisissez l'obtention du DEFV de l'étudiant sur la page de validation des études.";
+$string['privacy:metadata:these_a6:defvdate'] = "Date d'obtention du DEFV.";
+$string['privacy:metadata:these_a6:defvschool'] = "École où le DEFV a été obtenu.";
+$string['settingsreporttemplate'] = 'Modèle du rapport du directeur (Word)';
+$string['settingsreporttemplate_help'] = "Document Word (.docx) proposé au directeur sur la page de dépôt de son rapport : il le "
+    . "télécharge, le remplit et dépose son rapport.";
+$string['reporttemplate'] = 'Modèle de rapport';
+$string['reporttemplatedownload'] = 'Télécharger le modèle (Word)';
+$string['reporttemplatemissing'] = "Aucun modèle de rapport n'est déposé dans les paramètres du circuit.";
+$string['depositreport'] = 'Déposer le rapport';
+$string['depositreport_desc'] = "Rédigez votre rapport sur le manuscrit, à partir du modèle s'il est proposé, puis déposez-le ici "
+    . "(PDF ou document Word) avec votre avis. Il est obligatoire pour valider la soutenance.";
+$string['reportnotdeposited'] = 'Rapport non déposé.';
+$string['reportdepositedfavorable'] = 'Rapport déposé, avis favorable.';
+$string['reportdepositednotfavorable'] = 'Rapport déposé, sans avis favorable.';
+$string['daterequest'] = 'Demander une autre date';
+$string['daterequesthelp'] = "L'horaire proposé n'est pas disponible : l'étudiant est invité à proposer une autre date. Le dossier "
+    . "n'est pas renvoyé (documents et signatures sont conservés), mais il ne peut pas être validé avant la nouvelle proposition.";
+$string['daterequestreason'] = 'Motif, communiqué à l\'étudiant';
+$string['daterequestsent'] = "Nouvelle date demandée à l'étudiant.";
+$string['daterequestnotallowed'] = "Une nouvelle date ne peut être demandée que pour un dossier de soutenance déposé, avant sa validation par la DEVE, et s'il n'en attend pas déjà une.";
+$string['datepending'] = "Une nouvelle date de soutenance a été demandée à l'étudiant : le dossier ne peut pas être validé avant sa proposition.";
+$string['daterequestedlabel'] = 'Nouvelle date';
+$string['daterequestedbadge'] = "Demandée par la DEVE, en attente de l'étudiant";
+$string['newdate'] = 'Proposer une nouvelle date';
+$string['newproposeddate'] = 'Nouvelle date proposée';
+$string['newdatesubmit'] = 'Proposer cette date';
+$string['newdatesame'] = 'Proposez une date différente de celle qui n\'était pas disponible.';
+$string['newdatenotexpected'] = "Aucune nouvelle date n'est demandée pour votre soutenance.";
+$string['newdatesaved'] = 'Nouvelle date transmise à la DEVE.';
+$string['newdaterequested'] = "La DEVE ne peut pas retenir la date proposée ({\$a}) : proposez-en une autre. Le reste de votre dossier n'est pas modifié.";
+$string['logdaterequested'] = 'Nouvelle date de soutenance demandée';
+$string['logdateproposed'] = 'Nouvelle date de soutenance proposée';
+$string['emailkeydaterequested'] = 'Nouvelle date demandée';
+$string['emailkeydateproposed'] = 'Nouvelle date proposée';
+$string['emaildaterequestedsubject'] = 'Thèse de {$a->student} : proposez une autre date de soutenance';
+$string['emaildaterequestedbody'] = 'Bonjour,
+
+La date de soutenance proposée ({$a->date}) n\'est pas disponible :
+
+{$a->comment}
+
+Proposez une autre date ; le reste du dossier n\'est pas modifié.
+
+Sujet : {$a->title}
+
+Proposer une nouvelle date : {$a->url}';
+$string['emaildateproposedsubject'] = 'Thèse de {$a->student} : nouvelle date de soutenance proposée';
+$string['emaildateproposedbody'] = 'Bonjour,
+
+{$a->student} propose une nouvelle date de soutenance : {$a->date}. Le dossier peut de nouveau être validé.
+
+Sujet : {$a->title}
+
+Accéder au dossier : {$a->url}';
+$string['logsignaturesrevoked'] = 'Signatures révoquées, à redemander';
+$string['juryonedirector'] = 'Le jury doit comporter le directeur de thèse (deuxième ligne).';
+$string['bembargomonths'] = "Durée de l'embargo";
+$string['embargomonthsoption'] = '{$a} mois';
+$string['settingsmindelayweeks'] = 'Délai minimal entre le dépôt et la soutenance (semaines)';
+$string['settingsmindelayweeks_help'] = "Nombre de semaines au moins entre le dépôt du dossier de soutenance par l'étudiant et la date qu'il propose ; 0 pour aucun délai. 4 semaines par défaut. La DEVE peut ensuite arrêter une autre date.";
+$string['settingsmindelayweeksinvalid'] = 'Indiquez un nombre de semaines positif ou nul.';
+$string['proposeddatehelp'] = "La date et l'heure de la soutenance doivent avoir été convenues au préalable avec les membres du jury et la DEVE. Elles doivent être fixées au moins {\$a} semaine(s) après le dépôt.";
+$string['proposeddatetoosoon'] = 'La soutenance doit avoir lieu au moins {$a->weeks} semaine(s) après le dépôt, soit à partir du {$a->date}.';
+$string['proposeddatehelpnodelay'] = "La date et l'heure de la soutenance doivent avoir été convenues au préalable avec les membres du jury et la DEVE.";

@@ -94,7 +94,7 @@ final class rights_test extends these_testcase {
 
     /**
      * La zone « Documents générés », que l'étudiant consulte, ne reçoit jamais les documents réservés
-     * au personnel (rapport du directeur, grille) ; l'archive transmise à l'université, si.
+     * au personnel (grille, rapport déposé par le directeur) ; l'archive transmise à l'université, si.
      */
     public function test_generated_documents_hide_staff_only_from_student(): void {
         $this->setup_activity(['universityemail' => 'scolarite@univ.example.com']);
@@ -102,12 +102,16 @@ final class rights_test extends these_testcase {
             'status' => THESE_STATUS_CONFORM,
             'directorid' => $this->director->id,
             'defensedate' => time() + 10 * DAYSECS,
-            'reporttext' => 'Avis favorable du directeur.',
+            'conformitygrid' => json_encode(['fondlist' => 1]),
         ]);
-        $this->assertTrue(these_document_available($dossier, 'report'));
+        $this->assertTrue(these_document_available($dossier, 'grid'));
         $student = these_get_rights($this->context, $dossier, $this->student->id);
         $this->assertTrue(these_can_view_filearea('generated', $student));
-        $this->assertFalse(these_can_view_document('report', $student));
+        $this->assertFalse(these_can_view_document('grid', $student));
+        // Rapport déposé par le directeur : transmis à l'université, pas à l'étudiant.
+        get_file_storage()->create_file_from_string(['contextid' => $this->context->id, 'component' => 'mod_these',
+            'filearea' => 'directorreport', 'itemid' => $dossier->id, 'filepath' => '/', 'filename' => 'rapport.pdf'], '%PDF');
+        $this->assertFalse(these_can_view_filearea('directorreport', $student));
 
         $files = these_generate_documents($this->these, $this->context, $dossier, $this->deve->id);
         $names = array_map(function ($file) {
@@ -125,10 +129,10 @@ final class rights_test extends these_testcase {
         foreach ($names as $name) {
             $this->assertArrayHasKey($name, $archive);
         }
-        $report = these_document_filename('report');
-        $this->assertArrayHasKey($report, $archive);
-        $this->assertStringStartsWith('%PDF', file_get_contents($archive[$report]));
-        $this->assertArrayNotHasKey(these_document_filename('grid'), $archive);
+        $grid = these_document_filename('grid');
+        $this->assertArrayHasKey($grid, $archive);
+        $this->assertStringStartsWith('%PDF', file_get_contents($archive[$grid]));
+        $this->assertArrayHasKey('rapport-directeur-rapport.pdf', $archive);
     }
 
     /**

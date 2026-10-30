@@ -71,6 +71,11 @@ class scopesettings_form extends \moodleform {
         $mform->addRule('defenseduration', null, 'required', null, 'client');
         $mform->addRule('defenseduration', null, 'numeric', null, 'client');
         $mform->addHelpButton('defenseduration', 'settingsdefenseduration', 'mod_these');
+        $mform->addElement('text', 'mindelayweeks', get_string('settingsmindelayweeks', 'mod_these'), ['size' => 5]);
+        $mform->setType('mindelayweeks', PARAM_INT);
+        $mform->addRule('mindelayweeks', null, 'required', null, 'client');
+        $mform->addRule('mindelayweeks', null, 'numeric', null, 'client');
+        $mform->addHelpButton('mindelayweeks', 'settingsmindelayweeks', 'mod_these');
         $mform->addElement(
             'textarea',
             'defenserooms',
@@ -106,6 +111,14 @@ class scopesettings_form extends \moodleform {
             $this->_customdata['fileoptions']
         );
         $mform->addHelpButton('contracttemplate', 'settingscontracttemplate', 'mod_these');
+        $mform->addElement(
+            'filemanager',
+            'reporttemplate',
+            get_string('settingsreporttemplate', 'mod_these'),
+            null,
+            scopesettings::REPORT_TEMPLATE_OPTIONS
+        );
+        $mform->addHelpButton('reporttemplate', 'settingsreporttemplate', 'mod_these');
 
         $this->add_action_buttons(false, get_string('savechanges'));
     }
@@ -134,7 +147,7 @@ class scopesettings_form extends \moodleform {
     }
 
     /**
-     * Durée d'une soutenance : au moins une minute.
+     * Durée d'une soutenance : au moins une minute ; délai minimal avant la soutenance : positif ou nul.
      *
      * @param array $data
      * @param array $files
@@ -144,6 +157,9 @@ class scopesettings_form extends \moodleform {
         $errors = parent::validation($data, $files);
         if ((int) ($data['defenseduration'] ?? 0) < 1) {
             $errors['defenseduration'] = get_string('settingsdefensedurationinvalid', 'mod_these');
+        }
+        if ((int) ($data['mindelayweeks'] ?? 0) < 0) {
+            $errors['mindelayweeks'] = get_string('settingsmindelayweeksinvalid', 'mod_these');
         }
         return $errors;
     }

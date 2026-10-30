@@ -22,11 +22,14 @@ require_once($CFG->libdir . '/formslib.php');
 require_once($CFG->dirroot . '/mod/these/locallib.php');
 
 /**
- * Dépôt des documents de soutenance (phase 2, étape 1) : manuscrit, autres documents, date et
- * lieu proposés, composition du jury, puis les données des documents de l'établissement qui
- * reviennent à l'étudiant : identité et cursus (fiche signalétique), bordereau de thèse (ABES),
+ * Dépôt des documents de soutenance (phase 2, étape 1) : manuscrit (seul document déposé), date
+ * proposée, composition du jury, puis les données des documents de l'établissement qui reviennent à
+ * l'étudiant : identité (fiche signalétique), bordereau de thèse (ABES),
  * conclusions et contrat de diffusion électronique. La soumission signe le bordereau et le
  * contrat. Le dépôt peut être préparé en plusieurs fois ; tout n'est exigé qu'à la soumission.
+ *
+ * La salle est attribuée par la DEVE, et le cursus (DEFV, A6) saisi par elle sur la page de
+ * validation des études (voir \mod_these\local\a6) : l'étudiant ne les renseigne pas.
  *
  * @package   mod_these
  * @copyright 2026 Sébastien Lefebvre
@@ -46,6 +49,13 @@ class defense_form extends \moodleform {
 
         $mform->addElement('header', 'documentsheader', get_string('defensedocuments', 'mod_these'));
         $mform->setExpanded('documentsheader');
+        // Rappel avant le dépôt : la liste à jour du corps enseignant est une page du manuscrit
+        // (« Présence de la liste à jour du corps enseignant » de la grille de conformité).
+        $reminder = get_string('teachinglistreminder', 'mod_these');
+        if (!empty($this->_customdata['teachinglisturl'])) {
+            $reminder .= ' ' . \html_writer::link($this->_customdata['teachinglisturl'], get_string('teachinglist', 'mod_these'));
+        }
+        $mform->addElement('static', 'teachinglist', '', \html_writer::div($reminder, 'alert alert-warning mb-0'));
         $mform->addElement(
             'filemanager',
             'manuscript',
@@ -54,26 +64,23 @@ class defense_form extends \moodleform {
             these_filemanager_options('manuscript')
         );
         $mform->addHelpButton('manuscript', 'manuscript', 'mod_these');
-        if (!empty($this->_customdata['teachinglisturl'])) {
-            // Page à inclure dans le manuscrit (« Présence de la liste à jour du corps enseignant »).
-            $mform->addElement('static', 'teachinglist', '', get_string('teachinglistdefense', 'mod_these') . ' '
-                . \html_writer::link($this->_customdata['teachinglisturl'], get_string('teachinglist', 'mod_these')));
-            $mform->addHelpButton('teachinglist', 'teachinglist', 'mod_these');
-        }
-        $mform->addElement(
-            'filemanager',
-            'defensedocs',
-            get_string('defensedocs', 'mod_these'),
-            null,
-            these_filemanager_options('defensedocs')
-        );
-        $mform->addHelpButton('defensedocs', 'defensedocs', 'mod_these');
 
         $mform->addElement('header', 'dateheader', get_string('defenseproposal', 'mod_these'));
         $mform->setExpanded('dateheader');
+        // Date et heure convenues au préalable avec le jury et la DEVE, au moins le délai minimal des
+        // paramètres après le dépôt.
+        $mform->addElement('static', 'datehelp', '', \html_writer::div(
+            self::date_help($this->_customdata),
+            'alert alert-info mb-0'
+        ));
         // Pas de date préremplie (l'heure courante serait refusée) : l'étudiant l'active et la choisit.
         $mform->addElement('date_time_selector', 'proposeddate', get_string('proposeddate', 'mod_these'), ['optional' => true]);
-        \mod_these\local\scopesettings::add_location_field($mform, $this->_customdata['rooms'] ?? []);
+        $mform->addElement(
+            'static',
+            'roombydeve',
+            get_string('defenselocation', 'mod_these'),
+            get_string('roombydeve', 'mod_these')
+        );
         $mform->addElement('advcheckbox', 'bvisio', '', get_string('visio', 'mod_these'));
 
         these_add_jury_fields($this, $mform, $this->_customdata['jurycount'] ?? 0, false, $this->_customdata['jurorids'] ?? []);
@@ -98,11 +105,14 @@ class defense_form extends \moodleform {
         $mform->addHelpButton('bpersonalemail', 'bpersonalemail', 'mod_these');
         $mform->addElement('advcheckbox', 'bemailconsent', '', get_string('bemailconsent', 'mod_these'));
 
-        // Cursus (fiche signalétique).
+        // Cursus (fiche signalétique) : DEFV et A6 saisis par la DEVE (voir \mod_these\local\a6), rappelés ici.
         $mform->addElement('header', 'cursusheader', get_string('cursus', 'mod_these'));
-        $mform->addElement('date_selector', 'bdefvdate', get_string('bdefvdate', 'mod_these'), ['optional' => true]);
-        $mform->addElement('select', 'bdefvschool', get_string('bschool', 'mod_these'), these_school_options());
-        // Validation de l'A6 : saisie par la DEVE (voir \mod_these\local\a6), rappelée ici.
+        $mform->addElement(
+            'static',
+            'defvstatus',
+            get_string('bdefvdate', 'mod_these'),
+            s($this->_customdata['defvlabel'] ?? get_string('a6bydeve', 'mod_these'))
+        );
         $mform->addElement(
             'static',
             'a6status',
@@ -172,9 +182,17 @@ class defense_form extends \moodleform {
             'optional' => true, 'startyear' => (int) date('Y'), 'stopyear' => (int) date('Y') + 30,
         ]);
         $mform->addHelpButton('bconfidentialuntil', 'bconfidentialuntil', 'mod_these');
-        // Embargo : diffusion différée de THESE_EMBARGO_YEARS ans après la soutenance, sur demande motivée.
-        $mform->addElement('advcheckbox', 'bembargo', '', get_string('bembargo', 'mod_these', THESE_EMBARGO_YEARS));
+        // Embargo : diffusion différée d'au plus THESE_EMBARGO_MAX_MONTHS mois après la soutenance, sur demande motivée.
+        $mform->addElement('advcheckbox', 'bembargo', '', get_string('bembargo', 'mod_these', THESE_EMBARGO_MAX_MONTHS));
         $mform->addHelpButton('bembargo', 'embargo', 'mod_these');
+        $months = [];
+        for ($n = 1; $n <= THESE_EMBARGO_MAX_MONTHS; $n++) {
+            $months[$n] = get_string('embargomonthsoption', 'mod_these', $n);
+        }
+        $mform->addElement('select', 'bembargomonths', get_string('bembargomonths', 'mod_these'), $months);
+        $mform->setType('bembargomonths', PARAM_INT);
+        $mform->setDefault('bembargomonths', THESE_EMBARGO_MAX_MONTHS);
+        $mform->hideIf('bembargomonths', 'bembargo', 'notchecked');
         $mform->addElement('textarea', 'bembargoreason', get_string('bembargoreason', 'mod_these'), ['rows' => 3, 'cols' => 80]);
         $mform->setType('bembargoreason', PARAM_TEXT);
         $mform->hideIf('bembargoreason', 'bembargo', 'notchecked');
@@ -185,18 +203,13 @@ class defense_form extends \moodleform {
         ]);
         $mform->addHelpButton('bdiffusion', 'bdiffusion', 'mod_these');
 
-        // Questionnaire préalable au jury : ses questions obligatoires conditionnent le dépôt.
-        if (!empty($this->_customdata['questionnaireurl'])) {
+        // Questionnaire préalable au jury, rempli avec le dépôt : ses questions obligatoires conditionnent la soumission.
+        $questions = $this->_customdata['questions'] ?? [];
+        if ($questions) {
             $mform->addElement('header', 'questionnaireheader', get_string('questionnaire', 'mod_these'));
             $mform->setExpanded('questionnaireheader');
-            $missing = $this->_customdata['questionnairemissing'] ?? [];
-            $status = $missing
-                ? get_string('questionnairemissing', 'mod_these', implode(' ; ', array_map('format_string', $missing)))
-                : get_string('questionnairecomplete', 'mod_these');
-            $mform->addElement('static', 'questionnairestatus', '', $status . ' ' . \html_writer::link(
-                $this->_customdata['questionnaireurl'],
-                get_string('questionnairefill', 'mod_these')
-            ));
+            $mform->addElement('static', 'questionnairehelp', '', get_string('questionnaire_desc', 'mod_these'));
+            questionnaire_form::add_question_fields($mform, $questions);
         }
 
         these_add_signature_fields($mform, $this->_customdata['signername'], get_string('signdefenseintro', 'mod_these'));
@@ -210,7 +223,7 @@ class defense_form extends \moodleform {
     }
 
     /**
-     * À la soumission : manuscrit déposé, date à venir, lieu renseigné, jury valide et questionnaire
+     * À la soumission : manuscrit déposé, date à venir, jury valide et questionnaire
      * préalable au jury rempli.
      *
      * @param array $data
@@ -229,9 +242,8 @@ class defense_form extends \moodleform {
             $errors['proposeddate'] = get_string('proposeddaterequired', 'mod_these');
         } else if ((int) $data['proposeddate'] <= time()) {
             $errors['proposeddate'] = get_string('datemustbefuture', 'mod_these');
-        }
-        if (trim((string) $data['defenselocation']) === '') {
-            $errors['defenselocation'] = get_string('required');
+        } else if (!empty($this->_customdata['earliestdate']) && (int) $data['proposeddate'] < $this->_customdata['earliestdate']) {
+            $errors['proposeddate'] = self::too_soon_error($this->_customdata);
         }
         // Grille de conformité : éléments obligatoires cochés et attestation de l'étudiant.
         foreach (these_get_grid_items(these_settings_scope($this->_customdata['these'])) as $items) {
@@ -281,13 +293,36 @@ class defense_form extends \moodleform {
         if (!array_filter(array_map('trim', (array) ($data['bkeyword'] ?? [])), 'strlen')) {
             $errors['bkeywordgroup'] = get_string('required');
         }
-        if (empty($data['bdefvdate'])) {
-            $errors['bdefvdate'] = get_string('required');
-        }
-        if (!empty($this->_customdata['questionnairemissing'])) {
-            $errors['questionnairestatus'] = get_string('questionnairerequired', 'mod_these');
-        }
+        $errors = array_merge($errors, questionnaire_form::question_errors($this->_customdata['questions'] ?? [], $data));
         return array_merge($errors, these_signature_errors($data));
+    }
+
+    /**
+     * Rappel affiché avant la date proposée : date et heure convenues avec le jury et la DEVE, délai
+     * minimal après le dépôt.
+     *
+     * @param array $customdata mindelayweeks.
+     * @return string
+     */
+    public static function date_help(array $customdata) {
+        $weeks = (int) ($customdata['mindelayweeks'] ?? 0);
+        if ($weeks > 0) {
+            return get_string('proposeddatehelp', 'mod_these', $weeks);
+        }
+        return get_string('proposeddatehelpnodelay', 'mod_these');
+    }
+
+    /**
+     * Message d'une date proposée trop proche du dépôt.
+     *
+     * @param array $customdata mindelayweeks, earliestdate.
+     * @return string
+     */
+    public static function too_soon_error(array $customdata) {
+        return get_string('proposeddatetoosoon', 'mod_these', (object) [
+            'weeks' => (int) ($customdata['mindelayweeks'] ?? 0),
+            'date' => userdate((int) $customdata['earliestdate'], get_string('strftimedate', 'langconfig')),
+        ]);
     }
 
     /**

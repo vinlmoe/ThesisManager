@@ -89,7 +89,6 @@ $mform = new review_form($PAGE->url, [
     'returnto' => $step['returnto'],
     'theseid' => $these->id,
     'scope' => these_settings_scope($these),
-    'gridprefilled' => !empty(these_get_grid($dossier)),
     'minjury' => $these->minjury,
     'rooms' => these_defense_rooms($these),
     'jurycount' => count($jury),
@@ -100,15 +99,19 @@ $mform = new review_form($PAGE->url, [
     'roomconflicts' => $rights->viewall ? these_render_room_conflicts($dossier) : '',
     'signs' => implode(', ', $signs),
     'missingsignatures' => $missing ? \mod_these\local\prerequisites::render_missing($cm, $context, $dossier, $missing) : '',
+    // Nouvelle date demandée à l'étudiant : la DEVE ne peut pas valider le dossier avant de l'avoir reçue.
+    'datepending' => $step['key'] === 'devedefense' && \mod_these\local\daterequest::pending($dossier),
     'signername' => fullname($USER),
     // Nom de signature saisi par la DEVE seulement ; les autres signent au nom de leur compte.
     'editablename' => $step['actor'] === 'deve',
     'externaldirector' => !empty($dossier->externaldirector),
     // Validation de l'A6 : rappelée, saisie sur sa page à part (retour ici après la saisie).
     'a6label' => \mod_these\local\a6::label($dossier),
+    'defvlabel' => \mod_these\local\a6::defv_label($dossier),
+    'defvrecorded' => !empty(\mod_these\local\a6::get($dossier)['defvdate']),
     'a6url' => \mod_these\local\a6::url($cm, $dossier->userid, $PAGE->url),
     'report' => (object) [
-        'text' => (string) $dossier->reporttext,
+        'deposited' => these_has_files($context, 'directorreport', $dossier->id),
         'favorable' => !empty($dossier->reportfavorable),
         'url' => new moodle_url('/mod/these/report.php', ['id' => $cm->id, 'dossierid' => $dossier->id]),
     ],
@@ -122,9 +125,7 @@ switch ($step['key']) {
     case 'directordefense':
         $formdata->ethicsnumber = $dossier->ethicsnumber;
         $formdata->directorfunction = these_get_agreement($dossier)['directorfunction'] ?? '';
-        foreach (these_get_grid($dossier) as $item => $checked) {
-            $formdata->{'grid_' . $item} = $checked;
-        }
+        // Grille de conformité : le directeur la remplit lui-même, sans reprendre les cases de l'étudiant.
         break;
     case 'devedefense':
         $formdata->devenumber = $dossier->devenumber ?: these_suggest_devenumber($these->id);
@@ -133,11 +134,8 @@ switch ($step['key']) {
         $formdata = (object) array_merge((array) $formdata, these_jury_form_data($jury));
         // Jury présenté en lecture : la saisie ne s'ouvre que pour le modifier.
         $formdata->juryedit = empty($jury) ? 1 : 0;
-        // Agrément administratif : à défaut, ce que l'étudiant a déclaré dans sa fiche signalétique.
-        $agreement = these_get_agreement($dossier);
-        $declared = these_get_bordereau($dossier);
-        $formdata->agdefvdate = $agreement['defvdate'] ?? ($declared['defvdate'] ?? 0);
-        $formdata->agmobility = $agreement['mobility'] ?? 0;
+        // Agrément administratif : le DEFV et l'A6 viennent de la validation des études.
+        $formdata->agmobility = these_get_agreement($dossier)['mobility'] ?? 0;
         break;
 }
 $mform->set_data($formdata);
@@ -158,6 +156,9 @@ if ($mform->is_cancelled()) {
 
     if ($missing) {
         redirect($PAGE->url, get_string('prerequisitesmissing', 'mod_these'), null, \core\output\notification::NOTIFY_WARNING);
+    }
+    if ($step['key'] === 'devedefense' && \mod_these\local\daterequest::pending($dossier)) {
+        redirect($PAGE->url, get_string('datepending', 'mod_these'), null, \core\output\notification::NOTIFY_WARNING);
     }
     $fields = [];
     switch ($step['key']) {
@@ -183,8 +184,9 @@ if ($mform->is_cancelled()) {
             $fields['devenumber'] = trim($data->devenumber);
             $fields['defensedate'] = (int) $data->defensedate;
             $fields['defenselocation'] = trim($data->defenselocation);
+            // DEFV de la validation des études, repris dans l'agrément que la DEVE signe.
             $fields['agreement'] = json_encode(array_merge(these_get_agreement($dossier), [
-                'defvdate' => (int) $data->agdefvdate,
+                'defvdate' => (int) \mod_these\local\a6::get($dossier)['defvdate'],
                 'mobility' => (int) !empty($data->agmobility),
             ]));
             these_save_jury($dossier->id, these_extract_submitted_jury($data, true), $USER->id);

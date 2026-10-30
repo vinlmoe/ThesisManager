@@ -473,7 +473,7 @@ function thesesynthesis_search(array $links, $userid, array $filters, array $que
             $student = $DB->get_record('user', ['id' => $dossier->userid]);
             $director = $dossier->directorid ? $DB->get_record('user', ['id' => $dossier->directorid]) : null;
             if ($words) {
-                $haystack = [$dossier->codirectorname, $dossier->extdirectorname, $student ? fullname($student) : '',
+                $haystack = [$dossier->extdirectorname, $student ? fullname($student) : '',
                     $director ? fullname($director) : ''];
                 if ($knows) {
                     array_push($haystack, $dossier->title, $dossier->titleen, $dossier->summary, $dossier->keywords);

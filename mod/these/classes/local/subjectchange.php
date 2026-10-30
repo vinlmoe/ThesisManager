@@ -102,7 +102,6 @@ class subjectchange {
                 'directorid' => (int) $dossier->directorid,
                 'directorname' => !empty($dossier->externaldirector) ? (string) $dossier->extdirectorname
                     : ($olddirector ? fullname($olddirector) : ''),
-                'codirectorname' => (string) $dossier->codirectorname,
                 'libraryref' => (string) $dossier->libraryref,
                 'reason' => trim((string) $reason),
                 'changedby' => (int) $userid,
@@ -122,17 +121,14 @@ class subjectchange {
                 debugging('Archivage du dépôt de sujet impossible : ' . $e->getMessage(), DEBUG_DEVELOPER);
             }
 
-            // Le dépôt de sujet sera signé de nouveau par tous.
-            foreach (these_get_signatures($dossier->id) as $existing) {
-                if ($existing->doctype === 'subject') {
-                    these_delete_signature($context, $existing);
-                }
-            }
+            // Tous les documents signés (sujet, et soutenance d'un dossier abandonné relancé) sont
+            // révoqués : leurs signatures sont redemandées au fil du nouveau circuit.
+            signatures::revoke_signatures($context, $dossier, $userid);
 
             $oldtitle = (string) $dossier->title;
             $fields = [];
             foreach (
-                ['title', 'titleen', 'summary', 'keywords', 'codirectorname', 'studyyear', 'directortitle',
+                ['title', 'titleen', 'summary', 'keywords', 'studyyear', 'directortitle',
                     'extdirectorname', 'extdirectorgrade', 'extdirectorinstitution', 'extdirectoremail'] as $field
             ) {
                 $fields[$field] = (string) these_submitted_value($data, $dossier, $field);

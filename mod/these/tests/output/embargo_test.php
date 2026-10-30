@@ -41,7 +41,7 @@ final class embargo_test extends output_testcase {
 
         $library = $this->context_json(new embargo($dossier, these_get_rights($this->context, $dossier, $this->librarian->id)));
         $this->assertStringContainsString(self::SECRETS['embargoreason'], $library);
-        $until = userdate(make_timestamp(2031, 12, 3), get_string('strftimedate', 'langconfig'));
+        $until = userdate(make_timestamp(2027, 12, 3), get_string('strftimedate', 'langconfig'));
         $this->assertStringContainsString($until, $library);
         $this->assertStringContainsString(get_string('diffusionrestricted', 'mod_these'), $library);
 

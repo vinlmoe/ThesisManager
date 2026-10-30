@@ -43,7 +43,32 @@ class questionnaire_form extends \moodleform {
         $mform->addElement('hidden', 'dossierid');
         $mform->setType('dossierid', PARAM_INT);
 
-        foreach ($this->_customdata['questions'] as $question) {
+        self::add_question_fields($mform, $this->_customdata['questions']);
+
+        $this->add_action_buttons(true, get_string('savechanges'));
+    }
+
+    /**
+     * Questions obligatoires.
+     *
+     * @param array $data
+     * @param array $files
+     * @return array
+     */
+    public function validation($data, $files) {
+        return array_merge(parent::validation($data, $files), self::question_errors($this->_customdata['questions'], $data));
+    }
+
+    /**
+     * Ajoute les questions à un formulaire : celui du questionnaire, ou celui du dépôt de la
+     * soutenance, où l'étudiant y répond.
+     *
+     * @param \MoodleQuickForm $mform
+     * @param \stdClass[] $questions Voir these_get_questions().
+     * @return void
+     */
+    public static function add_question_fields(\MoodleQuickForm $mform, array $questions) {
+        foreach ($questions as $question) {
             $name = 'q' . $question->id;
             $label = format_string($question->label);
             switch ($question->qtype) {
@@ -70,27 +95,25 @@ class questionnaire_form extends \moodleform {
                     $mform->setType($name, PARAM_TEXT);
             }
             if ($question->required) {
-                // Contrôlé dans validation() : une règle « required » ne vaut pas pour un groupe de cases.
+                // Contrôlé dans question_errors() : une règle « required » ne vaut pas pour un groupe de cases.
                 $mform->addElement('static', $name . 'required', '', \html_writer::span(
                     get_string('questionrequired', 'mod_these'),
                     'text-muted small'
                 ));
             }
         }
-
-        $this->add_action_buttons(true, get_string('savechanges'));
     }
 
     /**
-     * Questions obligatoires.
+     * Questions obligatoires sans réponse dans les données soumises.
      *
+     * @param \stdClass[] $questions
      * @param array $data
-     * @param array $files
-     * @return array
+     * @return array Erreurs, indexées par champ.
      */
-    public function validation($data, $files) {
-        $errors = parent::validation($data, $files);
-        foreach ($this->_customdata['questions'] as $question) {
+    public static function question_errors(array $questions, array $data) {
+        $errors = [];
+        foreach ($questions as $question) {
             if (!$question->required) {
                 continue;
             }
@@ -108,5 +131,29 @@ class questionnaire_form extends \moodleform {
             }
         }
         return $errors;
+    }
+
+    /**
+     * Réponses enregistrées d'un dossier, sous la forme des champs du formulaire.
+     *
+     * @param \stdClass[] $questions
+     * @param array $answers Voir these_get_answers().
+     * @return array
+     */
+    public static function answers_data(array $questions, array $answers) {
+        $data = [];
+        foreach ($answers as $questionid => $answer) {
+            if (!isset($questions[$questionid])) {
+                continue;
+            }
+            if ($questions[$questionid]->qtype === 'multi') {
+                foreach (these_question_options($questions[$questionid]) as $n => $option) {
+                    $data['q' . $questionid . '_' . $n] = in_array($option, (array) $answer, true) ? 1 : 0;
+                }
+            } else {
+                $data['q' . $questionid] = these_answer_text($answer);
+            }
+        }
+        return $data;
     }
 }

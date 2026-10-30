@@ -197,8 +197,8 @@ function these_bordereau_fields() {
     return \mod_these\local\signatures::bordereau_fields();
 }
 
-/** Durée de l'embargo de diffusion qu'un étudiant peut demander, en années après la soutenance. */
-define('THESE_EMBARGO_YEARS', 5);
+/** Durée maximale de l'embargo de diffusion qu'un étudiant peut demander, en mois après la soutenance. */
+define('THESE_EMBARGO_MAX_MONTHS', 12);
 
 /**
  * Voir \mod_these\local\signatures::embargo_until().

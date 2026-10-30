@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Questionnaire préalable au jury : rempli par l'étudiant tant que le dépôt de la soutenance est
- * modifiable (les questions obligatoires conditionnent ce dépôt) ; la DEVE peut corriger les
- * réponses à tout moment.
+ * Questionnaire préalable au jury : l'étudiant y répond dans le dépôt de la soutenance (defense.php),
+ * dont les questions obligatoires conditionnent la soumission, ou sur cette page tant que le dépôt
+ * est modifiable ; la DEVE peut corriger les réponses à tout moment.
  *
  * @package   mod_these
  * @copyright 2026 Sébastien Lefebvre
@@ -61,20 +61,7 @@ $PAGE->set_context($context);
 
 $questions = these_get_questions(these_settings_scope($these));
 $mform = new questionnaire_form($PAGE->url, ['questions' => $questions]);
-$formdata = $params;
-foreach (these_get_answers($dossier->id) as $questionid => $answer) {
-    if (!isset($questions[$questionid])) {
-        continue;
-    }
-    if ($questions[$questionid]->qtype === 'multi') {
-        foreach (these_question_options($questions[$questionid]) as $n => $option) {
-            $formdata['q' . $questionid . '_' . $n] = in_array($option, (array) $answer, true) ? 1 : 0;
-        }
-    } else {
-        $formdata['q' . $questionid] = these_answer_text($answer);
-    }
-}
-$mform->set_data($formdata);
+$mform->set_data($params + questionnaire_form::answers_data($questions, these_get_answers($dossier->id)));
 
 if ($mform->is_cancelled()) {
     redirect(backlinks::to_dossier($cm, $dossier, $rights)->url);

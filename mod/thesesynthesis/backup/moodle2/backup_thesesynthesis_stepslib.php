@@ -87,6 +87,7 @@ class backup_thesesynthesis_activity_structure_step extends backup_activity_stru
         $thesesynthesis->annotate_files('mod_thesesynthesis', 'intro', null);
         $thesesynthesis->annotate_files('mod_thesesynthesis', 'docimages', null);
         $thesesynthesis->annotate_files('mod_thesesynthesis', 'contracttemplate', null);
+        $thesesynthesis->annotate_files('mod_thesesynthesis', 'reporttemplate', null);
 
         return $this->prepare_activity_structure($thesesynthesis);
     }

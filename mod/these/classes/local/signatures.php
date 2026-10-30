@@ -40,7 +40,7 @@ class signatures {
      * - subject : formulaire de dépôt de sujet (étudiant, directeur, directeur extérieur éventuel,
      *   visa de la DEVE) ;
      * - bordereau : bordereau de thèse d'exercice vétérinaire (ABES), signé par l'étudiant ;
-     * - report : rapport du directeur ; grid : grille de conformité, renseignée par le directeur ;
+     * - grid : grille de conformité, renseignée par le directeur (son rapport est un fichier déposé) ;
      * - agreement : fiche d'agréments administratif (DEVE) et scientifique (directeur, et directeur
      *   extérieur éventuel), visée par la direction générale (représentée par la DEVE) et le CCEM ;
      * - signaletique : fiche signalétique de l'étudiant, signée par le président du jury, la
@@ -59,7 +59,6 @@ class signatures {
         return [
             'subject' => ['slots' => ['student', 'director', 'extdirector', 'deve'], 'staffonly' => false],
             'bordereau' => ['slots' => ['student'], 'staffonly' => false],
-            'report' => ['slots' => ['director'], 'staffonly' => true],
             'grid' => ['slots' => ['director'], 'staffonly' => true],
             'agreement' => ['slots' => ['deve', 'director', 'extdirector', 'dgrep', 'ccem'], 'staffonly' => false],
             'signaletique' => ['slots' => ['president', 'dg', 'ccem'], 'staffonly' => false],
@@ -178,9 +177,6 @@ class signatures {
                 ];
             case 'bordereau':
                 return $common + ['titleen' => (string) $dossier->titleen, 'bordereau' => these_get_bordereau($dossier)];
-            case 'report':
-                return $common + ['reporttext' => (string) ($dossier->reporttext ?? ''),
-                    'reportfavorable' => (int) ($dossier->reportfavorable ?? 0)];
             case 'grid':
                 return $common + ['grid' => these_get_grid($dossier), 'ethicsnumber' => (string) ($dossier->ethicsnumber ?? '')];
             case 'agreement':
@@ -213,7 +209,7 @@ class signatures {
             case 'contract':
                 $student = these_get_bordereau($dossier);
                 $keys = ['birthname', 'firstnames', 'birthdate', 'street', 'postcode', 'city', 'country', 'personalemail',
-                    'confidentialuntil', 'embargo', 'embargountil', 'embargoreason', 'diffusion'];
+                    'confidentialuntil', 'embargo', 'embargomonths', 'embargountil', 'embargoreason', 'diffusion'];
                 return $common + [
                     'student' => array_intersect_key($student, array_flip($keys)),
                     'confidential' => (int) ($dossier->confidential ?? 0),
@@ -251,8 +247,6 @@ class signatures {
                 return trim((string) $dossier->title) !== '';
             case 'bordereau':
                 return !empty(these_get_bordereau($dossier));
-            case 'report':
-                return trim((string) ($dossier->reporttext ?? '')) !== '';
             case 'grid':
                 return !empty(these_get_grid($dossier));
             case 'agreement':
@@ -362,15 +356,16 @@ class signatures {
             // Bordereau ABES.
             'nbvolumes', 'nbpages', 'nbrefs', 'summaryfr', 'summaryen', 'keywords',
             // Contrat de diffusion.
-            'confidentialuntil', 'embargo', 'embargountil', 'embargoreason', 'diffusion',
+            'confidentialuntil', 'embargo', 'embargomonths', 'embargountil', 'embargoreason', 'diffusion',
             // Soutenance.
             'visio',
         ];
     }
 
     /**
-     * Fin de l'embargo de diffusion d'une thèse : THESE_EMBARGO_YEARS ans après la soutenance (date
-     * arrêtée, à défaut date proposée). Un embargo enregistré avant cette règle garde sa date.
+     * Fin de l'embargo de diffusion d'une thèse : la durée demandée, en mois (THESE_EMBARGO_MAX_MONTHS
+     * au plus, et par défaut), après la soutenance (date arrêtée, à défaut date proposée). Un embargo
+     * enregistré avec une date garde sa date, sans dépasser un an après la soutenance.
      *
      * @param stdClass $dossier
      * @return int 0 sans embargo, ou tant que la soutenance n'a pas de date.
@@ -380,15 +375,45 @@ class signatures {
         if (empty($bordereau['embargo'])) {
             return 0;
         }
-        if (!empty($bordereau['embargountil'])) {
-            return (int) $bordereau['embargountil'];
-        }
         $defense = (int) ($dossier->defensedate ?: $dossier->proposeddate);
+        $max = $defense ? self::add_months($defense, THESE_EMBARGO_MAX_MONTHS) : 0;
+        if (!empty($bordereau['embargountil'])) {
+            $until = (int) $bordereau['embargountil'];
+            return $max ? min($until, $max) : $until;
+        }
         if (!$defense) {
             return 0;
         }
-        $date = usergetdate($defense);
-        return make_timestamp($date['year'] + THESE_EMBARGO_YEARS, $date['mon'], $date['mday']);
+        return self::add_months($defense, self::embargo_months($bordereau));
+    }
+
+    /**
+     * Durée de l'embargo demandée, en mois : de 1 à THESE_EMBARGO_MAX_MONTHS, cette durée maximale à
+     * défaut (demandes antérieures au choix de la durée).
+     *
+     * @param array $bordereau Voir these_get_bordereau().
+     * @return int
+     */
+    public static function embargo_months(array $bordereau) {
+        $months = (int) ($bordereau['embargomonths'] ?? 0);
+        return $months >= 1 && $months <= THESE_EMBARGO_MAX_MONTHS ? $months : THESE_EMBARGO_MAX_MONTHS;
+    }
+
+    /**
+     * Jour (à minuit) tombant un nombre de mois après une date, ramené au dernier jour du mois s'il
+     * n'existe pas (31 janvier plus un mois : 28 ou 29 février).
+     *
+     * @param int $time
+     * @param int $months
+     * @return int
+     */
+    protected static function add_months($time, $months) {
+        $date = usergetdate($time);
+        $month = $date['mon'] - 1 + (int) $months;
+        $year = $date['year'] + intdiv($month, 12);
+        $month = $month % 12 + 1;
+        $day = min($date['mday'], (int) date('t', make_timestamp($year, $month, 1, 12)));
+        return make_timestamp($year, $month, $day);
     }
 
     /**
@@ -523,7 +548,8 @@ class signatures {
     }
 
     /**
-     * Signatures d'un dossier.
+     * Signatures d'un dossier, sur les documents que le module produit encore : celles d'un document
+     * retiré (rapport du directeur, désormais déposé en fichier) restent en base sans être reprises.
      *
      * @param int $dossierid
      * @return array « doctype:slot » => enregistrement these_signature
@@ -531,9 +557,12 @@ class signatures {
     public static function get_signatures($dossierid) {
         global $DB;
 
+        $definitions = these_document_definitions();
         $signatures = [];
         foreach ($DB->get_records('these_signature', ['dossierid' => $dossierid], 'id ASC') as $signature) {
-            $signatures[$signature->doctype . ':' . $signature->slot] = $signature;
+            if (isset($definitions[$signature->doctype])) {
+                $signatures[$signature->doctype . ':' . $signature->slot] = $signature;
+            }
         }
         return $signatures;
     }
@@ -688,6 +717,58 @@ class signatures {
         get_file_storage()->delete_area_files($context->id, 'mod_these', 'signature', $signature->id);
         $DB->delete_records('these_signature', ['id' => $signature->id]);
         these_unseal_document($context, $signature->dossierid, $signature->doctype);
+    }
+
+    /**
+     * Révoque les signatures d'un dossier, apposées ou encore demandées (lien envoyé, demande à un
+     * agent) : elles seront redemandées quand le dossier repassera les étapes du circuit. Sert au
+     * renvoi d'un dossier et au changement de sujet. La révocation est inscrite à l'historique.
+     *
+     * @param context $context
+     * @param stdClass $dossier
+     * @param int $userid Auteur du renvoi ou du changement.
+     * @param string[]|null $doctypes Documents concernés ; null pour tous.
+     * @param string[] $keepslots Emplacements conservés (signataires des étapes qui ne sont pas refaites).
+     * @return string[] Signatures révoquées (« doctype:slot »).
+     */
+    public static function revoke_signatures(
+        context $context,
+        stdClass $dossier,
+        $userid,
+        ?array $doctypes = null,
+        array $keepslots = []
+    ) {
+        $revoked = [];
+        $labels = [];
+        foreach (these_get_signatures($dossier->id) as $key => $signature) {
+            if (
+                ($doctypes !== null && !in_array($signature->doctype, $doctypes, true))
+                || in_array($signature->slot, $keepslots, true)
+            ) {
+                continue;
+            }
+            these_delete_signature($context, $signature);
+            $revoked[] = $key;
+            if (!empty($signature->timesigned)) {
+                $labels[] = these_document_label($signature->doctype) . ' — ' . these_slot_label($signature->slot);
+            }
+        }
+        if ($labels) {
+            these_log($dossier->id, $userid, 'signaturesrevoked', $dossier->status, $dossier->status, implode(', ', $labels));
+        }
+        return $revoked;
+    }
+
+    /**
+     * Documents d'une phase du circuit : le dépôt de sujet en phase 1, les documents de la
+     * soutenance en phase 2.
+     *
+     * @param int $phase Voir these_phase().
+     * @return string[]
+     */
+    public static function phase_documents($phase) {
+        $doctypes = array_keys(these_document_definitions());
+        return (int) $phase === 1 ? ['subject'] : array_values(array_diff($doctypes, ['subject']));
     }
 
     /**

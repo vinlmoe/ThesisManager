@@ -171,8 +171,9 @@ final class confidentiality_test extends these_testcase {
     }
 
     /**
-     * Demande d'embargo : 5 ans après la soutenance, motif obligatoire ; une date d'embargo saisie
-     * avec l'ancien formulaire n'est reprise que tant que l'étudiant ne réenregistre pas.
+     * Demande d'embargo : d'un à douze mois après la soutenance (un an par défaut), motif obligatoire ;
+     * une date d'embargo saisie avec l'ancien formulaire n'est reprise que tant que l'étudiant ne
+     * réenregistre pas, et sans dépasser un an après la soutenance.
      */
     public function test_embargo_request(): void {
         $this->setTimezone('Europe/Paris');
@@ -183,11 +184,13 @@ final class confidentiality_test extends these_testcase {
         ]);
         $this->assertSame(0, these_embargo_until($dossier));
 
-        // Ancienne saisie : embargo avec une date choisie.
+        // Ancienne saisie : embargo avec une date choisie, ramenée à un an après la soutenance au plus.
+        $dossier->bordereau = json_encode(['embargo' => 1, 'embargountil' => make_timestamp(2027, 3, 1)]);
+        $this->assertSame(make_timestamp(2027, 3, 1), these_embargo_until($dossier));
         $dossier->bordereau = json_encode(['embargo' => 1, 'embargountil' => make_timestamp(2028, 1, 1)]);
-        $this->assertSame(make_timestamp(2028, 1, 1), these_embargo_until($dossier));
+        $this->assertSame(make_timestamp(2027, 11, 12), these_embargo_until($dossier));
 
-        // Nouveau formulaire : demande de 5 ans, motivée.
+        // Nouveau formulaire : demande motivée, sans durée choisie un an.
         $bordereau = these_extract_bordereau(
             (object) ['bembargo' => 1, 'bembargoreason' => ' Brevet en cours ', 'bdiffusion' => 'internet'],
             these_get_bordereau($dossier)
@@ -195,25 +198,35 @@ final class confidentiality_test extends these_testcase {
         $this->assertSame(0, $bordereau['embargountil']);
         $this->assertSame('Brevet en cours', $bordereau['embargoreason']);
         $dossier->bordereau = json_encode($bordereau);
-        $this->assertSame(make_timestamp(2031, 11, 12), these_embargo_until($dossier));
+        $this->assertSame(make_timestamp(2027, 11, 12), these_embargo_until($dossier));
+
+        // Durée choisie : six mois ; une durée hors limites vaut un an.
+        $bordereau = these_extract_bordereau((object) ['bembargo' => 1, 'bembargomonths' => 6], $bordereau);
+        $dossier->bordereau = json_encode($bordereau);
+        $this->assertSame(make_timestamp(2027, 5, 12), these_embargo_until($dossier));
+        $dossier->bordereau = json_encode(['embargo' => 1, 'embargomonths' => 60]);
+        $this->assertSame(make_timestamp(2027, 11, 12), these_embargo_until($dossier));
+        $dossier->bordereau = json_encode($bordereau);
 
         // La date de fin suit la date de soutenance arrêtée par la DEVE.
         $dossier->defensedate = make_timestamp(2026, 12, 3, 10);
-        $this->assertSame(make_timestamp(2031, 12, 3), these_embargo_until($dossier));
+        $this->assertSame(make_timestamp(2027, 6, 3), these_embargo_until($dossier));
         $data = these_document_context($this->these, $this->context, $dossier, 'contract');
         $this->assertTrue($data['contract']['embargo']);
-        $this->assertSame(userdate(make_timestamp(2031, 12, 3), '%d/%m/%Y'), $data['contract']['embargountil']);
+        $this->assertSame(6, $data['contract']['embargomonths']);
+        $this->assertSame(userdate(make_timestamp(2027, 6, 3), '%d/%m/%Y'), $data['contract']['embargountil']);
         $this->assertSame('Brevet en cours', $data['contract']['embargoreason']);
 
         // Affichage dans le dossier.
         $rights = these_get_rights($this->context, $dossier, $this->librarian->id);
         $html = these_render_embargo($dossier, $rights);
-        $this->assertStringContainsString(userdate(make_timestamp(2031, 12, 3), get_string('strftimedate', 'langconfig')), $html);
+        $this->assertStringContainsString(userdate(make_timestamp(2027, 6, 3), get_string('strftimedate', 'langconfig')), $html);
         $this->assertStringContainsString('Brevet en cours', $html);
 
         // Embargo retiré : plus de date, motif effacé.
         $bordereau = these_extract_bordereau((object) ['bembargo' => 0, 'bembargoreason' => 'x'], $bordereau);
         $this->assertArrayNotHasKey('embargoreason', $bordereau);
+        $this->assertArrayNotHasKey('embargomonths', $bordereau);
         $dossier->bordereau = json_encode($bordereau);
         $this->assertSame(0, these_embargo_until($dossier));
     }

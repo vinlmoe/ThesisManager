@@ -58,32 +58,32 @@ final class integrity_test extends these_testcase {
         $this->setup_activity();
         $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
             'status' => THESE_STATUS_DEFENSE_SUBMITTED, 'directorid' => $this->director->id,
-            'reporttext' => 'Travail remarquable.', 'reportfavorable' => 1,
+            'conformitygrid' => json_encode(['fondlist' => 1]), 'ethicsnumber' => '2526',
         ]);
         $png = these_sample_signature_image();
-        these_sign_document($this->context, $dossier, 'report', 'director', $this->director->id, 'Pr Durand', $png);
+        these_sign_document($this->context, $dossier, 'grid', 'director', $this->director->id, 'Pr Durand', $png);
 
-        $sealed = these_get_sealed_document($this->context, $dossier->id, 'report');
+        $sealed = these_get_sealed_document($this->context, $dossier->id, 'grid');
         $this->assertNotNull($sealed);
         $pdf = $sealed->get_content();
         $log = $DB->get_record('these_log', ['dossierid' => $dossier->id, 'logaction' => 'documentsealed']);
         $this->assertStringContainsString(hash('sha256', $pdf), $log->remark);
         // Le nom du document scellé porte la date du scellement.
         $this->assertSame(
-            'report-' . userdate($sealed->get_timecreated(), '%Y-%m-%d', 99, false) . '.pdf',
-            \mod_these\local\documents::signed_document_filename($this->context, $dossier, 'report')
+            'grid-' . userdate($sealed->get_timecreated(), '%Y-%m-%d', 99, false) . '.pdf',
+            \mod_these\local\documents::signed_document_filename($this->context, $dossier, 'grid')
         );
 
         // Modèle modifié après la signature : le document signé reste celui qui a été signé.
-        these_set_doctemplate(these_local_scope($this->these), 'report', $this->changed_template('report', 'Ajout'));
-        $this->assertSame($pdf, these_signed_document_pdf($this->these, $this->context, $dossier, 'report'));
+        these_set_doctemplate(these_local_scope($this->these), 'grid', $this->changed_template('grid', 'Ajout'));
+        $this->assertSame($pdf, these_signed_document_pdf($this->these, $this->context, $dossier, 'grid'));
         $this->assertSame([], these_refresh_signatures($this->context, $dossier));
 
         // Contenu modifié : signature invalidée, scellé levé.
-        $dossier->reporttext = 'Rapport réécrit.';
-        $this->assertSame(['report:director'], these_refresh_signatures($this->context, $dossier));
-        $this->assertNull(these_get_sealed_document($this->context, $dossier->id, 'report'));
-        $this->assertSame('report.pdf', \mod_these\local\documents::signed_document_filename($this->context, $dossier, 'report'));
+        $dossier->ethicsnumber = '2527';
+        $this->assertSame(['grid:director'], these_refresh_signatures($this->context, $dossier));
+        $this->assertNull(these_get_sealed_document($this->context, $dossier->id, 'grid'));
+        $this->assertSame('grid.pdf', \mod_these\local\documents::signed_document_filename($this->context, $dossier, 'grid'));
     }
 
     /**

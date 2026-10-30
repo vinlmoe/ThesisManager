@@ -61,7 +61,11 @@ class scopesettings_page {
 
         $draftitemid = file_get_submitted_draft_itemid('contracttemplate');
         file_prepare_draft_area($draftitemid, $scope->contextid, $scope->component, 'contracttemplate', 0, $fileoptions);
-        $form->set_data(['id' => $baseurl->get_param('id'), 'contracttemplate' => $draftitemid] + $settings);
+        $reportoptions = scopesettings::REPORT_TEMPLATE_OPTIONS;
+        $reportitemid = file_get_submitted_draft_itemid('reporttemplate');
+        file_prepare_draft_area($reportitemid, $scope->contextid, $scope->component, 'reporttemplate', 0, $reportoptions);
+        $form->set_data(['id' => $baseurl->get_param('id'), 'contracttemplate' => $draftitemid,
+            'reporttemplate' => $reportitemid] + $settings);
 
         if ($data = $form->get_data()) {
             $values = [];
@@ -81,6 +85,14 @@ class scopesettings_page {
                 'contracttemplate',
                 0,
                 $fileoptions
+            );
+            file_save_draft_area_files(
+                $data->reporttemplate,
+                $scope->contextid,
+                $scope->component,
+                'reporttemplate',
+                0,
+                $reportoptions
             );
             redirect($baseurl, get_string('changessaved'), null, \core\output\notification::NOTIFY_SUCCESS);
         }

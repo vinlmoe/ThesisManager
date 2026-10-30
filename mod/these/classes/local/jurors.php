@@ -154,25 +154,6 @@ class jurors {
     }
 
     /**
-     * Options d'une liste déroulante des enseignants internes à l'établissement (voir
-     * internal_members()), pour choisir un co-directeur interne.
-     *
-     * @param \context $context Contexte de l'activité, dont la portée donne l'établissement.
-     * @param int $keep Enseignant à garder même s'il n'est plus actif ou interne (choix enregistré).
-     * @return array id => « Pr NOM Prénom »
-     */
-    public static function internal_options(\context $context, $keep = 0) {
-        $options = [];
-        foreach (self::internal_members((string) scopesettings::for_context($context)['institution']) as $juror) {
-            $options[(int) $juror->id] = self::name($juror);
-        }
-        if ($keep && !isset($options[(int) $keep]) && ($juror = self::get($keep))) {
-            $options[(int) $juror->id] = self::name($juror);
-        }
-        return $options;
-    }
-
-    /**
      * Enseignant de l'annuaire, actif ou retiré, ayant cette adresse ou, à défaut, ces nom et prénom.
      *
      * @param string|null $email

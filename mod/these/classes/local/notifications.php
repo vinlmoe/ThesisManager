@@ -88,6 +88,16 @@ class notifications {
                 'bodystring' => 'emailsubjectchangedbody',
                 'vars' => ['student', 'activity', 'oldtitle', 'title', 'reason', 'url'],
             ],
+            'daterequested' => [
+                'subjectstring' => 'emaildaterequestedsubject',
+                'bodystring' => 'emaildaterequestedbody',
+                'vars' => ['student', 'activity', 'title', 'date', 'comment', 'url'],
+            ],
+            'dateproposed' => [
+                'subjectstring' => 'emaildateproposedsubject',
+                'bodystring' => 'emaildateproposedbody',
+                'vars' => ['student', 'activity', 'title', 'date', 'url'],
+            ],
             'adjourned' => [
                 'subjectstring' => 'emailadjournedsubject',
                 'bodystring' => 'emailadjournedbody',

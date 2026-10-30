@@ -22,8 +22,8 @@ require_once($CFG->libdir . '/formslib.php');
 require_once($CFG->dirroot . '/mod/these/locallib.php');
 
 /**
- * Validation de l'A6 d'un étudiant, saisie par la DEVE sur la page de l'A6 (voir
- * \mod_these\local\a6) : date de validation, ou pas encore validée, et école.
+ * Validation des études d'un étudiant, saisie par la DEVE sur sa page (voir \mod_these\local\a6) :
+ * obtention du DEFV (date et école), et validation de l'A6 (date, ou pas encore validée, et école).
  *
  * @package   mod_these
  * @copyright 2026 Sébastien Lefebvre
@@ -41,6 +41,12 @@ class a6_form extends \moodleform {
             $mform->setType($name, $type);
         }
         $mform->addElement('static', 'studentname', get_string('student', 'mod_these'), s($this->_customdata['studentname']));
+        $mform->addElement('header', 'defvheader', get_string('defvvalidation', 'mod_these'));
+        $mform->setExpanded('defvheader');
+        $mform->addElement('date_selector', 'defvdate', get_string('agdefvdate', 'mod_these'), ['optional' => true]);
+        $mform->addElement('select', 'defvschool', get_string('bschool', 'mod_these'), these_school_options());
+        $mform->addElement('header', 'a6header', get_string('a6validation', 'mod_these'));
+        $mform->setExpanded('a6header');
         $mform->addElement('advcheckbox', 'aga6notyet', '', get_string('aga6notyet', 'mod_these'));
         $mform->addElement('date_selector', 'aga6date', get_string('aga6date', 'mod_these'), ['optional' => true]);
         $mform->hideIf('aga6date', 'aga6notyet', 'checked');

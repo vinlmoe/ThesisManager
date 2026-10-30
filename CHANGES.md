@@ -13,6 +13,74 @@ de version recalés sur la date. Les numéros entre parenthèses des sections de
 développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
 été étiquetée.
 
+## mod_these 0.23.0 (2026102901) et mod_thesesynthesis 0.7.2 (2026102901) — dépôt simplifié, rapport déposé, validation des études, date redemandée par la DEVE
+
+- **Plus de co-directeur.** Un directeur extérieur à l'établissement est
+  suppléé par un **examinateur interne**, choisi par l'étudiant dans la liste
+  des enseignants : il est enregistré comme directeur du dossier et fait les
+  démarches (validations, rapport, signatures en qualité de membre). Le
+  dossier affiche le directeur extérieur et l'examinateur ; l'export remplace
+  les colonnes du co-directeur par « Directeur extérieur » ; l'import n'a plus
+  de colonne `codirector`. Colonnes `codirectorname` et `codirectorjurorid`
+  supprimées (et `codirectorname` de l'historique des sujets).
+- **Dépôts réduits au nécessaire** : plus de pièces jointes au sujet, ni
+  d'« autres documents » à la soutenance, seulement le manuscrit. Les fichiers
+  déjà déposés restent consultables. Un rappel, en tête du dépôt, demande
+  d'inclure la page de la liste à jour du corps enseignant, avec le lien.
+- **Questionnaire préalable au jury rempli dans le dépôt de la soutenance** :
+  ses questions font partie du formulaire, sont enregistrées avec le brouillon,
+  comptées dans l'avancement, et les questions obligatoires bloquent la
+  soumission. La page du questionnaire reste pour la DEVE.
+- **Rapport du directeur déposé** (PDF ou Word), obligatoire pour valider la
+  soutenance, avec l'avis favorable : il n'est plus rédigé dans le module. Le
+  document « rapport » généré et signé disparaît (modèle, signature,
+  prérequis) ; le fichier déposé est joint à l'archive de l'université.
+  **Modèle Word du rapport** dans les paramètres du circuit, téléchargeable
+  depuis la page de dépôt (`reporttemplate.php`). Colonne `reporttext`
+  supprimée.
+- **Grille de conformité du directeur non préremplie** par celle de
+  l'étudiant.
+- **Validation des études** (ancienne page « Validation de l'A6 ») : la DEVE y
+  saisit l'obtention du DEFV (date, école) avec l'A6, par étudiant ou par
+  import (colonnes `defv`, `ecole defv`). L'étudiant ne renseigne plus son
+  DEFV ; l'agrément administratif et la fiche signalétique le reprennent, et
+  la validation du dossier par la DEVE l'exige. Champs `defvdate` et
+  `defvschool` ajoutés à `these_a6`.
+- **Salle attribuée par la DEVE** : l'étudiant ne propose plus de lieu.
+- **Nouvelle date demandée par la DEVE** (`daterequest.php`) quand l'horaire
+  proposé n'est pas disponible : le dossier n'est pas renvoyé (statut,
+  documents et signatures conservés), mais ne peut pas être validé tant que
+  l'étudiant n'a pas proposé une autre date (`newdate.php`). Courriels
+  personnalisables « Nouvelle date demandée » et « Nouvelle date proposée ».
+  Champs `daterequested` et `daterequestcomment` ajoutés à `these_dossier`.
+- **Renvoi et changement de sujet révoquent les documents signés** et
+  redemandent les signatures (signatures apposées, liens envoyés et demandes
+  aux agents). Renvoyé à l'étudiant, par une étape de validation ou par le refus
+  d'un agent DEVE, le dossier refait toute sa phase (directeur, DEVE,
+  bibliothèque) au lieu de revenir directement à l'étape qui l'a renvoyé ;
+  renvoyé au directeur, seules les signatures de l'étudiant (et du directeur
+  extérieur sur le dépôt de sujet) sont conservées. Un changement de sujet
+  révoque tous les documents signés, soutenance comprise. Les corrections
+  gardent le retour direct.
+- **Jury : président et directeur figés.** Dans la saisie du jury (dépôt de
+  l'étudiant, validation et modification par la DEVE), la première ligne est
+  celle du président, la deuxième celle du directeur de thèse (préremplie, le
+  directeur extérieur s'il y en a un) ; les suivantes ne proposent que membre
+  du jury ou invité. Un jury sans directeur de thèse est refusé.
+- **Embargo de diffusion d'un an au plus** (au lieu de 5 ans) : l'étudiant en
+  choisit la durée, d'un à douze mois (douze par défaut), reportée au contrat
+  de diffusion (variable `{{contract.embargomonths}}`, qui remplace
+  `{{contract.embargoyears}}`). Un embargo déjà demandé sans durée vaut un an ;
+  une date saisie avec l'ancien formulaire est ramenée à un an après la
+  soutenance au plus.
+- **Délai minimal entre le dépôt et la soutenance**, en semaines, dans les
+  paramètres du circuit (`mindelayweeks`, 4 par défaut, 0 pour aucun délai) :
+  une date proposée plus proche est refusée, au dépôt comme à la nouvelle date
+  demandée par la DEVE. Un rappel indique que la date et l'heure doivent être
+  convenues au préalable avec le jury et la DEVE.
+- `mod_thesesynthesis` : recherche sans le co-directeur, sauvegarde du modèle
+  de rapport des paramètres partagés.
+
 ## mod_these 0.22.0 (2026102900) et mod_thesesynthesis 0.7.1 (2026102900) — liens de retour revus, changement de sujet d'un dossier abandonné, date dans le nom des documents scellés
 
 - **Liens de retour** sur chaque page des deux modules (classe
