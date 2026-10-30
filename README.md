@@ -133,3 +133,7 @@ Bibliothèque ──conformité du manuscrit──▶ DEVE ──convocations, f
   [version publiée](https://github.com/vinlmoe/ThesisManager/releases/latest)
   et produit par la CI à chaque modification (artefact `guide-these`) depuis
   son source LaTeX [`docs/guides/guide-these.tex`](docs/guides/guide-these.tex).
+
+## Licence
+
+GPL v3 ou ultérieure, voir [`LICENSE`](LICENSE).
