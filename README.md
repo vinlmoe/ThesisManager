@@ -111,7 +111,7 @@ Bibliothèque ──conformité du manuscrit──▶ DEVE ──convocations, f
 ## Qualité
 
 - Style : standard Moodle (`moodlehq/moodle-cs`), sans avertissement.
-- Tests PHPUnit (222 tests pour `mod_these`, 26 pour `mod_thesesynthesis`, couverture mesurée en CI) :
+- Tests PHPUnit (231 tests pour `mod_these`, 26 pour `mod_thesesynthesis`, couverture mesurée en CI) :
   circuit complet, corrections, rapport, renvois,
   droits, relances, documents générés, signatures et scellés, modèles,
   paramètres partagés, questionnaire, recherche, transfert des paramètres,

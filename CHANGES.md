@@ -13,6 +13,48 @@ de version recalés sur la date. Les numéros entre parenthèses des sections de
 développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
 été étiquetée.
 
+## mod_these 0.25.0 (2026103002) et mod_thesesynthesis 0.8.0 (2026103002) — dette architecturale, messagerie et événements
+
+Actions 12 à 14 du plan de `docs/qualite/analyse-qualite-2026-10-30.tex`.
+Aucun changement de schéma ; `mod_thesesynthesis` 0.8.0 exige `mod_these`
+2026103002 (rappels de composant).
+
+- **Notifications par la messagerie de Moodle** pour les destinataires qui
+  ont un compte : cinq fournisseurs (`dossierawaiting`, `statuschanged`,
+  `signaturerequest`, `juryconvocation`, `digest`, courriel et notification
+  web par défaut), réglables dans les préférences de notification de chaque
+  utilisateur. Les destinataires extérieurs et les envois avec pièce jointe
+  restent en courriel. Chaînes `messageprovider:*`.
+- **Événements Moodle** du cycle de vie d'un dossier (`dossier_created`,
+  `subject_submitted`, `dossier_status_changed`, `document_signed`,
+  `defense_scheduled`, `minutes_recorded`), visibles dans les journaux.
+- **Code** : façades `these_*()` plus appelées depuis `classes/` (716 appels
+  remplacés par des appels de classe), constantes métier dans les classes de
+  domaine (les `THESE_*` de `locallib/` restent des alias), code mort
+  supprimé (`these_render_file_links`, `these_render_actions`,
+  `these_render_progress`, `these_sign_from_form`, `these_import_columns`,
+  chaînes `closedossier` et `ba6notyet`), amorce des pages factorisée
+  (`\mod_these\local\page`), classe de base des formulaires
+  (`\mod_these\form\base_form`).
+- **Classes scindées** : `signatures` → `seals`, `signaturetokens`,
+  `signaturefields`, `grid`, `bordereau` ; `doctemplates` →
+  `documentcontext` (contexte documentaire découpé par bloc),
+  `documentsamples`, `documentrenderer` ; `jury` → `juryform`, `juryaccess`,
+  `defenseconflicts`. Contrôleurs des pages communes dans
+  `\mod_these\page\`. Plus aucun fichier de plus de 1 000 lignes parmi
+  ceux visés ; méthodes de plus de 80 lignes de 23 à 18.
+- **Suivi des thèses** : classes de domaine `\mod_thesesynthesis\local\`
+  (`links`, `dossiers`, `signatures`, `search`, `navigation`, `scope`),
+  `locallib.php` réduit aux façades ; réponses, jurys, étudiants et sujets
+  lus par lot (le nombre de requêtes ne croît plus avec les dossiers).
+- **Dépendance inversée supprimée** : `mod_these` ne lit plus les tables ni
+  la configuration de `mod_thesesynthesis` ; le suivi fournit la portée des
+  paramètres partagés, les liens de retour et le droit de vue par des rappels
+  de composant (`these_settings_scope`, `these_settings_scope_for_cm`,
+  `these_scope_cmids`, `these_scope_urls`, `these_require_view`), documentés
+  dans son INSTALL.
+- `$plugin->requires` : Moodle 4.1 (plancher testé par la CI).
+
 ## mod_these 0.24.0 (2026103001) et mod_thesesynthesis 0.7.3 (2026103001) — corrections de l'analyse qualité du 30 octobre
 
 Mise en œuvre des actions 1 à 3 et 5 à 11 du plan de
