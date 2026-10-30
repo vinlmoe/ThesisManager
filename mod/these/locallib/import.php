@@ -27,15 +27,6 @@
 // Import.
 
 /**
- * Voir \mod_these\local\import::import_columns().
- *
- * @return string[]
- */
-function these_import_columns() {
-    return \mod_these\local\import::import_columns();
-}
-
-/**
  * Voir \mod_these\local\import::find_user().
  *
  * @param string $value

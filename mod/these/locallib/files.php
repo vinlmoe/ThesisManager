@@ -49,18 +49,6 @@ function these_get_files(context $context, $filearea, $dossierid) {
 }
 
 /**
- * Voir \mod_these\local\files::render_file_links().
- *
- * @param context $context
- * @param string $filearea
- * @param int $dossierid
- * @return string HTML, vide si la zone est vide.
- */
-function these_render_file_links(context $context, $filearea, $dossierid) {
-    return \mod_these\local\files::render_file_links($context, $filearea, $dossierid);
-}
-
-/**
  * Voir \mod_these\local\files::has_files().
  *
  * @param context $context

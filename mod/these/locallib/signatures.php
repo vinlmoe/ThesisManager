@@ -506,21 +506,6 @@ function these_signature_errors(array $data) {
 }
 
 /**
- * Voir \mod_these\local\signatures::sign_from_form().
- *
- * @param context $context
- * @param stdClass $dossier
- * @param string[] $doctypes
- * @param string $slot
- * @param stdClass $data Données du formulaire (signaturedata, signername).
- * @param int $userid
- * @return void
- */
-function these_sign_from_form(context $context, stdClass $dossier, array $doctypes, $slot, stdClass $data, $userid) {
-    return \mod_these\local\signatures::sign_from_form($context, $dossier, $doctypes, $slot, $data, $userid);
-}
-
-/**
  * Voir \mod_these\local\signatures::render_signed_documents().
  *
  * @param stdClass $cm

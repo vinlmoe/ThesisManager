@@ -398,7 +398,6 @@ $string['convocation'] = 'Thesis defence notice';
 $string['depositminutes'] = 'Upload the minutes';
 $string['minutesrequired'] = 'The signed minutes are required.';
 $string['minutesnotavailable'] = 'Minutes can be uploaded once the defence is scheduled.';
-$string['closedossier'] = 'Upload and close the file';
 $string['dossierclosed'] = 'Minutes uploaded: file closed.';
 
 // Registrar management.
@@ -844,7 +843,6 @@ $string['bdefvdate'] = 'DEFV obtained on';
 $string['bschool'] = 'at';
 $string['schoolother'] = 'Other institution';
 $string['ba6date'] = 'Final year (A6) validated on';
-$string['ba6notyet'] = 'I have not yet validated my final year (A6)';
 $string['a6required'] = 'Enter the A6 validation date, or tick the box if it is not validated yet.';
 $string['a6validation'] = 'A6 validation';
 $string['a6notvalidated'] = 'not validated';

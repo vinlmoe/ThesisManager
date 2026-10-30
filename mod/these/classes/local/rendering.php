@@ -147,19 +147,6 @@ class rendering {
     }
 
     /**
-     * Liens rendus en boutons.
-     *
-     * @param array $links libellé => moodle_url (null : ignoré)
-     * @param string $class
-     * @return string HTML
-     */
-    public static function render_actions(array $links, $class = 'btn btn-sm btn-secondary mr-1 mb-1') {
-        global $PAGE;
-
-        return $PAGE->get_renderer('mod_these')->render(new output\actions($links, $class));
-    }
-
-    /**
      * Barre de navigation commune aux pages du personnel, précédée du lien de retour (voir
      * \mod_these\local\backlinks).
      *
@@ -174,18 +161,6 @@ class rendering {
 
         return backlinks::render($back ?? backlinks::from_activity($cm, $context))
             . $PAGE->get_renderer('mod_these')->render(new output\navlinks($cm, $context));
-    }
-
-    /**
-     * Frise de progression d'un dossier dans le circuit.
-     *
-     * @param stdClass $dossier
-     * @return string HTML
-     */
-    public static function render_progress(stdClass $dossier) {
-        global $PAGE;
-
-        return $PAGE->get_renderer('mod_these')->render(new output\progress($dossier));
     }
 
     /**

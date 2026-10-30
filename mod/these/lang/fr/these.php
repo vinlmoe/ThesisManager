@@ -406,7 +406,6 @@ $string['convocation'] = 'Convocation à la soutenance de thèse';
 $string['depositminutes'] = 'Déposer le procès-verbal';
 $string['minutesrequired'] = 'Le procès-verbal signé est obligatoire.';
 $string['minutesnotavailable'] = "Le procès-verbal se dépose une fois la soutenance programmée.";
-$string['closedossier'] = 'Déposer et clôturer le dossier';
 $string['dossierclosed'] = 'Procès-verbal déposé : dossier clôturé.';
 
 // Gestion DEVE.
@@ -854,7 +853,6 @@ $string['bdefvdate'] = 'Obtention du DEFV le';
 $string['bschool'] = 'à';
 $string['schoolother'] = 'Autre établissement';
 $string['ba6date'] = "Validation de l'année d'approfondissement (A6) le";
-$string['ba6notyet'] = "Je n'ai pas encore validé mon année d'approfondissement (A6)";
 $string['a6required'] = "Indiquez la date de validation de l'A6, ou cochez la case si elle n'est pas encore validée.";
 $string['a6validation'] = "Validation de l'A6";
 $string['a6notvalidated'] = 'non validée';

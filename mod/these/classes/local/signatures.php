@@ -1250,27 +1250,6 @@ class signatures {
     }
 
     /**
-     * Appose la signature saisie dans un formulaire sur un ou plusieurs documents.
-     *
-     * @param context $context
-     * @param stdClass $dossier
-     * @param string[] $doctypes
-     * @param string $slot
-     * @param stdClass $data Données du formulaire (signaturedata, signername).
-     * @param int $userid
-     * @return void
-     */
-    public static function sign_from_form(context $context, stdClass $dossier, array $doctypes, $slot, stdClass $data, $userid) {
-        $signature = these_signature_from_form($data);
-        if ($signature === null) {
-            throw new coding_exception('Signature absente');
-        }
-        foreach ($doctypes as $doctype) {
-            these_sign_document($context, $dossier, $doctype, $slot, $userid, $signature->name, $signature->png);
-        }
-    }
-
-    /**
      * Tableau des documents signés d'un dossier : état de chaque signature et lien de
      * téléchargement du PDF.
      *
