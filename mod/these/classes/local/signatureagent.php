@@ -258,8 +258,6 @@ class signatureagent {
         array $doctypes,
         $validatorid = 0
     ) {
-        global $DB;
-
         $now = time();
         $labels = [];
         $slotagents = [];
@@ -273,31 +271,7 @@ class signatureagent {
                 if (!self::agent_document_due($dossier, $doctype)) {
                     continue;
                 }
-                $signature = $DB->get_record(
-                    'these_signature',
-                    ['dossierid' => $dossier->id, 'doctype' => $doctype, 'slot' => $slot]
-                );
-                $record = (object) [
-                    'dossierid' => $dossier->id,
-                    'doctype' => $doctype,
-                    'slot' => $slot,
-                    'userid' => $single ? (int) $single->id : 0,
-                    'signername' => $single ? fullname($single) : '',
-                    'signeremail' => $single ? $single->email : '',
-                    'token' => null,
-                    'requesttime' => $now,
-                    'timesigned' => 0,
-                    'contenthash' => null,
-                    'validatedby' => (int) $validatorid ?: (int) ($signature->validatedby ?? 0),
-                    'validatedtime' => $validatorid ? $now : (int) ($signature->validatedtime ?? 0),
-                ];
-                if ($signature) {
-                    $record->id = $signature->id;
-                    $DB->update_record('these_signature', $record);
-                } else {
-                    $record->timecreated = $now;
-                    $DB->insert_record('these_signature', $record);
-                }
+                self::open_agent_signature($dossier, $doctype, $slot, $single, $validatorid, $now);
                 $labels[$slot][] = self::document_label($doctype, $slot);
                 $slotagents[$slot] = $agents;
             }
@@ -305,6 +279,73 @@ class signatureagent {
         if (!$labels) {
             return 0;
         }
+        self::notify_agents($these, $cm, $dossier, $labels, $slotagents, $validatorid, $now);
+        return count(array_merge(...array_values($labels)));
+    }
+
+    /**
+     * Ouvre (ou rouvre) la signature d'un document attendue d'un agent.
+     *
+     * @param stdClass $dossier
+     * @param string $doctype
+     * @param string $slot
+     * @param stdClass|null $single Agent attitré quand il est seul pour l'emplacement.
+     * @param int $validatorid Voir request_agent_signatures().
+     * @param int $now Date de la demande.
+     * @return void
+     */
+    private static function open_agent_signature(stdClass $dossier, $doctype, $slot, ?stdClass $single, $validatorid, $now) {
+        global $DB;
+
+        $signature = $DB->get_record(
+            'these_signature',
+            ['dossierid' => $dossier->id, 'doctype' => $doctype, 'slot' => $slot]
+        );
+        $record = (object) [
+            'dossierid' => $dossier->id,
+            'doctype' => $doctype,
+            'slot' => $slot,
+            'userid' => $single ? (int) $single->id : 0,
+            'signername' => $single ? fullname($single) : '',
+            'signeremail' => $single ? $single->email : '',
+            'token' => null,
+            'requesttime' => $now,
+            'timesigned' => 0,
+            'contenthash' => null,
+            'validatedby' => (int) $validatorid ?: (int) ($signature->validatedby ?? 0),
+            'validatedtime' => $validatorid ? $now : (int) ($signature->validatedtime ?? 0),
+        ];
+        if ($signature) {
+            $record->id = $signature->id;
+            $DB->update_record('these_signature', $record);
+        } else {
+            $record->timecreated = $now;
+            $DB->insert_record('these_signature', $record);
+        }
+    }
+
+    /**
+     * Prévient les agents (un courriel chacun, pour les documents des emplacements qu'il signe) et
+     * inscrit les demandes à l'historique du dossier.
+     *
+     * @param stdClass $these
+     * @param stdClass $cm
+     * @param stdClass $dossier
+     * @param array $labels Libellés des documents demandés, par emplacement.
+     * @param array $slotagents Agents, par emplacement.
+     * @param int $validatorid Voir request_agent_signatures().
+     * @param int $now Date de la demande.
+     * @return void
+     */
+    private static function notify_agents(
+        stdClass $these,
+        stdClass $cm,
+        stdClass $dossier,
+        array $labels,
+        array $slotagents,
+        $validatorid,
+        $now
+    ) {
         // Validateur : compte qui a validé les documents, et quand, donnés aux agents avec la demande.
         $validated = $validatorid
             ? self::validator_label((object) ['validatedby' => $validatorid, 'validatedtime' => $now]) : '';
@@ -335,7 +376,6 @@ class signatureagent {
                 $actor . ' (' . implode(', ', array_map('fullname', $agents)) . ') — ' . implode(', ', $labels[$slot])
             );
         }
-        return count(array_merge(...array_values($labels)));
     }
 
     /**
