@@ -16,6 +16,7 @@
 
 namespace mod_these\output;
 
+use mod_these\local\questionnaire;
 use moodle_url;
 
 /**
@@ -49,7 +50,7 @@ class question_list implements \renderable, \templatable {
      * @return array Voir table_context::export().
      */
     public function export_for_template(\renderer_base $output): array {
-        $types = these_question_types();
+        $types = questionnaire::question_types();
         $count = count($this->questions);
         $rows = [];
         foreach (array_values($this->questions) as $index => $question) {
@@ -80,7 +81,7 @@ class question_list implements \renderable, \templatable {
             $rows[] = [
                 [parts::html(format_string($question->label))],
                 [parts::text($types[$question->qtype] ?? $question->qtype)],
-                [parts::text(implode(' ; ', these_question_options($question)))],
+                [parts::text(implode(' ; ', questionnaire::question_options($question)))],
                 [parts::text($question->required ? get_string('yes') : get_string('no'))],
                 $actions,
             ];

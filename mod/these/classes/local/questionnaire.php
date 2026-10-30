@@ -51,7 +51,7 @@ class questionnaire {
      */
     public static function get_questions(stdClass $scope) {
         global $DB;
-        return $DB->get_records('these_question', these_scope_conditions($scope), 'sortorder ASC, id ASC');
+        return $DB->get_records('these_question', doctemplates::scope_conditions($scope), 'sortorder ASC, id ASC');
     }
 
     /**
@@ -77,15 +77,15 @@ class questionnaire {
     public static function save_question(stdClass $scope, stdClass $data) {
         global $DB;
 
-        $record = (object) array_merge(these_scope_conditions($scope), [
-            'qtype' => array_key_exists($data->qtype, these_question_types()) ? $data->qtype : 'text',
+        $record = (object) array_merge(doctemplates::scope_conditions($scope), [
+            'qtype' => array_key_exists($data->qtype, self::question_types()) ? $data->qtype : 'text',
             'label' => trim((string) $data->label),
             'options' => in_array($data->qtype, ['list', 'multi'], true) ? trim((string) $data->options) : '',
             'required' => empty($data->required) ? 0 : 1,
             'timemodified' => time(),
         ]);
         $existing = !empty($data->id)
-            ? $DB->get_record('these_question', ['id' => $data->id] + these_scope_conditions($scope)) : null;
+            ? $DB->get_record('these_question', ['id' => $data->id] + doctemplates::scope_conditions($scope)) : null;
         if ($existing) {
             $record->id = $existing->id;
             $record->sortorder = $existing->sortorder;
@@ -94,7 +94,7 @@ class questionnaire {
         }
         $record->sortorder = (int) $DB->get_field_sql(
             'SELECT COALESCE(MAX(sortorder), -1) + 1 FROM {these_question} WHERE theseid = :theseid AND synthesisid = :synthesisid',
-            these_scope_conditions($scope)
+            doctemplates::scope_conditions($scope)
         );
         return (int) $DB->insert_record('these_question', $record);
     }
@@ -108,7 +108,7 @@ class questionnaire {
      */
     public static function delete_question(stdClass $scope, $id) {
         global $DB;
-        if ($DB->record_exists('these_question', ['id' => $id] + these_scope_conditions($scope))) {
+        if ($DB->record_exists('these_question', ['id' => $id] + doctemplates::scope_conditions($scope))) {
             $DB->delete_records('these_answer', ['questionid' => $id]);
             $DB->delete_records('these_question', ['id' => $id]);
         }
@@ -125,7 +125,7 @@ class questionnaire {
     public static function move_question(stdClass $scope, $id, $direction) {
         global $DB;
 
-        $ids = array_keys(these_get_questions($scope));
+        $ids = array_keys(self::get_questions($scope));
         $index = array_search((int) $id, array_map('intval', $ids), true);
         $target = $index === false ? false : $index + ($direction < 0 ? -1 : 1);
         if ($target === false || $target < 0 || $target >= count($ids)) {
@@ -144,12 +144,26 @@ class questionnaire {
      * @return array questionid => valeur (texte, ou liste de choix pour un QCM)
      */
     public static function get_answers($dossierid) {
+        return self::get_answers_for([$dossierid])[(int) $dossierid];
+    }
+
+    /**
+     * Réponses de plusieurs dossiers au questionnaire, lues en une requête.
+     *
+     * @param int[] $dossierids
+     * @return array dossierid => (questionid => valeur), un tableau (vide au besoin) par dossier demandé.
+     */
+    public static function get_answers_for(array $dossierids) {
         global $DB;
 
-        $answers = [];
-        foreach ($DB->get_records('these_answer', ['dossierid' => $dossierid]) as $answer) {
+        $answers = array_fill_keys(array_map('intval', $dossierids), []);
+        if (!$answers) {
+            return [];
+        }
+        [$insql, $params] = $DB->get_in_or_equal(array_keys($answers), SQL_PARAMS_NAMED);
+        foreach ($DB->get_records_select('these_answer', "dossierid $insql", $params, 'id ASC') as $answer) {
             $decoded = json_decode((string) $answer->value, true);
-            $answers[(int) $answer->questionid] = is_array($decoded) ? $decoded : (string) $answer->value;
+            $answers[(int) $answer->dossierid][(int) $answer->questionid] = is_array($decoded) ? $decoded : (string) $answer->value;
         }
         return $answers;
     }
@@ -168,7 +182,7 @@ class questionnaire {
 
         $data = (array) $data;
         foreach ($questions as $question) {
-            $options = these_question_options($question);
+            $options = self::question_options($question);
             if ($question->qtype === 'multi') {
                 $chosen = [];
                 foreach ($options as $n => $option) {
@@ -209,9 +223,9 @@ class questionnaire {
      * @return string[] Libellés.
      */
     public static function questionnaire_missing(stdClass $these, stdClass $dossier) {
-        $answers = these_get_answers($dossier->id);
+        $answers = self::get_answers($dossier->id);
         $missing = [];
-        foreach (these_get_questions(these_settings_scope($these)) as $question) {
+        foreach (self::get_questions(doctemplates::settings_scope($these)) as $question) {
             $answer = $answers[(int) $question->id] ?? '';
             if ($question->required && ($answer === '' || $answer === [])) {
                 $missing[] = $question->label;
@@ -243,8 +257,8 @@ class questionnaire {
         global $DB;
 
         $section = new output\detail_section(get_string('questionnaire', 'mod_these'));
-        $answers = these_get_answers($dossier->id);
-        $questions = these_get_questions(these_settings_scope($these));
+        $answers = self::get_answers($dossier->id);
+        $questions = self::get_questions(doctemplates::settings_scope($these));
         foreach (array_diff(array_keys($answers), array_keys($questions)) as $questionid) {
             if ($question = $DB->get_record('these_question', ['id' => $questionid])) {
                 $questions[$questionid] = $question;
@@ -256,7 +270,7 @@ class questionnaire {
                 output\parts::stronghtml(format_string($question->label)),
                 [$answer === '' || $answer === []
                     ? output\parts::span(get_string('questionnaireunanswered', 'mod_these'), 'text-muted')
-                    : output\parts::html(format_text(these_answer_text($answer), FORMAT_PLAIN))]
+                    : output\parts::html(format_text(self::answer_text($answer), FORMAT_PLAIN))]
             );
         }
         return $section;

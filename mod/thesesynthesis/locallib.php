@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Fonctions internes de mod_thesesynthesis : liens vers les activités « Gestion des thèses » de
- * plusieurs promotions, et lecture, pour l'utilisateur connecté, des dossiers qu'il suit dans
- * chacune (directeur, DEVE, bibliothèque) et des jurys où il siège.
+ * Façades des classes de mod_thesesynthesis (classes/local/) : liens vers les activités « Gestion
+ * des thèses » de plusieurs promotions, et lecture, pour l'utilisateur connecté, des dossiers qu'il
+ * suit dans chacune (directeur, DEVE, bibliothèque) et des jurys où il siège.
  *
  * L'activité ne stocke aucun droit ni aucune donnée de thèse : tout est relu à l'affichage dans les
  * activités liées, et seulement là où l'utilisateur a toujours ses droits à la source.
@@ -32,137 +32,59 @@ defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot . '/mod/these/locallib.php');
 
 /**
- * Liens d'une instance.
+ * Voir \mod_thesesynthesis\local\links::get_links().
  *
  * @param int $synthesisid
  * @return array thesecmid => enregistrement
  */
 function thesesynthesis_get_links($synthesisid) {
-    global $DB;
-
-    $links = [];
-    foreach ($DB->get_records('thesesynthesis_link', ['synthesisid' => $synthesisid], 'id') as $link) {
-        $links[(int) $link->thesecmid] = $link;
-    }
-    return $links;
+    return \mod_thesesynthesis\local\links::get_links($synthesisid);
 }
 
 /**
- * Remplace les liens d'une instance.
+ * Voir \mod_thesesynthesis\local\links::set_links().
  *
  * @param int $synthesisid
  * @param int[] $thesecmids
  * @return void
  */
 function thesesynthesis_set_links($synthesisid, array $thesecmids) {
-    global $DB;
-
-    $thesecmids = array_unique(array_map('intval', $thesecmids));
-    $existing = thesesynthesis_get_links($synthesisid);
-    foreach ($existing as $cmid => $link) {
-        if (!in_array($cmid, $thesecmids, true)) {
-            $DB->delete_records('thesesynthesis_link', ['id' => $link->id]);
-        }
-    }
-    foreach ($thesecmids as $cmid) {
-        if (!isset($existing[$cmid])) {
-            $DB->insert_record('thesesynthesis_link', (object) [
-                'synthesisid' => $synthesisid,
-                'thesecmid' => $cmid,
-                'timecreated' => time(),
-            ]);
-        }
-    }
-    // Les paramètres du circuit des activités suivies changent de portée.
-    \mod_these\local\scopesettings::reset_cache();
+    \mod_thesesynthesis\local\links::set_links($synthesisid, $thesecmids);
 }
 
 /**
- * Activités « Gestion des thèses » qu'un utilisateur peut lier : celles où il voit tous les
- * dossiers (DEVE, bibliothèque, gestionnaire), pour ne jamais exposer le nom d'un cours auquel il
- * n'a pas accès.
+ * Voir \mod_thesesynthesis\local\links::get_available_activities().
  *
  * @param int $userid
  * @return array thesecmid => {thesecmid, thesename, coursename, visible, coursevisible}
  */
 function thesesynthesis_get_available_activities($userid) {
-    global $DB;
-
-    $sql = "SELECT cm.id AS thesecmid, t.name AS thesename, c.fullname AS coursename, cm.visible,
-                   c.visible AS coursevisible
-              FROM {course_modules} cm
-              JOIN {modules} m ON m.id = cm.module AND m.name = 'these'
-              JOIN {these} t ON t.id = cm.instance
-              JOIN {course} c ON c.id = cm.course
-             WHERE cm.deletioninprogress = 0
-          ORDER BY c.fullname, t.name";
-    $available = [];
-    foreach ($DB->get_records_sql($sql) as $record) {
-        $rights = these_get_rights(context_module::instance($record->thesecmid), null, $userid);
-        if ($rights->viewall) {
-            $available[(int) $record->thesecmid] = $record;
-        }
-    }
-    return $available;
+    return \mod_thesesynthesis\local\links::get_available_activities($userid);
 }
 
 /**
- * Activités liées encore présentes, avec les droits de l'utilisateur dans chacune.
+ * Voir \mod_thesesynthesis\local\links::get_active_links().
  *
  * @param int $synthesisid
  * @param int $userid
  * @return array Liste d'objets {cm, these, course, context, rights, direct}
  */
 function thesesynthesis_get_active_links($synthesisid, $userid) {
-    global $DB;
-
-    $active = [];
-    foreach (array_keys(thesesynthesis_get_links($synthesisid)) as $cmid) {
-        $cm = get_coursemodule_from_id('these', $cmid, 0, false, IGNORE_MISSING);
-        if (!$cm || !empty($cm->deletioninprogress)) {
-            continue;
-        }
-        $context = context_module::instance($cm->id);
-        $active[] = (object) [
-            'cm' => $cm,
-            'these' => $DB->get_record('these', ['id' => $cm->instance], '*', MUST_EXIST),
-            'course' => get_course($cm->course),
-            'context' => $context,
-            'rights' => these_get_rights($context, null, $userid),
-            'direct' => has_capability('mod/these:direct', $context, $userid),
-        ];
-    }
-    return $active;
+    return \mod_thesesynthesis\local\links::get_active_links($synthesisid, $userid);
 }
 
 /**
- * Étudiants et directeurs de dossiers, lus en une requête : les champs du nom, pour fullname().
+ * Voir \mod_thesesynthesis\local\dossiers::load_users().
  *
  * @param stdClass[] $dossiers
  * @return stdClass[] userid => utilisateur (absent s'il n'existe plus).
  */
 function thesesynthesis_load_users(array $dossiers) {
-    global $DB;
-
-    $userids = [];
-    foreach ($dossiers as $dossier) {
-        $userids[(int) $dossier->userid] = true;
-        if ($dossier->directorid) {
-            $userids[(int) $dossier->directorid] = true;
-        }
-    }
-    unset($userids[0]);
-    if (!$userids) {
-        return [];
-    }
-    [$insql, $params] = $DB->get_in_or_equal(array_keys($userids), SQL_PARAMS_NAMED);
-    $fields = 'id, email, ' . implode(', ', \core_user\fields::for_name()->get_required_fields());
-    return $DB->get_records_select('user', "id $insql", $params, '', $fields);
+    return \mod_thesesynthesis\local\dossiers::load_users($dossiers);
 }
 
 /**
- * Dossiers suivis par l'utilisateur dans les activités liées : tous ceux des activités où il voit
- * tous les dossiers (DEVE, bibliothèque), et ceux qu'il dirige ailleurs.
+ * Voir \mod_thesesynthesis\local\dossiers::get_dossiers().
  *
  * @param array $links Voir thesesynthesis_get_active_links().
  * @param int $userid
@@ -170,67 +92,11 @@ function thesesynthesis_load_users(array $dossiers) {
  * @return array Liste d'objets {dossier, link, student, director, actor, todo, knowssubject}
  */
 function thesesynthesis_get_dossiers(array $links, $userid, array $filters = []) {
-    global $DB;
-
-    $rows = [];
-    foreach ($links as $link) {
-        if (!empty($filters['cmid']) && (int) $filters['cmid'] !== (int) $link->cm->id) {
-            continue;
-        }
-        if ($link->rights->viewall) {
-            $records = $DB->get_records('these_dossier', ['theseid' => $link->these->id], 'timemodified DESC');
-        } else if ($link->direct) {
-            $records = $DB->get_records(
-                'these_dossier',
-                ['theseid' => $link->these->id, 'directorid' => $userid],
-                'timemodified DESC'
-            );
-        } else {
-            continue;
-        }
-        if (isset($filters['status']) && $filters['status'] !== null) {
-            $records = array_filter($records, function ($dossier) use ($filters) {
-                return (int) $dossier->status === (int) $filters['status'];
-            });
-        }
-        $users = thesesynthesis_load_users($records);
-        // Thèse confidentielle : titre masqué, et absent de la recherche, pour qui ne doit pas le
-        // connaître.
-        $knowssubjects = \mod_these\local\rights::user_knows_subjects($records, $link->context, $userid);
-        foreach ($records as $dossier) {
-            $student = $users[(int) $dossier->userid] ?? null;
-            $knows = $knowssubjects[(int) $dossier->id];
-            $search = core_text::strtolower(trim((string) ($filters['search'] ?? '')));
-            if (
-                $search !== '' && strpos(core_text::strtolower(($student ? fullname($student) : '') . ' '
-                    . ($knows ? $dossier->title : '') . ' ' . $dossier->devenumber), $search) === false
-            ) {
-                continue;
-            }
-            $actor = these_step_actor($dossier->status);
-            $todo = ($actor === 'director' && (int) $dossier->directorid === (int) $userid && $link->direct)
-                || ($actor === 'deve' && $link->rights->deve)
-                || ($actor === 'library' && $link->rights->library);
-            $rows[] = (object) [
-                'dossier' => $dossier,
-                'link' => $link,
-                'student' => $student,
-                'director' => $dossier->directorid ? ($users[(int) $dossier->directorid] ?? null) : null,
-                'actor' => $actor,
-                'todo' => $todo,
-                'knowssubject' => $knows,
-            ];
-        }
-    }
-    return $rows;
+    return \mod_thesesynthesis\local\dossiers::get_dossiers($links, $userid, $filters);
 }
 
 /**
- * Signatures en attente dans les activités liées, groupées par dossier, chacune avec la page où agir :
- * - mine : documents que l'utilisateur signe lui-même (agent DEVE, bibliothèque, directeur, juré
- *   ayant un compte...), à signer depuis « Mes signatures » ;
- * - awaited : pour la DEVE, signatures demandées à d'autres et pas encore apposées, à relancer ou à
- *   recueillir sur place depuis le suivi des signatures du dossier.
+ * Voir \mod_thesesynthesis\local\signatures::get_signatures().
  *
  * @param array $links Voir thesesynthesis_get_active_links().
  * @param stdClass $user
@@ -238,73 +104,11 @@ function thesesynthesis_get_dossiers(array $links, $userid, array $filters = [])
  *               (libellés), since (première demande), url, label}
  */
 function thesesynthesis_get_signatures(array $links, stdClass $user) {
-    global $DB;
-
-    $bycmid = [];
-    foreach ($links as $link) {
-        $bycmid[(int) $link->cm->id] = $link;
-    }
-    $mine = [];
-    $mineids = [];
-    $mysignatures = new moodle_url('/mod/these/mysignatures.php');
-    foreach (these_get_user_pending_signatures($user) as $signature) {
-        $link = $bycmid[(int) $signature->cm->id] ?? null;
-        if (!$link) {
-            continue;
-        }
-        $mineids[(int) $signature->id] = true;
-        // Signature d'agent DEVE (sans jeton) : « par délégation » à l'emplacement de la direction générale.
-        $label = $signature->token === null
-            ? \mod_these\local\signatureagent::document_label($signature->doctype, $signature->slot)
-            : these_document_label($signature->doctype) . ' (' . these_slot_label($signature->slot) . ')';
-        $validated = \mod_these\local\signatureagent::validator_label($signature);
-        if ($validated !== '') {
-            $label .= ' — ' . $validated;
-        }
-        $row = thesesynthesis_signature_row($mine, $signature->dossier, $link, $user->id, $signature->requesttime);
-        $row->documents[] = $label;
-        $row->url = $mysignatures;
-        $row->label = get_string('sign', 'mod_thesesynthesis');
-    }
-
-    $awaited = [];
-    foreach ($links as $link) {
-        if (empty($link->rights->deve)) {
-            continue;
-        }
-        $signatures = $DB->get_records_sql(
-            "SELECT s.*
-               FROM {these_signature} s
-               JOIN {these_dossier} d ON d.id = s.dossierid
-              WHERE d.theseid = :theseid AND s.timesigned = 0
-                AND d.status <> :cancelled AND d.status <> :closed
-           ORDER BY d.id, s.id",
-            ['theseid' => $link->these->id, 'cancelled' => THESE_STATUS_CANCELLED, 'closed' => THESE_STATUS_CLOSED]
-        );
-        $dossiers = [];
-        foreach ($signatures as $signature) {
-            if (isset($mineids[(int) $signature->id])) {
-                continue;
-            }
-            if (!isset($dossiers[$signature->dossierid])) {
-                $dossiers[$signature->dossierid] = $DB->get_record('these_dossier', ['id' => $signature->dossierid]);
-            }
-            $dossier = $dossiers[$signature->dossierid];
-            if (!these_document_available($dossier, $signature->doctype)) {
-                continue;
-            }
-            $row = thesesynthesis_signature_row($awaited, $dossier, $link, $user->id, $signature->requesttime);
-            $row->documents[] = these_document_label($signature->doctype) . ' (' . these_slot_label($signature->slot) . ')';
-            $row->url = new moodle_url('/mod/these/signatures.php', ['id' => $link->cm->id, 'dossierid' => $dossier->id]);
-            $row->label = get_string('managesignatures', 'mod_these');
-        }
-    }
-    return ['mine' => array_values($mine), 'awaited' => array_values($awaited)];
+    return \mod_thesesynthesis\local\signatures::get_signatures($links, $user);
 }
 
 /**
- * Ligne d'un dossier dans une liste de signatures (voir thesesynthesis_get_signatures()), créée au
- * premier document ; la date retenue est celle de la plus ancienne demande.
+ * Voir \mod_thesesynthesis\local\signatures::signature_row().
  *
  * @param array $groups Lignes, indexées par dossier.
  * @param stdClass $dossier
@@ -314,90 +118,43 @@ function thesesynthesis_get_signatures(array $links, stdClass $user) {
  * @return stdClass La ligne du dossier.
  */
 function thesesynthesis_signature_row(array &$groups, stdClass $dossier, stdClass $link, $userid, $requesttime) {
-    global $DB;
-
-    if (!isset($groups[$dossier->id])) {
-        $groups[$dossier->id] = (object) [
-            'dossier' => $dossier,
-            'link' => $link,
-            'student' => $DB->get_record('user', ['id' => $dossier->userid]),
-            'knowssubject' => these_user_knows_subject($dossier, $link->context, $userid),
-            'documents' => [],
-            'since' => 0,
-            'url' => null,
-            'label' => '',
-        ];
-    }
-    $row = $groups[$dossier->id];
-    $requesttime = (int) $requesttime;
-    if ($requesttime && (!$row->since || $requesttime < $row->since)) {
-        $row->since = $requesttime;
-    }
-    return $row;
+    return \mod_thesesynthesis\local\signatures::signature_row($groups, $dossier, $link, $userid, $requesttime);
 }
 
 /**
- * Jurys où siège l'utilisateur, dans les activités liées : membre retenu avec son adresse, ou
- * enseignant de l'annuaire portant son adresse.
+ * Voir \mod_thesesynthesis\local\signatures::fill_signature_rows().
+ *
+ * @param array $rows Lignes (voir thesesynthesis_signature_row()), modifiées en place.
+ * @param int $userid
+ * @return void
+ */
+function thesesynthesis_fill_signature_rows(array $rows, $userid) {
+    \mod_thesesynthesis\local\signatures::fill_signature_rows($rows, $userid);
+}
+
+/**
+ * Voir \mod_thesesynthesis\local\dossiers::get_juries().
  *
  * @param array $links Voir thesesynthesis_get_active_links().
  * @param stdClass $user
  * @return array Liste d'objets {member, dossier, link, student}
  */
 function thesesynthesis_get_juries(array $links, stdClass $user) {
-    global $DB;
-
-    $email = trim((string) $user->email);
-    if ($email === '' || !$links) {
-        return [];
-    }
-    $byinstance = [];
-    foreach ($links as $link) {
-        $byinstance[(int) $link->these->id] = $link;
-    }
-    [$insql, $params] = $DB->get_in_or_equal(array_keys($byinstance), SQL_PARAMS_NAMED);
-    $params['email'] = core_text::strtolower($email);
-    $params['email2'] = core_text::strtolower($email);
-    $sql = "SELECT j.*, d.theseid
-              FROM {these_jury} j
-              JOIN {these_dossier} d ON d.id = j.dossierid
-         LEFT JOIN {these_juror} r ON r.id = j.jurorid
-             WHERE d.theseid $insql
-               AND d.status <> :cancelled
-               AND (LOWER(j.email) = :email OR LOWER(r.email) = :email2)
-          ORDER BY d.defensedate DESC, j.id";
-    $params['cancelled'] = THESE_STATUS_CANCELLED;
-    $members = $DB->get_records_sql($sql, $params);
-    $dossiers = $members ? $DB->get_records_list('these_dossier', 'id', array_column($members, 'dossierid')) : [];
-    $users = thesesynthesis_load_users($dossiers);
-    $rows = [];
-    foreach ($members as $member) {
-        $dossier = $dossiers[(int) $member->dossierid];
-        $rows[] = (object) [
-            'member' => $member,
-            'dossier' => $dossier,
-            'link' => $byinstance[(int) $member->theseid],
-            'student' => $users[(int) $dossier->userid] ?? null,
-        ];
-    }
-    return $rows;
+    return \mod_thesesynthesis\local\dossiers::get_juries($links, $user);
 }
 
 /**
- * Accueil de l'activité de suivi, cible du retour de ses autres pages (voir \mod_these\local\backlinks).
+ * Voir \mod_thesesynthesis\local\navigation::back_home().
  *
  * @param stdClass $cm
  * @return stdClass {url, label}
  */
 function thesesynthesis_back_home(stdClass $cm) {
-    return \mod_these\local\backlinks::target(
-        new moodle_url('/mod/thesesynthesis/view.php', ['id' => $cm->id]),
-        get_string('modulename', 'mod_thesesynthesis')
-    );
+    return \mod_thesesynthesis\local\navigation::back_home($cm);
 }
 
 /**
- * Liens vers les pages de l'activité, selon les droits de l'utilisateur, précédés du lien de retour.
+ * Voir \mod_thesesynthesis\local\navigation::render_navlinks().
  *
  * @param stdClass $cm
  * @param context $context
@@ -405,43 +162,31 @@ function thesesynthesis_back_home(stdClass $cm) {
  * @return string HTML
  */
 function thesesynthesis_render_navlinks(stdClass $cm, context $context, ?stdClass $back = null) {
-    global $PAGE;
-
-    return \mod_these\local\backlinks::render($back ?? thesesynthesis_back_home($cm))
-        . $PAGE->get_renderer('mod_thesesynthesis')->render(new \mod_thesesynthesis\output\navlinks($cm, $context));
+    return \mod_thesesynthesis\local\navigation::render_navlinks($cm, $context, $back);
 }
 
 /**
- * Texte normalisé pour la recherche : minuscules, sans accents.
+ * Voir \mod_thesesynthesis\local\search::normalise().
  *
  * @param string $text
  * @return string
  */
 function thesesynthesis_normalise($text) {
-    return core_text::strtolower(core_text::specialtoascii((string) $text));
+    return \mod_thesesynthesis\local\search::normalise($text);
 }
 
 /**
- * Année de soutenance d'un dossier (retenue, à défaut proposée).
+ * Voir \mod_thesesynthesis\local\dossiers::defense_year().
  *
  * @param stdClass $dossier
  * @return int 0 si aucune date.
  */
 function thesesynthesis_defense_year(stdClass $dossier) {
-    $date = (int) ($dossier->defensedate ?: $dossier->proposeddate);
-    return $date ? (int) userdate($date, '%Y') : 0;
+    return \mod_thesesynthesis\local\dossiers::defense_year($dossier);
 }
 
 /**
- * Recherche de thèses dans les activités liées.
- *
- * Dans une activité où l'utilisateur voit tous les dossiers (DEVE, bibliothèque, gestionnaire),
- * tous les dossiers sont cherchés et peuvent être ouverts. Ailleurs, un enseignant ne trouve que
- * les thèses enregistrées par la DEVE et non annulées, et n'ouvre que celles qu'il dirige.
- *
- * Une thèse confidentielle se trouve comme les autres, mais, pour qui ne doit pas connaître son
- * sujet (voir these_user_knows_subject()), ni son sujet ni ses réponses au questionnaire n'entrent
- * dans la recherche ou ne sont renvoyés.
+ * Voir \mod_thesesynthesis\local\search::find().
  *
  * @param array $links Voir thesesynthesis_get_active_links().
  * @param int $userid
@@ -451,118 +196,16 @@ function thesesynthesis_defense_year(stdClass $dossier) {
  *                     knowssubject}
  */
 function thesesynthesis_search(array $links, $userid, array $filters, array $questions = []) {
-    global $DB;
-
-    $words = array_filter(preg_split('/\s+/', thesesynthesis_normalise($filters['text'] ?? '')), 'strlen');
-    $answerfilters = array_filter((array) ($filters['answers'] ?? []), function ($value) {
-        return trim((string) $value) !== '';
-    });
-    $registered = these_status_rank(THESE_STATUS_SUBJECT_REGISTERED);
-    $rows = [];
-    foreach ($links as $link) {
-        if (!empty($filters['cmid']) && (int) $filters['cmid'] !== (int) $link->cm->id) {
-            continue;
-        }
-        // Premier tri sans requête : visibilité, statut, année. Les utilisateurs et la connaissance
-        // du sujet sont ensuite chargés en une fois pour les dossiers restants.
-        $candidates = [];
-        foreach ($DB->get_records('these_dossier', ['theseid' => $link->these->id], 'timemodified DESC') as $dossier) {
-            $status = (int) $dossier->status;
-            $directs = $link->direct && (int) $dossier->directorid === (int) $userid;
-            // Une thèse confidentielle se trouve comme les autres (promotion, année, étudiant,
-            // directeur, jury), son sujet restant masqué à qui ne doit pas le connaître.
-            $public = $status !== THESE_STATUS_CANCELLED && these_status_rank($status) >= $registered;
-            if (!$link->rights->viewall && !$directs && !$public) {
-                continue;
-            }
-            if (isset($filters['status']) && $filters['status'] !== null && $status !== (int) $filters['status']) {
-                continue;
-            }
-            $year = thesesynthesis_defense_year($dossier);
-            if (!empty($filters['year']) && $year !== (int) $filters['year']) {
-                continue;
-            }
-            $candidates[(int) $dossier->id] = [$dossier, $year, $directs];
-        }
-        $users = thesesynthesis_load_users(array_column($candidates, 0));
-        $knowssubjects = \mod_these\local\rights::user_knows_subjects(array_column($candidates, 0), $link->context, $userid);
-        foreach ($candidates as [$dossier, $year, $directs]) {
-            // Thèse confidentielle dont l'utilisateur ne connaît pas le sujet : ni le sujet ni les
-            // réponses au questionnaire n'entrent dans la recherche.
-            $knows = $knowssubjects[(int) $dossier->id];
-            if (!$knows && $answerfilters) {
-                continue;
-            }
-            $answers = these_get_answers($dossier->id);
-            $matches = true;
-            foreach ($answerfilters as $questionid => $value) {
-                $answer = $answers[(int) $questionid] ?? '';
-                $question = $questions[(int) $questionid] ?? null;
-                if ($question && in_array($question->qtype, ['list', 'multi'], true)) {
-                    $matches = $matches && in_array((string) $value, (array) $answer, true);
-                } else {
-                    $matches = $matches && strpos(
-                        thesesynthesis_normalise(these_answer_text($answer)),
-                        thesesynthesis_normalise(trim($value))
-                    ) !== false;
-                }
-            }
-            if (!$matches) {
-                continue;
-            }
-            $student = $users[(int) $dossier->userid] ?? null;
-            $director = $dossier->directorid ? ($users[(int) $dossier->directorid] ?? null) : null;
-            if ($words) {
-                $haystack = [$dossier->extdirectorname, $student ? fullname($student) : '',
-                    $director ? fullname($director) : ''];
-                if ($knows) {
-                    array_push($haystack, $dossier->title, $dossier->titleen, $dossier->summary, $dossier->keywords);
-                }
-                if ($link->rights->viewall) {
-                    $haystack[] = $dossier->devenumber;
-                    $haystack[] = $dossier->libraryref;
-                }
-                foreach (these_get_jury($dossier->id) as $member) {
-                    $haystack[] = $member->fullname;
-                }
-                foreach ($knows ? $answers : [] as $answer) {
-                    $haystack[] = these_answer_text($answer);
-                }
-                $haystack = thesesynthesis_normalise(implode(' ', $haystack));
-                foreach ($words as $word) {
-                    if (strpos($haystack, $word) === false) {
-                        continue 2;
-                    }
-                }
-            }
-            $rows[] = (object) [
-                'dossier' => $dossier,
-                'link' => $link,
-                'student' => $student,
-                'director' => $director,
-                'canopen' => $link->rights->viewall || $directs,
-                'answers' => $knows ? $answers : [],
-                'knowssubject' => $knows,
-                'year' => $year,
-            ];
-        }
-    }
-    usort($rows, function ($a, $b) {
-        return [$b->year, $a->dossier->title] <=> [$a->year, $b->dossier->title];
-    });
-    return $rows;
+    return \mod_thesesynthesis\local\search::find($links, $userid, $filters, $questions);
 }
 
 /**
- * Tableau des résultats d'une recherche de thèses. Pour une thèse confidentielle dont l'utilisateur
- * ne connaît pas le sujet, titre, mots-clés et résumé sont remplacés par « Thèse confidentielle ».
+ * Voir \mod_thesesynthesis\local\search::render_search_results().
  *
  * @param array $rows Voir thesesynthesis_search().
  * @param array $questions Questions du questionnaire (voir these_get_questions()).
  * @return string HTML
  */
 function thesesynthesis_render_search_results(array $rows, array $questions) {
-    global $PAGE;
-
-    return $PAGE->get_renderer('mod_thesesynthesis')->render(new \mod_thesesynthesis\output\search_results($rows, $questions));
+    return \mod_thesesynthesis\local\search::render_search_results($rows, $questions);
 }

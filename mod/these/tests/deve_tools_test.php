@@ -28,7 +28,7 @@ require_once(__DIR__ . '/these_testcase.php');
  * @package    mod_these
  * @copyright  2026 Sébastien Lefebvre
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \mod_these\local\jury::room_conflicts
+ * @covers     \mod_these\local\defenseconflicts::room_conflicts
  * @covers     \mod_these\local\rendering::primary_action
  * @covers     \mod_these\local\bulk
  * @covers     \mod_these\local\scopesettings::checklist

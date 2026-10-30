@@ -31,7 +31,7 @@ require_once($CFG->dirroot . '/mod/thesesynthesis/locallib.php');
  * @covers     ::thesesynthesis_get_dossiers
  * @covers     ::thesesynthesis_get_juries
  * @covers     ::thesesynthesis_get_available_activities
- * @covers     \mod_these\local\planning_page
+ * @covers     \mod_these\page\planning_page
  */
 final class synthesis_test extends \advanced_testcase {
     /**
@@ -147,7 +147,7 @@ final class synthesis_test extends \advanced_testcase {
         $gen->enrol_user($viewall->id, $activity->course->id, $roleid);
         accesslib_clear_all_caches_for_unit_testing();
 
-        $add = function (int $count) use ($gen, $thesegen, $env, $activity) {
+        $add = function (int $count) use ($gen, $thesegen, $env, $activity, $DB) {
             for ($i = 0; $i < $count; $i++) {
                 $student = $gen->create_and_enrol($activity->course, 'student');
                 $dossier = $thesegen->create_dossier($activity->these, $student->id, ['directorid' => $env->director->id,
@@ -157,30 +157,53 @@ final class synthesis_test extends \advanced_testcase {
                         'jurytitle' => 'Pr', 'institution' => '', 'email' => 'viewall@example.org', 'jurorid' => 0,
                         'jurystatus' => 'pr']]);
                 }
+                // Une réponse au questionnaire et une signature du directeur attendue par dossier.
+                $DB->insert_record('these_answer', (object) ['dossierid' => $dossier->id, 'questionid' => 1,
+                    'value' => 'Réponse ' . $i, 'timemodified' => time()]);
+                $DB->insert_record('these_signature', (object) ['dossierid' => $dossier->id, 'doctype' => 'subject',
+                    'slot' => 'director', 'userid' => 0, 'signername' => '', 'signeremail' => '', 'token' => null,
+                    'requesttime' => time() - DAYSECS, 'timesigned' => 0, 'timecreated' => time()]);
             }
         };
+        // Lectures de chaque page (liste des dossiers, recherche par texte, signatures en attente)
+        // et nombre de lignes obtenues, après une première exécution qui remplit les caches.
         $reads = function (\stdClass $user) use ($DB, $env) {
             $links = thesesynthesis_get_active_links($env->synthesis->id, $user->id);
-            thesesynthesis_get_dossiers($links, $user->id);
-            $before = $DB->perf_get_reads();
-            $rows = thesesynthesis_get_dossiers($links, $user->id);
-            return [$DB->perf_get_reads() - $before, count($rows)];
+            $pages = [
+                'dossiers' => function () use ($links, $user) {
+                    return thesesynthesis_get_dossiers($links, $user->id);
+                },
+                'search' => function () use ($links, $user) {
+                    return thesesynthesis_search($links, $user->id, ['text' => 'totale']);
+                },
+                'signatures' => function () use ($links, $user) {
+                    return thesesynthesis_get_signatures($links, $user)['awaited'];
+                },
+            ];
+            $result = [];
+            foreach ($pages as $page => $load) {
+                $load();
+                $before = $DB->perf_get_reads();
+                $rows = $load();
+                $result[$page] = [$DB->perf_get_reads() - $before, count($rows)];
+            }
+            return $result;
         };
 
         $add(2);
-        [$fewdeve, $count] = $reads($env->deve);
-        $this->assertSame(3, $count);
-        [$fewviewall, $count] = $reads($viewall);
-        $this->assertSame(3, $count);
+        $fewdeve = $reads($env->deve);
+        $this->assertSame([3, 1, 2], array_column($fewdeve, 1));
+        $fewviewall = $reads($viewall);
+        $this->assertSame([3, 1, 0], array_column($fewviewall, 1));
 
         $add(6);
-        [$manydeve, $count] = $reads($env->deve);
-        $this->assertSame(9, $count);
-        [$manyviewall, $count] = $reads($viewall);
-        $this->assertSame(9, $count);
+        $manydeve = $reads($env->deve);
+        $this->assertSame([9, 4, 8], array_column($manydeve, 1));
+        $manyviewall = $reads($viewall);
+        $this->assertSame([9, 4, 0], array_column($manyviewall, 1));
 
-        $this->assertSame($fewdeve, $manydeve);
-        $this->assertSame($fewviewall, $manyviewall);
+        $this->assertSame(array_column($fewdeve, 0), array_column($manydeve, 0));
+        $this->assertSame(array_column($fewviewall, 0), array_column($manyviewall, 0));
     }
 
     /**
@@ -205,10 +228,10 @@ final class synthesis_test extends \advanced_testcase {
             $PAGE->set_context($context);
             $PAGE->set_url(new \moodle_url('/mod/thesesynthesis/planning.php', ['id' => $cm->id]));
             ob_start();
-            \mod_these\local\planning_page::output(
+            \mod_these\page\planning_page::output(
                 thesesynthesis_get_active_links($env->synthesis->id, $user->id),
                 new \moodle_url('/mod/thesesynthesis/planning.php', ['id' => $cm->id]),
-                these_synthesis_scope($env->synthesis->id),
+                \mod_thesesynthesis\local\scope::for_synthesis($env->synthesis->id),
                 $env->activities[0]->these,
                 true,
                 'Planning'

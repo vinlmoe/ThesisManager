@@ -30,6 +30,9 @@ use stdClass;
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class rights {
+    /** Durée de validité d'un lien à jeton (signature sans compte, accès du jury), en secondes. */
+    public const TOKEN_LIFETIME = 60 * DAYSECS;
+
     /**
      * Droits de l'utilisateur sur un dossier (ou sur l'activité, si aucun dossier n'est donné).
      *
@@ -57,7 +60,7 @@ class rights {
             && has_capability('mod/these:direct', $context, $userid);
         // Thèse confidentielle : son sujet n'est connu que de l'étudiant, de la DEVE, de la bibliothèque, du
         // directeur et du jury (voir these_user_knows_subject()).
-        $rights->knowssubject = $dossier === null || these_user_knows_subject($dossier, $context, $userid);
+        $rights->knowssubject = $dossier === null || self::user_knows_subject($dossier, $context, $userid);
         return $rights;
     }
 
@@ -70,7 +73,7 @@ class rights {
     public static function require_view(context $context) {
         global $USER;
 
-        $rights = these_get_rights($context, null, $USER->id);
+        $rights = self::get_rights($context, null, $USER->id);
         if (!$rights->deve && !$rights->library) {
             require_capability('mod/these:view', $context);
         }
@@ -87,7 +90,7 @@ class rights {
     public static function require_service(context $context, $actor) {
         global $USER;
 
-        $rights = these_get_rights($context, null, $USER->id);
+        $rights = self::get_rights($context, null, $USER->id);
         if (empty($rights->$actor)) {
             $capability = $actor === 'deve' ? 'mod/these:managedeve' : 'mod/these:managelibrary';
             if (scopesettings::is_library_agent($context, $USER->id)) {
@@ -150,7 +153,7 @@ class rights {
      * @return bool
      */
     public static function can_view_filearea($filearea, stdClass $rights) {
-        if (!these_can_view_dossier($rights)) {
+        if (!self::can_view_dossier($rights)) {
             return false;
         }
         // Thèse confidentielle : sans connaître le sujet, seuls le manuscrit et le manuscrit corrigé
@@ -173,7 +176,7 @@ class rights {
      * @return bool
      */
     public static function user_can_act(stdClass $dossier, stdClass $rights) {
-        $actor = these_step_actor($dossier->status);
+        $actor = workflow::step_actor($dossier->status);
         if ($actor === null) {
             return false;
         }
@@ -221,7 +224,7 @@ class rights {
         if ((int) $dossier->userid === (int) $userid || (int) $dossier->directorid === (int) $userid) {
             return true;
         }
-        return self::knows_every_subject($context, $userid) || these_user_in_jury($dossier->id, $userid);
+        return self::knows_every_subject($context, $userid) || self::user_in_jury($dossier->id, $userid);
     }
 
     /**
@@ -345,7 +348,7 @@ class rights {
     public static function subject_field(stdClass $dossier, $field, context $context, $userid = null) {
         global $USER;
 
-        if (these_user_knows_subject($dossier, $context, $userid ?? $USER->id)) {
+        if (self::user_knows_subject($dossier, $context, $userid ?? $USER->id)) {
             return (string) $dossier->$field;
         }
         return get_string('confidentialtitle', 'mod_these');

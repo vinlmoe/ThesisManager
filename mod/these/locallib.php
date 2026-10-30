@@ -35,7 +35,8 @@
  * Le code métier est dans des classes autochargées, une par domaine (mod_these\local\workflow,
  * rights, dossiers, jury, signatures, doctemplates, planning...). Les fonctions these_*() de
  * locallib/, chargées par ce fichier, en sont des façades d'une ligne gardées pour les appelants
- * existants ; ce fichier reste le seul à inclure (il définit aussi les constantes).
+ * existants ; ce fichier reste le seul à inclure. Les constantes THESE_* qu'il définit sont des alias
+ * des constantes de classe correspondantes (lib.php garde les siennes, chargées par Moodle).
  *
  * @package   mod_these
  * @copyright 2026 Sébastien Lefebvre

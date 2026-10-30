@@ -16,10 +16,9 @@
 
 namespace mod_these\form;
 
-defined('MOODLE_INTERNAL') || die();
-
-require_once($CFG->libdir . '/formslib.php');
-require_once($CFG->dirroot . '/mod/these/locallib.php');
+use mod_these\local\dossiers;
+use mod_these\local\jury;
+use mod_these\local\juryform;
 
 /**
  * Modification d'un dossier par la DEVE, à tout moment et sans changer son statut : corriger le
@@ -29,17 +28,14 @@ require_once($CFG->dirroot . '/mod/these/locallib.php');
  * @copyright 2026 Sébastien Lefebvre
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class dossier_edit_form extends \moodleform {
+class dossier_edit_form extends base_form {
     /**
      * Defines the form fields.
      */
     public function definition() {
         $mform = $this->_form;
 
-        $mform->addElement('hidden', 'id');
-        $mform->setType('id', PARAM_INT);
-        $mform->addElement('hidden', 'dossierid');
-        $mform->setType('dossierid', PARAM_INT);
+        $this->add_hidden_ids(true);
 
         $mform->addElement('header', 'subjectheader', get_string('subject', 'mod_these'));
         $mform->addElement('textarea', 'title', get_string('subjecttitle', 'mod_these'), ['rows' => 2, 'cols' => 80]);
@@ -79,7 +75,7 @@ class dossier_edit_form extends \moodleform {
             $this->_customdata['roomconflicts'] ?? ''
         );
 
-        these_add_jury_fields(
+        juryform::add_jury_fields(
             $this,
             $mform,
             $this->_customdata['jurycount'] ?? 0,
@@ -87,7 +83,7 @@ class dossier_edit_form extends \moodleform {
             $this->_customdata['jurorids'] ?? [],
             $this->_customdata['juryconflicts'] ?? ''
         );
-        these_jury_readonly($mform, array_values($this->_customdata['jury'] ?? []));
+        juryform::jury_readonly($mform, array_values($this->_customdata['jury'] ?? []));
 
         // Page courte : sujet et enregistrements repliés, la soutenance (le plus souvent modifiée) ouverte.
         $mform->setExpanded('subjectheader', false);
@@ -107,12 +103,12 @@ class dossier_edit_form extends \moodleform {
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
         $number = trim((string) $data['devenumber']);
-        if ($number !== '' && these_devenumber_taken($this->_customdata['theseid'], $number, $data['dossierid'])) {
+        if ($number !== '' && dossiers::devenumber_taken($this->_customdata['theseid'], $number, $data['dossierid'])) {
             $errors['devenumber'] = get_string('devenumbertaken', 'mod_these');
         }
-        $members = these_extract_submitted_jury($data);
+        $members = juryform::extract_submitted_jury($data);
         if ($members) {
-            $juryerror = these_validate_jury($members, $this->_customdata['minjury']);
+            $juryerror = jury::validate_jury($members, $this->_customdata['minjury']);
             if ($juryerror !== null) {
                 $errors['juryhelp'] = get_string('juryproblem', 'mod_these', $juryerror);
             }

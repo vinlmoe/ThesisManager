@@ -16,6 +16,9 @@
 
 namespace mod_these\task;
 
+use mod_these\local\notifications;
+use mod_these\local\workflow;
+
 /**
  * Tâche planifiée : relance l'acteur attendu (directeur, DEVE, bibliothèque, ou étudiant dont le
  * dossier a été renvoyé) quand un dossier attend à la même étape depuis plus longtemps que le
@@ -45,9 +48,9 @@ class send_reminders extends \core\task\scheduled_task {
     public function execute() {
         global $CFG, $DB;
 
-        require_once($CFG->dirroot . '/mod/these/locallib.php');
+        require_once($CFG->dirroot . '/mod/these/lib.php');
 
-        $dossiers = these_get_dossiers_needing_reminder();
+        $dossiers = notifications::get_dossiers_needing_reminder();
         $instances = [];
         $cms = [];
         $sent = 0;
@@ -62,10 +65,10 @@ class send_reminders extends \core\task\scheduled_task {
                 continue;
             }
             unset($dossier->reminderdays);
-            if (these_send_reminder($these, $cm, $dossier)) {
+            if (notifications::send_reminder($these, $cm, $dossier)) {
                 $sent++;
                 mtrace("mod_these : dossier {$dossier->id} (" . format_string($these->name) . ') relancé, étape '
-                    . these_status_label($dossier->status) . '.');
+                    . workflow::status_label($dossier->status) . '.');
             }
         }
         mtrace("mod_these : $sent relance(s) envoyée(s).");

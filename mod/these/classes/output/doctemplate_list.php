@@ -16,6 +16,7 @@
 
 namespace mod_these\output;
 
+use mod_these\local\doctemplates;
 use moodle_url;
 use stdClass;
 
@@ -51,8 +52,8 @@ class doctemplate_list implements \renderable, \templatable {
      */
     public function export_for_template(\renderer_base $output): array {
         $rows = [];
-        foreach (array_keys(these_doctemplate_types()) as $type) {
-            $customised = these_doctemplate_customised($this->scope, $type);
+        foreach (array_keys(doctemplates::doctemplate_types()) as $type) {
+            $customised = doctemplates::doctemplate_customised($this->scope, $type);
             $actions = [
                 parts::link(new moodle_url($this->listurl, ['type' => $type]), get_string('edit'), 'btn btn-sm btn-primary'),
                 parts::text(' '),
@@ -72,7 +73,7 @@ class doctemplate_list implements \renderable, \templatable {
                 );
             }
             $rows[] = [
-                [parts::text(these_doctemplate_label($type))],
+                [parts::text(doctemplates::doctemplate_label($type))],
                 [$customised
                     ? parts::span(get_string('doctplcustomised', 'mod_these'), 'badge badge-warning bg-warning text-dark')
                     : parts::span(get_string('doctploriginal', 'mod_these'), 'badge badge-secondary bg-secondary')],

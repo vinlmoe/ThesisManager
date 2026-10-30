@@ -16,10 +16,6 @@
 
 namespace mod_these\form;
 
-defined('MOODLE_INTERNAL') || die();
-
-require_once($CFG->libdir . '/formslib.php');
-
 /**
  * Nouvelle date de soutenance proposée par l'étudiant, à la demande de la DEVE (voir
  * \mod_these\local\daterequest), au moins le délai minimal des paramètres après aujourd'hui.
@@ -30,15 +26,14 @@ require_once($CFG->libdir . '/formslib.php');
  * @copyright 2026 Sébastien Lefebvre
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class newdate_form extends \moodleform {
+class newdate_form extends base_form {
     /**
      * Defines the form fields.
      */
     public function definition() {
         $mform = $this->_form;
 
-        $mform->addElement('hidden', 'id');
-        $mform->setType('id', PARAM_INT);
+        $this->add_hidden_ids();
 
         $mform->addElement('static', 'datehelp', '', \html_writer::div(
             defense_form::date_help($this->_customdata),

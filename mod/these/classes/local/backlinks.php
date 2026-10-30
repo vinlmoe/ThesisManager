@@ -202,8 +202,8 @@ class backlinks {
 
     /**
      * Page où mener l'utilisateur après une action enregistrée sur une page d'un dossier (validation,
-     * renvoi, procès-verbal...) : venu du suivi des thèses, directement le suivi ; sinon la page
-     * prévue (le dossier, qui affiche le résultat).
+     * renvoi, procès-verbal...) : venu d'une page hors du module (le suivi des thèses), directement
+     * cette page ; sinon la page prévue (le dossier, qui affiche le résultat).
      *
      * @param stdClass $cm
      * @param moodle_url $default Page prévue sans suivi des thèses d'origine.
@@ -211,7 +211,7 @@ class backlinks {
      */
     public static function after_action(stdClass $cm, moodle_url $default) {
         $origin = self::origin((int) $cm->instance);
-        if ($origin && strpos($origin->url->out_as_local_url(false), '/mod/thesesynthesis/') === 0) {
+        if ($origin && strpos($origin->url->out_as_local_url(false), '/mod/these/') !== 0) {
             return $origin->url;
         }
         return $default;

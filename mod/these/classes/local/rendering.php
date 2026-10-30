@@ -76,8 +76,8 @@ class rendering {
         if (isset($filters['queue'])) {
             $queue = [];
             foreach ((array) $filters['queue'] as $actor) {
-                $statuses = array_values(array_filter(these_all_statuses(), function ($status) use ($actor) {
-                    return these_step_actor($status) === $actor;
+                $statuses = array_values(array_filter(workflow::all_statuses(), function ($status) use ($actor) {
+                    return workflow::step_actor($status) === $actor;
                 }));
                 [$insql, $inparams] = $DB->get_in_or_equal($statuses, SQL_PARAMS_NAMED, 'q' . $actor);
                 $condition = "d.status $insql";
@@ -147,19 +147,6 @@ class rendering {
     }
 
     /**
-     * Liens rendus en boutons.
-     *
-     * @param array $links libellé => moodle_url (null : ignoré)
-     * @param string $class
-     * @return string HTML
-     */
-    public static function render_actions(array $links, $class = 'btn btn-sm btn-secondary mr-1 mb-1') {
-        global $PAGE;
-
-        return $PAGE->get_renderer('mod_these')->render(new output\actions($links, $class));
-    }
-
-    /**
      * Barre de navigation commune aux pages du personnel, précédée du lien de retour (voir
      * \mod_these\local\backlinks).
      *
@@ -174,18 +161,6 @@ class rendering {
 
         return backlinks::render($back ?? backlinks::from_activity($cm, $context))
             . $PAGE->get_renderer('mod_these')->render(new output\navlinks($cm, $context));
-    }
-
-    /**
-     * Frise de progression d'un dossier dans le circuit.
-     *
-     * @param stdClass $dossier
-     * @return string HTML
-     */
-    public static function render_progress(stdClass $dossier) {
-        global $PAGE;
-
-        return $PAGE->get_renderer('mod_these')->render(new output\progress($dossier));
     }
 
     /**
@@ -246,33 +221,33 @@ class rendering {
         $status = (int) $dossier->status;
         $links = [];
 
-        if ($rights->student && these_subject_editable($dossier)) {
+        if ($rights->student && dossiers::subject_editable($dossier)) {
             $links[get_string('editsubject', 'mod_these')] = new moodle_url('/mod/these/subject.php', $params);
         }
         // Questionnaire préalable au jury : rempli par l'étudiant avant le dépôt de la soutenance,
         // corrigé au besoin par la DEVE.
-        if (($rights->student && these_defense_editable($dossier)) || ($rights->deve && $status >= THESE_STATUS_ACTIVE)) {
+        if (($rights->student && dossiers::defense_editable($dossier)) || ($rights->deve && $status >= THESE_STATUS_ACTIVE)) {
             $these = (object) ['id' => $cm->instance, 'name' => ''];
-            if (these_get_questions(these_settings_scope($these))) {
+            if (questionnaire::get_questions(doctemplates::settings_scope($these))) {
                 $links[get_string('questionnaire', 'mod_these')] = new moodle_url('/mod/these/questionnaire.php', $params);
             }
         }
-        if ($rights->student && these_defense_editable($dossier)) {
+        if ($rights->student && dossiers::defense_editable($dossier)) {
             $links[get_string('depositdefense', 'mod_these')] = new moodle_url('/mod/these/defense.php', $params);
         }
         if ($rights->student && daterequest::pending($dossier)) {
             $links[get_string('newdate', 'mod_these')] = daterequest::url($cm);
         }
-        if ($rights->student && these_subject_changeable($dossier)) {
+        if ($rights->student && subjectchange::subject_changeable($dossier)) {
             $links[get_string('subjectchange', 'mod_these')] = new moodle_url('/mod/these/subjectchange.php', ['id' => $cm->id]);
         }
         if ($rights->student && $status === THESE_STATUS_CORRECTIONS) {
             $links[get_string('depositcorrections', 'mod_these')] = new moodle_url('/mod/these/corrections.php', $params);
         }
-        if ($rights->director && these_report_editable($dossier)) {
+        if ($rights->director && dossiers::report_editable($dossier)) {
             $links[get_string('depositreport', 'mod_these')] = new moodle_url('/mod/these/report.php', $params);
         }
-        $steps = these_review_steps();
+        $steps = workflow::review_steps();
         if (isset($steps[$status]) && !empty($rights->{$steps[$status]['actor']})) {
             $links[get_string('review' . $steps[$status]['key'], 'mod_these')] = new moodle_url('/mod/these/review.php', $params);
         }
@@ -317,7 +292,7 @@ class rendering {
 
         $params = ['id' => $cm->id, 'dossierid' => $dossier->id];
         $status = (int) $dossier->status;
-        $steps = these_review_steps();
+        $steps = workflow::review_steps();
         if (isset($steps[$status]) && !empty($rights->{$steps[$status]['actor']})) {
             return [get_string('review' . $steps[$status]['key'], 'mod_these'), new moodle_url('/mod/these/review.php', $params)];
         }
@@ -372,34 +347,34 @@ class rendering {
      * @return array Colonnes de l'export (voir export.php).
      */
     public static function register_row(stdClass $dossier, context $context, ?stdClass $student, ?stdClass $director) {
-        $roles = these_jury_role_options();
+        $roles = workflow::jury_role_options();
         $dateformat = get_string('strftimedatetimeshort', 'langconfig');
         $jury = array_map(function ($member) use ($roles) {
             return ($roles[$member->juryrole] ?? $member->juryrole) . ' : ' . $member->fullname;
-        }, these_get_jury($dossier->id));
-        $embargo = these_embargo_until($dossier);
+        }, jury::get_jury($dossier->id));
+        $embargo = bordereau::embargo_until($dossier);
         return [
             'devenumber' => $dossier->devenumber,
             'student' => $student ? fullname($student) : '',
             'email' => $student ? $student->email : '',
-            'title' => these_subject_field($dossier, 'title', $context),
-            'titleen' => these_subject_field($dossier, 'titleen', $context),
-            'keywords' => these_subject_field($dossier, 'keywords', $context),
+            'title' => rights::subject_field($dossier, 'title', $context),
+            'titleen' => rights::subject_field($dossier, 'titleen', $context),
+            'keywords' => rights::subject_field($dossier, 'keywords', $context),
             'director' => $director ? fullname($director) : '',
             'extdirector' => !empty($dossier->externaldirector) ? (string) $dossier->extdirectorname : '',
             'libraryref' => $dossier->libraryref,
-            'status' => these_status_label($dossier->status),
+            'status' => workflow::status_label($dossier->status),
             'statustime' => userdate($dossier->statustime, $dateformat),
             'defensedate' => $dossier->defensedate ? userdate($dossier->defensedate, $dateformat) : '',
             'defenselocation' => $dossier->defenselocation,
             'jury' => implode(' ; ', $jury),
-            'result' => (int) $dossier->defenseresult ? these_result_label($dossier->defenseresult) : '',
-            'mention' => these_mention_label($dossier->mention),
+            'result' => (int) $dossier->defenseresult ? workflow::result_label($dossier->defenseresult) : '',
+            'mention' => workflow::mention_label($dossier->mention),
             'embargo' => $embargo ? userdate($embargo, get_string('strftimedatefullshort', 'langconfig')) : '',
             'a6' => a6::label($dossier),
             'directortitle' => (string) $dossier->directortitle,
             'missingsignatures' => implode(' ; ', array_map(function ($item) {
-                return these_document_label($item['doctype']) . ' — ' . these_slot_label($item['slot']);
+                return signatures::document_label($item['doctype']) . ' — ' . signatures::slot_label($item['slot']);
             }, prerequisites::missing($dossier))),
             'universitypieces' => self::university_pieces_label($context, $dossier),
             'lastrefusal' => self::last_refusal_label($dossier),
@@ -419,7 +394,7 @@ class rendering {
         $items = [];
         foreach (array_keys(university::pending($dossier)) as $doctype) {
             $file = university::get_sealed($context, $dossier->id, $doctype);
-            $items[] = these_document_label($doctype) . ' — ' . ($file
+            $items[] = signatures::document_label($doctype) . ' — ' . ($file
                 ? get_string('universitysealedon', 'mod_these', userdate($file->get_timecreated(), $dateformat))
                 : get_string('exportuniversitytoseal', 'mod_these'));
         }
@@ -492,7 +467,7 @@ class rendering {
      */
     public static function rank_reached(stdClass $dossier, $status) {
         $current = (int) $dossier->status === THESE_STATUS_CANCELLED ? $dossier->cancelledfromstatus : $dossier->status;
-        return these_status_rank($current) >= these_status_rank($status);
+        return workflow::status_rank($current) >= workflow::status_rank($status);
     }
 
     /**

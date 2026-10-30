@@ -91,7 +91,7 @@ final class backup_restore_test extends \advanced_testcase {
         $synthesis = $gen->create_module('thesesynthesis', ['course' => $course->id, 'name' => 'Suivi 2026']);
         thesesynthesis_set_links($synthesis->id, [$these->cmid, $otherthese->cmid]);
 
-        $scope = these_synthesis_scope($synthesis->id);
+        $scope = \mod_thesesynthesis\local\scope::for_synthesis($synthesis->id);
         $questionid = these_save_question($scope, (object) [
             'qtype' => 'text', 'label' => 'Laboratoire', 'options' => '', 'required' => 1,
         ]);
@@ -115,7 +115,7 @@ final class backup_restore_test extends \advanced_testcase {
         // Les liens d'origine sont intacts.
         $this->assertCount(2, thesesynthesis_get_links($synthesis->id));
 
-        $newscope = these_synthesis_scope($newsynthesis->id);
+        $newscope = \mod_thesesynthesis\local\scope::for_synthesis($newsynthesis->id);
         $questions = these_get_questions($newscope);
         $this->assertCount(1, $questions);
         $this->assertNotEquals($questionid, reset($questions)->id);

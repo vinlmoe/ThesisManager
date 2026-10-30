@@ -16,6 +16,8 @@
 
 namespace mod_these\output;
 
+use mod_these\local\workflow;
+
 /**
  * Tableau du jury d'un dossier.
  *
@@ -57,7 +59,7 @@ class jury implements \renderable, \templatable {
         if (!empty($member->eligible)) {
             $cell = [parts::badge(get_string('juryeligibilityvalidated', 'mod_these'), 'badge badge-success bg-success')];
         } else {
-            $state = these_jury_eligibility($member);
+            $state = \mod_these\local\jury::jury_eligibility($member);
             $cell = [parts::badge(
                 get_string('juryeligibility' . $state, 'mod_these'),
                 'badge ' . ($state === 'ko' ? 'badge-danger bg-danger' : 'badge-warning bg-warning text-dark')
@@ -82,7 +84,7 @@ class jury implements \renderable, \templatable {
         if (empty($this->members)) {
             return ['hasmembers' => false, 'heading' => '', 'table' => false];
         }
-        $roles = these_jury_role_options();
+        $roles = workflow::jury_role_options();
         $head = [get_string('juryrole', 'mod_these'), get_string('juryname', 'mod_these'),
             get_string('jurytitle', 'mod_these'), get_string('jurystatus', 'mod_these'),
             get_string('juryinstitution', 'mod_these')];

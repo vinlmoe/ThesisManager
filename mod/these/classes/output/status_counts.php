@@ -16,6 +16,7 @@
 
 namespace mod_these\output;
 
+use mod_these\local\workflow;
 use moodle_url;
 use stdClass;
 
@@ -51,14 +52,14 @@ class status_counts implements \renderable, \templatable {
      */
     public function export_for_template(\renderer_base $output): array {
         $badges = [];
-        foreach (these_all_statuses() as $status) {
+        foreach (workflow::all_statuses() as $status) {
             if (empty($this->counts[$status])) {
                 continue;
             }
             $badges[] = [
-                'label' => these_status_label($status) . ' : ' . $this->counts[$status],
+                'label' => workflow::status_label($status) . ' : ' . $this->counts[$status],
                 'url' => (new moodle_url('/mod/these/dashboard.php', ['id' => $this->cm->id, 'status' => $status]))->out(false),
-                'class' => 'badge ' . these_status_badgeclass($status) . ' mr-1 mb-1 p-2',
+                'class' => 'badge ' . workflow::status_badgeclass($status) . ' mr-1 mb-1 p-2',
                 'separator' => !empty($badges),
             ];
         }

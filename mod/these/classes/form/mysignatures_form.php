@@ -16,10 +16,8 @@
 
 namespace mod_these\form;
 
-defined('MOODLE_INTERNAL') || die();
-
-require_once($CFG->libdir . '/formslib.php');
-require_once($CFG->dirroot . '/mod/these/locallib.php');
+use mod_these\local\signatures;
+use mod_these\local\signaturefields;
 
 /**
  * Documents qui attendent la signature de l'utilisateur connecté (agent DEVE, membre du jury ou
@@ -34,7 +32,7 @@ require_once($CFG->dirroot . '/mod/these/locallib.php');
  * @copyright 2026 Sébastien Lefebvre
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class mysignatures_form extends \moodleform {
+class mysignatures_form extends base_form {
     /**
      * Defines the form fields.
      */
@@ -63,7 +61,7 @@ class mysignatures_form extends \moodleform {
                 ));
             }
         }
-        these_add_signature_fields(
+        signaturefields::add_signature_fields(
             $mform,
             $this->_customdata['signername'],
             get_string('signmyintro', 'mod_these'),
@@ -89,6 +87,6 @@ class mysignatures_form extends \moodleform {
         if (!$chosen) {
             $errors['documentsgroup'] = get_string('signnodocument', 'mod_these');
         }
-        return array_merge($errors, these_signature_errors($data));
+        return array_merge($errors, signaturefields::signature_errors($data));
     }
 }

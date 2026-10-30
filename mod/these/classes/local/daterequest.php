@@ -75,20 +75,20 @@ class daterequest {
         global $DB;
 
         $reason = trim((string) $reason);
-        $dossier = these_dossier_operation($dossier, function () use ($dossier, $userid, $reason) {
-            return these_set_status($dossier, $dossier->status, $userid, 'daterequested', $reason, [
+        $dossier = dossiers::dossier_operation($dossier, function () use ($dossier, $userid, $reason) {
+            return dossiers::set_status($dossier, $dossier->status, $userid, 'daterequested', $reason, [
                 'daterequested' => time(),
                 'daterequestcomment' => $reason,
             ]);
         });
         $student = $DB->get_record('user', ['id' => $dossier->userid, 'deleted' => 0]);
         if ($student) {
-            $vars = these_email_base_vars($these, $cm, $dossier);
+            $vars = notifications::email_base_vars($these, $cm, $dossier);
             $vars['comment'] = $reason;
             $format = get_string('strftimedaydatetime', 'langconfig');
             $vars['date'] = $dossier->proposeddate ? userdate($dossier->proposeddate, $format) : '';
             $vars['url'] = self::url($cm)->out(false);
-            these_send_email($these, 'daterequested', [$student], $vars, '', '', $dossier);
+            notifications::send_email($these, 'daterequested', [$student], $vars, '', '', $dossier);
         }
         return $dossier;
     }
@@ -106,9 +106,9 @@ class daterequest {
      */
     public static function propose(stdClass $these, stdClass $cm, stdClass $dossier, $userid, $date) {
         $date = (int) $date;
-        $dossier = these_dossier_operation($dossier, function () use ($dossier, $userid, $date) {
+        $dossier = dossiers::dossier_operation($dossier, function () use ($dossier, $userid, $date) {
             // La DEVE n'a pas encore arrêté la date : la date retenue suit la nouvelle proposition.
-            return these_set_status(
+            return dossiers::set_status(
                 $dossier,
                 $dossier->status,
                 $userid,
@@ -118,9 +118,10 @@ class daterequest {
             );
         });
         $context = context_module::instance($cm->id);
-        $vars = these_email_base_vars($these, $cm, $dossier);
+        $vars = notifications::email_base_vars($these, $cm, $dossier);
         $vars['date'] = userdate($date, get_string('strftimedaydatetime', 'langconfig'));
-        these_send_email($these, 'dateproposed', these_get_service_recipients($these, $context, 'deve'), $vars, '', '', $dossier);
+        $recipients = notifications::get_service_recipients($these, $context, 'deve');
+        notifications::send_email($these, 'dateproposed', $recipients, $vars, '', '', $dossier);
         return $dossier;
     }
 

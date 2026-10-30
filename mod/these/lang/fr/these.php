@@ -406,7 +406,6 @@ $string['convocation'] = 'Convocation à la soutenance de thèse';
 $string['depositminutes'] = 'Déposer le procès-verbal';
 $string['minutesrequired'] = 'Le procès-verbal signé est obligatoire.';
 $string['minutesnotavailable'] = "Le procès-verbal se dépose une fois la soutenance programmée.";
-$string['closedossier'] = 'Déposer et clôturer le dossier';
 $string['dossierclosed'] = 'Procès-verbal déposé : dossier clôturé.';
 
 // Gestion DEVE.
@@ -854,7 +853,6 @@ $string['bdefvdate'] = 'Obtention du DEFV le';
 $string['bschool'] = 'à';
 $string['schoolother'] = 'Autre établissement';
 $string['ba6date'] = "Validation de l'année d'approfondissement (A6) le";
-$string['ba6notyet'] = "Je n'ai pas encore validé mon année d'approfondissement (A6)";
 $string['a6required'] = "Indiquez la date de validation de l'A6, ou cochez la case si elle n'est pas encore validée.";
 $string['a6validation'] = "Validation de l'A6";
 $string['a6notvalidated'] = 'non validée';
@@ -1508,3 +1506,19 @@ $string['privacy:metadata:servicemailboxes'] = "Les adresses de service de la DE
 $string['privacy:metadata:servicemailboxes:student'] = "Nom de l'étudiant.";
 $string['privacy:metadata:servicemailboxes:title'] = 'Titre de la thèse (remplacé quand la thèse est confidentielle).';
 $string['privacy:metadata:servicemailboxes:status'] = 'Étape du circuit atteinte et commentaires saisis avec elle.';
+$string['privacy:metadata:core_message'] = 'Notifications du circuit adressées aux utilisateurs qui ont un compte (dossier en attente, renvoyé, enregistré ou clôturé, signatures, convocations, récapitulatif hebdomadaire).';
+
+// Événements.
+$string['eventdossiercreated'] = 'Dossier de thèse créé';
+$string['eventsubjectsubmitted'] = 'Sujet de thèse soumis';
+$string['eventdossierstatuschanged'] = 'Statut du dossier de thèse modifié';
+$string['eventdocumentsigned'] = 'Document de thèse signé';
+$string['eventdefensescheduled'] = 'Soutenance de thèse programmée';
+$string['eventminutesrecorded'] = 'Procès-verbal de soutenance enregistré';
+
+// Fournisseurs de messages (préférences de notification de l'utilisateur).
+$string['messageprovider:dossierawaiting'] = 'Dossier de thèse en attente de votre action, et relances';
+$string['messageprovider:statuschanged'] = 'Dossier de thèse renvoyé, enregistré, clôturé ou ajourné, sujet ou date modifiés';
+$string['messageprovider:signaturerequest'] = 'Signature demandée ou refusée sur un document de thèse';
+$string['messageprovider:juryconvocation'] = 'Convocations de soutenance et désignation du jury';
+$string['messageprovider:digest'] = 'Récapitulatif hebdomadaire de la DEVE';

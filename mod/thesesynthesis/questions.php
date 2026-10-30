@@ -42,7 +42,7 @@ $PAGE->set_title(format_string($synthesis->name) . ' - ' . get_string('questions
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($context);
 
-$scope = these_synthesis_scope($synthesis->id);
+$scope = \mod_thesesynthesis\local\scope::for_synthesis($synthesis->id);
 $navigation = thesesynthesis_render_navlinks($cm, $context);
 
-\mod_these\local\questions_page::output($scope, $baseurl, $navigation);
+\mod_these\page\questions_page::output($scope, $baseurl, $navigation);

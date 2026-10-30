@@ -16,10 +16,8 @@
 
 namespace mod_these\form;
 
-defined('MOODLE_INTERNAL') || die();
-
-require_once($CFG->libdir . '/formslib.php');
-require_once($CFG->dirroot . '/mod/these/locallib.php');
+use mod_these\local\signatures;
+use mod_these\local\bordereau;
 
 /**
  * Validation des études d'un étudiant, saisie par la DEVE sur sa page (voir \mod_these\local\a6) :
@@ -29,28 +27,25 @@ require_once($CFG->dirroot . '/mod/these/locallib.php');
  * @copyright 2026 Sébastien Lefebvre
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class a6_form extends \moodleform {
+class a6_form extends base_form {
     /**
      * Defines the form fields.
      */
     public function definition() {
         $mform = $this->_form;
 
-        foreach (['id' => PARAM_INT, 'userid' => PARAM_INT, 'returnurl' => PARAM_LOCALURL] as $name => $type) {
-            $mform->addElement('hidden', $name);
-            $mform->setType($name, $type);
-        }
+        $this->add_hidden_ids(false, ['userid' => PARAM_INT, 'returnurl' => PARAM_LOCALURL]);
         $mform->addElement('static', 'studentname', get_string('student', 'mod_these'), s($this->_customdata['studentname']));
         $mform->addElement('header', 'defvheader', get_string('defvvalidation', 'mod_these'));
         $mform->setExpanded('defvheader');
         $mform->addElement('date_selector', 'defvdate', get_string('agdefvdate', 'mod_these'), ['optional' => true]);
-        $mform->addElement('select', 'defvschool', get_string('bschool', 'mod_these'), these_school_options());
+        $mform->addElement('select', 'defvschool', get_string('bschool', 'mod_these'), bordereau::school_options());
         $mform->addElement('header', 'a6header', get_string('a6validation', 'mod_these'));
         $mform->setExpanded('a6header');
         $mform->addElement('advcheckbox', 'aga6notyet', '', get_string('aga6notyet', 'mod_these'));
         $mform->addElement('date_selector', 'aga6date', get_string('aga6date', 'mod_these'), ['optional' => true]);
         $mform->hideIf('aga6date', 'aga6notyet', 'checked');
-        $mform->addElement('select', 'aga6school', get_string('bschool', 'mod_these'), these_school_options());
+        $mform->addElement('select', 'aga6school', get_string('bschool', 'mod_these'), bordereau::school_options());
         $mform->hideIf('aga6school', 'aga6notyet', 'checked');
 
         $this->add_action_buttons();

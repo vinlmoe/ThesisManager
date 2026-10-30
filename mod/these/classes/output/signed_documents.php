@@ -17,8 +17,13 @@
 namespace mod_these\output;
 
 use context;
+use mod_these\local\doctemplates;
+use mod_these\local\files;
+use mod_these\local\rights;
+use mod_these\local\signatures;
 use moodle_url;
 use stdClass;
+use mod_these\local\documentrenderer;
 
 /**
  * Documents signés d'un dossier, avec l'état de chaque signature.
@@ -117,28 +122,31 @@ class signed_documents implements \renderable, \templatable {
      * @return array hasdocuments, heading, table (voir table_context), warning (alerte de la DEVE, ou false)
      */
     public function export_for_template(\renderer_base $output): array {
-        $signatures = these_get_signatures($this->dossier->id);
+        $signatures = signatures::get_signatures($this->dossier->id);
         // Scans joints au dossier, par document : leur nom commence par la date puis le document
         // (voir \mod_these\local\scans::add()).
         $scans = [];
-        if (these_can_view_filearea('signedscan', $this->rights)) {
-            foreach (these_get_files($this->context, 'signedscan', $this->dossier->id) as $file) {
+        if (rights::can_view_filearea('signedscan', $this->rights)) {
+            foreach (files::get_files($this->context, 'signedscan', $this->dossier->id) as $file) {
                 if (preg_match('/^\d{4}-\d{2}-\d{2}-([a-z]+)(-|$)/', $file->get_filename(), $match)) {
                     $scans[$match[1]][] = $file;
                 }
             }
         }
         $rows = [];
-        foreach (array_keys(these_document_definitions()) as $doctype) {
-            if (!these_document_available($this->dossier, $doctype) || !these_can_view_document($doctype, $this->rights)) {
+        foreach (array_keys(signatures::document_definitions()) as $doctype) {
+            if (
+                !signatures::document_available($this->dossier, $doctype)
+                || !signatures::can_view_document($doctype, $this->rights)
+            ) {
                 continue;
             }
             $states = [];
-            foreach (these_document_slots($this->dossier, $doctype) as $slot) {
+            foreach (signatures::document_slots($this->dossier, $doctype) as $slot) {
                 if ($states) {
                     $states[] = parts::br();
                 }
-                $states[] = parts::strong(these_slot_label($slot));
+                $states[] = parts::strong(signatures::slot_label($slot));
                 $states[] = parts::text(' : ');
                 $states[] = $this->state($signatures[$doctype . ':' . $slot] ?? null);
             }
@@ -166,7 +174,7 @@ class signed_documents implements \renderable, \templatable {
                 );
             }
             $rows[] = [
-                [parts::text(these_document_label($doctype))],
+                [parts::text(signatures::document_label($doctype))],
                 $states,
                 $actions,
             ];
@@ -176,8 +184,8 @@ class signed_documents implements \renderable, \templatable {
         }
         $warning = false;
         if (
-            $this->rights->deve && these_document_available($this->dossier, 'contract')
-                && ($problem = these_contract_template_problem($this->these())) !== null
+            $this->rights->deve && signatures::document_available($this->dossier, 'contract')
+                && ($problem = documentrenderer::contract_template_problem($this->these())) !== null
         ) {
             $warning = get_string($problem, 'mod_these');
         }

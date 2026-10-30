@@ -16,10 +16,6 @@
 
 namespace mod_these\form;
 
-defined('MOODLE_INTERNAL') || die();
-
-require_once($CFG->libdir . '/formslib.php');
-
 /**
  * Demande d'une nouvelle date de soutenance par la DEVE (voir \mod_these\local\daterequest) : motif,
  * communiqué à l'étudiant.
@@ -28,17 +24,14 @@ require_once($CFG->libdir . '/formslib.php');
  * @copyright 2026 Sébastien Lefebvre
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class daterequest_form extends \moodleform {
+class daterequest_form extends base_form {
     /**
      * Defines the form fields.
      */
     public function definition() {
         $mform = $this->_form;
 
-        $mform->addElement('hidden', 'id');
-        $mform->setType('id', PARAM_INT);
-        $mform->addElement('hidden', 'dossierid');
-        $mform->setType('dossierid', PARAM_INT);
+        $this->add_hidden_ids(true);
 
         $mform->addElement('static', 'daterequesthelp', '', get_string('daterequesthelp', 'mod_these'));
         $mform->addElement('static', 'currentdate', get_string('proposeddate', 'mod_these'), s($this->_customdata['currentdate']));

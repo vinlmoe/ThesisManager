@@ -159,7 +159,7 @@ final class prerequisites_test extends these_testcase {
         $png = these_sample_signature_image();
         these_sign_document($this->context, $dossier, 'subject', 'deve', $agent->id, fullname($agent), $png);
         $this->assertEquals($this->deve->id, these_get_signatures($dossier->id)['subject:deve']->validatedby);
-        $caption = \mod_these\local\doctemplates::signature_caption(['name' => fullname($agent), 'time' => time(),
+        $caption = \mod_these\local\documentcontext::signature_caption(['name' => fullname($agent), 'time' => time(),
             'hash' => 'abc', 'validator' => fullname($this->deve)]);
         $this->assertStringContainsString(get_string('pdfvalidatedby', 'mod_these', fullname($this->deve)), $caption);
     }

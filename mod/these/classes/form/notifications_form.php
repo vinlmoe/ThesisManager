@@ -16,10 +16,7 @@
 
 namespace mod_these\form;
 
-defined('MOODLE_INTERNAL') || die();
-
-require_once($CFG->libdir . '/formslib.php');
-require_once($CFG->dirroot . '/mod/these/locallib.php');
+use mod_these\local\notifications;
 
 /**
  * Personnalisation des courriels de l'activité par la DEVE : pour chacun, un sujet et un corps
@@ -29,18 +26,17 @@ require_once($CFG->dirroot . '/mod/these/locallib.php');
  * @copyright 2026 Sébastien Lefebvre
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class notifications_form extends \moodleform {
+class notifications_form extends base_form {
     /**
      * Defines the form fields.
      */
     public function definition() {
         $mform = $this->_form;
 
-        $mform->addElement('hidden', 'id');
-        $mform->setType('id', PARAM_INT);
+        $this->add_hidden_ids();
         $mform->addElement('static', 'notificationshelp', '', get_string('notificationshelp', 'mod_these'));
 
-        foreach (these_get_email_definitions() as $key => $definition) {
+        foreach (notifications::get_email_definitions() as $key => $definition) {
             $mform->addElement('header', 'header_' . $key, get_string('emailkey' . $key, 'mod_these'));
             $vars = implode(' ', array_map(function ($var) {
                 return '{{' . $var . '}}';

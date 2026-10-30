@@ -67,17 +67,6 @@ function these_paginate(array $items, $page, moodle_url $baseurl, $perpage = THE
 // Rendu.
 
 /**
- * Voir \mod_these\local\rendering::render_actions().
- *
- * @param array $links libellé => moodle_url (null : ignoré)
- * @param string $class
- * @return string HTML
- */
-function these_render_actions(array $links, $class = 'btn btn-sm btn-secondary mr-1 mb-1') {
-    return \mod_these\local\rendering::render_actions($links, $class);
-}
-
-/**
  * Voir \mod_these\local\rendering::render_navlinks().
  *
  * @param stdClass $cm
@@ -87,16 +76,6 @@ function these_render_actions(array $links, $class = 'btn btn-sm btn-secondary m
  */
 function these_render_navlinks(stdClass $cm, context $context, ?stdClass $back = null) {
     return \mod_these\local\rendering::render_navlinks($cm, $context, $back);
-}
-
-/**
- * Voir \mod_these\local\rendering::render_progress().
- *
- * @param stdClass $dossier
- * @return string HTML
- */
-function these_render_progress(stdClass $dossier) {
-    return \mod_these\local\rendering::render_progress($dossier);
 }
 
 /**

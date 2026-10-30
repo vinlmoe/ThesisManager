@@ -33,7 +33,9 @@ dépôt active une règle de protection de la branche (GitHub, *Settings* →
 ## Organisation du code
 
 Le code métier de `mod_these` est dans les classes autochargées de
-`mod/these/classes/local/` (une par domaine). Les fonctions `these_*()` de
+`mod/these/classes/local/` (une par domaine) ; les contrôleurs des pages communes aux deux
+modules (paramètres, modèles, grille, questionnaire, annuaire, planning) sont dans
+`mod/these/classes/page/`. Les fonctions `these_*()` de
 `mod/these/locallib/` n'en sont que des façades : une nouvelle fonction s'écrit
 comme méthode de la classe du domaine, sans façade ; les appels existants aux
 façades peuvent être remplacés progressivement par des appels aux classes.

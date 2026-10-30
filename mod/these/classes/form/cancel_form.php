@@ -16,10 +16,6 @@
 
 namespace mod_these\form;
 
-defined('MOODLE_INTERNAL') || die();
-
-require_once($CFG->libdir . '/formslib.php');
-
 /**
  * Abandon (ou réouverture) d'un dossier par la DEVE, motif à l'appui.
  *
@@ -27,7 +23,7 @@ require_once($CFG->libdir . '/formslib.php');
  * @copyright 2026 Sébastien Lefebvre
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class cancel_form extends \moodleform {
+class cancel_form extends base_form {
     /**
      * Defines the form fields.
      */
@@ -35,10 +31,7 @@ class cancel_form extends \moodleform {
         $mform = $this->_form;
         $reopen = !empty($this->_customdata['reopen']);
 
-        $mform->addElement('hidden', 'id');
-        $mform->setType('id', PARAM_INT);
-        $mform->addElement('hidden', 'dossierid');
-        $mform->setType('dossierid', PARAM_INT);
+        $this->add_hidden_ids(true);
 
         $mform->addElement('static', 'cancelhelp', '', get_string($reopen ? 'reopenhelp' : 'cancelhelp', 'mod_these'));
         $mform->addElement('textarea', 'remark', get_string('reviewremark', 'mod_these'), ['rows' => 3, 'cols' => 70]);

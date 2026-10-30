@@ -43,8 +43,8 @@ $PAGE->set_title(format_string($synthesis->name) . ' - ' . get_string('scopesett
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($context);
 
-\mod_these\local\scopesettings_page::output(
-    these_synthesis_scope($synthesis->id),
+\mod_these\page\scopesettings_page::output(
+    \mod_thesesynthesis\local\scope::for_synthesis($synthesis->id),
     $baseurl,
     thesesynthesis_render_navlinks($cm, $context)
 );

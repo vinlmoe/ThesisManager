@@ -16,6 +16,7 @@
 
 namespace mod_these\output;
 
+use mod_these\local\workflow;
 use stdClass;
 
 /**
@@ -50,12 +51,12 @@ class progress implements \renderable, \templatable {
      */
     public function export_for_template(\renderer_base $output): array {
         $status = (int) $this->dossier->status;
-        $rank = these_status_rank($status === THESE_STATUS_CANCELLED ? $this->dossier->cancelledfromstatus : $status);
+        $rank = workflow::status_rank($status === THESE_STATUS_CANCELLED ? $this->dossier->cancelledfromstatus : $status);
         $steps = [];
         $current = false;
         $currentfound = false;
-        $total = count(these_progress_steps());
-        foreach (these_progress_steps() as $index => $step) {
+        $total = count(workflow::progress_steps());
+        foreach (workflow::progress_steps() as $index => $step) {
             if ($rank >= $step['done']) {
                 $class = 'these-step-done';
             } else if (!$currentfound && $status !== THESE_STATUS_CANCELLED) {
@@ -67,14 +68,14 @@ class progress implements \renderable, \templatable {
                         'total' => $total,
                         'label' => $step['label'],
                     ]),
-                    'actor' => get_string('waitingfor', 'mod_these', these_actor_label($step['actor'])),
+                    'actor' => get_string('waitingfor', 'mod_these', workflow::actor_label($step['actor'])),
                 ];
             } else {
                 $class = 'these-step-todo';
             }
             $steps[] = [
                 'label' => ($index + 1) . '. ' . $step['label'],
-                'actor' => these_actor_label($step['actor']),
+                'actor' => workflow::actor_label($step['actor']),
                 'stateclass' => $class,
                 'separator' => $index === self::DORMANT_AFTER ? get_string('dormantphase', 'mod_these') : false,
             ];

@@ -16,10 +16,8 @@
 
 namespace mod_these\form;
 
-defined('MOODLE_INTERNAL') || die();
-
-require_once($CFG->libdir . '/formslib.php');
-require_once($CFG->dirroot . '/mod/these/locallib.php');
+use mod_these\local\files;
+use mod_these\local\workflow;
 
 /**
  * Dépôt du procès-verbal de soutenance par la DEVE (phase 2, étape 6) : le PV signé par le jury,
@@ -30,31 +28,28 @@ require_once($CFG->dirroot . '/mod/these/locallib.php');
  * @copyright 2026 Sébastien Lefebvre
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class minutes_form extends \moodleform {
+class minutes_form extends base_form {
     /**
      * Defines the form fields.
      */
     public function definition() {
         $mform = $this->_form;
 
-        $mform->addElement('hidden', 'id');
-        $mform->setType('id', PARAM_INT);
-        $mform->addElement('hidden', 'dossierid');
-        $mform->setType('dossierid', PARAM_INT);
+        $this->add_hidden_ids(true);
 
-        $mform->addElement('filemanager', 'pv', get_string('minutesscan', 'mod_these'), null, these_filemanager_options('pv'));
+        $mform->addElement('filemanager', 'pv', get_string('minutesscan', 'mod_these'), null, files::filemanager_options('pv'));
         $mform->addHelpButton('pv', 'minutesscan', 'mod_these');
         $mform->addRule('pv', null, 'required', null, 'client');
 
         $mform->addElement('header', 'decisionsheader', get_string('jurydecisions', 'mod_these'));
         $mform->setExpanded('decisionsheader');
         $mform->addElement('static', 'decisionshelp', '', get_string('jurydecisions_help', 'mod_these'));
-        $mform->addElement('select', 'defenseresult', get_string('defenseresult', 'mod_these'), these_result_options());
+        $mform->addElement('select', 'defenseresult', get_string('defenseresult', 'mod_these'), workflow::result_options());
         $mform->addElement(
             'select',
             'mention',
             get_string('mention', 'mod_these'),
-            ['' => get_string('choosedots')] + these_mention_options()
+            ['' => get_string('choosedots')] + workflow::mention_options()
         );
         $mform->hideIf('mention', 'defenseresult', 'neq', THESE_RESULT_ADMITTED);
         $mform->addElement('advcheckbox', 'prizeproposal', '', get_string('prizeproposal', 'mod_these'));
@@ -83,11 +78,11 @@ class minutes_form extends \moodleform {
      */
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
-        if (these_count_draft_files($data['pv']) < 1) {
+        if (files::count_draft_files($data['pv']) < 1) {
             $errors['pv'] = get_string('minutesrequired', 'mod_these');
         }
         if ((int) $data['defenseresult'] === THESE_RESULT_ADMITTED) {
-            if (!array_key_exists((string) $data['mention'], these_mention_options())) {
+            if (!array_key_exists((string) $data['mention'], workflow::mention_options())) {
                 $errors['mention'] = get_string('required');
             }
             if (!empty($data['correctionsrequested']) && trim((string) $data['correctionsnote']) === '') {

@@ -16,10 +16,8 @@
 
 namespace mod_these\form;
 
-defined('MOODLE_INTERNAL') || die();
-
-require_once($CFG->libdir . '/formslib.php');
-require_once($CFG->dirroot . '/mod/these/locallib.php');
+use mod_these\local\signatures;
+use mod_these\local\grid;
 
 /**
  * Éléments de la grille de conformité de l'activité (DEVE), dans l'ordre : rubrique, libellé, élément
@@ -31,18 +29,17 @@ require_once($CFG->dirroot . '/mod/these/locallib.php');
  * @copyright 2026 Sébastien Lefebvre
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class griditems_form extends \moodleform {
+class griditems_form extends base_form {
     /**
      * Defines the form fields.
      */
     public function definition() {
         $mform = $this->_form;
 
-        $mform->addElement('hidden', 'id');
-        $mform->setType('id', PARAM_INT);
+        $this->add_hidden_ids();
 
         $sections = [];
-        foreach (these_grid_sections() as $section) {
+        foreach (grid::grid_sections() as $section) {
             $sections[$section] = get_string('gridsection' . $section, 'mod_these');
         }
         $repeat = [

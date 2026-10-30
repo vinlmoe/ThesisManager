@@ -442,9 +442,9 @@ class jurors {
      * @return \stdClass[]
      */
     public static function internal_members($institution) {
-        $institution = jury::normalise_location($institution);
+        $institution = defenseconflicts::normalise_location($institution);
         return array_values(array_filter(self::get_all(true), function ($juror) use ($institution) {
-            return $institution === '' || strpos(jury::normalise_location($juror->institution), $institution) !== false;
+            return $institution === '' || strpos(defenseconflicts::normalise_location($juror->institution), $institution) !== false;
         }));
     }
 
@@ -513,7 +513,7 @@ class jurors {
             }, $groups)),
             'hasmembers' => !empty($groups),
             'groups' => $groups,
-            'img' => these_doctemplate_images($scope),
+            'img' => doctemplates::doctemplate_images($scope),
         ];
     }
 

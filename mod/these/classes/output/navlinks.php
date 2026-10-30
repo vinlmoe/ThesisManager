@@ -17,6 +17,10 @@
 namespace mod_these\output;
 
 use context;
+use mod_these\local\doctemplates;
+use mod_these\local\rights;
+use mod_these\local\scopesettings;
+use mod_these\local\signatureagent;
 use moodle_url;
 use stdClass;
 
@@ -56,7 +60,7 @@ class navlinks implements \renderable, \templatable {
     public function get_links(): array {
         global $USER;
 
-        $rights = these_get_rights($this->context, null, $USER->id);
+        $rights = rights::get_rights($this->context, null, $USER->id);
         $id = ['id' => $this->cm->id];
         $links = [];
         if ($rights->viewall || has_capability('mod/these:direct', $this->context)) {
@@ -75,7 +79,7 @@ class navlinks implements \renderable, \templatable {
             // La DEVE tient l'annuaire depuis son menu « Paramètres » ; les autres le consultent.
             $links[get_string('jurordirectory', 'mod_these')] = new moodle_url('/mod/these/directory.php', $id);
         }
-        $tosign = count(these_get_user_pending_signatures($USER));
+        $tosign = count(signatureagent::get_user_pending_signatures($USER));
         if ($tosign) {
             $links[get_string('mysignaturescount', 'mod_these', $tosign)] = new moodle_url('/mod/these/mysignatures.php');
         }
@@ -90,16 +94,16 @@ class navlinks implements \renderable, \templatable {
     public function get_settings_links(): array {
         global $DB, $USER;
 
-        if (!these_get_rights($this->context, null, $USER->id)->deve) {
+        if (!rights::get_rights($this->context, null, $USER->id)->deve) {
             return [];
         }
         $id = ['id' => $this->cm->id];
         $links = [get_string('notifications', 'mod_these') => new moodle_url('/mod/these/notifications.php', $id)];
         $these = $DB->get_record('these', ['id' => $this->cm->instance]);
-        $scope = $these ? these_settings_scope($these) : null;
+        $scope = $these ? doctemplates::settings_scope($these) : null;
         if ($scope && $scope->shared) {
             $links[get_string('sharedsettingslink', 'mod_these', format_string($scope->name))] =
-                new moodle_url('/mod/thesesynthesis/parameters.php', ['id' => $scope->cmid]);
+                scopesettings::scope_urls($scope)['settings'];
         } else {
             $links[get_string('scopesettings', 'mod_these')] = new moodle_url('/mod/these/parameters.php', $id);
             $links[get_string('doctemplates', 'mod_these')] = new moodle_url('/mod/these/doctemplates.php', $id);

@@ -28,6 +28,7 @@ require(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/these/locallib.php');
 
 use mod_these\local\backlinks;
+use mod_these\local\page;
 use mod_these\output;
 use mod_these\output\parts;
 
@@ -35,12 +36,9 @@ use mod_these\form\defense_form;
 
 $id = required_param('id', PARAM_INT);
 
-$cm = get_coursemodule_from_id('these', $id, 0, false, MUST_EXIST);
-$course = get_course($cm->course);
-$these = $DB->get_record('these', ['id' => $cm->instance], '*', MUST_EXIST);
-
+$activity = page::load_activity($id);
+['cm' => $cm, 'course' => $course, 'these' => $these, 'context' => $context] = (array) $activity;
 require_login($course, true, $cm);
-$context = context_module::instance($cm->id);
 require_capability('mod/these:submit', $context);
 
 $viewurl = new moodle_url('/mod/these/view.php', ['id' => $cm->id]);

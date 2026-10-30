@@ -16,10 +16,13 @@
 
 namespace mod_these\form;
 
-defined('MOODLE_INTERNAL') || die();
-
-require_once($CFG->libdir . '/formslib.php');
-require_once($CFG->dirroot . '/mod/these/locallib.php');
+use mod_these\local\dossiers;
+use mod_these\local\jury;
+use mod_these\local\signatures;
+use mod_these\local\workflow;
+use mod_these\local\grid;
+use mod_these\local\signaturefields;
+use mod_these\local\juryform;
 
 /**
  * Formulaire commun aux six étapes de validation du circuit (voir these_review_steps()) : un
@@ -42,7 +45,7 @@ require_once($CFG->dirroot . '/mod/these/locallib.php');
  * @copyright 2026 Sébastien Lefebvre
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class review_form extends \moodleform {
+class review_form extends base_form {
     /**
      * Defines the form fields.
      */
@@ -50,10 +53,7 @@ class review_form extends \moodleform {
         $mform = $this->_form;
         $stepkey = $this->_customdata['stepkey'];
 
-        $mform->addElement('hidden', 'id');
-        $mform->setType('id', PARAM_INT);
-        $mform->addElement('hidden', 'dossierid');
-        $mform->setType('dossierid', PARAM_INT);
+        $this->add_hidden_ids(true);
 
         $mform->addElement('header', 'stepheader', get_string('review' . $stepkey, 'mod_these'));
         $mform->setExpanded('stepheader');
@@ -92,7 +92,7 @@ class review_form extends \moodleform {
                 $mform->setType('ethicsnumber', PARAM_TEXT);
                 // Éléments de la grille de l'activité (modifiables par la DEVE) : la grille signée
                 // n'est produite qu'à partir de ce formulaire rempli.
-                foreach (these_get_grid_items($this->_customdata['scope']) as $section => $items) {
+                foreach (grid::get_grid_items($this->_customdata['scope']) as $section => $items) {
                     $mform->addElement(
                         'static',
                         'gridsection' . $section,
@@ -129,7 +129,7 @@ class review_form extends \moodleform {
                     $this->_customdata['roomconflicts'] ?? ''
                 );
                 $jurycount = $this->_customdata['jurycount'] ?? 0;
-                these_add_jury_fields(
+                juryform::add_jury_fields(
                     $this,
                     $mform,
                     $jurycount,
@@ -137,7 +137,7 @@ class review_form extends \moodleform {
                     $this->_customdata['jurorids'] ?? [],
                     $this->_customdata['juryconflicts'] ?? ''
                 );
-                these_jury_readonly($mform, array_values($this->_customdata['jury'] ?? []));
+                juryform::jury_readonly($mform, array_values($this->_customdata['jury'] ?? []));
                 $mform->addElement('static', 'juryeligiblehelp', '', get_string('juryeligiblehelp', 'mod_these'));
                 if ($mform->elementExists('juryedit')) {
                     $mform->hideIf('juryeligiblehelp', 'juryedit', 'notchecked');
@@ -161,7 +161,7 @@ class review_form extends \moodleform {
         }
 
         if (!empty($this->_customdata['signs'])) {
-            these_add_signature_fields(
+            signaturefields::add_signature_fields(
                 $mform,
                 $this->_customdata['signername'],
                 get_string('signreviewintro', 'mod_these', $this->_customdata['signs']),
@@ -180,7 +180,7 @@ class review_form extends \moodleform {
         if (count($returnto) > 1) {
             $options = [];
             foreach ($returnto as $target) {
-                $options[$target] = these_actor_label($target);
+                $options[$target] = workflow::actor_label($target);
             }
             $mform->addElement('select', 'returntarget', get_string('returntarget', 'mod_these'), $options);
         } else {
@@ -246,7 +246,7 @@ class review_form extends \moodleform {
                 if (empty($this->_customdata['externaldirector']) && trim((string) ($data['directorfunction'] ?? '')) === '') {
                     $errors['directorfunction'] = get_string('required');
                 }
-                foreach (these_get_grid_items($this->_customdata['scope']) as $items) {
+                foreach (grid::get_grid_items($this->_customdata['scope']) as $items) {
                     foreach ($items as $key => $item) {
                         if (!$item->conditional && empty($data['grid_' . $key])) {
                             $errors['grid_' . $key] = get_string('gridrequired', 'mod_these');
@@ -258,7 +258,7 @@ class review_form extends \moodleform {
                 $number = trim((string) $data['devenumber']);
                 if ($number === '') {
                     $errors['devenumber'] = get_string('required');
-                } else if (these_devenumber_taken($this->_customdata['theseid'], $number, $data['dossierid'])) {
+                } else if (dossiers::devenumber_taken($this->_customdata['theseid'], $number, $data['dossierid'])) {
                     $errors['devenumber'] = get_string('devenumbertaken', 'mod_these');
                 }
                 if (empty($this->_customdata['defvrecorded'])) {
@@ -268,9 +268,9 @@ class review_form extends \moodleform {
                     $errors['defenselocation'] = get_string('required');
                 }
                 if (empty($data['returndossier'])) {
-                    $members = these_extract_submitted_jury($data, true);
-                    $juryerror = these_validate_jury($members, $this->_customdata['minjury'])
-                        ?? these_validate_jury_eligibility($members);
+                    $members = juryform::extract_submitted_jury($data, true);
+                    $juryerror = jury::validate_jury($members, $this->_customdata['minjury'])
+                        ?? jury::validate_jury_eligibility($members);
                     if ($juryerror !== null) {
                         $errors['juryhelp'] = get_string('juryproblem', 'mod_these', $juryerror);
                     }
@@ -283,7 +283,7 @@ class review_form extends \moodleform {
                 break;
         }
         if (!empty($this->_customdata['signs'])) {
-            $errors = array_merge($errors, these_signature_errors($data));
+            $errors = array_merge($errors, signaturefields::signature_errors($data));
         }
         return $errors;
     }

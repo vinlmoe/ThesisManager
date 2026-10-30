@@ -26,12 +26,12 @@
 
 // Documents signés.
 
-/** Engagement de l'étudiant : avoir pris connaissance du guide des thèses. */
-define('THESE_COMMIT_GUIDE', 1);
-/** Engagement de l'étudiant : avoir vérifié que le sujet n'a pas déjà été traité. */
-define('THESE_COMMIT_DUPLICATE', 2);
-/** Engagement de l'étudiant : soumettre le protocole au comité d'éthique (si nécessaire). */
-define('THESE_COMMIT_ETHICS', 4);
+/** Alias de \mod_these\local\signatures::COMMIT_GUIDE. */
+define('THESE_COMMIT_GUIDE', \mod_these\local\signatures::COMMIT_GUIDE);
+/** Alias de \mod_these\local\signatures::COMMIT_DUPLICATE. */
+define('THESE_COMMIT_DUPLICATE', \mod_these\local\signatures::COMMIT_DUPLICATE);
+/** Alias de \mod_these\local\signatures::COMMIT_ETHICS. */
+define('THESE_COMMIT_ETHICS', \mod_these\local\signatures::COMMIT_ETHICS);
 
 /**
  * Voir \mod_these\local\signatures::document_definitions().
@@ -170,82 +170,82 @@ function these_get_agreement(stdClass $dossier) {
 }
 
 /**
- * Voir \mod_these\local\signatures::school_options().
+ * Voir \mod_these\local\bordereau::school_options().
  *
  * @return array
  */
 function these_school_options() {
-    return \mod_these\local\signatures::school_options();
+    return \mod_these\local\bordereau::school_options();
 }
 
 /**
- * Voir \mod_these\local\signatures::get_bordereau().
+ * Voir \mod_these\local\bordereau::get_bordereau().
  *
  * @param stdClass $dossier
  * @return array Voir these_bordereau_fields() ; tableau vide s'il n'a pas été renseigné.
  */
 function these_get_bordereau(stdClass $dossier) {
-    return \mod_these\local\signatures::get_bordereau($dossier);
+    return \mod_these\local\bordereau::get_bordereau($dossier);
 }
 
 /**
- * Voir \mod_these\local\signatures::bordereau_fields().
+ * Voir \mod_these\local\bordereau::bordereau_fields().
  *
  * @return string[]
  */
 function these_bordereau_fields() {
-    return \mod_these\local\signatures::bordereau_fields();
+    return \mod_these\local\bordereau::bordereau_fields();
 }
 
-/** Durée maximale de l'embargo de diffusion qu'un étudiant peut demander, en mois après la soutenance. */
-define('THESE_EMBARGO_MAX_MONTHS', 12);
+/** Alias de \mod_these\local\bordereau::EMBARGO_MAX_MONTHS. */
+define('THESE_EMBARGO_MAX_MONTHS', \mod_these\local\bordereau::EMBARGO_MAX_MONTHS);
 
 /**
- * Voir \mod_these\local\signatures::embargo_until().
+ * Voir \mod_these\local\bordereau::embargo_until().
  *
  * @param stdClass $dossier
  * @return int 0 sans embargo, ou tant que la soutenance n'a pas de date.
  */
 function these_embargo_until(stdClass $dossier) {
-    return \mod_these\local\signatures::embargo_until($dossier);
+    return \mod_these\local\bordereau::embargo_until($dossier);
 }
 
-/** Longueur maximale d'un résumé du bordereau, espaces compris. */
-define('THESE_BORDEREAU_SUMMARY_MAX', 1700);
+/** Alias de \mod_these\local\bordereau::BORDEREAU_SUMMARY_MAX. */
+define('THESE_BORDEREAU_SUMMARY_MAX', \mod_these\local\bordereau::BORDEREAU_SUMMARY_MAX);
 
-/** Nombre de mots-clés du bordereau. */
-define('THESE_BORDEREAU_KEYWORDS', 8);
+/** Alias de \mod_these\local\bordereau::BORDEREAU_KEYWORDS. */
+define('THESE_BORDEREAU_KEYWORDS', \mod_these\local\bordereau::BORDEREAU_KEYWORDS);
 
 /**
- * Voir \mod_these\local\signatures::grid_items().
+ * Voir \mod_these\local\grid::grid_items().
  *
  * @return array rubrique => [clé => conditionnel (bool)]
  */
 function these_grid_items() {
-    return \mod_these\local\signatures::grid_items();
+    return \mod_these\local\grid::grid_items();
 }
 
 /**
- * Voir \mod_these\local\signatures::grid_sections().
+ * Voir \mod_these\local\grid::grid_sections().
  *
  * @return string[]
  */
 function these_grid_sections() {
-    return \mod_these\local\signatures::grid_sections();
+    return \mod_these\local\grid::grid_sections();
 }
 
 /**
- * Voir \mod_these\local\signatures::get_grid_items().
+ * Voir \mod_these\local\grid::get_grid_items().
  *
  * @param stdClass|null $scope null : éléments d'origine, sans enregistrement (aperçus).
  * @return array rubrique => [clé => {itemkey, section, label, conditional, sortorder}]
  */
 function these_get_grid_items(?stdClass $scope) {
-    return \mod_these\local\signatures::get_grid_items($scope);
+    return \mod_these\local\grid::get_grid_items($scope);
 }
 
 /**
- * Voir \mod_these\local\signatures::save_grid_items().
+ * Voir \mod_these\local\grid::save_grid_items().
  *
  * @param stdClass $scope Voir these_settings_scope().
  * @param array $items Liste d'objets {itemkey ('' pour un nouvel élément), section, label, conditional}, dans l'ordre ;
@@ -253,17 +253,17 @@ function these_get_grid_items(?stdClass $scope) {
  * @return void
  */
 function these_save_grid_items(stdClass $scope, array $items) {
-    return \mod_these\local\signatures::save_grid_items($scope, $items);
+    return \mod_these\local\grid::save_grid_items($scope, $items);
 }
 
 /**
- * Voir \mod_these\local\signatures::get_grid().
+ * Voir \mod_these\local\grid::get_grid().
  *
  * @param stdClass $dossier
  * @return array clé => 0|1 ; tableau vide si elle n'a pas été renseignée.
  */
 function these_get_grid(stdClass $dossier) {
-    return \mod_these\local\signatures::get_grid($dossier);
+    return \mod_these\local\grid::get_grid($dossier);
 }
 
 /**
@@ -348,18 +348,18 @@ function these_refresh_signatures(context $context, stdClass $dossier) {
 }
 
 /**
- * Voir \mod_these\local\signatures::document_template_hash().
+ * Voir \mod_these\local\seals::document_template_hash().
  *
  * @param stdClass $dossier
  * @param string $doctype
  * @return string
  */
 function these_document_template_hash(stdClass $dossier, $doctype) {
-    return \mod_these\local\signatures::document_template_hash($dossier, $doctype);
+    return \mod_these\local\seals::document_template_hash($dossier, $doctype);
 }
 
 /**
- * Voir \mod_these\local\signatures::signature_template_changed().
+ * Voir \mod_these\local\seals::signature_template_changed().
  *
  * @param context $context
  * @param stdClass $dossier
@@ -367,22 +367,22 @@ function these_document_template_hash(stdClass $dossier, $doctype) {
  * @return bool
  */
 function these_signature_template_changed(context $context, stdClass $dossier, stdClass $signature) {
-    return \mod_these\local\signatures::signature_template_changed($context, $dossier, $signature);
+    return \mod_these\local\seals::signature_template_changed($context, $dossier, $signature);
 }
 
 /**
- * Voir \mod_these\local\signatures::document_fully_signed().
+ * Voir \mod_these\local\seals::document_fully_signed().
  *
  * @param stdClass $dossier
  * @param string $doctype
  * @return bool
  */
 function these_document_fully_signed(stdClass $dossier, $doctype) {
-    return \mod_these\local\signatures::document_fully_signed($dossier, $doctype);
+    return \mod_these\local\seals::document_fully_signed($dossier, $doctype);
 }
 
 /**
- * Voir \mod_these\local\signatures::get_sealed_document().
+ * Voir \mod_these\local\seals::get_sealed_document().
  *
  * @param context $context
  * @param int $dossierid
@@ -390,11 +390,11 @@ function these_document_fully_signed(stdClass $dossier, $doctype) {
  * @return stored_file|null
  */
 function these_get_sealed_document(context $context, $dossierid, $doctype) {
-    return \mod_these\local\signatures::get_sealed_document($context, $dossierid, $doctype);
+    return \mod_these\local\seals::get_sealed_document($context, $dossierid, $doctype);
 }
 
 /**
- * Voir \mod_these\local\signatures::seal_document().
+ * Voir \mod_these\local\seals::seal_document().
  *
  * @param context $context
  * @param stdClass $dossier
@@ -402,11 +402,11 @@ function these_get_sealed_document(context $context, $dossierid, $doctype) {
  * @return stored_file|null Document scellé, null s'il attend encore une signature.
  */
 function these_seal_document(context $context, stdClass $dossier, $doctype) {
-    return \mod_these\local\signatures::seal_document($context, $dossier, $doctype);
+    return \mod_these\local\seals::seal_document($context, $dossier, $doctype);
 }
 
 /**
- * Voir \mod_these\local\signatures::unseal_document().
+ * Voir \mod_these\local\seals::unseal_document().
  *
  * @param context $context
  * @param int $dossierid
@@ -414,7 +414,7 @@ function these_seal_document(context $context, stdClass $dossier, $doctype) {
  * @return void
  */
 function these_unseal_document(context $context, $dossierid, $doctype) {
-    return \mod_these\local\signatures::unseal_document($context, $dossierid, $doctype);
+    return \mod_these\local\seals::unseal_document($context, $dossierid, $doctype);
 }
 /**
  * Voir \mod_these\local\signatures::external_signers().
@@ -427,7 +427,7 @@ function these_external_signers(stdClass $dossier) {
 }
 
 /**
- * Voir \mod_these\local\signatures::pending_documents_for_slot().
+ * Voir \mod_these\local\signaturetokens::pending_documents_for_slot().
  *
  * @param stdClass $dossier
  * @param string $slot
@@ -435,11 +435,11 @@ function these_external_signers(stdClass $dossier) {
  * @return string[]
  */
 function these_pending_documents_for_slot(stdClass $dossier, $slot, ?array $doctypes = null) {
-    return \mod_these\local\signatures::pending_documents_for_slot($dossier, $slot, $doctypes);
+    return \mod_these\local\signaturetokens::pending_documents_for_slot($dossier, $slot, $doctypes);
 }
 
 /**
- * Voir \mod_these\local\signatures::request_signature().
+ * Voir \mod_these\local\signaturetokens::request_signature().
  *
  * @param stdClass $these
  * @param stdClass $cm
@@ -449,11 +449,11 @@ function these_pending_documents_for_slot(stdClass $dossier, $slot, ?array $doct
  * @return string|null Jeton, ou null si aucun document n'attend ce signataire.
  */
 function these_request_signature(stdClass $these, stdClass $cm, stdClass $dossier, $slot, ?array $doctypes = null) {
-    return \mod_these\local\signatures::request_signature($these, $cm, $dossier, $slot, $doctypes);
+    return \mod_these\local\signaturetokens::request_signature($these, $cm, $dossier, $slot, $doctypes);
 }
 
 /**
- * Voir \mod_these\local\signatures::request_external_signatures().
+ * Voir \mod_these\local\signaturetokens::request_external_signatures().
  *
  * @param stdClass $these
  * @param stdClass $cm
@@ -462,21 +462,21 @@ function these_request_signature(stdClass $these, stdClass $cm, stdClass $dossie
  * @return int Nombre de signataires invités.
  */
 function these_request_external_signatures(stdClass $these, stdClass $cm, stdClass $dossier, $doctypes) {
-    return \mod_these\local\signatures::request_external_signatures($these, $cm, $dossier, $doctypes);
+    return \mod_these\local\signaturetokens::request_external_signatures($these, $cm, $dossier, $doctypes);
 }
 
 /**
- * Voir \mod_these\local\signatures::get_signatures_by_token().
+ * Voir \mod_these\local\signaturetokens::get_signatures_by_token().
  *
  * @param string $token
  * @return stdClass[] Signatures en attente, vide si le jeton est inconnu, déjà utilisé ou expiré.
  */
 function these_get_signatures_by_token($token) {
-    return \mod_these\local\signatures::get_signatures_by_token($token);
+    return \mod_these\local\signaturetokens::get_signatures_by_token($token);
 }
 
 /**
- * Voir \mod_these\local\signatures::add_signature_fields().
+ * Voir \mod_these\local\signaturefields::add_signature_fields().
  *
  * @param MoodleQuickForm $mform
  * @param string $defaultname Nom du signataire (proposé s'il est modifiable).
@@ -492,32 +492,17 @@ function these_add_signature_fields(
     $allowsaved = true,
     $editablename = false
 ) {
-    return \mod_these\local\signatures::add_signature_fields($mform, $defaultname, $intro, $allowsaved, $editablename);
+    return \mod_these\local\signaturefields::add_signature_fields($mform, $defaultname, $intro, $allowsaved, $editablename);
 }
 
 /**
- * Voir \mod_these\local\signatures::signature_errors().
+ * Voir \mod_these\local\signaturefields::signature_errors().
  *
  * @param array $data
  * @return array Erreurs, indexées par champ.
  */
 function these_signature_errors(array $data) {
-    return \mod_these\local\signatures::signature_errors($data);
-}
-
-/**
- * Voir \mod_these\local\signatures::sign_from_form().
- *
- * @param context $context
- * @param stdClass $dossier
- * @param string[] $doctypes
- * @param string $slot
- * @param stdClass $data Données du formulaire (signaturedata, signername).
- * @param int $userid
- * @return void
- */
-function these_sign_from_form(context $context, stdClass $dossier, array $doctypes, $slot, stdClass $data, $userid) {
-    return \mod_these\local\signatures::sign_from_form($context, $dossier, $doctypes, $slot, $data, $userid);
+    return \mod_these\local\signaturefields::signature_errors($data);
 }
 
 /**

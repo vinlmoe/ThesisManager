@@ -17,6 +17,8 @@
 namespace mod_these\output;
 
 use context_module;
+use mod_these\local\rendering;
+use mod_these\local\rights;
 use moodle_url;
 use stdClass;
 
@@ -88,7 +90,7 @@ class dossier_table implements \renderable, \templatable {
                 $director->$field = $dossier->{'director' . $field} ?? '';
             }
             $url = new moodle_url('/mod/these/dossier.php', ['id' => $this->cm->id, 'dossierid' => $dossier->id]);
-            if (these_user_knows_subject($dossier, $context, $USER->id)) {
+            if (rights::user_knows_subject($dossier, $context, $USER->id)) {
                 $title = shorten_text(format_string($dossier->title), 90);
                 $title = $title ? parts::html($title) : parts::text('-');
             } else {
@@ -97,7 +99,7 @@ class dossier_table implements \renderable, \templatable {
             $open = parts::link($url, get_string('open', 'mod_these'), 'btn btn-sm btn-secondary');
             $actions = [$open];
             $action = $this->todo
-                ? these_primary_action($this->cm, $dossier, these_get_rights($context, $dossier, $USER->id)) : null;
+                ? rendering::primary_action($this->cm, $dossier, rights::get_rights($context, $dossier, $USER->id)) : null;
             if ($action) {
                 $actions = [parts::link($action[1], $action[0], 'btn btn-sm btn-primary mr-1 mb-1'), $open];
             }

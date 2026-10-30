@@ -16,6 +16,7 @@
 
 namespace mod_these\output;
 
+use mod_these\local\workflow;
 use moodle_url;
 
 /**
@@ -58,8 +59,8 @@ class dossier_filter implements \renderable, \templatable {
      */
     public function export_for_template(\renderer_base $output): array {
         $options = ['' => get_string('allstatuses', 'mod_these')];
-        foreach (these_all_statuses() as $status) {
-            $options[$status] = these_status_label($status);
+        foreach (workflow::all_statuses() as $status) {
+            $options[$status] = workflow::status_label($status);
         }
         return [
             'action' => $this->url->out_omit_querystring(),

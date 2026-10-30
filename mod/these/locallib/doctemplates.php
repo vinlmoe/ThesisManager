@@ -66,13 +66,13 @@ function these_local_scope(stdClass $these) {
 }
 
 /**
- * Voir \mod_these\local\doctemplates::synthesis_scope().
+ * Voir \mod_these\local\doctemplates::scope_for_cm().
  *
- * @param int $synthesisid
- * @return stdClass|null Voir these_local_scope().
+ * @param stdClass $cm
+ * @return stdClass|null
  */
-function these_synthesis_scope($synthesisid) {
-    return \mod_these\local\doctemplates::synthesis_scope($synthesisid);
+function these_scope_for_cm(stdClass $cm) {
+    return \mod_these\local\doctemplates::scope_for_cm($cm);
 }
 
 /**
@@ -150,7 +150,7 @@ function these_doctemplate_images(?stdClass $scope) {
 }
 
 /**
- * Voir \mod_these\local\doctemplates::document_sources().
+ * Voir \mod_these\local\documentcontext::document_sources().
  *
  * @param stdClass $these
  * @param context $context
@@ -159,11 +159,11 @@ function these_doctemplate_images(?stdClass $scope) {
  * @return array Voir these_build_document_context().
  */
 function these_document_sources(stdClass $these, context $context, stdClass $dossier, $doctype) {
-    return \mod_these\local\doctemplates::document_sources($these, $context, $dossier, $doctype);
+    return \mod_these\local\documentcontext::document_sources($these, $context, $dossier, $doctype);
 }
 
 /**
- * Voir \mod_these\local\doctemplates::document_context().
+ * Voir \mod_these\local\documentcontext::document_context().
  *
  * @param stdClass $these
  * @param context $context
@@ -174,65 +174,65 @@ function these_document_sources(stdClass $these, context $context, stdClass $dos
  * @return array
  */
 function these_document_context(stdClass $these, context $context, stdClass $dossier, $doctype, ?stdClass $recipient = null) {
-    return \mod_these\local\doctemplates::document_context($these, $context, $dossier, $doctype, $recipient);
+    return \mod_these\local\documentcontext::document_context($these, $context, $dossier, $doctype, $recipient);
 }
 
 /**
- * Voir \mod_these\local\doctemplates::doctemplate_box().
+ * Voir \mod_these\local\documentcontext::doctemplate_box().
  *
  * @param bool $checked
  * @return string HTML
  */
 function these_doctemplate_box($checked) {
-    return \mod_these\local\doctemplates::doctemplate_box($checked);
+    return \mod_these\local\documentcontext::doctemplate_box($checked);
 }
 
 /**
- * Voir \mod_these\local\doctemplates::doctemplate_text().
+ * Voir \mod_these\local\documentcontext::doctemplate_text().
  *
  * @param string|null $text
  * @return string HTML
  */
 function these_doctemplate_text($text) {
-    return \mod_these\local\doctemplates::doctemplate_text($text);
+    return \mod_these\local\documentcontext::doctemplate_text($text);
 }
 
 /**
- * Voir \mod_these\local\doctemplates::build_document_context().
+ * Voir \mod_these\local\documentcontext::build_document_context().
  *
  * @param array $src {these, dossier, student, director, jury, signatures, recipient, scope}, voir
  *                   these_document_sources().
  * @return array
  */
 function these_build_document_context(array $src) {
-    return \mod_these\local\doctemplates::build_document_context($src);
+    return \mod_these\local\documentcontext::build_document_context($src);
 }
 
-/** Longueur maximale des conclusions, espaces compris : elles doivent tenir sur une page avec les signatures. */
-define('THESE_CONCLUSIONS_MAX', 2200);
+/** Alias de \mod_these\local\documentrenderer::CONCLUSIONS_MAX. */
+define('THESE_CONCLUSIONS_MAX', \mod_these\local\documentrenderer::CONCLUSIONS_MAX);
 
 /**
- * Voir \mod_these\local\doctemplates::signature_caption().
+ * Voir \mod_these\local\documentcontext::signature_caption().
  *
  * @param array $signature
  * @return string
  */
 function these_signature_caption(array $signature) {
-    return \mod_these\local\doctemplates::signature_caption($signature);
+    return \mod_these\local\documentcontext::signature_caption($signature);
 }
 
 /**
- * Voir \mod_these\local\doctemplates::conclusions_context().
+ * Voir \mod_these\local\documentcontext::conclusions_context().
  *
  * @param string $text
  * @return array {html, bodyhtml, lasthtml}
  */
 function these_conclusions_context($text) {
-    return \mod_these\local\doctemplates::conclusions_context($text);
+    return \mod_these\local\documentcontext::conclusions_context($text);
 }
 
 /**
- * Voir \mod_these\local\doctemplates::conclusions_error().
+ * Voir \mod_these\local\documentrenderer::conclusions_error().
  *
  * @param stdClass $these
  * @param context|null $context
@@ -240,11 +240,11 @@ function these_conclusions_context($text) {
  * @return string|null Message d'erreur, ou null si elles tiennent.
  */
 function these_conclusions_error(stdClass $these, ?context $context, $text) {
-    return \mod_these\local\doctemplates::conclusions_error($these, $context, $text);
+    return \mod_these\local\documentrenderer::conclusions_error($these, $context, $text);
 }
 
 /**
- * Voir \mod_these\local\doctemplates::render_doctemplate().
+ * Voir \mod_these\local\documentrenderer::render_doctemplate().
  *
  * @param stdClass $these Activité.
  * @param string $type Voir these_doctemplate_types().
@@ -253,11 +253,11 @@ function these_conclusions_error(stdClass $these, ?context $context, $text) {
  * @return string Contenu PDF.
  */
 function these_render_doctemplate(stdClass $these, $type, array $data, $template = null) {
-    return \mod_these\local\doctemplates::render_doctemplate($these, $type, $data, $template);
+    return \mod_these\local\documentrenderer::render_doctemplate($these, $type, $data, $template);
 }
 
 /**
- * Voir \mod_these\local\doctemplates::render_scope_doctemplate().
+ * Voir \mod_these\local\documentrenderer::render_scope_doctemplate().
  *
  * @param stdClass|null $scope Voir these_settings_scope() ; null : modèle d'origine.
  * @param string $type
@@ -266,11 +266,11 @@ function these_render_doctemplate(stdClass $these, $type, array $data, $template
  * @return string Contenu PDF.
  */
 function these_render_scope_doctemplate(?stdClass $scope, $type, array $data, $template = null) {
-    return \mod_these\local\doctemplates::render_scope_doctemplate($scope, $type, $data, $template);
+    return \mod_these\local\documentrenderer::render_scope_doctemplate($scope, $type, $data, $template);
 }
 
 /**
- * Voir \mod_these\local\doctemplates::signed_document_pdf().
+ * Voir \mod_these\local\documentrenderer::signed_document_pdf().
  *
  * @param stdClass $these
  * @param context $context
@@ -279,11 +279,11 @@ function these_render_scope_doctemplate(?stdClass $scope, $type, array $data, $t
  * @return string Contenu PDF.
  */
 function these_signed_document_pdf(stdClass $these, context $context, stdClass $dossier, $doctype) {
-    return \mod_these\local\doctemplates::signed_document_pdf($these, $context, $dossier, $doctype);
+    return \mod_these\local\documentrenderer::signed_document_pdf($these, $context, $dossier, $doctype);
 }
 
 /**
- * Voir \mod_these\local\doctemplates::render_document_pdf().
+ * Voir \mod_these\local\documentrenderer::render_document_pdf().
  *
  * @param stdClass $these
  * @param context $context
@@ -292,21 +292,21 @@ function these_signed_document_pdf(stdClass $these, context $context, stdClass $
  * @return string Contenu PDF.
  */
 function these_render_document_pdf(stdClass $these, context $context, stdClass $dossier, $doctype) {
-    return \mod_these\local\doctemplates::render_document_pdf($these, $context, $dossier, $doctype);
+    return \mod_these\local\documentrenderer::render_document_pdf($these, $context, $dossier, $doctype);
 }
 
 /**
- * Voir \mod_these\local\doctemplates::contract_template_problem().
+ * Voir \mod_these\local\documentrenderer::contract_template_problem().
  *
  * @param stdClass $these
  * @return string|null 'contracttemplatemissing', 'contracttemplateunreadable' ou null.
  */
 function these_contract_template_problem(stdClass $these) {
-    return \mod_these\local\doctemplates::contract_template_problem($these);
+    return \mod_these\local\documentrenderer::contract_template_problem($these);
 }
 
 /**
- * Voir \mod_these\local\doctemplates::doctemplate_sample_context().
+ * Voir \mod_these\local\documentsamples::doctemplate_sample_context().
  *
  * @param stdClass|null $scope
  * @param string $type Voir these_doctemplate_types().
@@ -314,11 +314,11 @@ function these_contract_template_problem(stdClass $these) {
  * @return array
  */
 function these_doctemplate_sample_context(?stdClass $scope, $type, ?stdClass $activity = null) {
-    return \mod_these\local\doctemplates::doctemplate_sample_context($scope, $type, $activity);
+    return \mod_these\local\documentsamples::doctemplate_sample_context($scope, $type, $activity);
 }
 
 /**
- * Voir \mod_these\local\doctemplates::doctemplate_error().
+ * Voir \mod_these\local\documentrenderer::doctemplate_error().
  *
  * @param stdClass $scope Voir these_settings_scope().
  * @param string $type
@@ -327,38 +327,38 @@ function these_doctemplate_sample_context(?stdClass $scope, $type, ?stdClass $ac
  * @return string|null Message d'erreur, ou null si le modèle est utilisable.
  */
 function these_doctemplate_error(stdClass $scope, $type, $content, ?stdClass $activity = null) {
-    return \mod_these\local\doctemplates::doctemplate_error($scope, $type, $content, $activity);
+    return \mod_these\local\documentrenderer::doctemplate_error($scope, $type, $content, $activity);
 }
 
 /**
- * Voir \mod_these\local\doctemplates::sample_document_context().
+ * Voir \mod_these\local\documentsamples::sample_document_context().
  *
  * @param stdClass|null $scope Portée des paramètres (images, grille) ; null : ceux d'origine.
  * @param stdClass|null $activity Activité dont reprendre l'établissement (sinon des valeurs fictives).
  * @return array Voir these_build_document_context().
  */
 function these_sample_document_context(?stdClass $scope = null, ?stdClass $activity = null) {
-    return \mod_these\local\doctemplates::sample_document_context($scope, $activity);
+    return \mod_these\local\documentsamples::sample_document_context($scope, $activity);
 }
 
 /**
- * Voir \mod_these\local\doctemplates::sample_signature_image().
+ * Voir \mod_these\local\documentsamples::sample_signature_image().
  *
  * @return string
  */
 function these_sample_signature_image() {
-    return \mod_these\local\doctemplates::sample_signature_image();
+    return \mod_these\local\documentsamples::sample_signature_image();
 }
 
 /**
- * Voir \mod_these\local\doctemplates::doctemplate_variables().
+ * Voir \mod_these\local\documentsamples::doctemplate_variables().
  *
  * @param array $data
  * @param string $prefix
  * @return array nom => exemple (texte)
  */
 function these_doctemplate_variables(array $data, $prefix = '') {
-    return \mod_these\local\doctemplates::doctemplate_variables($data, $prefix);
+    return \mod_these\local\documentsamples::doctemplate_variables($data, $prefix);
 }
 
 /**
@@ -372,11 +372,11 @@ function these_get_contract_template(stdClass $these) {
 }
 
 /**
- * Voir \mod_these\local\doctemplates::merge_pdfs().
+ * Voir \mod_these\local\documentrenderer::merge_pdfs().
  *
  * @param string[] $sources Contenus PDF, dans l'ordre.
  * @return string Contenu PDF assemblé.
  */
 function these_merge_pdfs(array $sources) {
-    return \mod_these\local\doctemplates::merge_pdfs($sources);
+    return \mod_these\local\documentrenderer::merge_pdfs($sources);
 }

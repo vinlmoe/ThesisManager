@@ -16,10 +16,15 @@
 
 namespace mod_these\form;
 
-defined('MOODLE_INTERNAL') || die();
-
-require_once($CFG->libdir . '/formslib.php');
-require_once($CFG->dirroot . '/mod/these/locallib.php');
+use mod_these\local\doctemplates;
+use mod_these\local\files;
+use mod_these\local\jury;
+use mod_these\local\signatures;
+use mod_these\local\bordereau;
+use mod_these\local\grid;
+use mod_these\local\signaturefields;
+use mod_these\local\documentrenderer;
+use mod_these\local\juryform;
 
 /**
  * Dépôt des documents de soutenance (phase 2, étape 1) : manuscrit (seul document déposé), date
@@ -35,17 +40,14 @@ require_once($CFG->dirroot . '/mod/these/locallib.php');
  * @copyright 2026 Sébastien Lefebvre
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class defense_form extends \moodleform {
+class defense_form extends base_form {
     /**
      * Defines the form fields.
      */
     public function definition() {
         $mform = $this->_form;
 
-        $mform->addElement('hidden', 'id');
-        $mform->setType('id', PARAM_INT);
-        $mform->addElement('hidden', 'dossierid');
-        $mform->setType('dossierid', PARAM_INT);
+        $this->add_hidden_ids(true);
 
         $mform->addElement('header', 'documentsheader', get_string('defensedocuments', 'mod_these'));
         $mform->setExpanded('documentsheader');
@@ -61,7 +63,7 @@ class defense_form extends \moodleform {
             'manuscript',
             get_string('manuscript', 'mod_these'),
             null,
-            these_filemanager_options('manuscript')
+            files::filemanager_options('manuscript')
         );
         $mform->addHelpButton('manuscript', 'manuscript', 'mod_these');
 
@@ -83,7 +85,7 @@ class defense_form extends \moodleform {
         );
         $mform->addElement('advcheckbox', 'bvisio', '', get_string('visio', 'mod_these'));
 
-        these_add_jury_fields($this, $mform, $this->_customdata['jurycount'] ?? 0, false, $this->_customdata['jurorids'] ?? []);
+        juryform::add_jury_fields($this, $mform, $this->_customdata['jurycount'] ?? 0, false, $this->_customdata['jurorids'] ?? []);
 
         // Identité et coordonnées : communes au bordereau ABES, à la fiche signalétique et au
         // contrat de diffusion.
@@ -135,11 +137,11 @@ class defense_form extends \moodleform {
             $mform->addHelpButton('b' . $field, 'bsummary', 'mod_these');
         }
         $keywords = [];
-        for ($i = 0; $i < THESE_BORDEREAU_KEYWORDS; $i++) {
+        for ($i = 0; $i < bordereau::BORDEREAU_KEYWORDS; $i++) {
             $keywords[] = $mform->createElement('text', "bkeyword[$i]", '', ['size' => 22]);
         }
         $mform->addGroup($keywords, 'bkeywordgroup', get_string('bkeywords', 'mod_these'), ' ', false);
-        for ($i = 0; $i < THESE_BORDEREAU_KEYWORDS; $i++) {
+        for ($i = 0; $i < bordereau::BORDEREAU_KEYWORDS; $i++) {
             $mform->setType("bkeyword[$i]", PARAM_TEXT);
         }
         $mform->addHelpButton('bkeywordgroup', 'bkeywords', 'mod_these');
@@ -150,7 +152,7 @@ class defense_form extends \moodleform {
         $mform->addElement('static', 'gridhelp', '', get_string('gridstudenthelp', 'mod_these'));
         $mform->addElement('text', 'ethicsnumber', get_string('ethicsnumber', 'mod_these'), ['size' => 20]);
         $mform->setType('ethicsnumber', PARAM_TEXT);
-        foreach (these_get_grid_items(these_settings_scope($this->_customdata['these'])) as $section => $items) {
+        foreach (grid::get_grid_items(doctemplates::settings_scope($this->_customdata['these'])) as $section => $items) {
             $mform->addElement(
                 'static',
                 'gridsection' . $section,
@@ -170,7 +172,7 @@ class defense_form extends \moodleform {
         $mform->addElement('textarea', 'conclusions', get_string('conclusionstext', 'mod_these'), [
             'rows' => 14,
             'cols' => 80,
-            'maxlength' => THESE_CONCLUSIONS_MAX,
+            'maxlength' => documentrenderer::CONCLUSIONS_MAX,
         ]);
         $mform->setType('conclusions', PARAM_TEXT);
         $mform->addHelpButton('conclusions', 'conclusionstext', 'mod_these');
@@ -182,16 +184,17 @@ class defense_form extends \moodleform {
             'optional' => true, 'startyear' => (int) date('Y'), 'stopyear' => (int) date('Y') + 30,
         ]);
         $mform->addHelpButton('bconfidentialuntil', 'bconfidentialuntil', 'mod_these');
-        // Embargo : diffusion différée d'au plus THESE_EMBARGO_MAX_MONTHS mois après la soutenance, sur demande motivée.
-        $mform->addElement('advcheckbox', 'bembargo', '', get_string('bembargo', 'mod_these', THESE_EMBARGO_MAX_MONTHS));
+        // Embargo : diffusion différée d'au plus bordereau::EMBARGO_MAX_MONTHS mois après la soutenance,
+        // sur demande motivée.
+        $mform->addElement('advcheckbox', 'bembargo', '', get_string('bembargo', 'mod_these', bordereau::EMBARGO_MAX_MONTHS));
         $mform->addHelpButton('bembargo', 'embargo', 'mod_these');
         $months = [];
-        for ($n = 1; $n <= THESE_EMBARGO_MAX_MONTHS; $n++) {
+        for ($n = 1; $n <= bordereau::EMBARGO_MAX_MONTHS; $n++) {
             $months[$n] = get_string('embargomonthsoption', 'mod_these', $n);
         }
         $mform->addElement('select', 'bembargomonths', get_string('bembargomonths', 'mod_these'), $months);
         $mform->setType('bembargomonths', PARAM_INT);
-        $mform->setDefault('bembargomonths', THESE_EMBARGO_MAX_MONTHS);
+        $mform->setDefault('bembargomonths', bordereau::EMBARGO_MAX_MONTHS);
         $mform->hideIf('bembargomonths', 'bembargo', 'notchecked');
         $mform->addElement('textarea', 'bembargoreason', get_string('bembargoreason', 'mod_these'), ['rows' => 3, 'cols' => 80]);
         $mform->setType('bembargoreason', PARAM_TEXT);
@@ -212,7 +215,11 @@ class defense_form extends \moodleform {
             questionnaire_form::add_question_fields($mform, $questions);
         }
 
-        these_add_signature_fields($mform, $this->_customdata['signername'], get_string('signdefenseintro', 'mod_these'));
+        signaturefields::add_signature_fields(
+            $mform,
+            $this->_customdata['signername'],
+            get_string('signdefenseintro', 'mod_these')
+        );
 
         $buttons = [];
         $buttons[] = $mform->createElement('submit', 'submitdefense', get_string($this->_customdata['submitlabel'], 'mod_these'));
@@ -235,7 +242,7 @@ class defense_form extends \moodleform {
         if (empty($data['submitdefense'])) {
             return $errors;
         }
-        if (these_count_draft_files($data['manuscript']) < 1) {
+        if (files::count_draft_files($data['manuscript']) < 1) {
             $errors['manuscript'] = get_string('manuscriptrequired', 'mod_these');
         }
         if (empty($data['proposeddate'])) {
@@ -246,7 +253,7 @@ class defense_form extends \moodleform {
             $errors['proposeddate'] = self::too_soon_error($this->_customdata);
         }
         // Grille de conformité : éléments obligatoires cochés et attestation de l'étudiant.
-        foreach (these_get_grid_items(these_settings_scope($this->_customdata['these'])) as $items) {
+        foreach (grid::get_grid_items(doctemplates::settings_scope($this->_customdata['these'])) as $items) {
             foreach ($items as $key => $item) {
                 if (!$item->conditional && empty($data['grid_' . $key])) {
                     $errors['grid_' . $key] = get_string('gridrequired', 'mod_these');
@@ -256,7 +263,7 @@ class defense_form extends \moodleform {
         if (empty($data['gridconfirm'])) {
             $errors['gridconfirm'] = get_string('gridstudentconfirmrequired', 'mod_these');
         }
-        $juryerror = these_validate_jury(these_extract_submitted_jury($data), $this->_customdata['minjury']);
+        $juryerror = jury::validate_jury(juryform::extract_submitted_jury($data), $this->_customdata['minjury']);
         if ($juryerror !== null) {
             $errors['juryhelp'] = get_string('juryproblem', 'mod_these', $juryerror);
         }
@@ -270,7 +277,7 @@ class defense_form extends \moodleform {
             }
         }
         if (!isset($errors['conclusions'])) {
-            $conclusionserror = these_conclusions_error(
+            $conclusionserror = documentrenderer::conclusions_error(
                 $this->_customdata['these'],
                 $this->_customdata['context'] ?? null,
                 (string) $data['conclusions']
@@ -286,15 +293,15 @@ class defense_form extends \moodleform {
             $errors['bpersonalemail'] = get_string('invalidemail');
         }
         foreach (['bsummaryfr', 'bsummaryen'] as $field) {
-            if (\core_text::strlen((string) ($data[$field] ?? '')) > THESE_BORDEREAU_SUMMARY_MAX) {
-                $errors[$field] = get_string('summarytoolong', 'mod_these', THESE_BORDEREAU_SUMMARY_MAX);
+            if (\core_text::strlen((string) ($data[$field] ?? '')) > bordereau::BORDEREAU_SUMMARY_MAX) {
+                $errors[$field] = get_string('summarytoolong', 'mod_these', bordereau::BORDEREAU_SUMMARY_MAX);
             }
         }
         if (!array_filter(array_map('trim', (array) ($data['bkeyword'] ?? [])), 'strlen')) {
             $errors['bkeywordgroup'] = get_string('required');
         }
         $errors = array_merge($errors, questionnaire_form::question_errors($this->_customdata['questions'] ?? [], $data));
-        return array_merge($errors, these_signature_errors($data));
+        return array_merge($errors, signaturefields::signature_errors($data));
     }
 
     /**

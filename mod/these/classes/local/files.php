@@ -16,7 +16,6 @@
 
 namespace mod_these\local;
 
-use mod_these\output;
 use context;
 
 /**
@@ -74,20 +73,6 @@ class files {
     public static function get_files(context $context, $filearea, $dossierid) {
         $fs = get_file_storage();
         return array_values($fs->get_area_files($context->id, 'mod_these', $filearea, $dossierid, 'filename', false));
-    }
-
-    /**
-     * Liens de téléchargement des fichiers d'une zone.
-     *
-     * @param context $context
-     * @param string $filearea
-     * @param int $dossierid
-     * @return string HTML, vide si la zone est vide.
-     */
-    public static function render_file_links(context $context, $filearea, $dossierid) {
-        global $PAGE;
-
-        return $PAGE->get_renderer('mod_these')->render(new output\file_links($context, $filearea, $dossierid));
     }
 
     /**

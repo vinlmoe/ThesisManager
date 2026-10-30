@@ -16,10 +16,7 @@
 
 namespace mod_these\form;
 
-defined('MOODLE_INTERNAL') || die();
-
-require_once($CFG->libdir . '/formslib.php');
-require_once($CFG->dirroot . '/mod/these/locallib.php');
+use mod_these\local\files;
 
 /**
  * Dépôt par la DEVE du scan d'un document signé hors du module : document, date de la signature,
@@ -34,17 +31,14 @@ require_once($CFG->dirroot . '/mod/these/locallib.php');
  * @copyright 2026 Sébastien Lefebvre
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class scan_form extends \moodleform {
+class scan_form extends base_form {
     /**
      * Defines the form fields.
      */
     public function definition() {
         $mform = $this->_form;
 
-        $mform->addElement('hidden', 'id');
-        $mform->setType('id', PARAM_INT);
-        $mform->addElement('hidden', 'dossierid');
-        $mform->setType('dossierid', PARAM_INT);
+        $this->add_hidden_ids(true);
 
         $mform->addElement('select', 'doctype', get_string('scandoctype', 'mod_these'), \mod_these\local\scans::doctype_options());
         $mform->addRule('doctype', null, 'required', null, 'client');
@@ -72,7 +66,7 @@ class scan_form extends \moodleform {
             'scan',
             get_string('scanfiles', 'mod_these'),
             null,
-            these_filemanager_options('signedscan')
+            files::filemanager_options('signedscan')
         );
         $mform->addHelpButton('scan', 'scanfiles', 'mod_these');
         $mform->addRule('scan', null, 'required', null, 'client');
@@ -92,7 +86,7 @@ class scan_form extends \moodleform {
      */
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
-        if (these_count_draft_files($data['scan']) < 1) {
+        if (files::count_draft_files($data['scan']) < 1) {
             $errors['scan'] = get_string('scanrequired', 'mod_these');
         }
         return $errors;

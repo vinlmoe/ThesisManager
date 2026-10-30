@@ -16,10 +16,6 @@
 
 namespace mod_these\form;
 
-defined('MOODLE_INTERNAL') || die();
-
-require_once($CFG->libdir . '/formslib.php');
-
 /**
  * Refus de signer d'un agent DEVE (voir \mod_these\local\refusal) : documents refusés, cochés
  * d'office, avec l'étape où chacun renvoie le dossier, et motif obligatoire.
@@ -30,7 +26,7 @@ require_once($CFG->libdir . '/formslib.php');
  * @copyright 2026 Sébastien Lefebvre
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class refuse_form extends \moodleform {
+class refuse_form extends base_form {
     /**
      * Defines the form fields.
      */

@@ -168,13 +168,13 @@ class import {
         }
         // « très honorable » vaut la clé « treshonorable ».
         $compact = str_replace(' ', '', $value);
-        foreach (array_keys(these_mention_options()) as $key) {
+        foreach (array_keys(workflow::mention_options()) as $key) {
             if ($compact === $key) {
                 return $key;
             }
         }
         $strings = get_string_manager();
-        foreach (array_keys(these_mention_options()) as $key) {
+        foreach (array_keys(workflow::mention_options()) as $key) {
             $labels = [$key];
             foreach (['fr', 'en'] as $lang) {
                 $labels[] = self::normalise($strings->get_string('mention' . $key, 'mod_these', null, $lang));
@@ -288,7 +288,7 @@ class import {
                 $result['message'] = get_string('importusernotenrolled', 'mod_these', s($values['director']));
             } else if (
                 $values['devenumber'] !== ''
-                    && (isset($numbers[$values['devenumber']]) || these_devenumber_taken($these->id, $values['devenumber']))
+                    && (isset($numbers[$values['devenumber']]) || dossiers::devenumber_taken($these->id, $values['devenumber']))
             ) {
                 $result['message'] = get_string('devenumbertaken', 'mod_these');
             } else if ($status === null) {
@@ -332,10 +332,10 @@ class import {
                         $record['correctionsnote'] = $values['corrections'];
                     }
                     $dossierid = $DB->insert_record('these_dossier', (object) $record);
-                    these_log($dossierid, $userid, 'imported', $status, $status);
+                    dossiers::log($dossierid, $userid, 'imported', $status, $status);
                 }
                 $result['message'] = get_string($dryrun ? 'importwouldcreate' : 'importcreated', 'mod_these')
-                    . ($status !== THESE_STATUS_ACTIVE ? ' — ' . these_status_label($status) : '');
+                    . ($status !== THESE_STATUS_ACTIVE ? ' — ' . workflow::status_label($status) : '');
             }
             $report[] = $result;
         }

@@ -106,3 +106,84 @@ function thesesynthesis_delete_instance($id) {
 
     return true;
 }
+
+/*
+ * Rappels (callbacks) de mod_these.
+ *
+ * mod_these ne connaît pas mod_thesesynthesis : il interroge les modules présents par des rappels
+ * génériques (get_plugins_with_function() et component_callback()) pour savoir si les paramètres
+ * partagés d'une activité « Gestion des thèses » sont tenus ailleurs, et où. Un autre module peut
+ * fournir les mêmes rappels, préfixés de son nom. Le contrat (voir aussi INSTALL.md) :
+ *
+ * - <module>_these_settings_scope(stdClass $these) : portée des paramètres partagés en vigueur pour
+ *   une activité « Gestion des thèses » ({theseid, synthesisid, shared, component, contextid, cmid,
+ *   name}, voir \mod_these\local\doctemplates::local_scope()), ou null si le module n'en fournit pas ;
+ *   mod_these appelle chaque module qui déclare la fonction et retient la première portée renvoyée ;
+ * - <module>_these_settings_scope_for_cm(stdClass $cm) : portée d'un module de cours du module
+ *   lui-même (une activité de suivi), ou null ; appelé sur le module du cm (« mod_<modname> ») ;
+ * - <module>_these_scope_cmids(stdClass $scope) : modules de cours des activités « Gestion des
+ *   thèses » que la portée couvre (int[]) ; appelé sur $scope->component ;
+ * - <module>_these_scope_urls(stdClass $scope) : pages de l'activité qui tient la portée, moodle_url
+ *   indexées par home (accueil) et settings (paramètres du circuit) ; appelé sur $scope->component ;
+ * - <module>_these_require_view(stdClass $cm, context $context) : droit de consulter les documents
+ *   communs (liste du corps enseignant) depuis un module de cours du module ; lève une exception
+ *   sinon ; appelé sur le module du cm.
+ */
+
+/**
+ * Rappel de mod_these : portée partagée en vigueur pour une activité « Gestion des thèses ».
+ *
+ * @param stdClass $these
+ * @return stdClass|null Voir \mod_thesesynthesis\local\scope::for_these().
+ */
+function thesesynthesis_these_settings_scope(stdClass $these) {
+    // Module présent mais pas encore installé : aucune table à interroger.
+    if (!get_config('mod_thesesynthesis', 'version')) {
+        return null;
+    }
+    return \mod_thesesynthesis\local\scope::for_these($these);
+}
+
+/**
+ * Rappel de mod_these : portée d'une activité « Suivi des thèses » désignée par son module de cours.
+ *
+ * @param stdClass $cm
+ * @return stdClass|null Voir \mod_thesesynthesis\local\scope::for_synthesis().
+ */
+function thesesynthesis_these_settings_scope_for_cm(stdClass $cm) {
+    if ($cm->modname !== 'thesesynthesis') {
+        return null;
+    }
+    return \mod_thesesynthesis\local\scope::for_synthesis($cm->instance);
+}
+
+/**
+ * Rappel de mod_these : modules de cours des activités « Gestion des thèses » suivies dans une portée.
+ *
+ * @param stdClass $scope
+ * @return int[]
+ */
+function thesesynthesis_these_scope_cmids(stdClass $scope) {
+    return \mod_thesesynthesis\local\scope::linked_cmids($scope);
+}
+
+/**
+ * Rappel de mod_these : accueil et paramètres du circuit de l'activité de suivi d'une portée.
+ *
+ * @param stdClass $scope
+ * @return moodle_url[] {home, settings}
+ */
+function thesesynthesis_these_scope_urls(stdClass $scope) {
+    return \mod_thesesynthesis\local\scope::urls($scope);
+}
+
+/**
+ * Rappel de mod_these : droit de consulter les documents communs depuis une activité de suivi.
+ *
+ * @param stdClass $cm
+ * @param context $context
+ * @return void
+ */
+function thesesynthesis_these_require_view(stdClass $cm, context $context) {
+    require_capability('mod/thesesynthesis:view', $context);
+}

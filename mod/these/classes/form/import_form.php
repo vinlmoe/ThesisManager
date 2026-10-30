@@ -18,7 +18,6 @@ namespace mod_these\form;
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->libdir . '/formslib.php');
 require_once($CFG->libdir . '/csvlib.class.php');
 
 /**
@@ -30,15 +29,14 @@ require_once($CFG->libdir . '/csvlib.class.php');
  * @copyright 2026 Sébastien Lefebvre
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class import_form extends \moodleform {
+class import_form extends base_form {
     /**
      * Defines the form fields.
      */
     public function definition() {
         $mform = $this->_form;
 
-        $mform->addElement('hidden', 'id');
-        $mform->setType('id', PARAM_INT);
+        $this->add_hidden_ids();
 
         $mform->addElement('static', 'importhelp', '', get_string('importhelp', 'mod_these'));
         $mform->addElement(

@@ -48,8 +48,8 @@ class a6 {
         global $DB;
 
         $record = $userid ? $DB->get_record('these_a6', ['userid' => (int) $userid]) : null;
-        $agreement = $dossier ? these_get_agreement($dossier) : [];
-        $bordereau = $dossier ? these_get_bordereau($dossier) : [];
+        $agreement = $dossier ? signatures::get_agreement($dossier) : [];
+        $bordereau = $dossier ? bordereau::get_bordereau($dossier) : [];
         if ($record) {
             $a6 = ['date' => (int) $record->a6date, 'notyet' => empty($record->a6date),
                 'school' => (string) $record->a6school, 'recorded' => true];
@@ -162,7 +162,7 @@ class a6 {
             'a6' => self::label_for_user($userid),
         ]);
         foreach ($DB->get_records('these_dossier', ['userid' => $userid], '', 'id, status') as $dossier) {
-            these_log($dossier->id, $actorid, 'a6recorded', $dossier->status, $dossier->status, $label);
+            dossiers::log($dossier->id, $actorid, 'a6recorded', $dossier->status, $dossier->status, $label);
         }
     }
 
@@ -198,7 +198,7 @@ class a6 {
         if ($a6['notyet'] || !$a6['date']) {
             return get_string('a6notvalidated', 'mod_these');
         }
-        $schools = these_school_options();
+        $schools = bordereau::school_options();
         $label = userdate($a6['date'], get_string('strftimedate', 'langconfig'));
         if ($a6['school'] !== '' && isset($schools[$a6['school']])) {
             $label .= ' (' . $schools[$a6['school']] . ')';
@@ -216,7 +216,7 @@ class a6 {
         if (empty($a6['defvdate'])) {
             return get_string('defvnotrecorded', 'mod_these');
         }
-        $schools = these_school_options();
+        $schools = bordereau::school_options();
         $label = userdate($a6['defvdate'], get_string('strftimedate', 'langconfig'));
         if ($a6['defvschool'] !== '' && isset($schools[$a6['defvschool']])) {
             $label .= ' (' . $schools[$a6['defvschool']] . ')';
@@ -410,7 +410,7 @@ class a6 {
         if ($value === '') {
             return '';
         }
-        foreach (these_school_options() as $key => $label) {
+        foreach (bordereau::school_options() as $key => $label) {
             if ($key !== '' && ($value === self::normalise($key) || strpos(self::normalise($label), $value) !== false)) {
                 return $key;
             }
@@ -517,7 +517,7 @@ class a6 {
             $line++;
             $identifier = trim((string) ($row[$columns['student']] ?? ''));
             $result = ['line' => $line, 'student' => $identifier, 'ok' => false, 'message' => ''];
-            $student = these_find_user($identifier);
+            $student = import::find_user($identifier);
             $date = self::parse_date($row[$columns['date']] ?? '');
             $school = isset($columns['school']) ? self::parse_school($row[$columns['school']] ?? '') : '';
             // DEFV facultatif : sans colonne ou sans date, celui déjà connu est gardé.

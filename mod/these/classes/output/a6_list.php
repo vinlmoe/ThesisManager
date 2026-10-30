@@ -16,8 +16,10 @@
 
 namespace mod_these\output;
 
+use mod_these\local\signatures;
 use moodle_url;
 use stdClass;
+use mod_these\local\bordereau;
 
 /**
  * Page de validation de l'A6 (a6.php) : filtres, étudiants de l'activité à cocher avec leur
@@ -105,7 +107,7 @@ class a6_list implements \renderable, \templatable {
             'schoollabel' => get_string('bschool', 'mod_these'),
             'schools' => array_map(function ($value, $label) {
                 return ['value' => $value, 'label' => $label];
-            }, array_keys(these_school_options()), these_school_options()),
+            }, array_keys(bordereau::school_options()), bordereau::school_options()),
             'submit' => get_string('a6bulksubmit', 'mod_these'),
             'importurl' => (new moodle_url('/mod/these/a6import.php', ['id' => $this->cm->id]))->out(false),
             'importlabel' => get_string('a6import', 'mod_these'),

@@ -17,6 +17,7 @@
 namespace mod_these\output;
 
 use context;
+use mod_these\local\files;
 use moodle_url;
 
 /**
@@ -63,7 +64,7 @@ class file_links implements \renderable, \templatable {
     protected function get_files(): array {
         if ($this->files === null) {
             $this->files = [];
-            foreach (these_get_files($this->context, $this->filearea, $this->dossierid) as $file) {
+            foreach (files::get_files($this->context, $this->filearea, $this->dossierid) as $file) {
                 $url = moodle_url::make_pluginfile_url(
                     $this->context->id,
                     'mod_these',

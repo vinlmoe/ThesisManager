@@ -28,6 +28,7 @@
 require(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/these/locallib.php');
 
+use mod_these\local\page;
 use mod_these\output;
 
 $id = required_param('id', PARAM_INT);
@@ -35,12 +36,9 @@ $statusfilter = optional_param('status', '', PARAM_RAW_TRIMMED);
 $search = optional_param('search', '', PARAM_TEXT);
 $page = optional_param('page', 0, PARAM_INT);
 
-$cm = get_coursemodule_from_id('these', $id, 0, false, MUST_EXIST);
-$course = get_course($cm->course);
-$these = $DB->get_record('these', ['id' => $cm->instance], '*', MUST_EXIST);
-
+$activity = page::load_activity($id);
+['cm' => $cm, 'course' => $course, 'these' => $these, 'context' => $context] = (array) $activity;
 require_login($course, true, $cm);
-$context = context_module::instance($cm->id);
 $rights = these_require_view($context);
 $isdirector = has_capability('mod/these:direct', $context);
 if (!$rights->viewall && !$isdirector) {
@@ -72,9 +70,7 @@ if ($rights->deve) {
         return !$item['complete'] && !$item['optional'];
     }));
     if ($missing) {
-        $settingsurl = $scope->shared
-            ? new moodle_url('/mod/thesesynthesis/parameters.php', ['id' => $scope->cmid])
-            : new moodle_url('/mod/these/parameters.php', ['id' => $cm->id]);
+        $settingsurl = \mod_these\local\scopesettings::scope_urls($scope)['settings'];
         echo $renderer->render(new output\message([
             output\parts::text(get_string('settingsmissingnotice', 'mod_these', $missing) . ' '),
             output\parts::link($settingsurl, get_string('scopesettings', 'mod_these'), ''),
