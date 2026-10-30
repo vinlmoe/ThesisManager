@@ -68,10 +68,13 @@ final class dossier_table_test extends output_testcase {
             $this->links_for($director),
             $director->id
         ), ''));
-        $this->assertStringContainsString('<table class="generaltable these-dossiers">', $html);
-        $this->assertStringContainsString('<span class="badge badge-info">', $html);
-        $this->assertStringContainsString('class="btn btn-sm btn-secondary">' . get_string('open', 'mod_thesesynthesis'), $html);
-        $this->assertStringNotContainsString('btn-primary', $html);
+        $table = './/table[' . self::xclass('generaltable') . ' and ' . self::xclass('these-dossiers') . ']';
+        $this->assert_html_has($html, $table);
+        $this->assert_html_has($html, $table . '//td//span[' . self::xclass('badge') . ' and ' . self::xclass('badge-info') . ']');
+        $open = get_string('open', 'mod_thesesynthesis');
+        $button = $table . '//td//a[@href][' . self::xclass('btn-secondary') . ']';
+        $this->assert_html_has($html, $button . '[normalize-space() = "' . $open . '"]');
+        $this->assert_html_lacks($html, './/*[' . self::xclass('btn-primary') . ']');
 
         // File « À traiter » de la DEVE : l'action attendue est proposée avant « Ouvrir ».
         $deve = $this->env->deve;
@@ -83,10 +86,10 @@ final class dossier_table_test extends output_testcase {
         $html = $this->renderer()->render(new dossier_table($todo, '', true));
         $action = these_primary_action(reset($todo)->link->cm, reset($todo)->dossier, reset($todo)->link->rights);
         $this->assertNotNull($action);
-        $this->assertStringContainsString('class="btn btn-sm btn-primary mr-1 mb-1">' . $action[0], $html);
-        $this->assertSame(
-            '<div class="alert alert-info">Aucun &amp; rien</div>',
-            $this->renderer()->render(new dossier_table([], 'Aucun & rien'))
-        );
+        $primary = './/td//a[@href][' . self::xclass('btn-primary') . '][starts-with(normalize-space(), "' . $action[0] . '")]';
+        $this->assert_html_has($html, $primary . '/following::a[normalize-space() = "' . $open . '"]');
+        $empty = $this->renderer()->render(new dossier_table([], 'Aucun & rien'));
+        $this->assert_html_lacks($empty, './/table');
+        $this->assertSame(['Aucun & rien'], $this->html_texts($empty, './div[' . self::xclass('alert-info') . ']'));
     }
 }

@@ -54,8 +54,9 @@ final class planning_upcoming_test extends output_testcase {
     public function test_render(): void {
         $this->resetAfterTest();
         $html = $this->renderer()->render(new planning_upcoming(new \moodle_url('/mod/these/planning.php'), [1 => 3]));
-        $this->assertStringStartsWith('<ul>', $html);
-        $this->assertSame(1, substr_count($html, '<li><a href='));
-        $this->assertStringContainsString('</a> — ' . get_string('planningcount', 'mod_these', 3) . '</li>', $html);
+        $this->assert_html_has($html, './ul/li', 1);
+        $item = $this->assert_html_has($html, './ul/li[a[@href]]');
+        // Lien de la semaine, puis le nombre de soutenances.
+        $this->assertStringEndsWith('— ' . get_string('planningcount', 'mod_these', 3), trim($item->textContent));
     }
 }

@@ -66,13 +66,18 @@ final class detail_section_test extends output_testcase {
             'Titre' => [parts::text('<script>x</script>')],
             'Résumé' => [parts::html(format_text("ligne 1\nligne 2", FORMAT_PLAIN))],
         ]));
-        $this->assertStringStartsWith('<h4 class="mt-4">Sujet &amp; co</h4>', $html);
-        $this->assertStringContainsString('<div class="table-responsive"><table class="generaltable these-detail">', $html);
-        $this->assertStringContainsString('<td class="cell c0"><strong>Titre</strong></td>', $html);
-        $this->assertStringContainsString('&lt;script&gt;x&lt;/script&gt;', $html);
-        $this->assertStringNotContainsString('<script>', $html);
-        $this->assertStringContainsString('ligne 1<br />', $html);
-        $this->assertStringContainsString('<tr class="lastrow">', $html);
+        $this->assert_html_has($html, './*[1][self::h4][normalize-space() = "Sujet & co"]');
+        $table = './/div[' . self::xclass('table-responsive') . ']/table[' . self::xclass('generaltable') . ' and '
+            . self::xclass('these-detail') . ']';
+        $this->assert_html_has($html, $table);
+        // Libellé en gras dans la première colonne, valeur dans la seconde.
+        $this->assert_html_has($html, $table . '//tr[td[1]/strong[normalize-space() = "Titre"]]/td[2]');
+        // Texte brut : affiché tel quel, sans élément script.
+        $this->assert_html_text_contains($html, $table . '//tr/td[2]', '<script>x</script>');
+        $this->assert_html_lacks($html, './/script');
+        // HTML formaté : gardé (retour à la ligne).
+        $this->assert_html_has($html, $table . '//td[contains(., "ligne 1")]//br');
+        $this->assert_html_has($html, $table . '//tr[' . self::xclass('lastrow') . ']', 1);
         $this->assertSame('', $this->renderer()->render(new detail_section('Vide', ['a' => null])));
         $this->assertSame('', these_render_detail_section('Vide', ['a' => '']));
     }

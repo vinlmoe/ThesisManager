@@ -72,9 +72,12 @@ final class signed_documents_test extends output_testcase {
         $dossier = $this->confidential_dossier();
         $rights = these_get_rights($this->context, $dossier, $this->deve->id);
         $html = $this->renderer()->render(new signed_documents($this->cm, $this->context, $dossier, $rights));
-        $this->assertStringContainsString('<table class="generaltable these-signatures">', $html);
-        $button = 'class="btn btn-sm btn-secondary mr-1 mb-1">' . get_string('downloadpdf', 'mod_these') . '</a>';
-        $this->assertStringContainsString($button, $html);
-        $this->assertStringContainsString('<td class="header c2 lastcol"></td>', $html);
+        $table = './/table[' . self::xclass('generaltable') . ' and ' . self::xclass('these-signatures') . ']';
+        $this->assert_html_has($html, $table);
+        $download = get_string('downloadpdf', 'mod_these');
+        $button = $table . '//td//a[@href][' . self::xclass('btn') . '][normalize-space() = "' . $download . '"]';
+        $this->assert_html_has($html, $button);
+        // Colonne des boutons : sans titre.
+        $this->assert_html_has($html, '(' . $table . '//thead/tr)[1]/*[last()][not(normalize-space())]');
     }
 }

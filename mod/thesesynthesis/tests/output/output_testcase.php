@@ -20,6 +20,7 @@ defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 require_once($CFG->dirroot . '/mod/thesesynthesis/locallib.php');
+require_once($CFG->dirroot . '/mod/these/tests/html_assertions.php');
 
 /**
  * Socle des tests des composants de rendu de mod_thesesynthesis : deux promotions suivies, une thèse
@@ -31,6 +32,8 @@ require_once($CFG->dirroot . '/mod/thesesynthesis/locallib.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 abstract class output_testcase extends \advanced_testcase {
+    use \mod_these\html_assertions;
+
     /** @var string[] Marqueurs de chaque donnée qui révèle le sujet. */
     const SECRETS = [
         'title' => 'SECRETTITRE',

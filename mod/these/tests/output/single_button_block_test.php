@@ -48,9 +48,11 @@ final class single_button_block_test extends output_testcase {
     public function test_render(): void {
         $this->resetAfterTest();
         $html = $this->renderer()->render(new single_button_block(new \moodle_url('/a.php'), 'Ajouter', 'get'));
-        $this->assertStringStartsWith('<div class="mb-3">', $html);
-        $this->assertStringEndsWith('</div>', $html);
-        $this->assertMatchesRegularExpression('#<form method="get" action="https://www.example.com/moodle/a.php"#', $html);
-        $this->assertStringContainsString('Ajouter', $html);
+        // Un seul bloc, qui contient le formulaire du bouton.
+        $this->assert_html_has($html, './*', 1);
+        $form = './div//form[@method = "get"][@action = "https://www.example.com/moodle/a.php"]';
+        $this->assert_html_has($html, $form);
+        $button = '(self::button and normalize-space() = "Ajouter") or (self::input and @value = "Ajouter")';
+        $this->assert_html_has($html, $form . '//*[' . $button . ']');
     }
 }

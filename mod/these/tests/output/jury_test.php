@@ -74,9 +74,10 @@ final class jury_test extends output_testcase {
         $this->setup_activity();
         $dossier = $this->confidential_dossier();
         $html = $this->renderer()->render(new jury(these_get_jury($dossier->id)));
-        $this->assertStringStartsWith('<h4 class="mt-4">' . get_string('jury', 'mod_these') . '</h4>', $html);
-        $this->assertStringContainsString('<th class="header c0" scope="col">', $html);
-        $this->assertStringContainsString('Paul Président', $html);
+        $this->assert_html_has($html, './*[1][self::h4][normalize-space() = "' . get_string('jury', 'mod_these') . '"]');
+        // En-têtes de colonnes déclarés comme tels.
+        $this->assert_html_has($html, './/table//th[@scope = "col"]');
+        $this->assert_html_text_contains($html, './/table//td', 'Paul Président');
         $this->assertSame('', these_render_jury([]));
     }
 }

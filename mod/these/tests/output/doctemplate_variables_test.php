@@ -53,7 +53,7 @@ final class doctemplate_variables_test extends output_testcase {
         $sample = these_doctemplate_sample_context(these_settings_scope($this->these), 'subject', $this->these);
         $html = $this->renderer()->render(new doctemplate_variables($sample));
         $first = array_key_first(these_doctemplate_variables($sample));
-        $this->assertStringContainsString('<code>{{' . $first . '}}</code>', $html);
+        $this->assert_html_has($html, './/code[normalize-space() = "{{' . $first . '}}"]');
         $this->assertStringContainsString('{{{...}}}', $html);
     }
 }

@@ -69,7 +69,7 @@ final class navlinks_test extends output_testcase {
         $this->setup_activity();
         $this->setUser($this->director);
         $html = $this->renderer()->render(new navlinks($this->cm, $this->context));
-        $this->assertStringStartsWith('<div class="these-navlinks mb-3"><a href=', $html);
+        $this->assert_html_has($html, './*[1][self::div][' . self::xclass('these-navlinks') . ']/a[@href]');
         $back = \mod_these\local\backlinks::render(\mod_these\local\backlinks::activity_home($this->cm, $this->context));
         $this->assertStringContainsString('dashboard.php', $back);
         $this->assertSame($back . $html, these_render_navlinks($this->cm, $this->context));

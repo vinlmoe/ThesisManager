@@ -114,14 +114,18 @@ final class planning_test extends output_testcase {
         $defenses = $this->defenses_for($viewall);
         $html = $this->renderer()->render(new planning($defenses, false));
         $this->assertSame($html, these_render_planning($defenses, false));
-        $this->assertStringStartsWith('<h4 class="mt-4">', $html);
-        $this->assertStringContainsString('<table class="generaltable these-planning">', $html);
-        $this->assertStringContainsString('<strong>Professeur Paul Président</strong> (', $html);
-        $this->assertStringContainsString('<br /><span class="badge badge-success">', $html);
+        $this->assert_html_has($html, './*[1][self::h4]');
+        $table = './/table[' . self::xclass('generaltable') . ' and ' . self::xclass('these-planning') . ']';
+        $this->assert_html_has($html, $table);
+        // Président du jury en gras, suivi de sa qualité entre parenthèses.
+        $president = $table . '//td//strong[normalize-space() = "Professeur Paul Président"]';
+        $this->assert_html_has($html, $president . '[starts-with(normalize-space(following-sibling::text()[1]), "(")]');
+        $badge = self::xclass('badge') . ' and ' . self::xclass('badge-success');
+        $this->assert_html_has($html, $table . '//td//span[' . $badge . ']');
         $this->assert_no_secret($html);
-        $this->assertSame(
-            '<div class="alert alert-info">' . get_string('planningnone', 'mod_these') . '</div>',
-            these_render_planning([], false)
-        );
+        $empty = these_render_planning([], false);
+        $this->assert_html_lacks($empty, './/table');
+        $alert = './div[' . self::xclass('alert-info') . ']';
+        $this->assertSame([get_string('planningnone', 'mod_these')], $this->html_texts($empty, $alert));
     }
 }

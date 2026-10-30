@@ -80,15 +80,17 @@ final class signature_table_test extends output_testcase {
         $this->request_signature();
         $rows = thesesynthesis_get_signatures($this->links_for($this->env->deve), $this->env->deve)['awaited'];
         $html = $this->renderer()->render(new signature_table($rows, ''));
-        $this->assertStringContainsString('<table class="generaltable these-signatures">', $html);
-        $this->assertStringContainsString('class="btn btn-sm btn-primary">' . get_string('managesignatures', 'mod_these'), $html);
-        $this->assertStringContainsString('signatures.php?id=' . $this->env->activities[0]->these->cmid, $html);
+        $table = './/table[' . self::xclass('generaltable') . ' and ' . self::xclass('these-signatures') . ']';
+        $this->assert_html_has($html, $table);
+        // Bouton vers la gestion des signatures de l'activité.
+        $href = '/mod/these/signatures.php?id=' . $this->env->activities[0]->these->cmid;
+        $this->assert_html_has($html, $table . '//td//a[contains(@href, "' . $href . '")][' . self::xclass('btn-primary') . ']'
+            . '[starts-with(normalize-space(), "' . get_string('managesignatures', 'mod_these') . '")]');
 
         $rows[0]->knowssubject = false;
         $this->assert_no_secret($this->context_json(new signature_table($rows, '')));
-        $this->assertSame(
-            '<div class="alert alert-info">Rien</div>',
-            $this->renderer()->render(new signature_table([], 'Rien'))
-        );
+        $empty = $this->renderer()->render(new signature_table([], 'Rien'));
+        $this->assert_html_lacks($empty, './/table');
+        $this->assertSame(['Rien'], $this->html_texts($empty, './div[' . self::xclass('alert-info') . ']'));
     }
 }

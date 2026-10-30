@@ -58,7 +58,7 @@ final class juror_list_test extends output_testcase {
             'email' => '', 'status' => 'other', 'institution' => '', 'active' => 0]);
         $list = new juror_list(\mod_these\local\jurors::get_all(), new \moodle_url('/mod/these/jurors.php'));
         $html = $this->renderer()->render($list);
-        $this->assertStringContainsString('<table class="generaltable these-jurors">', $html);
+        $this->assert_html_has($html, './/table[' . self::xclass('generaltable') . ' and ' . self::xclass('these-jurors') . ']');
         $this->assertStringContainsString('DURAND &amp; CO', $html);
         $this->assertStringContainsString(get_string('juroractiveno', 'mod_these'), $html);
     }

@@ -64,7 +64,10 @@ final class question_list_test extends output_testcase {
         these_save_question($scope, (object) ['qtype' => 'text', 'label' => 'Labo', 'options' => '', 'required' => 1]);
         $url = new \moodle_url('/mod/these/questions.php', ['id' => $this->cm->id]);
         $html = $this->renderer()->render(new question_list(these_get_questions($scope), $url));
-        $this->assertStringContainsString('<table class="generaltable these-questions">', $html);
-        $this->assertStringContainsString('</a> | <a href=', $html);
+        $table = './/table[' . self::xclass('generaltable') . ' and ' . self::xclass('these-questions') . ']';
+        $this->assert_html_has($html, $table);
+        // Actions d'une question : liens séparés par « | ».
+        $this->assert_html_has($html, $table . '//a[@href][normalize-space(following-sibling::node()[1]) = "|"]'
+            . '[following-sibling::*[1][self::a]]');
     }
 }

@@ -61,8 +61,8 @@ final class embargo_test extends output_testcase {
         $dossier = $this->confidential_dossier();
         $rights = these_get_rights($this->context, $dossier, $this->viewall_user()->id);
         $html = $this->renderer()->render(new embargo($dossier, $rights));
-        $this->assertStringStartsWith('<h4 class="mt-4">' . get_string('diffusion', 'mod_these') . '</h4>', $html);
-        $this->assertStringContainsString('<span class="badge badge-warning">', $html);
+        $this->assert_html_has($html, './*[1][self::h4][normalize-space() = "' . get_string('diffusion', 'mod_these') . '"]');
+        $this->assert_html_has($html, './/span[' . self::xclass('badge') . ' and ' . self::xclass('badge-warning') . ']');
         $this->assert_no_secret($html);
         $dossier->bordereau = '';
         $this->assertSame('', these_render_embargo($dossier, $rights));

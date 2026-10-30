@@ -79,7 +79,7 @@ final class history_test extends output_testcase {
         $this->setup_activity();
         $dossier = $this->dossier_with_logs();
         $html = $this->renderer()->render(new history($dossier->id, false, false));
-        $this->assertStringContainsString('<table class="generaltable these-history">', $html);
+        $this->assert_html_has($html, './/table[' . self::xclass('generaltable') . ' and ' . self::xclass('these-history') . ']');
         $returned = strpos($html, s(get_string('logreturnedtodirector', 'mod_these')));
         $this->assertLessThan($returned, strpos($html, s(get_string('logsubjectchanged', 'mod_these'))));
         $this->assert_no_secret($html);

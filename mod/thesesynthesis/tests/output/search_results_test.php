@@ -81,13 +81,16 @@ final class search_results_test extends output_testcase {
     public function test_render(): void {
         $this->setup_env();
         $html = $this->renderer()->render($this->results_for($this->env->director));
-        $this->assertStringContainsString('<table class="generaltable these-search">', $html);
-        $this->assertStringContainsString('<details><summary>' . self::SECRETS['title'], $html);
-        $this->assertStringContainsString('</summary><div class="small mt-1"><strong>', $html);
+        $table = './/table[' . self::xclass('generaltable') . ' and ' . self::xclass('these-search') . ']';
+        $this->assert_html_has($html, $table);
+        // Titre dépliable ; le détail (libellés en gras) suit le résumé.
+        $details = $table . '//td//details[summary[starts-with(normalize-space(), "' . self::SECRETS['title'] . '")]]';
+        $this->assert_html_has($html, $details);
+        $this->assert_html_has($html, $details . '/summary/following-sibling::div[' . self::xclass('small') . ']//strong');
 
         $results = $this->results_for($this->env->teacher);
         $html = $this->renderer()->render($results);
         $this->assert_no_secret($html);
-        $this->assertStringContainsString('<em>' . get_string('confidentialtitle', 'mod_these') . '</em>', $html);
+        $this->assert_html_has($html, './/em[normalize-space() = "' . get_string('confidentialtitle', 'mod_these') . '"]');
     }
 }

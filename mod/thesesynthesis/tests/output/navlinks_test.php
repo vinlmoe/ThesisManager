@@ -68,9 +68,10 @@ final class navlinks_test extends output_testcase {
         $this->setup_env();
         $this->setUser($this->env->teacher);
         $html = $this->renderer()->render(new navlinks($this->env->cm, $this->env->context));
-        $this->assertStringStartsWith('<div class="these-navlinks mb-3"><a href=', $html);
-        $this->assertSame(3, substr_count($html, 'class="btn btn-secondary mr-1 mb-1"'));
-        $this->assertStringNotContainsString("</a>\n", $html);
+        $block = './*[1][self::div][' . self::xclass('these-navlinks') . ']';
+        $this->assert_html_has($html, $block . '/a[@href][' . self::xclass('btn') . ']', 3);
+        // Boutons collés : aucun texte, pas même un retour à la ligne, entre deux liens.
+        $this->assert_html_lacks($html, $block . '/a/following-sibling::node()[1][self::text()]');
         $back = \mod_these\local\backlinks::render(thesesynthesis_back_home($this->env->cm));
         $this->assertStringContainsString('/mod/thesesynthesis/view.php', $back);
         $this->assertSame($back . $html, thesesynthesis_render_navlinks($this->env->cm, $this->env->context));

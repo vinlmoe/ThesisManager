@@ -61,8 +61,10 @@ final class subject_history_test extends output_testcase {
         $this->setup_activity();
         $dossier = $this->confidential_dossier();
         $html = $this->renderer()->render(new subject_history($this->context, $dossier));
-        $this->assertStringContainsString('<table class="generaltable these-subjecthistory">', $html);
-        $this->assertStringContainsString('<td class="cell c4 lastcol">-</td>', $html);
+        $table = './/table[' . self::xclass('generaltable') . ' and ' . self::xclass('these-subjecthistory') . ']';
+        $this->assert_html_has($html, $table);
+        // Dernière colonne (PDF archivé) : « - » sans fichier.
+        $this->assert_html_has($html, $table . '//tbody/tr/td[last()][normalize-space() = "-"]');
         $DB->delete_records('these_subjecthistory', ['dossierid' => $dossier->id]);
         $this->assertSame('', these_render_subject_history($this->context, $dossier));
     }

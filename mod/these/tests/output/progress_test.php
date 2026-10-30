@@ -63,12 +63,16 @@ final class progress_test extends output_testcase {
     public function test_render(): void {
         $this->resetAfterTest();
         $html = $this->renderer()->render(new progress((object) ['status' => THESE_STATUS_DRAFT, 'cancelledfromstatus' => 0]));
-        $this->assertStringStartsWith('<div class="these-progress-compact d-md-none', $html);
-        $this->assertStringContainsString('<details class="these-progress-mobile d-md-none', $html);
-        $this->assertStringContainsString('<div class="d-none d-md-block">', $html);
-        $this->assertSame(2, substr_count($html, '<ol class="these-progress">'));
-        $this->assertSame(2 * count(these_progress_steps()), substr_count($html, '<li class="these-step these-step-'));
-        $this->assertSame(2, substr_count($html, '<li class="these-step-separator">'));
-        $this->assertStringContainsString('<span class="these-step-label">1. ', $html);
+        // Résumé compact et détail repliable sur petit écran, frise complète sur grand écran.
+        $small = self::xclass('d-md-none');
+        $this->assert_html_has($html, './*[1][' . self::xclass('these-progress-compact') . ' and ' . $small . ']');
+        $this->assert_html_has($html, './details[' . self::xclass('these-progress-mobile') . ' and ' . $small . ']');
+        $this->assert_html_has($html, './div[' . self::xclass('d-none') . ' and ' . self::xclass('d-md-block') . ']');
+        $this->assert_html_has($html, './/ol[' . self::xclass('these-progress') . ']', 2);
+        $this->assert_html_has($html, './/ol/li[' . self::xclass('these-step') . ']', 2 * count(these_progress_steps()));
+        $this->assert_html_has($html, './/ol/li[' . self::xclass('these-step-separator') . ']', 2);
+        $labels = $this->html_texts($html, './/li[' . self::xclass('these-step') . ']//span['
+            . self::xclass('these-step-label') . ']');
+        $this->assertStringStartsWith('1. ', $labels[0]);
     }
 }
