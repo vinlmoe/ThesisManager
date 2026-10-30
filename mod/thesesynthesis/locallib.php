@@ -136,6 +136,31 @@ function thesesynthesis_get_active_links($synthesisid, $userid) {
 }
 
 /**
+ * Étudiants et directeurs de dossiers, lus en une requête : les champs du nom, pour fullname().
+ *
+ * @param stdClass[] $dossiers
+ * @return stdClass[] userid => utilisateur (absent s'il n'existe plus).
+ */
+function thesesynthesis_load_users(array $dossiers) {
+    global $DB;
+
+    $userids = [];
+    foreach ($dossiers as $dossier) {
+        $userids[(int) $dossier->userid] = true;
+        if ($dossier->directorid) {
+            $userids[(int) $dossier->directorid] = true;
+        }
+    }
+    unset($userids[0]);
+    if (!$userids) {
+        return [];
+    }
+    [$insql, $params] = $DB->get_in_or_equal(array_keys($userids), SQL_PARAMS_NAMED);
+    $fields = 'id, email, ' . implode(', ', \core_user\fields::for_name()->get_required_fields());
+    return $DB->get_records_select('user', "id $insql", $params, '', $fields);
+}
+
+/**
  * Dossiers suivis par l'utilisateur dans les activités liées : tous ceux des activités où il voit
  * tous les dossiers (DEVE, bibliothèque), et ceux qu'il dirige ailleurs.
  *
@@ -163,14 +188,18 @@ function thesesynthesis_get_dossiers(array $links, $userid, array $filters = [])
         } else {
             continue;
         }
+        if (isset($filters['status']) && $filters['status'] !== null) {
+            $records = array_filter($records, function ($dossier) use ($filters) {
+                return (int) $dossier->status === (int) $filters['status'];
+            });
+        }
+        $users = thesesynthesis_load_users($records);
+        // Thèse confidentielle : titre masqué, et absent de la recherche, pour qui ne doit pas le
+        // connaître.
+        $knowssubjects = \mod_these\local\rights::user_knows_subjects($records, $link->context, $userid);
         foreach ($records as $dossier) {
-            if (isset($filters['status']) && $filters['status'] !== null && (int) $dossier->status !== (int) $filters['status']) {
-                continue;
-            }
-            $student = $DB->get_record('user', ['id' => $dossier->userid]);
-            // Thèse confidentielle : titre masqué, et absent de la recherche, pour qui ne doit pas le
-            // connaître.
-            $knows = these_user_knows_subject($dossier, $link->context, $userid);
+            $student = $users[(int) $dossier->userid] ?? null;
+            $knows = $knowssubjects[(int) $dossier->id];
             $search = core_text::strtolower(trim((string) ($filters['search'] ?? '')));
             if (
                 $search !== '' && strpos(core_text::strtolower(($student ? fullname($student) : '') . ' '
@@ -186,7 +215,7 @@ function thesesynthesis_get_dossiers(array $links, $userid, array $filters = [])
                 'dossier' => $dossier,
                 'link' => $link,
                 'student' => $student,
-                'director' => $dossier->directorid ? $DB->get_record('user', ['id' => $dossier->directorid]) : null,
+                'director' => $dossier->directorid ? ($users[(int) $dossier->directorid] ?? null) : null,
                 'actor' => $actor,
                 'todo' => $todo,
                 'knowssubject' => $knows,
@@ -338,14 +367,17 @@ function thesesynthesis_get_juries(array $links, stdClass $user) {
                AND (LOWER(j.email) = :email OR LOWER(r.email) = :email2)
           ORDER BY d.defensedate DESC, j.id";
     $params['cancelled'] = THESE_STATUS_CANCELLED;
+    $members = $DB->get_records_sql($sql, $params);
+    $dossiers = $members ? $DB->get_records_list('these_dossier', 'id', array_column($members, 'dossierid')) : [];
+    $users = thesesynthesis_load_users($dossiers);
     $rows = [];
-    foreach ($DB->get_records_sql($sql, $params) as $member) {
-        $dossier = $DB->get_record('these_dossier', ['id' => $member->dossierid]);
+    foreach ($members as $member) {
+        $dossier = $dossiers[(int) $member->dossierid];
         $rows[] = (object) [
             'member' => $member,
             'dossier' => $dossier,
             'link' => $byinstance[(int) $member->theseid],
-            'student' => $DB->get_record('user', ['id' => $dossier->userid]),
+            'student' => $users[(int) $dossier->userid] ?? null,
         ];
     }
     return $rows;
@@ -431,6 +463,9 @@ function thesesynthesis_search(array $links, $userid, array $filters, array $que
         if (!empty($filters['cmid']) && (int) $filters['cmid'] !== (int) $link->cm->id) {
             continue;
         }
+        // Premier tri sans requête : visibilité, statut, année. Les utilisateurs et la connaissance
+        // du sujet sont ensuite chargés en une fois pour les dossiers restants.
+        $candidates = [];
         foreach ($DB->get_records('these_dossier', ['theseid' => $link->these->id], 'timemodified DESC') as $dossier) {
             $status = (int) $dossier->status;
             $directs = $link->direct && (int) $dossier->directorid === (int) $userid;
@@ -440,17 +475,22 @@ function thesesynthesis_search(array $links, $userid, array $filters, array $que
             if (!$link->rights->viewall && !$directs && !$public) {
                 continue;
             }
-            // Thèse confidentielle dont l'utilisateur ne connaît pas le sujet : ni le sujet ni les
-            // réponses au questionnaire n'entrent dans la recherche.
-            $knows = these_user_knows_subject($dossier, $link->context, $userid);
-            if (!$knows && $answerfilters) {
-                continue;
-            }
             if (isset($filters['status']) && $filters['status'] !== null && $status !== (int) $filters['status']) {
                 continue;
             }
             $year = thesesynthesis_defense_year($dossier);
             if (!empty($filters['year']) && $year !== (int) $filters['year']) {
+                continue;
+            }
+            $candidates[(int) $dossier->id] = [$dossier, $year, $directs];
+        }
+        $users = thesesynthesis_load_users(array_column($candidates, 0));
+        $knowssubjects = \mod_these\local\rights::user_knows_subjects(array_column($candidates, 0), $link->context, $userid);
+        foreach ($candidates as [$dossier, $year, $directs]) {
+            // Thèse confidentielle dont l'utilisateur ne connaît pas le sujet : ni le sujet ni les
+            // réponses au questionnaire n'entrent dans la recherche.
+            $knows = $knowssubjects[(int) $dossier->id];
+            if (!$knows && $answerfilters) {
                 continue;
             }
             $answers = these_get_answers($dossier->id);
@@ -470,8 +510,8 @@ function thesesynthesis_search(array $links, $userid, array $filters, array $que
             if (!$matches) {
                 continue;
             }
-            $student = $DB->get_record('user', ['id' => $dossier->userid]);
-            $director = $dossier->directorid ? $DB->get_record('user', ['id' => $dossier->directorid]) : null;
+            $student = $users[(int) $dossier->userid] ?? null;
+            $director = $dossier->directorid ? ($users[(int) $dossier->directorid] ?? null) : null;
             if ($words) {
                 $haystack = [$dossier->extdirectorname, $student ? fullname($student) : '',
                     $director ? fullname($director) : ''];

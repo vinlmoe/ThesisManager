@@ -128,6 +128,62 @@ final class synthesis_test extends \advanced_testcase {
     }
 
     /**
+     * Le nombre de lectures en base ne croît pas avec le nombre de dossiers suivis : étudiants et
+     * directeurs sont chargés en une requête par activité, et la connaissance du sujet des thèses
+     * confidentielles est calculée une fois par activité, y compris pour qui n'est reconnu que par
+     * les jurys (un détenteur de viewall sans rôle de service).
+     */
+    public function test_reads_do_not_grow_with_dossiers(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $env = $this->setup_promotions();
+        $gen = $this->getDataGenerator();
+        $thesegen = $gen->get_plugin_generator('mod_these');
+        $activity = $env->activities[0];
+        $roleid = $gen->create_role(['shortname' => 'theseviewall']);
+        assign_capability('mod/these:view', CAP_ALLOW, $roleid, \context_system::instance()->id);
+        assign_capability('mod/these:viewall', CAP_ALLOW, $roleid, \context_system::instance()->id);
+        $viewall = $gen->create_user(['email' => 'viewall@example.org']);
+        $gen->enrol_user($viewall->id, $activity->course->id, $roleid);
+        accesslib_clear_all_caches_for_unit_testing();
+
+        $add = function (int $count) use ($gen, $thesegen, $env, $activity) {
+            for ($i = 0; $i < $count; $i++) {
+                $student = $gen->create_and_enrol($activity->course, 'student');
+                $dossier = $thesegen->create_dossier($activity->these, $student->id, ['directorid' => $env->director->id,
+                    'status' => THESE_STATUS_ACTIVE, 'confidential' => $i % 2]);
+                if ($i % 2) {
+                    these_save_jury($dossier->id, [(object) ['juryrole' => 'member', 'fullname' => 'Vue Totale',
+                        'jurytitle' => 'Pr', 'institution' => '', 'email' => 'viewall@example.org', 'jurorid' => 0,
+                        'jurystatus' => 'pr']]);
+                }
+            }
+        };
+        $reads = function (\stdClass $user) use ($DB, $env) {
+            $links = thesesynthesis_get_active_links($env->synthesis->id, $user->id);
+            thesesynthesis_get_dossiers($links, $user->id);
+            $before = $DB->perf_get_reads();
+            $rows = thesesynthesis_get_dossiers($links, $user->id);
+            return [$DB->perf_get_reads() - $before, count($rows)];
+        };
+
+        $add(2);
+        [$fewdeve, $count] = $reads($env->deve);
+        $this->assertSame(3, $count);
+        [$fewviewall, $count] = $reads($viewall);
+        $this->assertSame(3, $count);
+
+        $add(6);
+        [$manydeve, $count] = $reads($env->deve);
+        $this->assertSame(9, $count);
+        [$manyviewall, $count] = $reads($viewall);
+        $this->assertSame(9, $count);
+
+        $this->assertSame($fewdeve, $manydeve);
+        $this->assertSame($fewviewall, $manyviewall);
+    }
+
+    /**
      * Planning des soutenances des promotions suivies : chacun n'y voit que ce qu'il voit à la source,
      * avec la promotion de chaque étudiant.
      */
