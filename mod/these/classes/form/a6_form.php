@@ -16,10 +16,11 @@
 
 namespace mod_these\form;
 
+use mod_these\local\signatures;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/formslib.php');
-require_once($CFG->dirroot . '/mod/these/locallib.php');
 
 /**
  * Validation des études d'un étudiant, saisie par la DEVE sur sa page (voir \mod_these\local\a6) :
@@ -44,13 +45,13 @@ class a6_form extends \moodleform {
         $mform->addElement('header', 'defvheader', get_string('defvvalidation', 'mod_these'));
         $mform->setExpanded('defvheader');
         $mform->addElement('date_selector', 'defvdate', get_string('agdefvdate', 'mod_these'), ['optional' => true]);
-        $mform->addElement('select', 'defvschool', get_string('bschool', 'mod_these'), these_school_options());
+        $mform->addElement('select', 'defvschool', get_string('bschool', 'mod_these'), signatures::school_options());
         $mform->addElement('header', 'a6header', get_string('a6validation', 'mod_these'));
         $mform->setExpanded('a6header');
         $mform->addElement('advcheckbox', 'aga6notyet', '', get_string('aga6notyet', 'mod_these'));
         $mform->addElement('date_selector', 'aga6date', get_string('aga6date', 'mod_these'), ['optional' => true]);
         $mform->hideIf('aga6date', 'aga6notyet', 'checked');
-        $mform->addElement('select', 'aga6school', get_string('bschool', 'mod_these'), these_school_options());
+        $mform->addElement('select', 'aga6school', get_string('bschool', 'mod_these'), signatures::school_options());
         $mform->hideIf('aga6school', 'aga6notyet', 'checked');
 
         $this->add_action_buttons();

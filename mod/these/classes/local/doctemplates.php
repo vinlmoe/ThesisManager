@@ -79,7 +79,7 @@ class doctemplates {
     public static function doctemplate_default($type) {
         global $CFG;
 
-        if (!array_key_exists($type, these_doctemplate_types())) {
+        if (!array_key_exists($type, self::doctemplate_types())) {
             throw new coding_exception('Modèle de document inconnu : ' . $type);
         }
         return (string) file_get_contents($CFG->dirroot . '/mod/these/doctemplates/' . $type . '.html');
@@ -155,13 +155,13 @@ class doctemplates {
                     ['cmid' => $cm->id]
                 );
                 foreach ($synthesisids as $synthesisid) {
-                    if ($scope = these_synthesis_scope($synthesisid)) {
+                    if ($scope = self::synthesis_scope($synthesisid)) {
                         return $scope;
                     }
                 }
             }
         }
-        return these_local_scope($these);
+        return self::local_scope($these);
     }
 
     /**
@@ -185,8 +185,8 @@ class doctemplates {
     public static function get_doctemplate(stdClass $scope, $type) {
         global $DB;
 
-        $custom = $DB->get_field('these_doctemplate', 'content', these_scope_conditions($scope) + ['doctype' => $type]);
-        return is_string($custom) && trim($custom) !== '' ? $custom : these_doctemplate_default($type);
+        $custom = $DB->get_field('these_doctemplate', 'content', self::scope_conditions($scope) + ['doctype' => $type]);
+        return is_string($custom) && trim($custom) !== '' ? $custom : self::doctemplate_default($type);
     }
 
     /**
@@ -199,7 +199,7 @@ class doctemplates {
     public static function doctemplate_customised(stdClass $scope, $type) {
         global $DB;
 
-        return $DB->record_exists('these_doctemplate', these_scope_conditions($scope) + ['doctype' => $type]);
+        return $DB->record_exists('these_doctemplate', self::scope_conditions($scope) + ['doctype' => $type]);
     }
 
     /**
@@ -216,9 +216,9 @@ class doctemplates {
         $normalise = function ($text) {
             return trim(str_replace("\r\n", "\n", (string) $text));
         };
-        $conditions = these_scope_conditions($scope) + ['doctype' => $type];
+        $conditions = self::scope_conditions($scope) + ['doctype' => $type];
         $existing = $DB->get_record('these_doctemplate', $conditions);
-        if ($content === null || $normalise($content) === $normalise(these_doctemplate_default($type))) {
+        if ($content === null || $normalise($content) === $normalise(self::doctemplate_default($type))) {
             if ($existing) {
                 $DB->delete_records('these_doctemplate', ['id' => $existing->id]);
             }
@@ -267,7 +267,7 @@ class doctemplates {
             $fs = get_file_storage();
             foreach ($fs->get_area_files($scope->contextid, $scope->component, 'docimages', 0, 'filename', false) as $file) {
                 if (in_array($file->get_mimetype(), ['image/png', 'image/jpeg'], true)) {
-                    $images[these_doctemplate_image_name($file->get_filename())] = '@' . base64_encode($file->get_content());
+                    $images[self::doctemplate_image_name($file->get_filename())] = '@' . base64_encode($file->get_content());
                 }
             }
         }
@@ -288,7 +288,7 @@ class doctemplates {
 
         $signatures = [];
         if ($doctype !== null) {
-            foreach (these_get_signatures($dossier->id) as $signature) {
+            foreach (signatures::get_signatures($dossier->id) as $signature) {
                 if ($signature->doctype === $doctype && !empty($signature->timesigned)) {
                     $verifier = !empty($signature->verifiedby) ? $DB->get_record('user', ['id' => $signature->verifiedby]) : null;
                     $validator = !empty($signature->validatedby)
@@ -297,7 +297,7 @@ class doctemplates {
                         'name' => $signature->signername,
                         'time' => (int) $signature->timesigned,
                         'hash' => substr((string) $signature->contenthash, 0, 12),
-                        'image' => these_get_signature_image($context->id, $signature->id),
+                        'image' => signatures::get_signature_image($context->id, $signature->id),
                         'method' => (string) ($signature->method ?? 'online'),
                         'delegated' => !empty($signature->delegated),
                         'verifier' => $verifier ? fullname($verifier) : '',
@@ -312,10 +312,10 @@ class doctemplates {
             'dossier' => $dossier,
             'student' => $DB->get_record('user', ['id' => $dossier->userid]) ?: null,
             'director' => $dossier->directorid ? ($DB->get_record('user', ['id' => $dossier->directorid]) ?: null) : null,
-            'jury' => these_get_jury($dossier->id),
+            'jury' => jury::get_jury($dossier->id),
             'signatures' => $signatures,
             'recipient' => null,
-            'scope' => these_settings_scope($these),
+            'scope' => self::settings_scope($these),
         ];
     }
 
@@ -337,9 +337,9 @@ class doctemplates {
         $doctype,
         ?stdClass $recipient = null
     ) {
-        $sources = these_document_sources($these, $context, $dossier, $doctype);
+        $sources = self::document_sources($these, $context, $dossier, $doctype);
         $sources['recipient'] = $recipient;
-        return these_build_document_context($sources);
+        return self::build_document_context($sources);
     }
 
     /**
@@ -375,10 +375,10 @@ class doctemplates {
     public static function build_document_context(array $src) {
         $these = $src['these'];
         $d = $src['dossier'];
-        $b = these_get_bordereau($d);
-        $agreementdata = these_get_agreement($d);
-        $griddata = these_get_grid($d);
-        $config = scopesettings::get_all($src['scope'] ?? these_settings_scope($these));
+        $b = signatures::get_bordereau($d);
+        $agreementdata = signatures::get_agreement($d);
+        $griddata = signatures::get_grid($d);
+        $config = scopesettings::get_all($src['scope'] ?? self::settings_scope($these));
 
         $day = function ($time) {
             return (int) $time ? userdate((int) $time, get_string('strftimedatefullshort', 'langconfig')) : '';
@@ -386,7 +386,7 @@ class doctemplates {
         $up = function ($text) {
             return core_text::strtoupper(trim((string) $text));
         };
-        $schools = these_school_options();
+        $schools = signatures::school_options();
         $school = function ($key) use ($schools) {
             return (string) $key !== '' ? ($schools[$key] ?? '') : '';
         };
@@ -453,14 +453,14 @@ class doctemplates {
         ];
 
         // Thèse.
-        $keywords = these_split_keywords((string) $d->keywords);
+        $keywords = dossiers::split_keywords((string) $d->keywords);
         $abeskeywords = array_slice(array_values((array) ($b['keywords'] ?? [])), 0, signatures::BORDEREAU_KEYWORDS);
         $thesis = [
             'title' => (string) $d->title,
             'titleupper' => $up($d->title),
             'titleen' => (string) $d->titleen,
             'summary' => (string) $d->summary,
-            'summaryhtml' => these_doctemplate_text($d->summary),
+            'summaryhtml' => self::doctemplate_text($d->summary),
             'keywords' => implode(' ; ', $keywords),
             'confidential' => !empty($d->confidential),
             // Titre à imprimer sur un document destiné à des personnes qui ne connaissent pas le sujet
@@ -479,8 +479,8 @@ class doctemplates {
             'nbpages' => !empty($b['nbpages']) ? (string) (int) $b['nbpages'] : '',
             'nbrefs' => !empty($b['nbrefs']) ? (string) (int) $b['nbrefs'] : '',
             // Résumés coupés à 1700 caractères, comme l'annonce le bordereau.
-            'summaryfrhtml' => these_doctemplate_text($summary('summaryfr')),
-            'summaryenhtml' => these_doctemplate_text($summary('summaryen')),
+            'summaryfrhtml' => self::doctemplate_text($summary('summaryfr')),
+            'summaryenhtml' => self::doctemplate_text($summary('summaryen')),
         ];
         for ($i = 1; $i <= signatures::BORDEREAU_KEYWORDS; $i++) {
             $abes['kw' . $i] = (string) ($abeskeywords[$i - 1] ?? '');
@@ -497,8 +497,8 @@ class doctemplates {
             'day' => $date ? userdate($date, '%d') : '',
             'location' => (string) $d->defenselocation,
             'visio' => !empty($b['visio']),
-            'result' => these_result_label($d->defenseresult),
-            'mention' => these_mention_label($d->mention),
+            'result' => workflow::result_label($d->defenseresult),
+            'mention' => workflow::mention_label($d->mention),
             'prizeproposal' => !empty($d->prizeproposal),
             'corrections' => !empty($d->correctionsrequested),
             'correctionsnote' => (string) ($d->correctionsnote ?? ''),
@@ -526,7 +526,7 @@ class doctemplates {
 
         // Jury : liste complète, et places fixes des formulaires (président, membre de
         // l'établissement, deux autres membres, directeur, deux invités).
-        $roles = these_jury_role_options();
+        $roles = workflow::jury_role_options();
         $empty = ['role' => '', 'rolelabel' => '', 'title' => '', 'fullname' => '', 'name' => '', 'institution' => '',
             'email' => ''];
         $jury = [];
@@ -579,7 +579,7 @@ class doctemplates {
         $mark = [];
         $gridsections = [];
         $checkmark = '<span style="font-family:freeserif;">&#10003;</span>';
-        foreach (these_get_grid_items($src['scope'] ?? null) as $section => $items) {
+        foreach (signatures::get_grid_items($src['scope'] ?? null) as $section => $items) {
             $rows = [];
             foreach ($items as $key => $item) {
                 $checked = !empty($griddata[$key]);
@@ -595,7 +595,7 @@ class doctemplates {
                 'items' => $rows,
             ];
         }
-        $conclusions = these_conclusions_context((string) $d->conclusions);
+        $conclusions = self::conclusions_context((string) $d->conclusions);
 
         // Contrat de diffusion.
         $embargo = !empty($b['embargo']);
@@ -603,7 +603,7 @@ class doctemplates {
             'confidential' => !empty($d->confidential),
             'confidentialuntil' => !empty($d->confidential) ? $day($b['confidentialuntil'] ?? 0) : '',
             'embargo' => $embargo,
-            'embargountil' => $embargo ? $day(these_embargo_until($d)) : '',
+            'embargountil' => $embargo ? $day(signatures::embargo_until($d)) : '',
             'embargomonths' => $embargo ? signatures::embargo_months($b) : 0,
             'embargoreason' => $embargo ? trim((string) ($b['embargoreason'] ?? '')) : '',
             'internet' => ($b['diffusion'] ?? '') === 'internet',
@@ -624,7 +624,7 @@ class doctemplates {
             $signed[$slot] = (bool) $signature;
             $sigdate[$slot] = $signature ? $day($signature['time']) : '';
             $signer[$slot] = $signature ? (string) $signature['name'] : '';
-            $sigcaption[$slot] = $signature ? these_signature_caption($signature) : '';
+            $sigcaption[$slot] = $signature ? self::signature_caption($signature) : '';
             $sigsrc[$slot] = $signature && !empty($signature['image']) ? '@' . base64_encode($signature['image']) : '';
             $sig[$slot] = $signature ? ($sigsrc[$slot] !== '' ? '<img src="' . $sigsrc[$slot] . '" height="12mm" /><br />' : '')
                 . '<span style="font-size:6pt;color:#555555;letter-spacing:0;">'
@@ -698,7 +698,7 @@ class doctemplates {
             ],
             'establishment' => [
                 'name' => (string) $these->establishmentname,
-                'addresshtml' => these_doctemplate_text($these->establishmentaddress),
+                'addresshtml' => self::doctemplate_text($these->establishmentaddress),
                 'city' => (string) $these->establishmentcity,
                 'signatoryname' => (string) $these->signatoryname,
                 'signatorytitle' => (string) $these->signatorytitle,
@@ -732,8 +732,8 @@ class doctemplates {
             'contract' => $contract,
             'recipient' => $recipientdata,
             'box' => array_map('these_doctemplate_box', $box),
-            'checked' => these_doctemplate_box(true),
-            'unchecked' => these_doctemplate_box(false),
+            'checked' => self::doctemplate_box(true),
+            'unchecked' => self::doctemplate_box(false),
             'check' => '<span style="font-family:freeserif;">&#10003;</span>',
             'sig' => $sig,
             'sigsrc' => $sigsrc,
@@ -741,7 +741,7 @@ class doctemplates {
             'sigdate' => $sigdate,
             'signer' => $signer,
             'signed' => $signed,
-            'img' => these_doctemplate_images($src['scope'] ?? null),
+            'img' => self::doctemplate_images($src['scope'] ?? null),
         ];
     }
 
@@ -810,10 +810,10 @@ class doctemplates {
         if ($length > self::CONCLUSIONS_MAX) {
             return get_string('conclusionstoolong', 'mod_these', (object) ['max' => self::CONCLUSIONS_MAX, 'length' => $length]);
         }
-        $data = these_sample_document_context(these_settings_scope($these), $these);
-        $data['conclusions'] = these_conclusions_context((string) $text);
+        $data = self::sample_document_context(self::settings_scope($these), $these);
+        $data['conclusions'] = self::conclusions_context((string) $text);
         try {
-            $pages = \mod_these\pdf\html_document::page_count(these_render_doctemplate($these, 'conclusions', $data));
+            $pages = \mod_these\pdf\html_document::page_count(self::render_doctemplate($these, 'conclusions', $data));
         } catch (\Throwable $e) {
             return null;
         }
@@ -831,7 +831,7 @@ class doctemplates {
      * @return string Contenu PDF.
      */
     public static function render_doctemplate(stdClass $these, $type, array $data, $template = null) {
-        return these_render_scope_doctemplate(these_settings_scope($these), $type, $data, $template);
+        return self::render_scope_doctemplate(self::settings_scope($these), $type, $data, $template);
     }
 
     /**
@@ -845,9 +845,9 @@ class doctemplates {
      */
     public static function render_scope_doctemplate(?stdClass $scope, $type, array $data, $template = null) {
         return \mod_these\pdf\html_document::render(
-            $template ?? ($scope ? these_get_doctemplate($scope, $type) : these_doctemplate_default($type)),
+            $template ?? ($scope ? self::get_doctemplate($scope, $type) : self::doctemplate_default($type)),
             $data,
-            these_doctemplate_label($type)
+            self::doctemplate_label($type)
         );
     }
 
@@ -861,16 +861,16 @@ class doctemplates {
      * @return string Contenu PDF.
      */
     public static function signed_document_pdf(stdClass $these, context $context, stdClass $dossier, $doctype) {
-        if (!array_key_exists($doctype, these_document_definitions())) {
+        if (!array_key_exists($doctype, signatures::document_definitions())) {
             throw new coding_exception('Document inconnu : ' . $doctype);
         }
         // Document entièrement signé : le PDF scellé fait foi (scellé au besoin pour un document signé
         // avant l'apparition des scellés).
-        $sealed = these_seal_document($context, $dossier, $doctype);
+        $sealed = signatures::seal_document($context, $dossier, $doctype);
         if ($sealed) {
             return $sealed->get_content();
         }
-        return these_render_document_pdf($these, $context, $dossier, $doctype);
+        return self::render_document_pdf($these, $context, $dossier, $doctype);
     }
 
     /**
@@ -884,20 +884,20 @@ class doctemplates {
      * @return string Contenu PDF.
      */
     public static function render_document_pdf(stdClass $these, context $context, stdClass $dossier, $doctype) {
-        $data = these_document_context($these, $context, $dossier, $doctype);
+        $data = self::document_context($these, $context, $dossier, $doctype);
         if ($doctype !== 'contract') {
-            return these_render_doctemplate($these, $doctype, $data);
+            return self::render_doctemplate($these, $doctype, $data);
         }
 
         // Contrat de diffusion, comme les conventions de mod_stage : page de données et de choix,
         // contrat type officiel déposé dans les paramètres, page de signatures.
-        $template = these_get_contract_template($these);
+        $template = self::get_contract_template($these);
         if ($template !== null) {
             try {
-                return these_merge_pdfs([
-                    these_render_doctemplate($these, 'contractdata', $data),
+                return self::merge_pdfs([
+                    self::render_doctemplate($these, 'contractdata', $data),
                     $template,
-                    these_render_doctemplate($these, 'contractsign', $data),
+                    self::render_doctemplate($these, 'contractsign', $data),
                 ]);
             } catch (\Throwable $e) {
                 // Contrat type illisible par l'analyseur libre de FPDI (certaines compressions récentes) :
@@ -907,9 +907,9 @@ class doctemplates {
             }
         }
         $data['contract']['templatemissing'] = true;
-        return these_merge_pdfs([
-            these_render_doctemplate($these, 'contractdata', $data),
-            these_render_doctemplate($these, 'contractsign', $data),
+        return self::merge_pdfs([
+            self::render_doctemplate($these, 'contractdata', $data),
+            self::render_doctemplate($these, 'contractsign', $data),
         ]);
     }
 
@@ -921,12 +921,12 @@ class doctemplates {
      * @return string|null 'contracttemplatemissing', 'contracttemplateunreadable' ou null.
      */
     public static function contract_template_problem(stdClass $these) {
-        $template = these_get_contract_template($these);
+        $template = self::get_contract_template($these);
         if ($template === null) {
             return 'contracttemplatemissing';
         }
         try {
-            these_merge_pdfs([$template]);
+            self::merge_pdfs([$template]);
         } catch (\Throwable $e) {
             return 'contracttemplateunreadable';
         }
@@ -944,12 +944,12 @@ class doctemplates {
      */
     public static function doctemplate_sample_context(?stdClass $scope, $type, ?stdClass $activity = null) {
         if ($type === 'planning') {
-            return these_sample_planning_context($scope, $activity);
+            return planning::sample_planning_context($scope, $activity);
         }
         if ($type === 'teachinglist') {
             return jurors::sample_teaching_list_context($scope, $activity);
         }
-        return these_sample_document_context($scope, $activity);
+        return self::sample_document_context($scope, $activity);
     }
 
     /**
@@ -963,7 +963,7 @@ class doctemplates {
      */
     public static function doctemplate_error(stdClass $scope, $type, $content, ?stdClass $activity = null) {
         try {
-            these_render_scope_doctemplate($scope, $type, these_doctemplate_sample_context($scope, $type, $activity), $content);
+            self::render_scope_doctemplate($scope, $type, self::doctemplate_sample_context($scope, $type, $activity), $content);
         } catch (\Throwable $e) {
             return get_string('doctplerror', 'mod_these', $e->getMessage());
         }
@@ -1010,7 +1010,7 @@ class doctemplates {
                 . "Dernier paragraphe des conclusions, qui reste avec les signatures.",
             'reportfavorable' => 1,
             'conformitygrid' => json_encode(array_fill_keys(
-                array_merge(...array_map('array_keys', array_values(these_get_grid_items($scope)))),
+                array_merge(...array_map('array_keys', array_values(signatures::get_grid_items($scope)))),
                 1
             )),
             'agreement' => json_encode(['defvdate' => make_timestamp(2023, 7, 3), 'mobility' => 1,
@@ -1032,13 +1032,13 @@ class doctemplates {
             $jury[] = (object) ['juryrole' => $role, 'jurytitle' => $title, 'fullname' => $name, 'institution' => $institution,
                 'email' => 'jury' . $i . '@example.org'];
         }
-        $image = these_sample_signature_image();
+        $image = self::sample_signature_image();
         $signatures = [];
         foreach (['student', 'director', 'extdirector', 'deve', 'library', 'dgrep', 'dg', 'ccem', 'ucbl', 'president'] as $slot) {
-            $signatures[$slot] = ['name' => these_slot_label($slot), 'time' => $now, 'hash' => '3f2a9c51d0e4',
+            $signatures[$slot] = ['name' => signatures::slot_label($slot), 'time' => $now, 'hash' => '3f2a9c51d0e4',
                 'image' => $image];
         }
-        return these_build_document_context([
+        return self::build_document_context([
             'these' => $these,
             'dossier' => $dossier,
             'student' => (object) ['firstname' => 'Camille', 'lastname' => 'Martin', 'email' => 'camille.martin@example.org'],
@@ -1094,7 +1094,7 @@ class doctemplates {
             } else if (is_array($value) && isset($value[0]) && is_array($value[0])) {
                 $variables[$name] = get_string('doctplvarlist', 'mod_these', implode(', ', array_keys($value[0])));
             } else if (is_array($value) && !isset($value[0])) {
-                $variables += these_doctemplate_variables($value, $name . '.');
+                $variables += self::doctemplate_variables($value, $name . '.');
             } else if (is_bool($value)) {
                 $variables[$name] = get_string('doctplvarbool', 'mod_these', $value ? 'true' : 'false');
             } else if (is_scalar($value)) {
@@ -1114,7 +1114,7 @@ class doctemplates {
      * @return string|null Contenu du PDF.
      */
     public static function get_contract_template(stdClass $these) {
-        return scopesettings::contract_template(these_settings_scope($these));
+        return scopesettings::contract_template(self::settings_scope($these));
     }
 
     /**

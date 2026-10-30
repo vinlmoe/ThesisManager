@@ -307,9 +307,9 @@ class workflow {
             return true;
         }
         if ($from === THESE_STATUS_CANCELLED) {
-            return in_array($to, these_all_statuses(), true);
+            return in_array($to, self::all_statuses(), true);
         }
-        return in_array($to, these_status_transitions()[$from] ?? [], true);
+        return in_array($to, self::status_transitions()[$from] ?? [], true);
     }
 
     /**
@@ -392,7 +392,7 @@ class workflow {
      * @return string
      */
     public static function result_label($result) {
-        $options = these_result_options();
+        $options = self::result_options();
         return $options[(int) $result] ?? '-';
     }
 
@@ -416,7 +416,7 @@ class workflow {
      * @return string
      */
     public static function mention_label($mention) {
-        return these_mention_options()[(string) $mention] ?? (string) $mention;
+        return self::mention_options()[(string) $mention] ?? (string) $mention;
     }
 
     /**
@@ -426,9 +426,9 @@ class workflow {
      * @return string
      */
     public static function decision_label(stdClass $dossier) {
-        $parts = [these_result_label($dossier->defenseresult)];
+        $parts = [self::result_label($dossier->defenseresult)];
         if ((string) $dossier->mention !== '') {
-            $parts[] = get_string('mention', 'mod_these') . ' ' . core_text::strtolower(these_mention_label($dossier->mention));
+            $parts[] = get_string('mention', 'mod_these') . ' ' . core_text::strtolower(self::mention_label($dossier->mention));
         }
         if (!empty($dossier->prizeproposal)) {
             $parts[] = get_string('prizeproposal', 'mod_these');

@@ -48,18 +48,18 @@ class doctemplates_page {
 
         $type = optional_param('type', '', PARAM_ALPHA);
         $action = optional_param('action', '', PARAM_ALPHA);
-        $types = these_doctemplate_types();
+        $types = doctemplates::doctemplate_types();
         if ($type !== '' && !array_key_exists($type, $types)) {
             throw new \moodle_exception('invalidparameter', 'debug');
         }
         $sample = function () use ($scope, $activity, $type) {
-            return these_doctemplate_sample_context($scope, $type, $activity);
+            return doctemplates::doctemplate_sample_context($scope, $type, $activity);
         };
 
         // Aperçu du modèle en vigueur.
         if ($type !== '' && $action === 'preview') {
             send_file(
-                these_render_scope_doctemplate($scope, $type, $sample()),
+                doctemplates::render_scope_doctemplate($scope, $type, $sample()),
                 $type . '.pdf',
                 0,
                 0,
@@ -72,17 +72,17 @@ class doctemplates_page {
         // Retour au modèle d'origine.
         if ($type !== '' && $action === 'reset') {
             if (optional_param('confirm', 0, PARAM_BOOL) && confirm_sesskey()) {
-                these_set_doctemplate($scope, $type, null);
+                doctemplates::set_doctemplate($scope, $type, null);
                 redirect(
                     $listurl,
-                    get_string('doctplresetdone', 'mod_these', these_doctemplate_label($type)),
+                    get_string('doctplresetdone', 'mod_these', doctemplates::doctemplate_label($type)),
                     null,
                     \core\output\notification::NOTIFY_SUCCESS
                 );
             }
             echo $OUTPUT->header();
             echo $OUTPUT->confirm(
-                get_string('doctplresetconfirm', 'mod_these', these_doctemplate_label($type)),
+                get_string('doctplresetconfirm', 'mod_these', doctemplates::doctemplate_label($type)),
                 new moodle_url($listurl, ['type' => $type, 'action' => 'reset', 'confirm' => 1, 'sesskey' => sesskey()]),
                 $listurl
             );
@@ -98,12 +98,12 @@ class doctemplates_page {
                 redirect($listurl);
             }
             $mform->set_data(['id' => $listurl->get_param('id'), 'type' => $type,
-                'content' => these_get_doctemplate($scope, $type)]);
+                'content' => doctemplates::get_doctemplate($scope, $type)]);
             if ($data = $mform->get_data()) {
                 if (!empty($data->previewbutton)) {
                     // Aperçu du modèle en cours de modification, sans l'enregistrer.
                     send_file(
-                        these_render_scope_doctemplate($scope, $type, $sample(), $data->content),
+                        doctemplates::render_scope_doctemplate($scope, $type, $sample(), $data->content),
                         $type . '.pdf',
                         0,
                         0,
@@ -112,10 +112,10 @@ class doctemplates_page {
                         'application/pdf'
                     );
                 }
-                these_set_doctemplate($scope, $type, $data->content);
+                doctemplates::set_doctemplate($scope, $type, $data->content);
                 redirect(
                     $listurl,
-                    get_string('doctplsaved', 'mod_these', these_doctemplate_label($type)),
+                    get_string('doctplsaved', 'mod_these', doctemplates::doctemplate_label($type)),
                     null,
                     \core\output\notification::NOTIFY_SUCCESS
                 );
@@ -123,7 +123,7 @@ class doctemplates_page {
 
             $renderer = $PAGE->get_renderer('mod_these');
             echo $OUTPUT->header();
-            echo $OUTPUT->heading(get_string('doctemplates', 'mod_these') . ' : ' . these_doctemplate_label($type));
+            echo $OUTPUT->heading(get_string('doctemplates', 'mod_these') . ' : ' . doctemplates::doctemplate_label($type));
             echo backlinks::render(backlinks::target($listurl, get_string('doctemplates', 'mod_these')));
             echo $renderer->render(new output\message(get_string('doctplintro', 'mod_these'), 'my-3'));
             $mform->display();

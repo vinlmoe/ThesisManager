@@ -46,7 +46,7 @@ class planning {
             'cm' => $cm,
             'course' => get_course($cm->course),
             'context' => $context,
-            'rights' => these_get_rights($context, null, $userid),
+            'rights' => rights::get_rights($context, null, $userid),
             'direct' => has_capability('mod/these:direct', $context, $userid),
         ];
     }
@@ -136,7 +136,7 @@ class planning {
                 $params['directorid'] = $userid;
             }
             foreach ($DB->get_records_select('these_dossier', $where, $params, 'defensedate ASC, id ASC') as $dossier) {
-                $jury = array_values(these_get_jury($dossier->id));
+                $jury = array_values(jury::get_jury($dossier->id));
                 $president = null;
                 foreach ($jury as $member) {
                     if ($member->juryrole === 'president') {
@@ -151,7 +151,7 @@ class planning {
                     'director' => $dossier->directorid ? $DB->get_record('user', ['id' => $dossier->directorid]) : null,
                     'president' => $president,
                     'jury' => $jury,
-                    'confirmed' => these_rank_reached($dossier, THESE_STATUS_DEFENSE_VALIDATED),
+                    'confirmed' => rendering::rank_reached($dossier, THESE_STATUS_DEFENSE_VALIDATED),
                 ];
             }
         }
@@ -172,10 +172,10 @@ class planning {
      * @return int[] début de semaine => nombre de soutenances (semaines sans soutenance omises).
      */
     public static function count_defenses_by_week(array $sources, $weekstart, $weeks, $userid) {
-        $end = these_planning_shift_week($weekstart, $weeks);
+        $end = self::planning_shift_week($weekstart, $weeks);
         $counts = [];
-        foreach (these_get_defenses($sources, $weekstart, $end, $userid) as $defense) {
-            $week = these_planning_week_start((int) $defense->dossier->defensedate);
+        foreach (self::get_defenses($sources, $weekstart, $end, $userid) as $defense) {
+            $week = self::planning_week_start((int) $defense->dossier->defensedate);
             $counts[$week] = ($counts[$week] ?? 0) + 1;
         }
         return $counts;
@@ -196,7 +196,7 @@ class planning {
         $others = array_filter($defense->jury, function ($member) use ($defense) {
             return $member !== $defense->president;
         });
-        $roles = these_jury_role_options();
+        $roles = workflow::jury_role_options();
         $director = $defense->director ? fullname($defense->director) : '';
         if (!empty($dossier->externaldirector) && trim((string) $dossier->extdirectorname) !== '') {
             $director = trim((string) $dossier->extdirectorname) . ($director !== '' ? ' (' . $director . ')' : '');
@@ -207,7 +207,7 @@ class planning {
             'time' => userdate($dossier->defensedate, get_string('strftimetime', 'langconfig')),
             'student' => $defense->student ? fullname($defense->student) : '',
             'title' => format_string(
-                these_subject_field($dossier, 'title', $defense->source->context),
+                rights::subject_field($dossier, 'title', $defense->source->context),
                 true,
                 ['context' => $defense->source->context, 'escape' => false]
             ),
@@ -262,7 +262,7 @@ class planning {
     ) {
         $days = [];
         foreach ($defenses as $defense) {
-            $row = these_defense_row($defense);
+            $row = self::defense_row($defense);
             if (!$showpromotion) {
                 $row['promotion'] = '';
             }
@@ -282,7 +282,7 @@ class planning {
             'count' => count($defenses),
             'hasdefenses' => !empty($defenses),
             'days' => array_values($days),
-            'img' => these_doctemplate_images($scope),
+            'img' => doctemplates::doctemplate_images($scope),
         ];
     }
 
@@ -295,7 +295,7 @@ class planning {
      */
     public static function sample_planning_context(?stdClass $scope = null, ?stdClass $activity = null) {
         $establishment = $activity ?? (object) ['establishmentname' => 'École vétérinaire', 'establishmentcity' => 'Ville'];
-        $start = these_planning_month_start(time());
+        $start = self::planning_month_start(time());
         $sample = function ($day, $hour, $student, $title, $director, $president, $jury, $location, $confirmed) use ($start) {
             $time = $start + ($day - 1) * DAYSECS + $hour * HOURSECS;
             return [
@@ -340,7 +340,7 @@ class planning {
             'count' => 2,
             'hasdefenses' => true,
             'days' => [['label' => $first['day'], 'defenses' => [$first, $second]]],
-            'img' => these_doctemplate_images($scope),
+            'img' => doctemplates::doctemplate_images($scope),
         ];
     }
 }

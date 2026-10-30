@@ -16,10 +16,11 @@
 
 namespace mod_these\form;
 
+use mod_these\local\questionnaire;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/formslib.php');
-require_once($CFG->dirroot . '/mod/these/locallib.php');
 
 /**
  * Question du questionnaire préalable au jury : type (réponse courte, réponse longue, liste,
@@ -43,7 +44,7 @@ class question_form extends \moodleform {
         $mform->addElement('hidden', 'action', 'edit');
         $mform->setType('action', PARAM_ALPHA);
 
-        $mform->addElement('select', 'qtype', get_string('questiontype', 'mod_these'), these_question_types());
+        $mform->addElement('select', 'qtype', get_string('questiontype', 'mod_these'), questionnaire::question_types());
         $mform->addElement('textarea', 'label', get_string('questionlabel', 'mod_these'), ['rows' => 3, 'cols' => 80]);
         $mform->setType('label', PARAM_TEXT);
         $mform->addRule('label', null, 'required', null, 'client');
@@ -70,7 +71,7 @@ class question_form extends \moodleform {
         }
         if (
             in_array($data['qtype'], ['list', 'multi'], true)
-                && count(these_question_options((object) ['options' => $data['options']])) < 2
+                && count(questionnaire::question_options((object) ['options' => $data['options']])) < 2
         ) {
             $errors['options'] = get_string('questionoptionsrequired', 'mod_these');
         }

@@ -16,10 +16,11 @@
 
 namespace mod_these\form;
 
+use mod_these\local\files;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/formslib.php');
-require_once($CFG->dirroot . '/mod/these/locallib.php');
 
 /**
  * Dépôt du manuscrit corrigé par l'étudiant, après une soutenance avec corrections demandées par
@@ -46,7 +47,7 @@ class corrections_form extends \moodleform {
             'corrections',
             get_string('correctedmanuscript', 'mod_these'),
             null,
-            these_filemanager_options('corrections')
+            files::filemanager_options('corrections')
         );
         $mform->addRule('corrections', null, 'required', null, 'client');
         $mform->addElement('textarea', 'correctionsdone', get_string('correctionsdone', 'mod_these'), ['rows' => 8, 'cols' => 80]);
@@ -66,7 +67,7 @@ class corrections_form extends \moodleform {
      */
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
-        if (these_count_draft_files($data['corrections']) < 1) {
+        if (files::count_draft_files($data['corrections']) < 1) {
             $errors['corrections'] = get_string('correctedmanuscriptrequired', 'mod_these');
         }
         if (trim((string) $data['correctionsdone']) === '') {

@@ -17,6 +17,7 @@
 namespace mod_these\output;
 
 use mod_these\local\signatureagent;
+use mod_these\local\signatures;
 use mod_these\local\university;
 use moodle_url;
 use stdClass;
@@ -69,17 +70,17 @@ class external_signers implements \renderable, \templatable {
         $this->rows = [];
         // Étudiant et directeur : signature sur place seulement, pour les documents dont la signature a
         // commencé (une signature déjà apposée ou demandée) ; signataires sans compte : lien ou sur place.
-        $started = array_unique(array_column(these_get_signatures($dossier->id), 'doctype'));
-        foreach (these_inperson_slots() as $slot) {
-            $signer = these_inperson_signer($dossier, $slot);
+        $started = array_unique(array_column(signatures::get_signatures($dossier->id), 'doctype'));
+        foreach (signatures::inperson_slots() as $slot) {
+            $signer = signatures::inperson_signer($dossier, $slot);
             $internal = in_array($slot, ['student', 'director'], true);
             if ($internal && !$signer['userid']) {
                 continue;
             }
             $pending = array_filter(
-                these_pending_documents_for_slot($dossier, $slot),
+                signatures::pending_documents_for_slot($dossier, $slot),
                 function ($doctype) use ($dossier, $internal, $started) {
-                    return these_document_available($dossier, $doctype) && (!$internal || in_array($doctype, $started, true));
+                    return signatures::document_available($dossier, $doctype) && (!$internal || in_array($doctype, $started, true));
                 }
             );
             if (!$pending) {
@@ -93,7 +94,8 @@ class external_signers implements \renderable, \templatable {
                 continue;
             }
             $actions = [];
-            if (in_array($slot, these_external_slots(), true) && $signer['email'] !== '' && university::sends_link($these, $slot)) {
+            $external = in_array($slot, signatures::external_slots(), true) && $signer['email'] !== '';
+            if ($external && university::sends_link($these, $slot)) {
                 $actions[] = parts::link(
                     new moodle_url($this->pageurl, ['resend' => $slot, 'sesskey' => sesskey()]),
                     get_string('resendsignature', 'mod_these'),
@@ -106,7 +108,7 @@ class external_signers implements \renderable, \templatable {
                 'btn btn-sm btn-primary'
             );
             $this->rows[] = [
-                [parts::text(these_slot_label($slot) . ($signer['name'] !== '' ? ' — ' . $signer['name'] : ''))],
+                [parts::text(signatures::slot_label($slot) . ($signer['name'] !== '' ? ' — ' . $signer['name'] : ''))],
                 [$signer['email'] !== '' ? parts::text($signer['email'])
                     : parts::span(get_string('noemail', 'mod_these'), 'text-muted')],
                 [parts::text(implode(', ', array_map('these_document_label', $pending)))],
@@ -121,14 +123,14 @@ class external_signers implements \renderable, \templatable {
             $key = $university ? $slot : 'deve';
             if (!isset($groups[$key])) {
                 $groups[$key] = [
-                    'label' => $university ? get_string('agentuniversity', 'mod_these', these_slot_label($slot))
+                    'label' => $university ? get_string('agentuniversity', 'mod_these', signatures::slot_label($slot))
                         : get_string('agentdeve', 'mod_these'),
                     'agents' => signatureagent::agents_for_slot($these, $slot),
                     'pending' => [],
                 ];
             }
-            foreach (these_pending_documents_for_slot($dossier, $slot) as $doctype) {
-                if (these_agent_document_due($dossier, $doctype)) {
+            foreach (signatures::pending_documents_for_slot($dossier, $slot) as $doctype) {
+                if (signatureagent::agent_document_due($dossier, $doctype)) {
                     $groups[$key]['pending'][] = signatureagent::document_label($doctype, $slot);
                 }
             }

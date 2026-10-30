@@ -16,10 +16,12 @@
 
 namespace mod_these\form;
 
+use mod_these\local\dossiers;
+use mod_these\local\signatures;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/formslib.php');
-require_once($CFG->dirroot . '/mod/these/locallib.php');
 
 /**
  * Formulaire de dépôt de sujet de thèse (phase 1, étape 1), reprenant le formulaire papier de
@@ -134,7 +136,7 @@ class subject_form extends \moodleform {
             ));
         }
 
-        these_add_signature_fields($mform, $this->_customdata['signername'], get_string('signsubjectintro', 'mod_these'));
+        signatures::add_signature_fields($mform, $this->_customdata['signername'], get_string('signsubjectintro', 'mod_these'));
 
         $buttons = [];
         $buttons[] = $mform->createElement('submit', 'submitsubject', get_string($this->_customdata['submitlabel'], 'mod_these'));
@@ -210,7 +212,7 @@ class subject_form extends \moodleform {
                 $errors[$field === 'studyyear' ? 'studyyeargroup' : $field] = get_string('required');
             }
         }
-        $keywords = these_split_keywords((string) ($data['keywords'] ?? ''));
+        $keywords = dossiers::split_keywords((string) ($data['keywords'] ?? ''));
         if (!isset($errors['keywords']) && (count($keywords) < 3 || count($keywords) > 5)) {
             $errors['keywords'] = get_string('keywordscount', 'mod_these');
         }
@@ -235,6 +237,6 @@ class subject_form extends \moodleform {
                 $errors[$field] = get_string('commitrequired', 'mod_these');
             }
         }
-        return array_merge($errors, these_signature_errors($data));
+        return array_merge($errors, signatures::signature_errors($data));
     }
 }

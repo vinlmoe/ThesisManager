@@ -16,10 +16,11 @@
 
 namespace mod_these\form;
 
+use mod_these\local\settingstransfer;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/formslib.php');
-require_once($CFG->dirroot . '/mod/these/locallib.php');
 
 /**
  * Transfert des paramètres de l'activité (DEVE) : export dans un fichier, ou reprise depuis une
@@ -67,7 +68,7 @@ class settings_transfer_form extends \moodleform {
         // identifiants restent uniques.
         $prefix = $import ? '' : 'export';
         $groups = [];
-        foreach (these_settings_groups() as $group) {
+        foreach (settingstransfer::settings_groups() as $group) {
             $label = get_string('transfergroup' . $group, 'mod_these');
             $groups[] = $mform->createElement('advcheckbox', $prefix . $group, '', $label);
             $mform->setDefault($prefix . $group, 1);
@@ -93,7 +94,7 @@ class settings_transfer_form extends \moodleform {
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
         $prefix = $this->_customdata['mode'] === 'import' ? '' : 'export';
-        $chosen = array_filter(these_settings_groups(), function ($group) use ($data, $prefix) {
+        $chosen = array_filter(settingstransfer::settings_groups(), function ($group) use ($data, $prefix) {
             return !empty($data[$prefix . $group]);
         });
         if (!$chosen) {
@@ -109,7 +110,7 @@ class settings_transfer_form extends \moodleform {
             $content = self::draft_content((int) ($data['settingsfile'] ?? 0));
             if ($content === null) {
                 $errors['settingsfile'] = get_string('required');
-            } else if (these_parse_settings_file($content) === null) {
+            } else if (settingstransfer::parse_settings_file($content) === null) {
                 $errors['settingsfile'] = get_string('transferbadfile', 'mod_these');
             }
         }

@@ -122,14 +122,14 @@ class university {
         if (!$paper) {
             return [];
         }
-        $signatures = these_get_signatures($dossier->id);
+        $signatures = signatures::get_signatures($dossier->id);
         $pending = [];
-        foreach (array_keys(these_document_definitions()) as $doctype) {
-            if (!these_document_available($dossier, $doctype)) {
+        foreach (array_keys(signatures::document_definitions()) as $doctype) {
+            if (!signatures::document_available($dossier, $doctype)) {
                 continue;
             }
             $university = [];
-            foreach (these_document_slots($dossier, $doctype) as $slot) {
+            foreach (signatures::document_slots($dossier, $doctype) as $slot) {
                 if (!empty($signatures[$doctype . ':' . $slot]->timesigned)) {
                     continue;
                 }
@@ -175,11 +175,11 @@ class university {
         if ($sealed = self::get_sealed($context, $dossier->id, $doctype)) {
             return $sealed;
         }
-        these_refresh_signatures($context, $dossier);
+        signatures::refresh_signatures($context, $dossier);
         if (!isset(self::pending($dossier)[$doctype])) {
             return null;
         }
-        $pdf = these_render_document_pdf($these, $context, $dossier, $doctype);
+        $pdf = doctemplates::render_document_pdf($these, $context, $dossier, $doctype);
         $file = get_file_storage()->create_file_from_string([
             'contextid' => $context->id,
             'component' => 'mod_these',
@@ -194,7 +194,7 @@ class university {
             'universitysealed',
             $dossier->status,
             $dossier->status,
-            these_document_label($doctype) . ' — SHA-256 ' . hash('sha256', $pdf)
+            signatures::document_label($doctype) . ' — SHA-256 ' . hash('sha256', $pdf)
         );
         return $file;
     }
@@ -231,8 +231,8 @@ class university {
             $file = self::seal($these, $context, $dossier, $doctype, $userid);
             if ($file) {
                 // Pièce scellée : la date du scellement s'ajoute à son nom.
-                $files[these_document_filename($doctype, '', (int) $file->get_timecreated())] = $file;
-                $labels[] = these_document_label($doctype);
+                $files[documents::document_filename($doctype, '', (int) $file->get_timecreated())] = $file;
+                $labels[] = signatures::document_label($doctype);
             }
         }
         if (!$files) {
@@ -267,7 +267,7 @@ class university {
         $sealed = 0;
         foreach ($pending as $doctype => $slots) {
             $waiting = implode(', ', array_map('these_slot_label', $slots));
-            $item = these_document_label($doctype) . ' — ' . get_string('universitywaitingfor', 'mod_these', $waiting);
+            $item = signatures::document_label($doctype) . ' — ' . get_string('universitywaitingfor', 'mod_these', $waiting);
             if ($file = self::get_sealed($context, $dossier->id, $doctype)) {
                 $item .= ' — ' . get_string('universitysealedon', 'mod_these', userdate($file->get_timecreated(), $dateformat));
                 $sealed++;

@@ -33,10 +33,17 @@ use core_privacy\local\request\contextlist;
 use core_privacy\local\request\transform;
 use core_privacy\local\request\userlist;
 use core_privacy\local\request\writer;
+use mod_these\local\dossiers;
+use mod_these\local\jury;
+use mod_these\local\questionnaire;
+use mod_these\local\signatureagent;
+use mod_these\local\signatures;
+use mod_these\local\subjectchange;
+use mod_these\local\workflow;
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot . '/mod/these/locallib.php');
+require_once($CFG->dirroot . '/mod/these/lib.php');
 
 /**
  * Fournisseur de données personnelles de mod_these.
@@ -237,7 +244,7 @@ class provider implements
         $contextlist = new contextlist();
         $contextlist->add_from_sql(self::contexts_sql(), self::contexts_params($userid));
         // Signature enregistrée et validation de l'A6, dans le contexte de l'utilisateur.
-        if (these_get_saved_signature($userid) !== null || self::has_a6($userid)) {
+        if (signatureagent::get_saved_signature($userid) !== null || self::has_a6($userid)) {
             $contextlist->add_user_context($userid);
         }
         return $contextlist;
@@ -253,7 +260,7 @@ class provider implements
         $context = $userlist->get_context();
         if (
             $context instanceof \context_user
-                && (these_get_saved_signature($context->instanceid) !== null || self::has_a6($context->instanceid))
+                && (signatureagent::get_saved_signature($context->instanceid) !== null || self::has_a6($context->instanceid))
         ) {
             $userlist->add_user($context->instanceid);
             return;
@@ -335,7 +342,7 @@ class provider implements
             if ($dossier) {
                 $subcontext = [get_string('mydossier', 'mod_these')];
                 writer::with_context($context)->export_data($subcontext, (object) [
-                    'status' => these_status_label($dossier->status),
+                    'status' => workflow::status_label($dossier->status),
                     'title' => $dossier->title,
                     'titleen' => $dossier->titleen,
                     'summary' => $dossier->summary,
@@ -345,14 +352,14 @@ class provider implements
                     'proposeddate' => $dossier->proposeddate ? transform::datetime($dossier->proposeddate) : null,
                     'defensedate' => $dossier->defensedate ? transform::datetime($dossier->defensedate) : null,
                     'defenselocation' => $dossier->defenselocation,
-                    'defenseresult' => (int) $dossier->defenseresult ? these_result_label($dossier->defenseresult) : null,
-                    'mention' => these_mention_label($dossier->mention),
+                    'defenseresult' => (int) $dossier->defenseresult ? workflow::result_label($dossier->defenseresult) : null,
+                    'mention' => workflow::mention_label($dossier->mention),
                     'prizeproposal' => transform::yesno($dossier->prizeproposal),
                     'correctionsnote' => $dossier->correctionsnote,
                     'correctionsdone' => $dossier->correctionsdone,
                     'returncomment' => $dossier->returncomment,
                     'conclusions' => $dossier->conclusions,
-                    'personaldata' => these_get_bordereau($dossier),
+                    'personaldata' => signatures::get_bordereau($dossier),
                     'timecreated' => transform::datetime($dossier->timecreated),
                 ]);
                 $jury = array_map(function ($member) {
@@ -363,7 +370,7 @@ class provider implements
                         'institution' => $member->institution,
                         'email' => $member->email,
                     ];
-                }, these_get_jury($dossier->id));
+                }, jury::get_jury($dossier->id));
                 if ($jury) {
                     writer::with_context($context)->export_data(
                         array_merge($subcontext, [get_string('jury', 'mod_these')]),
@@ -379,7 +386,7 @@ class provider implements
                         'reason' => $entry->reason,
                         'time' => transform::datetime($entry->timecreated),
                     ];
-                }, these_get_subject_history($dossier->id)));
+                }, subjectchange::get_subject_history($dossier->id)));
                 if ($previous) {
                     writer::with_context($context)->export_data(
                         array_merge($subcontext, [get_string('subjecthistory', 'mod_these')]),
@@ -387,10 +394,10 @@ class provider implements
                     );
                 }
                 $answers = [];
-                foreach (these_get_answers($dossier->id) as $questionid => $answer) {
+                foreach (questionnaire::get_answers($dossier->id) as $questionid => $answer) {
                     $answers[] = (object) [
                         'question' => (string) $DB->get_field('these_question', 'label', ['id' => $questionid]),
-                        'answer' => these_answer_text($answer),
+                        'answer' => questionnaire::answer_text($answer),
                     ];
                 }
                 if ($answers) {
@@ -402,7 +409,7 @@ class provider implements
                 $history = array_map(function ($log) {
                     return (object) [
                         'action' => $log->logaction,
-                        'status' => these_status_label($log->tostatus),
+                        'status' => workflow::status_label($log->tostatus),
                         'remark' => $log->remark,
                         'time' => transform::datetime($log->timecreated),
                     ];
@@ -419,7 +426,7 @@ class provider implements
                     }
                 }
                 // Documents scellés, sauf ceux réservés au personnel (rapport, grille).
-                $definitions = these_document_definitions();
+                $definitions = signatures::document_definitions();
                 $sealed = get_file_storage()->get_area_files($context->id, 'mod_these', 'sealed', $dossier->id, 'filename', false);
                 foreach ($sealed as $file) {
                     $doctype = pathinfo($file->get_filename(), PATHINFO_FILENAME);
@@ -443,8 +450,8 @@ class provider implements
                 $subcontext = [get_string('signatures', 'mod_these'), $signature->id];
                 writer::with_context($context)->export_data($subcontext, (object) [
                     'dossier' => $signature->title,
-                    'document' => these_document_label($signature->doctype),
-                    'slot' => these_slot_label($signature->slot),
+                    'document' => signatures::document_label($signature->doctype),
+                    'slot' => signatures::slot_label($signature->slot),
                     'signername' => $signature->signername,
                     'ipaddress' => $signature->ipaddress,
                     'timesigned' => transform::datetime($signature->timesigned),
@@ -507,7 +514,7 @@ class provider implements
         global $DB;
 
         if ($context instanceof \context_user) {
-            these_delete_saved_signature($context->instanceid);
+            signatureagent::delete_saved_signature($context->instanceid);
             $DB->delete_records('these_a6', ['userid' => $context->instanceid]);
             return;
         }
@@ -518,7 +525,7 @@ class provider implements
         if (!$cm) {
             return;
         }
-        these_delete_dossiers($DB->get_fieldset_select('these_dossier', 'id', 'theseid = ?', [$cm->instance]), $context);
+        dossiers::delete_dossiers($DB->get_fieldset_select('these_dossier', 'id', 'theseid = ?', [$cm->instance]), $context);
     }
 
     /**
@@ -557,7 +564,7 @@ class provider implements
 
         if ($context instanceof \context_user) {
             if (in_array((int) $context->instanceid, array_map('intval', $userids), true)) {
-                these_delete_saved_signature($context->instanceid);
+                signatureagent::delete_saved_signature($context->instanceid);
                 $DB->delete_records('these_a6', ['userid' => $context->instanceid]);
             }
             return;
@@ -575,7 +582,7 @@ class provider implements
         $params = array_merge($inparams, ['theseid' => $cm->instance]);
 
         // Dossiers propres : supprimés intégralement.
-        these_delete_dossiers(
+        dossiers::delete_dossiers(
             $DB->get_fieldset_select('these_dossier', 'id', "theseid = :theseid AND userid $insql", $params),
             $context
         );
@@ -621,7 +628,7 @@ class provider implements
         foreach ($signatures as $signature) {
             get_file_storage()->delete_area_files($context->id, 'mod_these', 'signature', $signature->id);
             // Le document scellé reproduit la signature : il sera scellé de nouveau sans elle.
-            these_unseal_document($context, $signature->dossierid, $signature->doctype);
+            signatures::unseal_document($context, $signature->dossierid, $signature->doctype);
             $DB->update_record('these_signature', (object) [
                 'id' => $signature->id, 'userid' => 0, 'signername' => '', 'signeremail' => '', 'ipaddress' => '',
             ]);

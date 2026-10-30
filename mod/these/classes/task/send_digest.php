@@ -42,7 +42,7 @@ class send_digest extends \core\task\scheduled_task {
     public function execute() {
         global $CFG;
 
-        require_once($CFG->dirroot . '/mod/these/locallib.php');
+        require_once($CFG->dirroot . '/mod/these/lib.php');
         $sent = \mod_these\local\notifications::send_weekly_digests(null, function ($line) {
             mtrace('mod_these : ' . $line);
         });

@@ -16,10 +16,11 @@
 
 namespace mod_these\form;
 
+use mod_these\local\files;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/formslib.php');
-require_once($CFG->dirroot . '/mod/these/locallib.php');
 
 /**
  * Rapport du directeur sur le manuscrit : fichier déposé (rédigé à partir du modèle des paramètres du
@@ -55,7 +56,7 @@ class report_form extends \moodleform {
             'directorreport',
             get_string('directorreport', 'mod_these'),
             null,
-            these_filemanager_options('directorreport')
+            files::filemanager_options('directorreport')
         );
         $mform->addHelpButton('directorreport', 'directorreport', 'mod_these');
         $mform->addElement('advcheckbox', 'reportfavorable', '', get_string('reportfavorable', 'mod_these'));
@@ -72,7 +73,7 @@ class report_form extends \moodleform {
      */
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
-        if (these_count_draft_files($data['directorreport'] ?? 0) < 1) {
+        if (files::count_draft_files($data['directorreport'] ?? 0) < 1) {
             $errors['directorreport'] = get_string('directorreportrequired', 'mod_these');
         }
         return $errors;

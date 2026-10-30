@@ -16,10 +16,11 @@
 
 namespace mod_these\form;
 
+use mod_these\local\files;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/formslib.php');
-require_once($CFG->dirroot . '/mod/these/locallib.php');
 
 /**
  * Dépôt par la DEVE du scan d'un document signé hors du module : document, date de la signature,
@@ -72,7 +73,7 @@ class scan_form extends \moodleform {
             'scan',
             get_string('scanfiles', 'mod_these'),
             null,
-            these_filemanager_options('signedscan')
+            files::filemanager_options('signedscan')
         );
         $mform->addHelpButton('scan', 'scanfiles', 'mod_these');
         $mform->addRule('scan', null, 'required', null, 'client');
@@ -92,7 +93,7 @@ class scan_form extends \moodleform {
      */
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
-        if (these_count_draft_files($data['scan']) < 1) {
+        if (files::count_draft_files($data['scan']) < 1) {
             $errors['scan'] = get_string('scanrequired', 'mod_these');
         }
         return $errors;

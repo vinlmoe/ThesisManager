@@ -109,7 +109,7 @@ class refusal {
         $chosen = null;
         foreach ($doctypes as $doctype) {
             $step = self::creation_steps()[$doctype] ?? null;
-            if ($step && ($chosen === null || these_status_rank($step['to']) < these_status_rank($chosen['to']))) {
+            if ($step && ($chosen === null || workflow::status_rank($step['to']) < workflow::status_rank($chosen['to']))) {
                 $chosen = $step;
             }
         }
@@ -135,7 +135,7 @@ class refusal {
         if ($reason === '' || !$signatures) {
             throw new moodle_exception('refusenothing', 'mod_these');
         }
-        return these_dossier_operation($dossier, function () use ($these, $cm, $dossier, $signatures, $userid, $reason) {
+        return dossiers::dossier_operation($dossier, function () use ($these, $cm, $dossier, $signatures, $userid, $reason) {
             $step = self::return_step(array_column($signatures, 'doctype'));
             $labels = array_map(function ($signature) {
                 return signatureagent::document_label($signature->doctype, $signature->slot);
@@ -148,7 +148,7 @@ class refusal {
                 context_module::instance($cm->id),
                 $dossier,
                 $userid,
-                signatures::phase_documents(these_phase($step['to'])),
+                signatures::phase_documents(workflow::phase($step['to'])),
                 $step['keep']
             );
 
@@ -156,7 +156,7 @@ class refusal {
                 'documents' => implode(', ', $labels),
                 'reason' => $reason,
             ]);
-            $dossier = these_set_status($dossier, $step['to'], $userid, 'agentrefused', $remark, [
+            $dossier = dossiers::set_status($dossier, $step['to'], $userid, 'agentrefused', $remark, [
                 'returncomment' => $reason,
                 'returnedby' => (int) $userid,
                 'returntime' => time(),
@@ -165,9 +165,9 @@ class refusal {
 
             // Prévenus : le destinataire du renvoi, l'équipe DEVE et les comptes qui avaient validé.
             if ($step['target'] === 'student') {
-                these_notify_returned($these, $cm, $dossier, 'student', $reason);
+                notifications::notify_returned($these, $cm, $dossier, 'student', $reason);
             }
-            $recipients = these_get_service_recipients($these, context_module::instance($cm->id), 'deve');
+            $recipients = notifications::get_service_recipients($these, context_module::instance($cm->id), 'deve');
             foreach ($validators as $validatorid) {
                 $validator = \core_user::get_user($validatorid);
                 if ($validator && !$validator->deleted) {
@@ -175,13 +175,13 @@ class refusal {
                 }
             }
             $agent = \core_user::get_user($userid);
-            $vars = these_email_base_vars($these, $cm, $dossier);
+            $vars = notifications::email_base_vars($these, $cm, $dossier);
             $vars['name'] = $agent ? fullname($agent) : '';
             $vars['document'] = implode(', ', $labels);
             $vars['comment'] = $reason;
-            $vars['target'] = $step['target'] === 'student' ? these_actor_label('student') : these_actor_label('deve');
+            $vars['target'] = $step['target'] === 'student' ? workflow::actor_label('student') : workflow::actor_label('deve');
             $vars['url'] = (new moodle_url('/mod/these/dossier.php', ['id' => $cm->id, 'dossierid' => $dossier->id]))->out(false);
-            these_send_email($these, 'agentrefused', self::unique_users($recipients), $vars, '', '', $dossier);
+            notifications::send_email($these, 'agentrefused', self::unique_users($recipients), $vars, '', '', $dossier);
             return $dossier;
         });
     }

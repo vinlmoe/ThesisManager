@@ -94,13 +94,13 @@ class prerequisites {
      * @return array Liste de ['doctype' => string, 'slot' => string, 'requesttime' => int].
      */
     public static function missing(stdClass $dossier) {
-        $signatures = these_get_signatures($dossier->id);
+        $signatures = signatures::get_signatures($dossier->id);
         $missing = [];
         foreach (self::required($dossier->status) as $doctype => $required) {
-            if (!these_document_available($dossier, $doctype)) {
+            if (!signatures::document_available($dossier, $doctype)) {
                 continue;
             }
-            foreach (these_document_slots($dossier, $doctype) as $slot) {
+            foreach (signatures::document_slots($dossier, $doctype) as $slot) {
                 $wanted = $required === self::ALL
                     || ($required === self::BUT_UNIVERSITY && !in_array($slot, self::UNIVERSITY_SLOTS, true))
                     || (is_array($required) && in_array($slot, $required, true));
@@ -179,7 +179,7 @@ class prerequisites {
         $dateformat = get_string('strftimedatetimeshort', 'langconfig');
         $items = [];
         foreach ($missing as $item) {
-            $label = these_document_label($item['doctype']) . ' — ' . these_slot_label($item['slot']);
+            $label = signatures::document_label($item['doctype']) . ' — ' . signatures::slot_label($item['slot']);
             if ($item['requesttime']) {
                 $label .= ' (' . get_string('signaturerequestedon', 'mod_these', userdate($item['requesttime'], $dateformat)) . ')';
             }
@@ -190,7 +190,7 @@ class prerequisites {
             \mod_these\output\parts::strong(get_string($paper ? 'prerequisitesuniversity' : 'prerequisitesmissing', 'mod_these')),
             \mod_these\output\parts::html($PAGE->get_renderer('mod_these')->render(new \mod_these\output\bullet_list($items))),
         ];
-        if (these_get_rights($context, $dossier, $USER->id)->deve) {
+        if (rights::get_rights($context, $dossier, $USER->id)->deve) {
             $params = ['id' => $cm->id, 'dossierid' => $dossier->id];
             $parts[] = \mod_these\output\parts::link(
                 new moodle_url('/mod/these/signatures.php', $params),

@@ -199,16 +199,16 @@ class notifications {
      * @return stdClass {subject, body}
      */
     public static function resolve_email_text($theseid, $emailkey, array $vars) {
-        $definition = these_get_email_definitions()[$emailkey];
-        $custom = these_get_custom_email_template($theseid, $emailkey);
+        $definition = self::get_email_definitions()[$emailkey];
+        $custom = self::get_custom_email_template($theseid, $emailkey);
 
         if ($custom && trim((string) $custom->subject) !== '') {
-            $subject = these_render_email_placeholders($custom->subject, $vars);
+            $subject = self::render_email_placeholders($custom->subject, $vars);
         } else {
             $subject = get_string($definition['subjectstring'], 'mod_these', (object) $vars);
         }
         if ($custom && trim((string) $custom->body) !== '') {
-            $body = these_render_email_placeholders($custom->body, $vars);
+            $body = self::render_email_placeholders($custom->body, $vars);
         } else {
             $body = get_string($definition['bodystring'], 'mod_these', (object) $vars);
         }
@@ -257,7 +257,7 @@ class notifications {
     public static function get_service_recipients(stdClass $these, context $context, $actor) {
         $email = $actor === 'deve' ? trim((string) $these->deveemail) : trim((string) $these->libraryemail);
         if ($email !== '') {
-            return [these_make_external_user($email, these_actor_label($actor))];
+            return [self::make_external_user($email, workflow::actor_label($actor))];
         }
         $capability = $actor === 'deve' ? 'mod/these:managedeve' : 'mod/these:managelibrary';
         $users = get_enrolled_users($context, $capability, 0, 'u.*', null, 0, 0, true);
@@ -280,7 +280,7 @@ class notifications {
     public static function get_actor_recipients(stdClass $these, context $context, stdClass $dossier) {
         global $DB;
 
-        $actor = these_step_actor($dossier->status);
+        $actor = workflow::step_actor($dossier->status);
         if ($actor === 'student') {
             $user = $DB->get_record('user', ['id' => $dossier->userid, 'deleted' => 0]);
             return $user ? [$user] : [];
@@ -290,7 +290,7 @@ class notifications {
             return $user ? [$user] : [];
         }
         if ($actor === 'deve' || $actor === 'library') {
-            return these_get_service_recipients($these, $context, $actor);
+            return self::get_service_recipients($these, $context, $actor);
         }
         return [];
     }
@@ -341,15 +341,15 @@ class notifications {
         ?stdClass $dossier = null
     ) {
         $noreply = core_user::get_noreply_user();
-        $text = these_resolve_email_text($these->id, $emailkey, $vars);
+        $text = self::resolve_email_text($these->id, $emailkey, $vars);
         $masked = null;
         $sent = 0;
         foreach ($recipients as $recipient) {
             $message = $text;
-            if ($dossier !== null && !these_recipient_knows_subject($these, $dossier, $recipient)) {
+            if ($dossier !== null && !self::recipient_knows_subject($these, $dossier, $recipient)) {
                 if ($masked === null) {
                     $hidden = get_string('confidentialtitle', 'mod_these');
-                    $masked = these_resolve_email_text($these->id, $emailkey, array_merge($vars, array_intersect_key(
+                    $masked = self::resolve_email_text($these->id, $emailkey, array_merge($vars, array_intersect_key(
                         ['title' => $hidden, 'oldtitle' => $hidden],
                         $vars
                     )));
@@ -381,7 +381,7 @@ class notifications {
         }
         if ((int) $recipient->id > 0) {
             $cm = get_coursemodule_from_instance('these', $these->id, 0, false, MUST_EXIST);
-            return these_user_knows_subject($dossier, context_module::instance($cm->id), $recipient->id);
+            return rights::user_knows_subject($dossier, context_module::instance($cm->id), $recipient->id);
         }
         $email = core_text::strtolower(trim((string) $recipient->email));
         if ($email === '') {
@@ -391,10 +391,10 @@ class notifications {
         foreach (['deveemail', 'libraryemail', 'universityemail'] as $field) {
             $known[] = (string) ($these->$field ?? '');
         }
-        foreach (these_get_jury($dossier->id) as $member) {
+        foreach (jury::get_jury($dossier->id) as $member) {
             $known[] = (string) $member->email;
         }
-        foreach (these_external_signers($dossier) as $signer) {
+        foreach (signatures::external_signers($dossier) as $signer) {
             $known[] = (string) $signer['email'];
         }
         foreach ($known as $candidate) {
@@ -415,13 +415,13 @@ class notifications {
      */
     public static function notify_actor(stdClass $these, stdClass $cm, stdClass $dossier) {
         $context = context_module::instance($cm->id);
-        $recipients = these_get_actor_recipients($these, $context, $dossier);
+        $recipients = self::get_actor_recipients($these, $context, $dossier);
         if (empty($recipients)) {
             return 0;
         }
-        $vars = these_email_base_vars($these, $cm, $dossier);
-        $vars['status'] = these_status_label($dossier->status);
-        return these_send_email($these, 'actionrequired', $recipients, $vars, '', '', $dossier);
+        $vars = self::email_base_vars($these, $cm, $dossier);
+        $vars['status'] = workflow::status_label($dossier->status);
+        return self::send_email($these, 'actionrequired', $recipients, $vars, '', '', $dossier);
     }
 
     /**
@@ -442,9 +442,9 @@ class notifications {
         if (!$user) {
             return 0;
         }
-        $vars = these_email_base_vars($these, $cm, $dossier);
+        $vars = self::email_base_vars($these, $cm, $dossier);
         $vars['comment'] = $comment;
-        return these_send_email($these, 'returned', [$user], $vars, '', '', $dossier);
+        return self::send_email($these, 'returned', [$user], $vars, '', '', $dossier);
     }
 
     /**
@@ -456,8 +456,8 @@ class notifications {
      * @return int
      */
     public static function notify_subject_active(stdClass $these, stdClass $cm, stdClass $dossier) {
-        $vars = these_email_base_vars($these, $cm, $dossier);
-        return these_send_email($these, 'subjectactive', these_get_student_and_director($dossier), $vars, '', '', $dossier);
+        $vars = self::email_base_vars($these, $cm, $dossier);
+        return self::send_email($these, 'subjectactive', self::get_student_and_director($dossier), $vars, '', '', $dossier);
     }
 
     /**
@@ -469,9 +469,9 @@ class notifications {
      * @return int
      */
     public static function notify_closed(stdClass $these, stdClass $cm, stdClass $dossier) {
-        $vars = these_email_base_vars($these, $cm, $dossier);
-        $vars['result'] = these_decision_label($dossier);
-        return these_send_email($these, 'closed', these_get_student_and_director($dossier), $vars, '', '', $dossier);
+        $vars = self::email_base_vars($these, $cm, $dossier);
+        $vars['result'] = workflow::decision_label($dossier);
+        return self::send_email($these, 'closed', self::get_student_and_director($dossier), $vars, '', '', $dossier);
     }
 
     /**
@@ -533,19 +533,19 @@ class notifications {
         global $DB;
 
         $context = context_module::instance($cm->id);
-        $recipients = these_get_actor_recipients($these, $context, $dossier);
+        $recipients = self::get_actor_recipients($these, $context, $dossier);
         if (empty($recipients)) {
             return false;
         }
-        $vars = these_email_base_vars($these, $cm, $dossier);
-        $vars['status'] = these_status_label($dossier->status);
+        $vars = self::email_base_vars($these, $cm, $dossier);
+        $vars['status'] = workflow::status_label($dossier->status);
         $vars['days'] = (int) floor((time() - $dossier->statustime) / DAYSECS);
-        if (!these_send_email($these, 'reminder', $recipients, $vars, '', '', $dossier)) {
+        if (!self::send_email($these, 'reminder', $recipients, $vars, '', '', $dossier)) {
             return false;
         }
         $DB->set_field('these_dossier', 'remindertime', time(), ['id' => $dossier->id]);
-        $actor = these_actor_label(these_step_actor($dossier->status));
-        these_log($dossier->id, 0, 'reminded', $dossier->status, $dossier->status, $actor);
+        $actor = workflow::actor_label(workflow::step_actor($dossier->status));
+        dossiers::log($dossier->id, 0, 'reminded', $dossier->status, $dossier->status, $actor);
         return true;
     }
 
@@ -593,25 +593,26 @@ class notifications {
             if (!$cm) {
                 continue;
             }
-            $available = array_values(array_filter(array_keys(these_document_definitions()), function ($doctype) use ($dossier) {
-                return these_document_available($dossier, $doctype);
+            $doctypes = array_keys(signatures::document_definitions());
+            $available = array_values(array_filter($doctypes, function ($doctype) use ($dossier) {
+                return signatures::document_available($dossier, $doctype);
             }));
-            $signers = these_external_signers($dossier);
+            $signers = signatures::external_signers($dossier);
             foreach (array_keys($slots) as $slot) {
                 $email = (string) ($signers[$slot]['email'] ?? '');
                 // Seuls les documents déjà demandés sont relancés (voir signatures::requested_documents_for_slot()).
                 $requested = isset($signers[$slot]) ? signatures::requested_documents_for_slot($dossier, $slot, $available) : [];
                 if (
                     $requested && $email !== '' && validate_email($email)
-                        && these_request_signature($these, $cm, $dossier, $slot, $requested) !== null
+                        && signatures::request_signature($these, $cm, $dossier, $slot, $requested) !== null
                 ) {
                     $sent++;
-                    $trace("Dossier $dossierid : signataire " . these_slot_label($slot) . " relancé ($email).");
+                    $trace("Dossier $dossierid : signataire " . signatures::slot_label($slot) . " relancé ($email).");
                 }
             }
             if (
                 array_intersect(array_keys($slots), signatureagent::slots_for($these))
-                    && these_request_agent_signatures($these, $cm, $dossier, $available) > 0
+                    && signatureagent::request_agent_signatures($these, $cm, $dossier, $available) > 0
             ) {
                 $sent++;
                 $trace("Dossier $dossierid : agents DEVE signataires relancés.");
@@ -638,8 +639,8 @@ class notifications {
             return $user ? fullname($user) : '-';
         };
         $content = ['todo' => [], 'signatures' => [], 'defenses' => [], 'conflicts' => []];
-        foreach (these_get_dossiers($these->id, ['queue' => ['deve']]) as $dossier) {
-            $content['todo'][] = $name($dossier->userid) . ' : ' . these_status_label($dossier->status);
+        foreach (rendering::get_dossiers($these->id, ['queue' => ['deve']]) as $dossier) {
+            $content['todo'][] = $name($dossier->userid) . ' : ' . workflow::status_label($dossier->status);
         }
         $signatures = $DB->get_records_sql(
             "SELECT s.id, s.dossierid, s.doctype, s.slot, d.userid
@@ -652,8 +653,8 @@ class notifications {
                 'closed' => THESE_STATUS_CLOSED]
         );
         foreach ($signatures as $signature) {
-            $content['signatures'][] = $name($signature->userid) . ' : ' . these_document_label($signature->doctype)
-                . ' (' . these_slot_label($signature->slot) . ')';
+            $content['signatures'][] = $name($signature->userid) . ' : ' . signatures::document_label($signature->doctype)
+                . ' (' . signatures::slot_label($signature->slot) . ')';
         }
         $dateformat = get_string('strftimedaydatetime', 'langconfig');
         $upcoming = $DB->get_records_select(
@@ -667,8 +668,8 @@ class notifications {
                 $content['defenses'][] = userdate($dossier->defensedate, $dateformat) . ' : ' . $name($dossier->userid)
                     . (trim((string) $dossier->defenselocation) !== '' ? ' (' . $dossier->defenselocation . ')' : '');
             }
-            $jury = count(these_jury_conflicts($dossier));
-            $rooms = count(these_room_conflicts($dossier));
+            $jury = count(jury::jury_conflicts($dossier));
+            $rooms = count(jury::room_conflicts($dossier));
             if ($jury || $rooms) {
                 $content['conflicts'][] = $name($dossier->userid) . ', ' . userdate($dossier->defensedate, $dateformat) . ' : '
                     . get_string('digestconflicts', 'mod_these', (object) ['jury' => $jury, 'rooms' => $rooms]);
@@ -722,7 +723,7 @@ class notifications {
                 'url' => (new moodle_url('/mod/these/dashboard.php', ['id' => $cm->id]))->out(false),
             ];
             $context = context_module::instance($cm->id);
-            if (these_send_email($these, 'digest', these_get_service_recipients($these, $context, 'deve'), $vars)) {
+            if (self::send_email($these, 'digest', self::get_service_recipients($these, $context, 'deve'), $vars)) {
                 set_config('lastdigest' . $these->id, $now, 'mod_these');
                 $sent++;
                 $trace("$name : récapitulatif envoyé à la DEVE.");

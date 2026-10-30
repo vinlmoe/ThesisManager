@@ -116,7 +116,7 @@ class signatureagent {
      */
     public static function slots_for(stdClass $these) {
         return array_merge(
-            these_agent_slots(),
+            self::agent_slots(),
             self::signs_dg_by_delegation($these) ? ['dg'] : [],
             university::delegated_slots($these)
         );
@@ -134,7 +134,7 @@ class signatureagent {
         if (in_array($slot, prerequisites::UNIVERSITY_SLOTS, true)) {
             return university::agents($these, $slot);
         }
-        return these_deve_agents($these);
+        return self::deve_agents($these);
     }
 
     /**
@@ -177,7 +177,7 @@ class signatureagent {
      * @return string
      */
     public static function document_label($doctype, $slot) {
-        return these_document_label($doctype) . ' (' . these_slot_label($slot)
+        return signatures::document_label($doctype) . ' (' . signatures::slot_label($slot)
             . (self::delegated_slot($slot) ? ', ' . get_string('signeddelegated', 'mod_these') : '') . ')';
     }
 
@@ -205,10 +205,10 @@ class signatureagent {
      * @return bool
      */
     public static function signs_slot_at_validation($slot, $userid, stdClass $these) {
-        if (!in_array($slot, these_agent_slots(), true)) {
+        if (!in_array($slot, self::agent_slots(), true)) {
             return true;
         }
-        $agents = these_deve_agents($these);
+        $agents = self::deve_agents($these);
         return !$agents || isset($agents[(int) $userid]);
     }
 
@@ -230,8 +230,8 @@ class signatureagent {
             'contract' => THESE_STATUS_DEFENSE_VALIDATED,
             'conclusions' => THESE_STATUS_DEFENSE_VALIDATED,
         ];
-        return isset($after[$doctype]) && these_document_available($dossier, $doctype)
-            && these_rank_reached($dossier, $after[$doctype]);
+        return isset($after[$doctype]) && signatures::document_available($dossier, $doctype)
+            && rendering::rank_reached($dossier, $after[$doctype]);
     }
 
     /**
@@ -269,8 +269,8 @@ class signatureagent {
                 continue;
             }
             $single = count($agents) === 1 ? reset($agents) : null;
-            foreach (these_pending_documents_for_slot($dossier, $slot, $doctypes) as $doctype) {
-                if (!these_agent_document_due($dossier, $doctype)) {
+            foreach (signatures::pending_documents_for_slot($dossier, $slot, $doctypes) as $doctype) {
+                if (!self::agent_document_due($dossier, $doctype)) {
                     continue;
                 }
                 $signature = $DB->get_record(
@@ -316,17 +316,17 @@ class signatureagent {
                 $recipients[$agent->id]['labels'] = array_merge($recipients[$agent->id]['labels'] ?? [], $labels[$slot]);
             }
         }
-        $vars = these_email_base_vars($these, $cm, $dossier);
+        $vars = notifications::email_base_vars($these, $cm, $dossier);
         $vars['url'] = (new moodle_url('/mod/these/mysignatures.php'))->out(false);
         foreach ($recipients as $recipient) {
             $vars['name'] = fullname($recipient['user']);
             $vars['document'] = implode(', ', $recipient['labels']) . ($validated !== '' ? ' — ' . $validated : '');
-            these_send_email($these, 'agentsignature', [$recipient['user']], $vars, '', '', $dossier);
+            notifications::send_email($these, 'agentsignature', [$recipient['user']], $vars, '', '', $dossier);
         }
         foreach ($slotagents as $slot => $agents) {
             $actor = in_array($slot, prerequisites::UNIVERSITY_SLOTS, true)
-                ? get_string('agentuniversity', 'mod_these', these_slot_label($slot)) : get_string('agentdeve', 'mod_these');
-            these_log(
+                ? get_string('agentuniversity', 'mod_these', signatures::slot_label($slot)) : get_string('agentdeve', 'mod_these');
+            dossiers::log(
                 $dossier->id,
                 0,
                 'signaturerequested',
@@ -355,7 +355,7 @@ class signatureagent {
 
         // Les agents sont désignés par activité : les signatures d'agent sont toutes lues, puis
         // gardées pour les activités dont l'utilisateur est agent.
-        $agentslots = array_merge(these_agent_slots(), ['dg'], prerequisites::UNIVERSITY_SLOTS);
+        $agentslots = array_merge(self::agent_slots(), ['dg'], prerequisites::UNIVERSITY_SLOTS);
         $params = ['userid' => $user->id];
         [$slotsql, $slotparams] = $DB->get_in_or_equal($agentslots, SQL_PARAMS_NAMED, 'agentslot');
         $agentsql = " OR (s.token IS NULL AND s.slot $slotsql)";
@@ -374,7 +374,7 @@ class signatureagent {
         foreach ($records as $signature) {
             $dossier = $DB->get_record('these_dossier', ['id' => $signature->dossierid]);
             $cm = $dossier ? get_coursemodule_from_instance('these', $dossier->theseid, 0, false, IGNORE_MISSING) : null;
-            if (!$cm || !these_document_available($dossier, $signature->doctype)) {
+            if (!$cm || !signatures::document_available($dossier, $signature->doctype)) {
                 continue;
             }
             $these = $DB->get_record('these', ['id' => $dossier->theseid]);
@@ -387,7 +387,7 @@ class signatureagent {
                 }
                 $agents = self::agents_for_slot($these, $signature->slot);
                 $allowed = $agents ? isset($agents[(int) $user->id]) : (int) $signature->userid === (int) $user->id;
-                if (!$allowed || !these_agent_document_due($dossier, $signature->doctype)) {
+                if (!$allowed || !self::agent_document_due($dossier, $signature->doctype)) {
                     continue;
                 }
             }

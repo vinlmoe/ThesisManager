@@ -333,7 +333,7 @@ class scopesettings {
      * @return array
      */
     public static function for_these(stdClass $these) {
-        return self::get_all(these_settings_scope($these));
+        return self::get_all(doctemplates::settings_scope($these));
     }
 
     /**
@@ -366,7 +366,7 @@ class scopesettings {
                 $cm = get_coursemodule_from_id('', $context->instanceid, 0, false, IGNORE_MISSING);
                 if ($cm && $cm->modname === 'these' && ($these = $DB->get_record('these', ['id' => $cm->instance]))) {
                     $values = self::for_these($these);
-                } else if ($cm && $cm->modname === 'thesesynthesis' && ($scope = these_synthesis_scope($cm->instance))) {
+                } else if ($cm && $cm->modname === 'thesesynthesis' && ($scope = doctemplates::synthesis_scope($cm->instance))) {
                     $values = self::get_all($scope);
                 }
             }
@@ -465,7 +465,7 @@ class scopesettings {
             ['settingscheckrooms', (bool) self::rooms($values), false, null],
             ['settingscheckagents', $filled(['deveagent']), false, null],
             ['settingschecklibraryagents', $filled(['libraryagent']), true, null],
-            ['settingscheckquestions', (bool) these_get_questions($scope), true, $page('questions.php')],
+            ['settingscheckquestions', (bool) questionnaire::get_questions($scope), true, $page('questions.php')],
         ];
         $list = [];
         foreach ($items as [$key, $complete, $optional, $url]) {

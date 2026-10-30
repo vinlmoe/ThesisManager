@@ -513,7 +513,7 @@ class jurors {
             }, $groups)),
             'hasmembers' => !empty($groups),
             'groups' => $groups,
-            'img' => these_doctemplate_images($scope),
+            'img' => doctemplates::doctemplate_images($scope),
         ];
     }
 

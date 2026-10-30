@@ -18,6 +18,9 @@ namespace mod_these\output;
 
 use context;
 use mod_these\local\dossiers;
+use mod_these\local\rendering;
+use mod_these\local\rights;
+use mod_these\local\workflow;
 use moodle_url;
 use stdClass;
 
@@ -103,7 +106,7 @@ class dossier implements \renderable, \templatable {
      * @return array|null
      */
     protected function files(string $filearea, \renderer_base $output): ?array {
-        if (!these_can_view_filearea($filearea, $this->rights)) {
+        if (!rights::can_view_filearea($filearea, $this->rights)) {
             return null;
         }
         $links = new file_links($this->context, $filearea, $this->dossier->id);
@@ -180,9 +183,9 @@ class dossier implements \renderable, \templatable {
             get_string('generateddocuments', 'mod_these') => $this->files('generated', $output),
             get_string('signedscans', 'mod_these') => $this->files('signedscan', $output),
         ];
-        if ($status === THESE_STATUS_CLOSED || these_in_corrections($status)) {
-            $rows[get_string('defenseresult', 'mod_these')] = self::text(these_result_label($dossier->defenseresult));
-            $rows[get_string('mention', 'mod_these')] = self::text(these_mention_label($dossier->mention));
+        if ($status === THESE_STATUS_CLOSED || workflow::in_corrections($status)) {
+            $rows[get_string('defenseresult', 'mod_these')] = self::text(workflow::result_label($dossier->defenseresult));
+            $rows[get_string('mention', 'mod_these')] = self::text(workflow::mention_label($dossier->mention));
             $rows[get_string('prizeproposal', 'mod_these')] = $dossier->prizeproposal ? [parts::text(get_string('yes'))] : null;
             $rows[get_string('minutes', 'mod_these')] = $this->files('pv', $output);
         }
@@ -246,14 +249,14 @@ class dossier implements \renderable, \templatable {
         $knows = $rights->knowssubject;
         $involved = $rights->viewall || $rights->director || $rights->owner;
 
-        $actor = these_step_actor($status);
+        $actor = workflow::step_actor($status);
         $waiting = false;
         if ($actor !== null) {
-            $waiting = get_string('waitingfor', 'mod_these', these_actor_label($actor)) . ' — '
+            $waiting = get_string('waitingfor', 'mod_these', workflow::actor_label($actor)) . ' — '
                 . get_string('since', 'mod_these', userdate($dossier->statustime, get_string('strftimedate', 'langconfig')));
         }
         $adjourned = false;
-        if (these_is_adjourned($dossier)) {
+        if (dossiers::is_adjourned($dossier)) {
             $adjourned = get_string(
                 $rights->student ? 'adjournednoticestudent' : 'adjournednotice',
                 'mod_these',
@@ -262,7 +265,7 @@ class dossier implements \renderable, \templatable {
         }
         $actionbar = false;
         if ($this->withactions) {
-            $actions = new actions(these_get_dossier_actions($this->cm, $dossier, $rights), 'btn btn-primary mr-1 mb-1');
+            $actions = new actions(rendering::get_dossier_actions($this->cm, $dossier, $rights), 'btn btn-primary mr-1 mb-1');
             $actionbar = $actions->is_empty() ? false : $actions->export_for_template($output);
         }
 
@@ -299,10 +302,10 @@ class dossier implements \renderable, \templatable {
             'roomconflicts' => '',
         ];
 
-        if (these_rank_reached($dossier, THESE_STATUS_ACTIVE) || $dossier->proposeddate) {
+        if (rendering::rank_reached($dossier, THESE_STATUS_ACTIVE) || $dossier->proposeddate) {
             $data['defense'] = $this->defense_section($output)->export_for_template($output);
             // Salle déjà occupée sur le créneau, pour le personnel : au-dessus de la soutenance.
-            $data['roomconflicts'] = $rights->viewall ? these_render_room_conflicts($dossier) : '';
+            $data['roomconflicts'] = $rights->viewall ? \mod_these\local\jury::render_room_conflicts($dossier) : '';
             if (!empty($dossier->correctionsrequested)) {
                 $data['corrections'] = $this->corrections_section($output)->export_for_template($output);
             }
@@ -310,9 +313,10 @@ class dossier implements \renderable, \templatable {
                 $data['answers'] = \mod_these\local\questionnaire::answers_section((object) ['id' => $dossier->theseid], $dossier)
                     ->export_for_template($output);
             }
-            $data['jury'] = (new jury(these_get_jury($dossier->id), $involved, $rights->deve))->export_for_template($output);
+            $members = \mod_these\local\jury::get_jury($dossier->id);
+            $data['jury'] = (new jury($members, $involved, $rights->deve))->export_for_template($output);
             // Conflits de jury, pour le personnel : au-dessus du tableau du jury.
-            $data['jury']['conflicts'] = $rights->viewall ? these_render_jury_conflicts($dossier) : '';
+            $data['jury']['conflicts'] = $rights->viewall ? \mod_these\local\jury::render_jury_conflicts($dossier) : '';
             $juryvalidated = $status >= THESE_STATUS_DEFENSE_VALIDATED && $status < THESE_STATUS_CLOSED;
             if ($rights->deve && $juryvalidated) {
                 $url = new moodle_url('/mod/these/jurynotify.php', [

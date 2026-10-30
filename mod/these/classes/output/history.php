@@ -16,6 +16,8 @@
 
 namespace mod_these\output;
 
+use mod_these\local\workflow;
+
 /**
  * Historique d'un dossier.
  *
@@ -80,7 +82,7 @@ class history implements \renderable, \templatable {
                 [parts::text($strman->string_exists($actionkey, 'mod_these')
                     ? get_string($actionkey, 'mod_these') : $log->logaction)],
                 [parts::text($by)],
-                [parts::text(these_status_label($log->tostatus))],
+                [parts::text(workflow::status_label($log->tostatus))],
                 $showremark ? [parts::html(format_text((string) $log->remark, FORMAT_PLAIN))] : [],
             ];
         }

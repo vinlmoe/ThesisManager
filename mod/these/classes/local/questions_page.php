@@ -45,19 +45,19 @@ class questions_page {
 
         $action = optional_param('action', '', PARAM_ALPHA);
         $questionid = optional_param('questionid', 0, PARAM_INT);
-        $questions = these_get_questions($scope);
+        $questions = questionnaire::get_questions($scope);
         if ($questionid && !isset($questions[$questionid])) {
             throw new \moodle_exception('invalidrecord', 'error', '', 'these_question');
         }
 
         if (($action === 'up' || $action === 'down') && confirm_sesskey()) {
-            these_move_question($scope, $questionid, $action === 'up' ? -1 : 1);
+            questionnaire::move_question($scope, $questionid, $action === 'up' ? -1 : 1);
             redirect($listurl);
         }
 
         if ($action === 'delete') {
             if (optional_param('confirm', 0, PARAM_BOOL) && confirm_sesskey()) {
-                these_delete_question($scope, $questionid);
+                questionnaire::delete_question($scope, $questionid);
                 redirect($listurl, get_string('questiondeleted', 'mod_these'), null, \core\output\notification::NOTIFY_SUCCESS);
             }
             $answers = $DB->count_records('these_answer', ['questionid' => $questionid]);
@@ -88,7 +88,7 @@ class questions_page {
                 redirect($listurl);
             } else if ($data = $mform->get_data()) {
                 $data->id = $data->questionid;
-                these_save_question($scope, $data);
+                questionnaire::save_question($scope, $data);
                 redirect($listurl, get_string('questionsaved', 'mod_these'), null, \core\output\notification::NOTIFY_SUCCESS);
             }
             echo $OUTPUT->header();

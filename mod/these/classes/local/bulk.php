@@ -66,21 +66,21 @@ class bulk {
             case 'remind':
                 // Signatures attendues des agents DEVE et des signataires sans compte.
                 $available = array_values(array_filter(
-                    array_keys(these_document_definitions()),
+                    array_keys(signatures::document_definitions()),
                     function ($doctype) use ($dossier) {
-                        return these_document_available($dossier, $doctype);
+                        return signatures::document_available($dossier, $doctype);
                     }
                 ));
                 if (!$available || $status === THESE_STATUS_CANCELLED) {
                     return false;
                 }
-                $sent = these_request_agent_signatures($these, $cm, $dossier, $available) > 0;
-                foreach (these_external_slots() as $slot) {
+                $sent = signatureagent::request_agent_signatures($these, $cm, $dossier, $available) > 0;
+                foreach (signatures::external_slots() as $slot) {
                     // Seules les demandes déjà émises par le circuit sont relancées : un nouveau lien n'est pas
                     // envoyé au directeur extérieur avant la validation du sujet par le directeur.
                     $requested = signatures::requested_documents_for_slot($dossier, $slot, $available);
                     if ($requested) {
-                        $sent = these_request_signature($these, $cm, $dossier, $slot, $requested) !== null || $sent;
+                        $sent = signatures::request_signature($these, $cm, $dossier, $slot, $requested) !== null || $sent;
                     }
                 }
                 return $sent;
@@ -88,13 +88,13 @@ class bulk {
                 if (!in_array($status, [THESE_STATUS_CONFORM, THESE_STATUS_SCHEDULED], true)) {
                     return false;
                 }
-                these_generate_documents($these, $context, $dossier, $userid);
+                documents::generate_documents($these, $context, $dossier, $userid);
                 return true;
             case 'notifyjury':
                 if ($status < THESE_STATUS_DEFENSE_VALIDATED || $status > THESE_STATUS_SCHEDULED) {
                     return false;
                 }
-                return these_notify_jury($these, $cm, $dossier)->sent > 0;
+                return jury::notify_jury($these, $cm, $dossier)->sent > 0;
         }
         return false;
     }

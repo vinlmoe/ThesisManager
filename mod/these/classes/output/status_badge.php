@@ -16,6 +16,8 @@
 
 namespace mod_these\output;
 
+use mod_these\local\workflow;
+
 /**
  * Badge du statut d'un dossier.
  *
@@ -44,8 +46,8 @@ class status_badge implements \renderable, \templatable {
      */
     public function export_for_template(\renderer_base $output): array {
         return [
-            'label' => these_status_label($this->status),
-            'badgeclass' => these_status_badgeclass($this->status),
+            'label' => workflow::status_label($this->status),
+            'badgeclass' => workflow::status_badgeclass($this->status),
         ];
     }
 }

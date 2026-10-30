@@ -66,32 +66,32 @@ class planning_page {
         $dataformat = optional_param('dataformat', '', PARAM_ALPHA);
 
         if ($view === 'week') {
-            $from = these_planning_week_start($date);
-            $to = these_planning_shift_week($from, 1);
-            $previous = these_planning_shift_week($from, -1);
+            $from = planning::planning_week_start($date);
+            $to = planning::planning_shift_week($from, 1);
+            $previous = planning::planning_shift_week($from, -1);
             $next = $to;
-            $current = these_planning_week_start(time());
+            $current = planning::planning_week_start(time());
             $label = get_string('planningweekof', 'mod_these', (object) [
                 'start' => userdate($from, get_string('strftimedate', 'langconfig')),
                 'end' => userdate($to - DAYSECS, get_string('strftimedate', 'langconfig')),
             ]);
             $filename = 'planning-soutenances-semaine-' . userdate($from, '%Y-%m-%d');
         } else {
-            $from = these_planning_month_start($date);
-            $to = these_planning_shift_month($from, 1);
-            $previous = these_planning_shift_month($from, -1);
+            $from = planning::planning_month_start($date);
+            $to = planning::planning_shift_month($from, 1);
+            $previous = planning::planning_shift_month($from, -1);
             $next = $to;
-            $current = these_planning_month_start(time());
+            $current = planning::planning_month_start(time());
             $label = userdate($from, get_string('strftimemonthyear', 'mod_these'));
             $filename = 'planning-soutenances-' . userdate($from, '%Y-%m');
         }
-        $defenses = these_get_defenses($sources, $from, $to, $USER->id);
+        $defenses = planning::get_defenses($sources, $from, $to, $USER->id);
 
         // Planning imprimable.
         if ($format === 'pdf') {
-            $data = these_planning_document_context($defenses, $label, $establishment, $scope, $showpromotion);
+            $data = planning::planning_document_context($defenses, $label, $establishment, $scope, $showpromotion);
             send_file(
-                these_render_scope_doctemplate($scope, 'planning', $data),
+                doctemplates::render_scope_doctemplate($scope, 'planning', $data),
                 $filename . '.pdf',
                 0,
                 0,
@@ -117,7 +117,7 @@ class planning_page {
                 'devenumber' => get_string('devenumber', 'mod_these'),
             ];
             \core\dataformat::download_data($filename, $dataformat, $columns, $defenses, function ($defense) use ($columns) {
-                return rendering::spreadsheet_safe(array_intersect_key(these_defense_row($defense), $columns));
+                return rendering::spreadsheet_safe(array_intersect_key(planning::defense_row($defense), $columns));
             });
             die();
         }
@@ -138,7 +138,7 @@ class planning_page {
         echo $renderer->render(new output\planning_nav($baseurl, $view, $from, $previous, $current, $next, $date));
 
         echo $OUTPUT->heading($label . ' — ' . get_string('planningcount', 'mod_these', count($defenses)), 3);
-        echo these_render_planning($defenses, $showpromotion);
+        echo planning::render_planning($defenses, $showpromotion);
 
         // Impression et téléchargement de la période affichée.
         echo $renderer->render(new output\planning_print($baseurl, $view, $from));
@@ -151,7 +151,7 @@ class planning_page {
 
         // Semaines à venir qui ont des soutenances.
         if ($view === 'week') {
-            $counts = these_count_defenses_by_week($sources, max($current, $next), self::UPCOMING_WEEKS, $USER->id);
+            $counts = planning::count_defenses_by_week($sources, max($current, $next), self::UPCOMING_WEEKS, $USER->id);
             if ($counts) {
                 echo $OUTPUT->heading(get_string('planningupcoming', 'mod_these'), 4, 'mt-4');
                 echo $renderer->render(new output\planning_upcoming($baseurl, $counts));

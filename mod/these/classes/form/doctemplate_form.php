@@ -16,10 +16,11 @@
 
 namespace mod_these\form;
 
+use mod_these\local\doctemplates;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/formslib.php');
-require_once($CFG->dirroot . '/mod/these/locallib.php');
 
 /**
  * Modification du modèle d'un document de l'activité (DEVE) : le source HTML avec ses balises
@@ -70,7 +71,7 @@ class doctemplate_form extends \moodleform {
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
         if (empty($errors['content'])) {
-            $error = these_doctemplate_error(
+            $error = doctemplates::doctemplate_error(
                 $this->_customdata['scope'],
                 $data['type'],
                 (string) $data['content'],

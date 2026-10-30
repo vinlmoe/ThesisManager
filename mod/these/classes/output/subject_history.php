@@ -17,6 +17,8 @@
 namespace mod_these\output;
 
 use context;
+use mod_these\local\files;
+use mod_these\local\subjectchange;
 use moodle_url;
 use stdClass;
 
@@ -54,12 +56,12 @@ class subject_history implements \renderable, \templatable {
      * @return array hasentries, heading, table (voir table_context)
      */
     public function export_for_template(\renderer_base $output): array {
-        $history = these_get_subject_history($this->dossier->id);
+        $history = subjectchange::get_subject_history($this->dossier->id);
         if (!$history) {
             return ['hasentries' => false, 'heading' => '', 'table' => false];
         }
         $files = [];
-        foreach (these_get_files($this->context, 'subjectarchive', $this->dossier->id) as $file) {
+        foreach (files::get_files($this->context, 'subjectarchive', $this->dossier->id) as $file) {
             if (preg_match('/-(\d+)\.pdf$/', $file->get_filename(), $match)) {
                 $files[(int) $match[1]] = $file;
             }

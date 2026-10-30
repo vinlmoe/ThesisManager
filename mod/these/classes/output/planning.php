@@ -56,7 +56,7 @@ class planning implements \renderable, \templatable {
      * @return array[] Une liste de fragments (voir parts) par cellule.
      */
     public function defense_cells(stdClass $defense): array {
-        $row = these_defense_row($defense);
+        $row = \mod_these\local\planning::defense_row($defense);
         $url = new moodle_url('/mod/these/dossier.php', [
             'id' => $defense->source->cm->id,
             'dossierid' => $defense->dossier->id,
@@ -72,7 +72,7 @@ class planning implements \renderable, \templatable {
         $jury[] = parts::text($row['jury']);
         // Membre déjà engagé dans un autre jury sur le même créneau (personnel qui voit tous les dossiers).
         if (!empty($defense->source->rights->viewall)) {
-            foreach (these_jury_conflicts($defense->dossier, $defense->jury) as $conflict) {
+            foreach (\mod_these\local\jury::jury_conflicts($defense->dossier, $defense->jury) as $conflict) {
                 $jury[] = parts::br();
                 $jury[] = parts::badge(get_string('juryconflictshort', 'mod_these', (object) [
                     'member' => $conflict->member,
@@ -108,7 +108,7 @@ class planning implements \renderable, \templatable {
     protected function location_cell(stdClass $defense, string $location): array {
         $cell = [parts::text($location)];
         if (!empty($defense->source->rights->viewall)) {
-            foreach (these_room_conflicts($defense->dossier) as $conflict) {
+            foreach (\mod_these\local\jury::room_conflicts($defense->dossier) as $conflict) {
                 $cell[] = parts::br();
                 $cell[] = parts::badge(get_string('roomconflictshort', 'mod_these', (object) [
                     'student' => $conflict->student,
@@ -147,7 +147,7 @@ class planning implements \renderable, \templatable {
         foreach ($bydate as $defenses) {
             $rows = array_map([$this, 'defense_cells'], $defenses);
             $days[] = [
-                'heading' => these_defense_row($defenses[0])['day'],
+                'heading' => \mod_these\local\planning::defense_row($defenses[0])['day'],
                 'table' => table_context::export('generaltable these-planning', $head, $rows),
             ];
         }

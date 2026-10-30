@@ -16,10 +16,11 @@
 
 namespace mod_these\form;
 
+use mod_these\local\signatures;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/formslib.php');
-require_once($CFG->dirroot . '/mod/these/locallib.php');
 
 /**
  * Signature, en une seule fois, des documents qui attendent un signataire invité (président du
@@ -47,7 +48,7 @@ class sign_form extends \moodleform {
             $mform->addElement('hidden', $name);
             $mform->setType($name, $type);
         }
-        these_add_signature_fields(
+        signatures::add_signature_fields(
             $mform,
             $this->_customdata['signername'],
             get_string('signexternalintro', 'mod_these'),
@@ -65,6 +66,6 @@ class sign_form extends \moodleform {
      * @return array
      */
     public function validation($data, $files) {
-        return array_merge(parent::validation($data, $files), these_signature_errors($data));
+        return array_merge(parent::validation($data, $files), signatures::signature_errors($data));
     }
 }

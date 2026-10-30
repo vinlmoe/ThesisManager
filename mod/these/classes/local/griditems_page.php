@@ -49,7 +49,7 @@ class griditems_page {
         global $DB, $OUTPUT, $PAGE;
 
         $items = [];
-        foreach (these_get_grid_items($scope) as $sectionitems) {
+        foreach (signatures::get_grid_items($scope) as $sectionitems) {
             foreach ($sectionitems as $item) {
                 $items[] = $item;
             }
@@ -68,7 +68,7 @@ class griditems_page {
             redirect($cancelurl);
         } else if ($data = $mform->get_data()) {
             if (!empty($data->resetbutton)) {
-                $DB->delete_records('these_griditem', these_scope_conditions($scope));
+                $DB->delete_records('these_griditem', doctemplates::scope_conditions($scope));
             } else {
                 $submitted = [];
                 foreach ((array) $data->label as $i => $label) {
@@ -79,7 +79,7 @@ class griditems_page {
                         'conditional' => $data->conditional[$i] ?? 0,
                     ];
                 }
-                these_save_grid_items($scope, $submitted);
+                signatures::save_grid_items($scope, $submitted);
             }
             redirect($pageurl, get_string('griditemssaved', 'mod_these'), null, \core\output\notification::NOTIFY_SUCCESS);
         }

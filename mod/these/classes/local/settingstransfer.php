@@ -78,7 +78,7 @@ class settingstransfer {
         $data = ['format' => self::SETTINGS_FORMAT, 'version' => 1, 'name' => (string) $these->name, 'groups' => []];
         if (in_array('activity', $groups, true)) {
             $data['groups']['activity'] = [];
-            foreach (array_keys(these_settings_activity_fields()) as $field) {
+            foreach (array_keys(self::settings_activity_fields()) as $field) {
                 $data['groups']['activity'][$field] = $these->$field;
             }
         }
@@ -91,7 +91,7 @@ class settingstransfer {
         }
         if (in_array('griditems', $groups, true)) {
             $data['groups']['griditems'] = [];
-            foreach (these_get_grid_items(these_local_scope($these)) as $items) {
+            foreach (signatures::get_grid_items(doctemplates::local_scope($these)) as $items) {
                 foreach ($items as $item) {
                     $data['groups']['griditems'][] = ['itemkey' => $item->itemkey, 'section' => $item->section,
                         'label' => $item->label, 'conditional' => (int) $item->conditional];
@@ -100,7 +100,7 @@ class settingstransfer {
         }
         if (in_array('questions', $groups, true)) {
             $data['groups']['questions'] = [];
-            foreach (these_get_questions(these_local_scope($these)) as $question) {
+            foreach (questionnaire::get_questions(doctemplates::local_scope($these)) as $question) {
                 $data['groups']['questions'][] = ['qtype' => $question->qtype, 'label' => $question->label,
                     'options' => $question->options, 'required' => (int) $question->required];
             }
@@ -162,7 +162,7 @@ class settingstransfer {
 
         if (in_array('activity', $groups, true) && is_array($source['activity'] ?? null)) {
             $update = (object) ['id' => $these->id, 'timemodified' => time()];
-            foreach (these_settings_activity_fields() as $field => $type) {
+            foreach (self::settings_activity_fields() as $field => $type) {
                 if (array_key_exists($field, $source['activity'])) {
                     $update->$field = clean_param($source['activity'][$field] ?? '', $type);
                 }
@@ -182,14 +182,15 @@ class settingstransfer {
 
         if (in_array('emails', $groups, true) && is_array($source['emails'] ?? null)) {
             $DB->delete_records('these_email_template', ['theseid' => $these->id]);
-            $definitions = these_get_email_definitions();
+            $definitions = notifications::get_email_definitions();
             foreach ($source['emails'] as $email) {
                 $key = (string) ($email['emailkey'] ?? '');
                 if (!isset($definitions[$key])) {
                     $result->skipped[] = get_string('transferskippedemail', 'mod_these', s($key));
                     continue;
                 }
-                these_save_email_template($these->id, $key, (string) ($email['subject'] ?? ''), (string) ($email['body'] ?? ''));
+                $subject = (string) ($email['subject'] ?? '');
+                notifications::save_email_template($these->id, $key, $subject, (string) ($email['body'] ?? ''));
                 $result->emails++;
             }
         }
@@ -206,23 +207,23 @@ class settingstransfer {
                     'conditional' => !empty($item['conditional']),
                 ];
             }
-            $scope = these_local_scope($these);
-            these_save_grid_items($scope, $items);
-            $result->griditems = count(these_get_grid_items($scope), COUNT_RECURSIVE) - count(these_grid_sections());
+            $scope = doctemplates::local_scope($these);
+            signatures::save_grid_items($scope, $items);
+            $result->griditems = count(signatures::get_grid_items($scope), COUNT_RECURSIVE) - count(signatures::grid_sections());
         }
 
         // Questionnaire : les réponses déjà données aux questions remplacées sont supprimées avec elles.
         if (in_array('questions', $groups, true) && is_array($source['questions'] ?? null)) {
-            $scope = these_local_scope($these);
-            foreach (array_keys(these_get_questions($scope)) as $questionid) {
-                these_delete_question($scope, $questionid);
+            $scope = doctemplates::local_scope($these);
+            foreach (array_keys(questionnaire::get_questions($scope)) as $questionid) {
+                questionnaire::delete_question($scope, $questionid);
             }
             foreach ($source['questions'] as $question) {
                 $label = clean_param((string) ($question['label'] ?? ''), PARAM_TEXT);
                 if (trim($label) === '') {
                     continue;
                 }
-                these_save_question($scope, (object) [
+                questionnaire::save_question($scope, (object) [
                     'qtype' => (string) ($question['qtype'] ?? 'text'),
                     'label' => $label,
                     'options' => clean_param((string) ($question['options'] ?? ''), PARAM_TEXT),
@@ -234,7 +235,7 @@ class settingstransfer {
 
         if (in_array('doctemplates', $groups, true) && is_array($source['doctemplates'] ?? null)) {
             $DB->delete_records('these_doctemplate', ['theseid' => $these->id]);
-            $types = these_doctemplate_types();
+            $types = doctemplates::doctemplate_types();
             foreach ($source['doctemplates'] as $template) {
                 $type = (string) ($template['doctype'] ?? '');
                 $content = (string) ($template['content'] ?? '');
@@ -242,11 +243,12 @@ class settingstransfer {
                     $result->skipped[] = get_string('transferskippeddoctemplate', 'mod_these', s($type));
                     continue;
                 }
-                if (($error = these_doctemplate_error(these_local_scope($these), $type, $content, $these)) !== null) {
-                    $result->skipped[] = these_doctemplate_label($type) . ' : ' . $error;
+                $error = doctemplates::doctemplate_error(doctemplates::local_scope($these), $type, $content, $these);
+                if ($error !== null) {
+                    $result->skipped[] = doctemplates::doctemplate_label($type) . ' : ' . $error;
                     continue;
                 }
-                these_set_doctemplate(these_local_scope($these), $type, $content);
+                doctemplates::set_doctemplate(doctemplates::local_scope($these), $type, $content);
                 $result->doctemplates++;
             }
         }
@@ -303,7 +305,7 @@ class settingstransfer {
             if (!$cm) {
                 continue;
             }
-            $rights = these_get_rights(context_module::instance($cm->id), null, $userid);
+            $rights = rights::get_rights(context_module::instance($cm->id), null, $userid);
             if ($rights->deve) {
                 $sources[$record->id] = format_string($record->coursename) . ' : ' . format_string($record->name);
             }

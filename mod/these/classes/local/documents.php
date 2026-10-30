@@ -62,9 +62,9 @@ class documents {
             'time' => $date ? userdate($date, get_string('strftimetime', 'langconfig')) : '-',
             'location' => (string) $dossier->defenselocation,
             'today' => userdate(time(), get_string('strftimedate', 'langconfig')),
-            'jury' => these_get_jury($dossier->id),
-            'result' => these_result_label($dossier->defenseresult),
-            'mention' => these_mention_label($dossier->mention),
+            'jury' => jury::get_jury($dossier->id),
+            'result' => workflow::result_label($dossier->defenseresult),
+            'mention' => workflow::mention_label($dossier->mention),
         ];
     }
 
@@ -96,7 +96,7 @@ class documents {
      * @return string
      */
     public static function signed_document_filename(context $context, stdClass $dossier, $doctype, $name = '') {
-        $sealed = these_get_sealed_document($context, $dossier->id, $doctype);
+        $sealed = signatures::get_sealed_document($context, $dossier->id, $doctype);
         return self::document_filename($doctype, $name, $sealed ? (int) $sealed->get_timecreated() : 0);
     }
 
@@ -114,21 +114,26 @@ class documents {
     public static function generate_documents(stdClass $these, context $context, stdClass $dossier, $userid) {
         global $DB;
 
-        $data = these_document_context($these, $context, $dossier, null);
+        $data = doctemplates::document_context($these, $context, $dossier, null);
         $documents = [];
-        $documents[these_document_filename('convocation-etudiant')] = these_render_doctemplate($these, 'convocation', $data);
-        foreach (these_get_jury($dossier->id) as $index => $member) {
-            $documents[these_document_filename('convocation-jury-' . ($index + 1), $member->fullname)] =
-                these_render_doctemplate($these, 'convocation', these_document_context($these, $context, $dossier, null, $member));
+        $documents[self::document_filename('convocation-etudiant')] =
+            doctemplates::render_doctemplate($these, 'convocation', $data);
+        foreach (jury::get_jury($dossier->id) as $index => $member) {
+            $documents[self::document_filename('convocation-jury-' . ($index + 1), $member->fullname)] =
+                doctemplates::render_doctemplate(
+                    $these,
+                    'convocation',
+                    doctemplates::document_context($these, $context, $dossier, null, $member)
+                );
         }
-        $documents[these_document_filename('feuille-de-jury')] = these_render_doctemplate($these, 'jurysheet', $data);
-        $documents[these_document_filename('proces-verbal')] = these_render_doctemplate($these, 'minutes', $data);
+        $documents[self::document_filename('feuille-de-jury')] = doctemplates::render_doctemplate($these, 'jurysheet', $data);
+        $documents[self::document_filename('proces-verbal')] = doctemplates::render_doctemplate($these, 'minutes', $data);
         // Documents de l'établissement, dans leur état de signature à la génération. Les documents
         // réservés au personnel (rapport du directeur, grille) n'entrent pas dans cette zone, que
         // l'étudiant consulte : ils ne sont joints qu'à l'archive transmise à l'université.
-        foreach (these_document_definitions() as $doctype => $definition) {
-            if (!$definition['staffonly'] && these_document_available($dossier, $doctype)) {
-                $pdf = these_signed_document_pdf($these, $context, $dossier, $doctype);
+        foreach (signatures::document_definitions() as $doctype => $definition) {
+            if (!$definition['staffonly'] && signatures::document_available($dossier, $doctype)) {
+                $pdf = doctemplates::signed_document_pdf($these, $context, $dossier, $doctype);
                 $documents[self::signed_document_filename($context, $dossier, $doctype)] = $pdf;
             }
         }
@@ -151,7 +156,7 @@ class documents {
         $now = time();
         $DB->update_record('these_dossier', (object) ['id' => $dossier->id, 'documentstime' => $now, 'timemodified' => $now]);
         $dossier->documentstime = $now;
-        these_log($dossier->id, $userid, 'documentsgenerated', $dossier->status, $dossier->status);
+        dossiers::log($dossier->id, $userid, 'documentsgenerated', $dossier->status, $dossier->status);
         return $files;
     }
 
@@ -167,19 +172,19 @@ class documents {
      */
     public static function archive_files(stdClass $these, context $context, stdClass $dossier) {
         $files = [];
-        foreach (these_get_files($context, 'generated', $dossier->id) as $file) {
+        foreach (files::get_files($context, 'generated', $dossier->id) as $file) {
             $files[$file->get_filename()] = $file;
         }
-        foreach (these_get_files($context, 'directorreport', $dossier->id) as $file) {
+        foreach (files::get_files($context, 'directorreport', $dossier->id) as $file) {
             $files['rapport-directeur-' . $file->get_filename()] = $file;
         }
         $directory = null;
-        foreach (these_document_definitions() as $doctype => $definition) {
-            if (!$definition['staffonly'] || !these_document_available($dossier, $doctype)) {
+        foreach (signatures::document_definitions() as $doctype => $definition) {
+            if (!$definition['staffonly'] || !signatures::document_available($dossier, $doctype)) {
                 continue;
             }
             $directory = $directory ?? make_request_directory();
-            $pdf = these_signed_document_pdf($these, $context, $dossier, $doctype);
+            $pdf = doctemplates::signed_document_pdf($these, $context, $dossier, $doctype);
             $filename = self::signed_document_filename($context, $dossier, $doctype);
             $path = $directory . '/' . $filename;
             file_put_contents($path, $pdf);
@@ -202,14 +207,14 @@ class documents {
      * @return stdClass {sent, failed, missing (noms des membres du jury sans adresse)}
      */
     public static function transmit_documents(stdClass $these, stdClass $cm, context $context, stdClass $dossier, $userid) {
-        return these_dossier_operation($dossier, function () use ($these, $cm, $context, $dossier, $userid) {
+        return dossiers::dossier_operation($dossier, function () use ($these, $cm, $context, $dossier, $userid) {
             global $DB;
 
             $files = [];
-            foreach (these_get_files($context, 'generated', $dossier->id) as $file) {
+            foreach (files::get_files($context, 'generated', $dossier->id) as $file) {
                 $files[$file->get_filename()] = $file;
             }
-            $data = these_document_data($these, $dossier);
+            $data = self::document_data($these, $dossier);
             $result = (object) ['sent' => 0, 'failed' => 0, 'missing' => []];
             $basevars = [
                 'student' => $data['student'],
@@ -223,7 +228,7 @@ class documents {
                 if (isset($files[$filename])) {
                     $attachment = $files[$filename]->copy_content_to_temp('mod_these');
                 }
-                $sent = these_send_email(
+                $sent = notifications::send_email(
                     $these,
                     'convocation',
                     [$recipient],
@@ -237,7 +242,7 @@ class documents {
 
             $student = $DB->get_record('user', ['id' => $dossier->userid, 'deleted' => 0]);
             if ($student) {
-                $send($student, fullname($student), these_document_filename('convocation-etudiant'));
+                $send($student, fullname($student), self::document_filename('convocation-etudiant'));
             }
             foreach ($data['jury'] as $index => $member) {
                 if ($member->email === '') {
@@ -245,9 +250,9 @@ class documents {
                     continue;
                 }
                 $send(
-                    these_make_external_user($member->email, $member->fullname),
+                    notifications::make_external_user($member->email, $member->fullname),
                     $member->fullname,
-                    these_document_filename('convocation-jury-' . ($index + 1), $member->fullname)
+                    self::document_filename('convocation-jury-' . ($index + 1), $member->fullname)
                 );
             }
 
@@ -258,10 +263,10 @@ class documents {
                 $zippath = make_request_directory() . '/' . $zipname;
                 $packer = get_file_packer('application/zip');
                 $packer->archive_to_pathname($archive, $zippath);
-                $sent = these_send_email(
+                $sent = notifications::send_email(
                     $these,
                     'university',
-                    [these_make_external_user($universityemail)],
+                    [notifications::make_external_user($universityemail)],
                     array_merge($basevars, ['devenumber' => (string) $dossier->devenumber]),
                     $zippath,
                     $zipname,
@@ -273,9 +278,9 @@ class documents {
             $fields = ['senttime' => time()];
             $remark = get_string('transmitsummary', 'mod_these', $result);
             if ((int) $dossier->status === THESE_STATUS_CONFORM) {
-                these_set_status($dossier, THESE_STATUS_SCHEDULED, $userid, 'documentssent', $remark, $fields);
+                dossiers::set_status($dossier, THESE_STATUS_SCHEDULED, $userid, 'documentssent', $remark, $fields);
             } else {
-                these_set_status($dossier, $dossier->status, $userid, 'documentsresent', $remark, $fields);
+                dossiers::set_status($dossier, $dossier->status, $userid, 'documentsresent', $remark, $fields);
             }
             return $result;
         });

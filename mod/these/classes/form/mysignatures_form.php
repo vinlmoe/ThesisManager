@@ -16,10 +16,11 @@
 
 namespace mod_these\form;
 
+use mod_these\local\signatures;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/formslib.php');
-require_once($CFG->dirroot . '/mod/these/locallib.php');
 
 /**
  * Documents qui attendent la signature de l'utilisateur connecté (agent DEVE, membre du jury ou
@@ -63,7 +64,7 @@ class mysignatures_form extends \moodleform {
                 ));
             }
         }
-        these_add_signature_fields(
+        signatures::add_signature_fields(
             $mform,
             $this->_customdata['signername'],
             get_string('signmyintro', 'mod_these'),
@@ -89,6 +90,6 @@ class mysignatures_form extends \moodleform {
         if (!$chosen) {
             $errors['documentsgroup'] = get_string('signnodocument', 'mod_these');
         }
-        return array_merge($errors, these_signature_errors($data));
+        return array_merge($errors, signatures::signature_errors($data));
     }
 }

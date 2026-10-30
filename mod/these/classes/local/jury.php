@@ -58,7 +58,7 @@ class jury {
         global $DB;
 
         $options = [0 => get_string('choosedots')];
-        foreach (these_get_potential_directors($context) as $user) {
+        foreach (self::get_potential_directors($context) as $user) {
             $options[$user->id] = fullname($user);
         }
         if ($currentid && !isset($options[$currentid])) {
@@ -241,13 +241,13 @@ class jury {
     public static function jury_conflicts(stdClass $dossier, ?array $members = null) {
         global $DB;
 
-        $members = $members ?? these_get_jury($dossier->id);
+        $members = $members ?? self::get_jury($dossier->id);
         if (!$members) {
             return [];
         }
         $conflicts = [];
         foreach (self::overlapping_dossiers($dossier) as $other) {
-            $otherjury = these_get_jury($other->id);
+            $otherjury = self::get_jury($other->id);
             foreach ($members as $member) {
                 foreach ($otherjury as $othermember) {
                     if (!self::same_member($member, $othermember)) {
@@ -307,12 +307,12 @@ class jury {
 
         $previous = [];
         foreach ($DB->get_records('these_jury', ['dossierid' => $dossierid]) as $record) {
-            $previous[these_jury_member_key($record)] = $record;
+            $previous[self::jury_member_key($record)] = $record;
         }
         $DB->delete_records('these_jury', ['dossierid' => $dossierid]);
         $sortorder = 0;
         foreach ($members as $member) {
-            $old = $previous[these_jury_member_key($member)] ?? null;
+            $old = $previous[self::jury_member_key($member)] ?? null;
             $record = (object) [
                 'dossierid' => $dossierid,
                 'juryrole' => $member->juryrole,
@@ -380,7 +380,7 @@ class jury {
         $jurors = [0 => get_string('juryexternal', 'mod_these')] + \mod_these\local\jurors::options(false, $keep);
         $repeat = [];
         $repeat[] = $mform->createElement('static', 'jurymemberlabel', '', html_writer::tag('hr', ''));
-        $repeat[] = $mform->createElement('select', 'juryrole', get_string('juryrole', 'mod_these'), these_jury_role_options());
+        $repeat[] = $mform->createElement('select', 'juryrole', get_string('juryrole', 'mod_these'), workflow::jury_role_options());
         $repeat[] = $mform->createElement('select', 'jurorid', get_string('juryjuror', 'mod_these'), $jurors);
         $repeat[] = $mform->createElement('text', 'juryname', get_string('juryname', 'mod_these'), ['size' => 48]);
         $repeat[] = $mform->createElement('text', 'jurytitle', get_string('jurytitle', 'mod_these'), ['size' => 48]);
@@ -426,7 +426,7 @@ class jury {
      * @return void
      */
     protected static function fix_roles(MoodleQuickForm $mform) {
-        $roles = these_jury_role_options();
+        $roles = workflow::jury_role_options();
         for ($i = 0; $mform->elementExists("juryrole[$i]"); $i++) {
             $role = self::FIXED_ROLES[$i] ?? null;
             if ($role === null) {
@@ -491,7 +491,7 @@ class jury {
         }
         $rows = self::form_rows($members);
         $first = 'jurymemberlabel[0]';
-        $summary = $mform->createElement('static', 'jurysummary', '', these_render_jury($members, true, false));
+        $summary = $mform->createElement('static', 'jurysummary', '', rendering::render_jury($members, true, false));
         $mform->insertElementBefore($summary, $first);
         $toggle = $mform->createElement('advcheckbox', 'juryedit', '', get_string('juryedit', 'mod_these'));
         $mform->insertElementBefore($toggle, $first);
@@ -512,7 +512,7 @@ class jury {
                     get_string('juryeligiblecheckof', 'mod_these', s($member->fullname))
                 );
             }
-            if (!$member || these_jury_eligibility($member) === 'ok') {
+            if (!$member || self::jury_eligibility($member) === 'ok') {
                 $mform->hideIf("juryeligible[$i]", 'juryedit', 'notchecked');
             }
         }
@@ -540,7 +540,7 @@ class jury {
             $data['juryinstitution'][$i] = $member->institution;
             $data['juryemail'][$i] = $member->email;
             // Pour la DEVE : éligibilité déjà validée, ou évidente (enseignant de l'annuaire au statut admis pour son rôle).
-            $data['juryeligible'][$i] = (int) (!empty($member->eligible) || these_jury_eligibility($member) === 'ok');
+            $data['juryeligible'][$i] = (int) (!empty($member->eligible) || self::jury_eligibility($member) === 'ok');
         }
         return $data;
     }
@@ -563,7 +563,7 @@ class jury {
         sort($rows);
         foreach ($rows as $i) {
             $role = $data['juryrole'][$i] ?? 'member';
-            $role = array_key_exists($role, these_jury_role_options()) ? $role : 'member';
+            $role = array_key_exists($role, workflow::jury_role_options()) ? $role : 'member';
             // Président et directeur seulement sur leurs lignes : les suivantes sont membres ou invités.
             if ($i >= count(self::FIXED_ROLES) && in_array($role, self::FIXED_ROLES, true)) {
                 $role = 'member';
@@ -668,7 +668,7 @@ class jury {
                 }
                 $seen[$member->jurorid] = true;
             }
-            if ($member->juryrole === 'president' && these_jury_eligibility($member) === 'ko') {
+            if ($member->juryrole === 'president' && self::jury_eligibility($member) === 'ko') {
                 return get_string('jurypresidentnoteligible', 'mod_these', s($member->fullname));
             }
             if ($member->email !== '' && !validate_email($member->email)) {
@@ -699,7 +699,7 @@ class jury {
             if (!self::is_voting($member)) {
                 continue;
             }
-            if (these_jury_eligibility($member) === 'ko') {
+            if (self::jury_eligibility($member) === 'ko') {
                 return get_string('jurypresidentnoteligible', 'mod_these', s($member->fullname));
             }
             if (empty($member->eligible)) {
@@ -726,8 +726,8 @@ class jury {
         $result = (object) ['sent' => 0, 'failed' => 0, 'missing' => []];
         $student = $DB->get_record('user', ['id' => $dossier->userid]);
         $date = (int) ($dossier->defensedate ?: $dossier->proposeddate);
-        $roles = these_jury_role_options();
-        foreach (these_get_jury($dossier->id) as $member) {
+        $roles = workflow::jury_role_options();
+        foreach (self::get_jury($dossier->id) as $member) {
             if (!$force && !empty($member->notifiedtime)) {
                 continue;
             }
@@ -737,9 +737,10 @@ class jury {
             }
             // Seule l'empreinte du jeton est conservée : chaque envoi donne un nouveau lien, qui
             // remplace le précédent.
-            $token = these_new_token();
-            $DB->set_field('these_jury', 'accesstoken', these_token_hash($token), ['id' => $member->id]);
-            $sent = these_send_email($these, 'jurydesignation', [these_make_external_user($member->email, $member->fullname)], [
+            $token = rights::new_token();
+            $DB->set_field('these_jury', 'accesstoken', rights::token_hash($token), ['id' => $member->id]);
+            $recipient = notifications::make_external_user($member->email, $member->fullname);
+            $sent = notifications::send_email($these, 'jurydesignation', [$recipient], [
                 'name' => trim($member->jurytitle . ' ' . $member->fullname),
                 'role' => $roles[$member->juryrole] ?? $member->juryrole,
                 'student' => $student ? fullname($student) : '',
@@ -772,8 +773,8 @@ class jury {
         if (strlen($token) < 32) {
             return null;
         }
-        $member = $DB->get_record('these_jury', ['accesstoken' => these_token_hash($token)]);
-        return $member ? these_jury_access_member($member) : null;
+        $member = $DB->get_record('these_jury', ['accesstoken' => rights::token_hash($token)]);
+        return $member ? self::jury_access_member($member) : null;
     }
 
     /**
@@ -796,7 +797,7 @@ class jury {
         if (!empty($member->jurorid)) {
             $emails[] = core_text::strtolower(trim((string) $DB->get_field('these_juror', 'email', ['id' => $member->jurorid])));
         }
-        return in_array($email, $emails, true) ? these_jury_access_member($member) : null;
+        return in_array($email, $emails, true) ? self::jury_access_member($member) : null;
     }
 
     /**
@@ -810,7 +811,7 @@ class jury {
         global $DB;
 
         $dossier = $DB->get_record('these_dossier', ['id' => $member->dossierid]);
-        if (!$dossier || !these_jury_access_open($dossier, $member)) {
+        if (!$dossier || !self::jury_access_open($dossier, $member)) {
             return null;
         }
         $member->dossier = $dossier;

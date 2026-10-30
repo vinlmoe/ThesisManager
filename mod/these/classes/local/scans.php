@@ -69,12 +69,12 @@ class scans {
     public static function pending_slots(stdClass $dossier) {
         $pending = [];
         foreach (self::DOCTYPES as $doctype) {
-            if (!these_document_available($dossier, $doctype)) {
+            if (!signatures::document_available($dossier, $doctype)) {
                 continue;
             }
-            foreach (these_document_slots($dossier, $doctype) as $slot) {
-                if (in_array($doctype, these_pending_documents_for_slot($dossier, $slot, [$doctype]), true)) {
-                    $pending[$doctype][$slot] = these_slot_label($slot);
+            foreach (signatures::document_slots($dossier, $doctype) as $slot) {
+                if (in_array($doctype, signatures::pending_documents_for_slot($dossier, $slot, [$doctype]), true)) {
+                    $pending[$doctype][$slot] = signatures::slot_label($slot);
                 }
             }
         }
@@ -93,8 +93,8 @@ class scans {
      * @return string
      */
     public static function slot_signer_name(stdClass $dossier, $slot, $delegated = false) {
-        $name = $delegated ? '' : trim((string) these_inperson_signer($dossier, $slot)['name']);
-        return $name !== '' ? $name : these_slot_label($slot);
+        $name = $delegated ? '' : trim((string) signatures::inperson_signer($dossier, $slot)['name']);
+        return $name !== '' ? $name : signatures::slot_label($slot);
     }
 
     /**
@@ -172,7 +172,7 @@ class scans {
 
         // Signataires couverts : signés à la main, à la date du document, enregistrés par la DEVE.
         foreach ($slots as $slot => $delegated) {
-            these_sign_document($context, $dossier, $doctype, $slot, 0, $names[$slot], '', '', [
+            signatures::sign_document($context, $dossier, $doctype, $slot, 0, $names[$slot], '', '', [
                 'method' => 'scan',
                 'delegated' => $delegated,
                 'verifiedby' => $userid,

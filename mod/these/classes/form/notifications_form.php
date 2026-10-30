@@ -16,10 +16,11 @@
 
 namespace mod_these\form;
 
+use mod_these\local\notifications;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/formslib.php');
-require_once($CFG->dirroot . '/mod/these/locallib.php');
 
 /**
  * Personnalisation des courriels de l'activité par la DEVE : pour chacun, un sujet et un corps
@@ -40,7 +41,7 @@ class notifications_form extends \moodleform {
         $mform->setType('id', PARAM_INT);
         $mform->addElement('static', 'notificationshelp', '', get_string('notificationshelp', 'mod_these'));
 
-        foreach (these_get_email_definitions() as $key => $definition) {
+        foreach (notifications::get_email_definitions() as $key => $definition) {
             $mform->addElement('header', 'header_' . $key, get_string('emailkey' . $key, 'mod_these'));
             $vars = implode(' ', array_map(function ($var) {
                 return '{{' . $var . '}}';

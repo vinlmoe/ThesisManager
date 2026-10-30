@@ -16,10 +16,11 @@
 
 namespace mod_these\form;
 
+use mod_these\local\questionnaire;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/formslib.php');
-require_once($CFG->dirroot . '/mod/these/locallib.php');
 
 /**
  * Réponses d'un dossier au questionnaire préalable au jury : un champ q<id> par question (zone de
@@ -78,14 +79,14 @@ class questionnaire_form extends \moodleform {
                     break;
                 case 'list':
                     $options = ['' => get_string('choosedots')];
-                    foreach (these_question_options($question) as $option) {
+                    foreach (questionnaire::question_options($question) as $option) {
                         $options[$option] = format_string($option);
                     }
                     $mform->addElement('select', $name, $label, $options);
                     break;
                 case 'multi':
                     $boxes = [];
-                    foreach (these_question_options($question) as $n => $option) {
+                    foreach (questionnaire::question_options($question) as $n => $option) {
                         $boxes[] = $mform->createElement('advcheckbox', $name . '_' . $n, '', format_string($option));
                     }
                     $mform->addGroup($boxes, $name, $label, \html_writer::empty_tag('br'), false);
@@ -120,7 +121,7 @@ class questionnaire_form extends \moodleform {
             $name = 'q' . $question->id;
             if ($question->qtype === 'multi') {
                 $answered = false;
-                foreach (array_keys(these_question_options($question)) as $n) {
+                foreach (array_keys(questionnaire::question_options($question)) as $n) {
                     $answered = $answered || !empty($data[$name . '_' . $n]);
                 }
             } else {
@@ -147,11 +148,11 @@ class questionnaire_form extends \moodleform {
                 continue;
             }
             if ($questions[$questionid]->qtype === 'multi') {
-                foreach (these_question_options($questions[$questionid]) as $n => $option) {
+                foreach (questionnaire::question_options($questions[$questionid]) as $n => $option) {
                     $data['q' . $questionid . '_' . $n] = in_array($option, (array) $answer, true) ? 1 : 0;
                 }
             } else {
-                $data['q' . $questionid] = these_answer_text($answer);
+                $data['q' . $questionid] = questionnaire::answer_text($answer);
             }
         }
         return $data;

@@ -16,10 +16,11 @@
 
 namespace mod_these\form;
 
+use mod_these\local\signatures;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/formslib.php');
-require_once($CFG->dirroot . '/mod/these/locallib.php');
 
 /**
  * Éléments de la grille de conformité de l'activité (DEVE), dans l'ordre : rubrique, libellé, élément
@@ -42,7 +43,7 @@ class griditems_form extends \moodleform {
         $mform->setType('id', PARAM_INT);
 
         $sections = [];
-        foreach (these_grid_sections() as $section) {
+        foreach (signatures::grid_sections() as $section) {
             $sections[$section] = get_string('gridsection' . $section, 'mod_these');
         }
         $repeat = [

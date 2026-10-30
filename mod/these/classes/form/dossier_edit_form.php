@@ -16,10 +16,12 @@
 
 namespace mod_these\form;
 
+use mod_these\local\dossiers;
+use mod_these\local\jury;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/formslib.php');
-require_once($CFG->dirroot . '/mod/these/locallib.php');
 
 /**
  * Modification d'un dossier par la DEVE, à tout moment et sans changer son statut : corriger le
@@ -79,7 +81,7 @@ class dossier_edit_form extends \moodleform {
             $this->_customdata['roomconflicts'] ?? ''
         );
 
-        these_add_jury_fields(
+        jury::add_jury_fields(
             $this,
             $mform,
             $this->_customdata['jurycount'] ?? 0,
@@ -87,7 +89,7 @@ class dossier_edit_form extends \moodleform {
             $this->_customdata['jurorids'] ?? [],
             $this->_customdata['juryconflicts'] ?? ''
         );
-        these_jury_readonly($mform, array_values($this->_customdata['jury'] ?? []));
+        jury::jury_readonly($mform, array_values($this->_customdata['jury'] ?? []));
 
         // Page courte : sujet et enregistrements repliés, la soutenance (le plus souvent modifiée) ouverte.
         $mform->setExpanded('subjectheader', false);
@@ -107,12 +109,12 @@ class dossier_edit_form extends \moodleform {
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
         $number = trim((string) $data['devenumber']);
-        if ($number !== '' && these_devenumber_taken($this->_customdata['theseid'], $number, $data['dossierid'])) {
+        if ($number !== '' && dossiers::devenumber_taken($this->_customdata['theseid'], $number, $data['dossierid'])) {
             $errors['devenumber'] = get_string('devenumbertaken', 'mod_these');
         }
-        $members = these_extract_submitted_jury($data);
+        $members = jury::extract_submitted_jury($data);
         if ($members) {
-            $juryerror = these_validate_jury($members, $this->_customdata['minjury']);
+            $juryerror = jury::validate_jury($members, $this->_customdata['minjury']);
             if ($juryerror !== null) {
                 $errors['juryhelp'] = get_string('juryproblem', 'mod_these', $juryerror);
             }

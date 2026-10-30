@@ -56,7 +56,7 @@ class planning_upcoming implements \renderable, \templatable {
                 'url' => (new moodle_url($this->baseurl, ['view' => 'week', 'date' => $week]))->out(false),
                 'label' => get_string('planningweekof', 'mod_these', (object) [
                     'start' => userdate($week, $dateformat),
-                    'end' => userdate(these_planning_shift_week($week, 1) - DAYSECS, $dateformat),
+                    'end' => userdate(\mod_these\local\planning::planning_shift_week($week, 1) - DAYSECS, $dateformat),
                 ]),
                 'count' => get_string('planningcount', 'mod_these', $count),
             ];

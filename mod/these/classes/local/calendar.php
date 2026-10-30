@@ -109,10 +109,10 @@ class calendar {
         if (trim((string) $dossier->defenselocation) !== '') {
             $lines[] = get_string('defenselocation', 'mod_these') . ' : ' . s($dossier->defenselocation);
         }
-        $roles = these_jury_role_options();
+        $roles = workflow::jury_role_options();
         $jury = array_map(function ($member) use ($roles) {
             return s(trim($member->jurytitle . ' ' . $member->fullname)) . ' — ' . ($roles[$member->juryrole] ?? '');
-        }, these_get_jury($dossier->id));
+        }, jury::get_jury($dossier->id));
         if ($jury) {
             $lines[] = get_string('jury', 'mod_these') . ' : ' . implode(' ; ', $jury);
         }

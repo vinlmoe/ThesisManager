@@ -16,6 +16,7 @@
 
 namespace mod_these\output;
 
+use mod_these\local\signatures;
 use stdClass;
 
 /**
@@ -53,7 +54,7 @@ class embargo implements \renderable, \templatable {
      */
     public function get_section(): detail_section {
         $section = new detail_section(get_string('diffusion', 'mod_these'));
-        $bordereau = these_get_bordereau($this->dossier);
+        $bordereau = signatures::get_bordereau($this->dossier);
         if (!$bordereau) {
             return $section;
         }
@@ -64,7 +65,7 @@ class embargo implements \renderable, \templatable {
                 ? [parts::text(get_string('diffusion' . $diffusion, 'mod_these'))] : null
         );
         if (!empty($bordereau['embargo'])) {
-            $until = these_embargo_until($this->dossier);
+            $until = signatures::embargo_until($this->dossier);
             $label = $until
                 ? get_string('embargorequested', 'mod_these', (object) [
                     'months' => \mod_these\local\signatures::embargo_months($bordereau),
