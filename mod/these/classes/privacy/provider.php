@@ -72,13 +72,20 @@ class provider implements
             'summary' => 'privacy:metadata:these_dossier:summary',
             'keywords' => 'privacy:metadata:these_dossier:keywords',
             'directorid' => 'privacy:metadata:these_dossier:directorid',
+            'externaldirector' => 'privacy:metadata:these_dossier:externaldirector',
+            'extdirectorname' => 'privacy:metadata:these_dossier:extdirectorname',
+            'extdirectorgrade' => 'privacy:metadata:these_dossier:extdirectorgrade',
+            'extdirectorinstitution' => 'privacy:metadata:these_dossier:extdirectorinstitution',
+            'extdirectoremail' => 'privacy:metadata:these_dossier:extdirectoremail',
             'devenumber' => 'privacy:metadata:these_dossier:devenumber',
             'defensedate' => 'privacy:metadata:these_dossier:defensedate',
             'defenseresult' => 'privacy:metadata:these_dossier:defenseresult',
             'returncomment' => 'privacy:metadata:these_dossier:returncomment',
             'returnedby' => 'privacy:metadata:these_dossier:returnedby',
+            'daterequestcomment' => 'privacy:metadata:these_dossier:daterequestcomment',
             'bordereau' => 'privacy:metadata:these_dossier:bordereau',
             'conclusions' => 'privacy:metadata:these_dossier:conclusions',
+            'correctionsnote' => 'privacy:metadata:these_dossier:correctionsnote',
             'correctionsdone' => 'privacy:metadata:these_dossier:correctionsdone',
             'timecreated' => 'privacy:metadata:these_dossier:timecreated',
         ], 'privacy:metadata:these_dossier');
@@ -87,8 +94,11 @@ class provider implements
             'userid' => 'privacy:metadata:these_signature:userid',
             'signername' => 'privacy:metadata:these_signature:signername',
             'signeremail' => 'privacy:metadata:these_signature:signeremail',
+            'token' => 'privacy:metadata:these_signature:token',
+            'contenthash' => 'privacy:metadata:these_signature:contenthash',
             'ipaddress' => 'privacy:metadata:these_signature:ipaddress',
             'timesigned' => 'privacy:metadata:these_signature:timesigned',
+            'verifiedby' => 'privacy:metadata:these_signature:verifiedby',
             'validatedby' => 'privacy:metadata:these_signature:validatedby',
         ], 'privacy:metadata:these_signature');
 
@@ -97,6 +107,8 @@ class provider implements
             'email' => 'privacy:metadata:these_jury:email',
             'institution' => 'privacy:metadata:these_jury:institution',
             'jurystatus' => 'privacy:metadata:these_jury:jurystatus',
+            'eligibleby' => 'privacy:metadata:these_jury:eligibleby',
+            'accesstoken' => 'privacy:metadata:these_jury:accesstoken',
         ], 'privacy:metadata:these_jury');
 
         // Annuaire du jury : enseignants désignés par leur nom et leur adresse, sans lien avec un compte.
@@ -123,6 +135,8 @@ class provider implements
         $collection->add_database_table('these_subjecthistory', [
             'title' => 'privacy:metadata:these_subjecthistory:title',
             'summary' => 'privacy:metadata:these_subjecthistory:summary',
+            'directorid' => 'privacy:metadata:these_subjecthistory:directorid',
+            'directorname' => 'privacy:metadata:these_subjecthistory:directorname',
             'reason' => 'privacy:metadata:these_subjecthistory:reason',
             'changedby' => 'privacy:metadata:these_subjecthistory:changedby',
             'timecreated' => 'privacy:metadata:these_subjecthistory:timecreated',
@@ -149,6 +163,30 @@ class provider implements
             'defensedate' => 'privacy:metadata:jury:defensedate',
         ], 'privacy:metadata:jury');
 
+        // Université : les documents de soutenance (fiche signalétique, conclusions, contrat de
+        // diffusion, PV) lui sont transmis par courriel après la soutenance.
+        $collection->add_external_location_link('university', [
+            'student' => 'privacy:metadata:university:student',
+            'title' => 'privacy:metadata:university:title',
+            'defensedate' => 'privacy:metadata:university:defensedate',
+            'documents' => 'privacy:metadata:university:documents',
+        ], 'privacy:metadata:university');
+
+        // Signataires extérieurs (directeur extérieur, direction générale, CCEM, université) : lien
+        // personnel vers le document à signer.
+        $collection->add_external_location_link('externalsigners', [
+            'student' => 'privacy:metadata:externalsigners:student',
+            'title' => 'privacy:metadata:externalsigners:title',
+            'document' => 'privacy:metadata:externalsigners:document',
+        ], 'privacy:metadata:externalsigners');
+
+        // Boîtes de service (DEVE, bibliothèque) : notifications du circuit.
+        $collection->add_external_location_link('servicemailboxes', [
+            'student' => 'privacy:metadata:servicemailboxes:student',
+            'title' => 'privacy:metadata:servicemailboxes:title',
+            'status' => 'privacy:metadata:servicemailboxes:status',
+        ], 'privacy:metadata:servicemailboxes');
+
         return $collection;
     }
 
@@ -167,7 +205,26 @@ class provider implements
                     OR d.directorid = :userid2
                     OR d.returnedby = :userid3
                     OR EXISTS (SELECT 1 FROM {these_log} l WHERE l.dossierid = d.id AND l.userid = :userid4)
-                    OR EXISTS (SELECT 1 FROM {these_signature} sg WHERE sg.dossierid = d.id AND sg.userid = :userid5)";
+                    OR EXISTS (SELECT 1 FROM {these_signature} sg
+                                WHERE sg.dossierid = d.id
+                                  AND (sg.userid = :userid5 OR sg.verifiedby = :userid6 OR sg.validatedby = :userid7))
+                    OR EXISTS (SELECT 1 FROM {these_jury} j WHERE j.dossierid = d.id AND j.eligibleby = :userid8)
+                    OR EXISTS (SELECT 1 FROM {these_subjecthistory} h
+                                WHERE h.dossierid = d.id AND (h.directorid = :userid9 OR h.changedby = :userid10))";
+    }
+
+    /**
+     * Paramètres de contexts_sql() pour un utilisateur.
+     *
+     * @param int $userid
+     * @return array
+     */
+    protected static function contexts_params(int $userid) {
+        $params = ['contextlevel' => CONTEXT_MODULE, 'modname' => 'these'];
+        for ($i = 1; $i <= 10; $i++) {
+            $params['userid' . $i] = $userid;
+        }
+        return $params;
     }
 
     /**
@@ -178,15 +235,7 @@ class provider implements
      */
     public static function get_contexts_for_userid(int $userid): contextlist {
         $contextlist = new contextlist();
-        $contextlist->add_from_sql(self::contexts_sql(), [
-            'contextlevel' => CONTEXT_MODULE,
-            'modname' => 'these',
-            'userid1' => $userid,
-            'userid2' => $userid,
-            'userid3' => $userid,
-            'userid4' => $userid,
-            'userid5' => $userid,
-        ]);
+        $contextlist->add_from_sql(self::contexts_sql(), self::contexts_params($userid));
         // Signature enregistrée et validation de l'A6, dans le contexte de l'utilisateur.
         if (these_get_saved_signature($userid) !== null || self::has_a6($userid)) {
             $contextlist->add_user_context($userid);
@@ -226,12 +275,21 @@ class provider implements
                                              JOIN {these_dossier} d ON d.theseid = cm.instance
                                              JOIN {these_log} l ON l.dossierid = d.id
                                             WHERE cm.id = :instanceid", $params);
-        $userlist->add_from_sql('userid', "SELECT sg.userid
-                                             FROM {course_modules} cm
-                                             JOIN {modules} m ON m.id = cm.module AND m.name = :modname
-                                             JOIN {these_dossier} d ON d.theseid = cm.instance
-                                             JOIN {these_signature} sg ON sg.dossierid = d.id
-                                            WHERE cm.id = :instanceid", $params);
+        $related = [
+            'these_signature' => ['userid', 'verifiedby', 'validatedby'],
+            'these_jury' => ['eligibleby'],
+            'these_subjecthistory' => ['directorid', 'changedby'],
+        ];
+        foreach ($related as $table => $fields) {
+            foreach ($fields as $field) {
+                $userlist->add_from_sql($field, "SELECT r.$field
+                                                   FROM {course_modules} cm
+                                                   JOIN {modules} m ON m.id = cm.module AND m.name = :modname
+                                                   JOIN {these_dossier} d ON d.theseid = cm.instance
+                                                   JOIN {{$table}} r ON r.dossierid = d.id
+                                                  WHERE cm.id = :instanceid AND r.$field > 0", $params);
+            }
+        }
     }
 
     /**
@@ -537,6 +595,22 @@ class provider implements
             "UPDATE {these_log} SET userid = 0, remark = '' WHERE dossierid $dsql AND userid $insql",
             array_merge($dparams, $inparams)
         );
+        // Comptes cités sans être signataires : validation d'éligibilité, ancien directeur ou auteur
+        // d'un changement de sujet, vérification d'identité ou validation d'une signature.
+        $DB->execute(
+            "UPDATE {these_subjecthistory} SET directorid = 0, directorname = '' WHERE dossierid $dsql AND directorid $insql",
+            array_merge($dparams, $inparams)
+        );
+        $cited = [
+            'these_jury' => ['eligibleby'],
+            'these_subjecthistory' => ['changedby'],
+            'these_signature' => ['verifiedby', 'validatedby'],
+        ];
+        foreach ($cited as $table => $fields) {
+            foreach ($fields as $field) {
+                $DB->set_field_select($table, $field, 0, "dossierid $dsql AND $field $insql", array_merge($dparams, $inparams));
+            }
+        }
         // Signatures du personnel dans les dossiers d'autrui : l'image et l'identité sont effacées,
         // la date de signature est conservée (le document reste marqué comme signé à cette date).
         $signatures = $DB->get_records_select(

@@ -304,6 +304,29 @@ attendu quand un dossier attend à la même étape depuis le délai de relance d
 son activité, puis à chaque nouveau délai écoulé. Brouillons et dossiers actifs
 ne sont jamais relancés.
 
+## 4 bis. Conservation des procès-verbaux
+
+Le module applique l'API de confidentialité de Moodle (export et suppression
+des données personnelles, *Administration du site* → *Utilisateurs* →
+*Confidentialité et règlements*). Son comportement actuel à la suppression est
+le suivant :
+
+- **étudiant** : son dossier est effacé en entier, procès-verbal scellé, PV
+  scanné, documents signés, jury et historique compris ;
+- **membre du personnel** (directeur, DEVE, bibliothèque, agent signataire) :
+  les dossiers des autres restent, mais ses références y sont dissociées (nom,
+  image et adresse de ses signatures effacés, comptes de validation remis à
+  zéro, commentaires supprimés) et tout document scellé qui portait sa
+  signature est **descellé**, puis reconstitué sans elle.
+
+Un procès-verbal de soutenance a une valeur d'archive publique que
+l'établissement peut être tenu de conserver au-delà du compte de l'étudiant ou
+de l'agent. Le délégué à la protection des données doit en tenir compte avant
+d'approuver une demande de suppression : exporter ou archiver hors du module
+le PV et les documents signés concernés, ou refuser la suppression du dossier
+pendant la durée légale de conservation. Le module ne propose pas encore
+d'anonymisation qui garderait le document en effaçant seulement l'identité.
+
 ## 5 bis. Sauvegarde et restauration
 
 La sauvegarde d'un cours emporte, pour chaque activité, son paramétrage

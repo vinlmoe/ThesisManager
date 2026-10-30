@@ -137,6 +137,114 @@ final class privacy_provider_test extends these_testcase {
     }
 
     /**
+     * Complète le dossier de make_dossier() : signature du directeur vérifiée sur place par la DEVE,
+     * président du jury déclaré éligible par un autre compte DEVE, ancien sujet changé par la DEVE.
+     *
+     * @param \stdClass $dossier
+     * @param \stdClass $validator Compte qui a validé l'éligibilité.
+     * @return int Identifiant de la signature.
+     */
+    private function cite_staff(\stdClass $dossier, \stdClass $validator): int {
+        global $DB;
+
+        $now = time();
+        $signatureid = $DB->insert_record('these_signature', (object) [
+            'dossierid' => $dossier->id, 'doctype' => 'subject', 'slot' => 'director', 'userid' => $this->director->id,
+            'signername' => 'Dora Directrice', 'signeremail' => '', 'token' => null, 'requesttime' => 0,
+            'timesigned' => $now, 'contenthash' => str_repeat('c', 64), 'templatehash' => str_repeat('t', 64),
+            'ipaddress' => '127.0.0.1', 'method' => 'inperson', 'delegated' => 0, 'verifiedby' => $this->deve->id,
+            'validatedby' => 0, 'validatedtime' => 0, 'timecreated' => $now,
+        ]);
+        get_file_storage()->create_file_from_string([
+            'contextid' => $this->context->id, 'component' => 'mod_these', 'filearea' => 'signature',
+            'itemid' => $signatureid, 'filepath' => '/', 'filename' => 'signature.png',
+        ], 'PNG');
+        $jury = $this->generator->default_jury();
+        $jury[0]->eligible = 1;
+        these_save_jury($dossier->id, $jury, $validator->id);
+        $DB->insert_record('these_subjecthistory', (object) [
+            'dossierid' => $dossier->id, 'title' => 'Ancien sujet', 'titleen' => '', 'summary' => '', 'keywords' => '',
+            'studyyear' => '', 'confidential' => 0, 'directorid' => $this->director->id, 'directorname' => 'Dora Directrice',
+            'libraryref' => '', 'reason' => 'Changement', 'changedby' => $this->deve->id, 'timecreated' => $now,
+        ]);
+        return $signatureid;
+    }
+
+    /**
+     * Un compte seulement cité (validation d'éligibilité) est trouvé par ses contextes comme dans la
+     * liste des utilisateurs du contexte.
+     */
+    public function test_cited_staff_found(): void {
+        $this->setup_activity();
+        $dossier = $this->make_dossier();
+        $validator = $this->getDataGenerator()->create_and_enrol($this->course, 'editingteacher');
+        $this->cite_staff($dossier, $validator);
+
+        $this->assertEquals([$this->context->id], provider::get_contexts_for_userid($validator->id)->get_contextids());
+        $userlist = new userlist($this->context, 'mod_these');
+        provider::get_users_in_context($userlist);
+        $this->assertContains((int) $validator->id, array_map('intval', $userlist->get_userids()));
+        $this->assertNotContains((int) $this->librarian->id, array_map('intval', $userlist->get_userids()));
+    }
+
+    /**
+     * Signature enregistrée : contexte utilisateur remonté, exporté, puis effacé.
+     */
+    public function test_saved_signature_user_context(): void {
+        $this->setup_activity();
+        these_save_signature_image($this->director->id, 'PNG');
+        $usercontext = \context_user::instance($this->director->id);
+
+        $this->assertEquals([$usercontext->id], provider::get_contexts_for_userid($this->director->id)->get_contextids());
+        $userlist = new userlist($usercontext, 'mod_these');
+        provider::get_users_in_context($userlist);
+        $this->assertEquals([$this->director->id], $userlist->get_userids());
+        $this->assertEmpty(provider::get_contexts_for_userid($this->deve->id)->get_contextids());
+
+        provider::export_user_data(new approved_contextlist($this->director, 'mod_these', [$usercontext->id]));
+        $this->assertNotEmpty(writer::with_context($usercontext)->get_files([get_string('signaturesaved', 'mod_these')]));
+
+        provider::delete_data_for_user(new approved_contextlist($this->director, 'mod_these', [$usercontext->id]));
+        $this->assertNull(these_get_saved_signature($this->director->id));
+        $this->assertEmpty(provider::get_contexts_for_userid($this->director->id)->get_contextids());
+    }
+
+    /**
+     * Suppression du personnel cité : signature anonymisée et image effacée, comptes de vérification,
+     * d'éligibilité et de changement de sujet remis à zéro ; le dossier et sa date de signature restent.
+     */
+    public function test_delete_cited_staff(): void {
+        global $DB;
+        $this->setup_activity();
+        $dossier = $this->make_dossier();
+        $validator = $this->getDataGenerator()->create_and_enrol($this->course, 'editingteacher');
+        $signatureid = $this->cite_staff($dossier, $validator);
+
+        provider::delete_data_for_users(new approved_userlist($this->context, 'mod_these', [
+            $this->director->id, $this->deve->id, $validator->id,
+        ]));
+
+        $this->assertTrue($DB->record_exists('these_dossier', ['id' => $dossier->id]));
+        $signature = $DB->get_record('these_signature', ['id' => $signatureid], '*', MUST_EXIST);
+        $this->assertEquals(0, $signature->userid);
+        $this->assertSame('', $signature->signername);
+        $this->assertEquals(0, $signature->verifiedby);
+        $this->assertGreaterThan(0, $signature->timesigned);
+        $this->assertNull(these_get_signature_image($this->context->id, $signatureid));
+        $president = $DB->get_record('these_jury', ['dossierid' => $dossier->id, 'juryrole' => 'president'], '*', MUST_EXIST);
+        $this->assertEquals(1, $president->eligible);
+        $this->assertEquals(0, $president->eligibleby);
+        $history = $DB->get_record('these_subjecthistory', ['dossierid' => $dossier->id], '*', MUST_EXIST);
+        $this->assertEquals(0, $history->directorid);
+        $this->assertSame('', $history->directorname);
+        $this->assertEquals(0, $history->changedby);
+        $this->assertSame('Ancien sujet', $history->title);
+        foreach ([$this->director, $this->deve, $validator] as $user) {
+            $this->assertEmpty(provider::get_contexts_for_userid($user->id)->get_contextids());
+        }
+    }
+
+    /**
      * Suppression de tout le contexte.
      */
     public function test_delete_all(): void {
