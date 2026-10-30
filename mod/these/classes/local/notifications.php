@@ -175,20 +175,18 @@ class notifications {
     }
 
     /**
-     * Remplace dans un texte personnalisé les jetons {{cle}} par les valeurs fournies.
+     * Remplace dans un texte personnalisé les jetons {{cle}} par les valeurs fournies, en une seule
+     * passe : une valeur qui contient elle-même {{...}} est insérée telle quelle, et un jeton inconnu
+     * est laissé tel quel.
      *
      * @param string $text
      * @param array $vars cle => valeur
      * @return string
      */
     public static function render_email_placeholders($text, array $vars) {
-        $search = [];
-        $replace = [];
-        foreach ($vars as $key => $value) {
-            $search[] = '{{' . $key . '}}';
-            $replace[] = (string) $value;
-        }
-        return str_replace($search, $replace, $text);
+        return preg_replace_callback('/\{\{([a-z0-9_]+)\}\}/i', function ($match) use ($vars) {
+            return array_key_exists($match[1], $vars) ? (string) $vars[$match[1]] : $match[0];
+        }, (string) $text);
     }
 
     /**
@@ -367,7 +365,10 @@ class notifications {
 
     /**
      * Indique si le destinataire d'un courriel peut connaître le sujet d'une thèse : un compte qui le
-     * connaît (voir these_user_knows_subject()), ou la boîte de service de la DEVE ou de la bibliothèque.
+     * connaît (voir these_user_knows_subject()), ou, sans compte, une adresse qui doit le connaître :
+     * boîtes de service de la DEVE et de la bibliothèque, université (archive de la soutenance), membres
+     * du jury, directeur extérieur et signataires de l'établissement (direction générale, CCEM,
+     * université), dont les documents citent le titre.
      *
      * @param stdClass $these
      * @param stdClass $dossier
@@ -383,9 +384,21 @@ class notifications {
             return these_user_knows_subject($dossier, context_module::instance($cm->id), $recipient->id);
         }
         $email = core_text::strtolower(trim((string) $recipient->email));
-        foreach (['deveemail', 'libraryemail'] as $field) {
-            $service = core_text::strtolower(trim((string) ($these->$field ?? '')));
-            if ($service !== '' && $email === $service) {
+        if ($email === '') {
+            return false;
+        }
+        $known = [];
+        foreach (['deveemail', 'libraryemail', 'universityemail'] as $field) {
+            $known[] = (string) ($these->$field ?? '');
+        }
+        foreach (these_get_jury($dossier->id) as $member) {
+            $known[] = (string) $member->email;
+        }
+        foreach (these_external_signers($dossier) as $signer) {
+            $known[] = (string) $signer['email'];
+        }
+        foreach ($known as $candidate) {
+            if ($candidate !== '' && $email === core_text::strtolower(trim($candidate))) {
                 return true;
             }
         }

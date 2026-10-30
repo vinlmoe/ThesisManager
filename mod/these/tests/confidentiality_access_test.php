@@ -438,4 +438,40 @@ final class confidentiality_access_test extends these_testcase {
         $this->assert_no_secret(implode(' ', $received['inconnu@example.org']), 'adresse inconnue');
         $sink->close();
     }
+
+    /**
+     * Sans compte, seules les adresses qui doivent connaître le sujet reçoivent le titre : membres du
+     * jury, université, directeur extérieur et signataires de l'établissement ; la désignation du
+     * jury et les demandes de signature le citent donc même pour une thèse confidentielle.
+     */
+    public function test_external_recipients_who_must_know_the_subject(): void {
+        global $DB;
+        $this->setup_confidential();
+        $this->these->universityemail = 'archives@universite.example.org';
+        $DB->update_record('these', $this->these);
+        \mod_these\local\scopesettings::set(these_settings_scope($this->these), ['dgemail' => 'dg@example.org']);
+        $DB->update_record('these_dossier', (object) ['id' => $this->dossier->id, 'externaldirector' => 1,
+            'extdirectorname' => 'Dr Externe', 'extdirectoremail' => 'Externe@example.org']);
+        $dossier = $this->reload($this->dossier->id);
+        $knows = function (string $email) use ($dossier) {
+            return these_recipient_knows_subject($this->these, $dossier, these_make_external_user($email));
+        };
+        $this->assertTrue($knows('president@example.com'));
+        $this->assertTrue($knows('ARCHIVES@universite.example.org'));
+        $this->assertTrue($knows('externe@example.org'));
+        $this->assertTrue($knows('dg@example.org'));
+        $this->assertFalse($knows('inconnu@example.org'));
+        $this->assertFalse($knows(''));
+
+        $sink = $this->redirectEmails();
+        these_notify_jury($this->these, $this->cm, $dossier, true);
+        these_request_signature($this->these, $this->cm, $dossier, 'extdirector', ['subject']);
+        $bodies = [];
+        foreach ($sink->get_messages() as $message) {
+            $bodies[$message->to][] = $message->subject . ' ' . quoted_printable_decode($message->body);
+        }
+        $sink->close();
+        $this->assertStringContainsString(self::SECRETS['title'], implode(' ', $bodies['president@example.com']));
+        $this->assertStringContainsString(self::SECRETS['title'], implode(' ', $bodies['Externe@example.org']));
+    }
 }

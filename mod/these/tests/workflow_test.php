@@ -30,6 +30,7 @@ require_once(__DIR__ . '/these_testcase.php');
  * @copyright  2026 Sébastien Lefebvre
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     ::these_save_subject
+ * @covers     ::these_render_email_placeholders
  * @covers     ::these_validate_step
  * @covers     ::these_save_defense
  * @covers     ::these_generate_documents
@@ -219,6 +220,18 @@ final class workflow_test extends these_testcase {
         $this->assertStringContainsString(fullname($this->student), $message->subject);
         $body = quoted_printable_decode($message->body);
         $this->assertStringContainsString(these_status_label(THESE_STATUS_SUBJECT_SUBMITTED), $body);
+    }
+
+    /**
+     * Jetons d'un courriel personnalisé : substitués en une seule passe (une valeur qui contient un
+     * jeton n'est pas substituée à son tour), jeton inconnu laissé tel quel.
+     */
+    public function test_email_placeholders_single_pass(): void {
+        $rendered = these_render_email_placeholders(
+            '{{student}} : {{title}} ({{unknown}}) {{status}}',
+            ['student' => 'Camille {{title}}', 'title' => 'Sujet {{student}}', 'status' => 0]
+        );
+        $this->assertSame('Camille {{title}} : Sujet {{student}} ({{unknown}}) 0', $rendered);
     }
 
     /**

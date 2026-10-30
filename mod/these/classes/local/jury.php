@@ -747,7 +747,7 @@ class jury {
                 'date' => $date ? userdate($date, get_string('strftimedaydatetime', 'langconfig')) : '-',
                 'location' => (string) $dossier->defenselocation,
                 'url' => (new moodle_url('/mod/these/jury.php', ['token' => $token]))->out(false),
-            ]);
+            ], '', '', $dossier);
             if ($sent) {
                 $DB->set_field('these_jury', 'notifiedtime', time(), ['id' => $member->id]);
                 $result->sent++;

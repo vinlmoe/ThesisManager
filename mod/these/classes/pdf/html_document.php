@@ -136,10 +136,22 @@ class html_document extends \pdf {
         $mustache = self::mustache();
         foreach (['header', 'body', 'footer'] as $section) {
             if ($parsed[$section] !== '') {
-                $parsed[$section] = self::restrict_images($mustache->render($parsed[$section], $context));
+                $parsed[$section] = self::restrict_images(self::strip_tcpdf_tags($mustache->render($parsed[$section], $context)));
             }
         }
         return $parsed;
+    }
+
+    /**
+     * Retire les balises <tcpdf> : TCPDF peut y lire des appels de méthode (« method », « params »)
+     * quand K_TCPDF_CALLS_IN_HTML est activé. Un modèle, modifiable par la DEVE et importable par le
+     * transfert de paramètres, ne doit pas pouvoir en contenir, quelle que soit la configuration.
+     *
+     * @param string $html
+     * @return string
+     */
+    public static function strip_tcpdf_tags($html) {
+        return preg_replace('/<\/?tcpdf\b[^>]*>/i', '', $html);
     }
 
     /**
