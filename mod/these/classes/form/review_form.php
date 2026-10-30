@@ -22,6 +22,7 @@ use mod_these\local\signatures;
 use mod_these\local\workflow;
 use mod_these\local\grid;
 use mod_these\local\signaturefields;
+use mod_these\local\juryform;
 
 /**
  * Formulaire commun aux six étapes de validation du circuit (voir these_review_steps()) : un
@@ -128,7 +129,7 @@ class review_form extends base_form {
                     $this->_customdata['roomconflicts'] ?? ''
                 );
                 $jurycount = $this->_customdata['jurycount'] ?? 0;
-                jury::add_jury_fields(
+                juryform::add_jury_fields(
                     $this,
                     $mform,
                     $jurycount,
@@ -136,7 +137,7 @@ class review_form extends base_form {
                     $this->_customdata['jurorids'] ?? [],
                     $this->_customdata['juryconflicts'] ?? ''
                 );
-                jury::jury_readonly($mform, array_values($this->_customdata['jury'] ?? []));
+                juryform::jury_readonly($mform, array_values($this->_customdata['jury'] ?? []));
                 $mform->addElement('static', 'juryeligiblehelp', '', get_string('juryeligiblehelp', 'mod_these'));
                 if ($mform->elementExists('juryedit')) {
                     $mform->hideIf('juryeligiblehelp', 'juryedit', 'notchecked');
@@ -267,7 +268,7 @@ class review_form extends base_form {
                     $errors['defenselocation'] = get_string('required');
                 }
                 if (empty($data['returndossier'])) {
-                    $members = jury::extract_submitted_jury($data, true);
+                    $members = juryform::extract_submitted_jury($data, true);
                     $juryerror = jury::validate_jury($members, $this->_customdata['minjury'])
                         ?? jury::validate_jury_eligibility($members);
                     if ($juryerror !== null) {

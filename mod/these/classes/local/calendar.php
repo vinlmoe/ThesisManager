@@ -128,7 +128,7 @@ class calendar {
             'eventtype' => self::EVENTTYPE,
             'uuid' => self::uuid($dossier),
             'timestart' => (int) $dossier->defensedate,
-            'timeduration' => jury::defense_duration($dossier),
+            'timeduration' => defenseconflicts::defense_duration($dossier),
             'visible' => (int) $cm->visible,
         ];
     }

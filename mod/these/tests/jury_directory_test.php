@@ -146,7 +146,7 @@ final class jury_directory_test extends these_testcase {
             get_string('juryonedirector', 'mod_these'),
             these_validate_jury(these_extract_submitted_jury($nodirector), 2)
         );
-        $this->assertSame([0, 1, 2], array_keys(\mod_these\local\jury::form_rows([
+        $this->assertSame([0, 1, 2], array_keys(\mod_these\local\juryform::form_rows([
             (object) ['juryrole' => 'member'], (object) ['juryrole' => 'director'], (object) ['juryrole' => 'president'],
         ])));
 

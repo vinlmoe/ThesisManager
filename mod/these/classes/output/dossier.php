@@ -305,7 +305,7 @@ class dossier implements \renderable, \templatable {
         if (rendering::rank_reached($dossier, THESE_STATUS_ACTIVE) || $dossier->proposeddate) {
             $data['defense'] = $this->defense_section($output)->export_for_template($output);
             // Salle déjà occupée sur le créneau, pour le personnel : au-dessus de la soutenance.
-            $data['roomconflicts'] = $rights->viewall ? \mod_these\local\jury::render_room_conflicts($dossier) : '';
+            $data['roomconflicts'] = $rights->viewall ? \mod_these\local\defenseconflicts::render_room_conflicts($dossier) : '';
             if (!empty($dossier->correctionsrequested)) {
                 $data['corrections'] = $this->corrections_section($output)->export_for_template($output);
             }
@@ -316,7 +316,7 @@ class dossier implements \renderable, \templatable {
             $members = \mod_these\local\jury::get_jury($dossier->id);
             $data['jury'] = (new jury($members, $involved, $rights->deve))->export_for_template($output);
             // Conflits de jury, pour le personnel : au-dessus du tableau du jury.
-            $data['jury']['conflicts'] = $rights->viewall ? \mod_these\local\jury::render_jury_conflicts($dossier) : '';
+            $data['jury']['conflicts'] = $rights->viewall ? \mod_these\local\defenseconflicts::render_jury_conflicts($dossier) : '';
             $juryvalidated = $status >= THESE_STATUS_DEFENSE_VALIDATED && $status < THESE_STATUS_CLOSED;
             if ($rights->deve && $juryvalidated) {
                 $url = new moodle_url('/mod/these/jurynotify.php', [

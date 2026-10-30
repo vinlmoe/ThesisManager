@@ -18,6 +18,7 @@ namespace mod_these\form;
 
 use mod_these\local\dossiers;
 use mod_these\local\jury;
+use mod_these\local\juryform;
 
 /**
  * Modification d'un dossier par la DEVE, à tout moment et sans changer son statut : corriger le
@@ -74,7 +75,7 @@ class dossier_edit_form extends base_form {
             $this->_customdata['roomconflicts'] ?? ''
         );
 
-        jury::add_jury_fields(
+        juryform::add_jury_fields(
             $this,
             $mform,
             $this->_customdata['jurycount'] ?? 0,
@@ -82,7 +83,7 @@ class dossier_edit_form extends base_form {
             $this->_customdata['jurorids'] ?? [],
             $this->_customdata['juryconflicts'] ?? ''
         );
-        jury::jury_readonly($mform, array_values($this->_customdata['jury'] ?? []));
+        juryform::jury_readonly($mform, array_values($this->_customdata['jury'] ?? []));
 
         // Page courte : sujet et enregistrements repliés, la soutenance (le plus souvent modifiée) ouverte.
         $mform->setExpanded('subjectheader', false);
@@ -105,7 +106,7 @@ class dossier_edit_form extends base_form {
         if ($number !== '' && dossiers::devenumber_taken($this->_customdata['theseid'], $number, $data['dossierid'])) {
             $errors['devenumber'] = get_string('devenumbertaken', 'mod_these');
         }
-        $members = jury::extract_submitted_jury($data);
+        $members = juryform::extract_submitted_jury($data);
         if ($members) {
             $juryerror = jury::validate_jury($members, $this->_customdata['minjury']);
             if ($juryerror !== null) {

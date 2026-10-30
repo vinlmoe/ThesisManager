@@ -60,24 +60,24 @@ function these_get_jury($dossierid) {
 }
 
 /**
- * Voir \mod_these\local\jury::jury_conflicts().
+ * Voir \mod_these\local\defenseconflicts::jury_conflicts().
  *
  * @param stdClass $dossier
  * @param array|null $members
  * @return stdClass[]
  */
 function these_jury_conflicts(stdClass $dossier, ?array $members = null) {
-    return \mod_these\local\jury::jury_conflicts($dossier, $members);
+    return \mod_these\local\defenseconflicts::jury_conflicts($dossier, $members);
 }
 
 /**
- * Voir \mod_these\local\jury::render_jury_conflicts().
+ * Voir \mod_these\local\defenseconflicts::render_jury_conflicts().
  *
  * @param stdClass $dossier
  * @return string
  */
 function these_render_jury_conflicts(stdClass $dossier) {
-    return \mod_these\local\jury::render_jury_conflicts($dossier);
+    return \mod_these\local\defenseconflicts::render_jury_conflicts($dossier);
 }
 
 /**
@@ -104,7 +104,7 @@ function these_save_jury($dossierid, array $members, $userid = 0) {
 }
 
 /**
- * Voir \mod_these\local\jury::add_jury_fields().
+ * Voir \mod_these\local\juryform::add_jury_fields().
  *
  * @param moodleform $form
  * @param MoodleQuickForm $mform
@@ -122,28 +122,28 @@ function these_add_jury_fields(
     array $keep = [],
     $warning = ''
 ) {
-    return \mod_these\local\jury::add_jury_fields($form, $mform, $count, $eligibility, $keep, $warning);
+    return \mod_these\local\juryform::add_jury_fields($form, $mform, $count, $eligibility, $keep, $warning);
 }
 
 /**
- * Voir \mod_these\local\jury::jury_form_data().
+ * Voir \mod_these\local\juryform::jury_form_data().
  *
  * @param array $members
  * @return array
  */
 function these_jury_form_data(array $members) {
-    return \mod_these\local\jury::jury_form_data($members);
+    return \mod_these\local\juryform::jury_form_data($members);
 }
 
 /**
- * Voir \mod_these\local\jury::extract_submitted_jury().
+ * Voir \mod_these\local\juryform::extract_submitted_jury().
  *
  * @param stdClass|array $data
  * @param bool $witheligibility Reprendre la validation d'éligibilité de la DEVE.
  * @return array Liste d'objets {juryrole, fullname, jurytitle, institution, email, jurorid, jurystatus, eligible?}.
  */
 function these_extract_submitted_jury($data, $witheligibility = false) {
-    return \mod_these\local\jury::extract_submitted_jury($data, $witheligibility);
+    return \mod_these\local\juryform::extract_submitted_jury($data, $witheligibility);
 }
 
 /**
@@ -178,7 +178,7 @@ function these_validate_jury_eligibility(array $members) {
 }
 
 /**
- * Voir \mod_these\local\jury::notify_jury().
+ * Voir \mod_these\local\juryaccess::notify_jury().
  *
  * @param stdClass $these
  * @param stdClass $cm
@@ -187,50 +187,50 @@ function these_validate_jury_eligibility(array $members) {
  * @return stdClass {sent, failed, missing (noms des membres sans adresse)}
  */
 function these_notify_jury(stdClass $these, stdClass $cm, stdClass $dossier, $force = false) {
-    return \mod_these\local\jury::notify_jury($these, $cm, $dossier, $force);
+    return \mod_these\local\juryaccess::notify_jury($these, $cm, $dossier, $force);
 }
 
 /**
- * Voir \mod_these\local\jury::get_jury_access().
+ * Voir \mod_these\local\juryaccess::get_jury_access().
  *
  * @param string $token
  * @return stdClass|null Membre, avec dossier, these et cm ; null si le lien est inconnu ou n'est plus
  *                       valide (voir these_jury_access_open()).
  */
 function these_get_jury_access($token) {
-    return \mod_these\local\jury::get_jury_access($token);
+    return \mod_these\local\juryaccess::get_jury_access($token);
 }
 
 /**
- * Voir \mod_these\local\jury::get_jury_member_access().
+ * Voir \mod_these\local\juryaccess::get_jury_member_access().
  *
  * @param int $memberid
  * @param stdClass $user
  * @return stdClass|null Voir these_get_jury_access().
  */
 function these_get_jury_member_access($memberid, stdClass $user) {
-    return \mod_these\local\jury::get_jury_member_access($memberid, $user);
+    return \mod_these\local\juryaccess::get_jury_member_access($memberid, $user);
 }
 
 /**
- * Voir \mod_these\local\jury::jury_access_member().
+ * Voir \mod_these\local\juryaccess::jury_access_member().
  *
  * @param stdClass $member
  * @return stdClass|null
  */
 function these_jury_access_member(stdClass $member) {
-    return \mod_these\local\jury::jury_access_member($member);
+    return \mod_these\local\juryaccess::jury_access_member($member);
 }
 
 /**
- * Voir \mod_these\local\jury::jury_access_open().
+ * Voir \mod_these\local\juryaccess::jury_access_open().
  *
  * @param stdClass $dossier
  * @param stdClass $member
  * @return bool
  */
 function these_jury_access_open(stdClass $dossier, stdClass $member) {
-    return \mod_these\local\jury::jury_access_open($dossier, $member);
+    return \mod_these\local\juryaccess::jury_access_open($dossier, $member);
 }
 
 /**
@@ -257,33 +257,33 @@ function these_defense_rooms(stdClass $these) {
 }
 
 /**
- * Voir \mod_these\local\jury::room_conflicts().
+ * Voir \mod_these\local\defenseconflicts::room_conflicts().
  *
  * @param stdClass $dossier
  * @param string|null $location
  * @return stdClass[]
  */
 function these_room_conflicts(stdClass $dossier, $location = null) {
-    return \mod_these\local\jury::room_conflicts($dossier, $location);
+    return \mod_these\local\defenseconflicts::room_conflicts($dossier, $location);
 }
 
 /**
- * Voir \mod_these\local\jury::render_room_conflicts().
+ * Voir \mod_these\local\defenseconflicts::render_room_conflicts().
  *
  * @param stdClass $dossier
  * @return string HTML
  */
 function these_render_room_conflicts(stdClass $dossier) {
-    return \mod_these\local\jury::render_room_conflicts($dossier);
+    return \mod_these\local\defenseconflicts::render_room_conflicts($dossier);
 }
 
 /**
- * Voir \mod_these\local\jury::jury_readonly().
+ * Voir \mod_these\local\juryform::jury_readonly().
  *
  * @param MoodleQuickForm $mform
  * @param array $members
  * @return void
  */
 function these_jury_readonly(MoodleQuickForm $mform, array $members) {
-    \mod_these\local\jury::jury_readonly($mform, $members);
+    \mod_these\local\juryform::jury_readonly($mform, $members);
 }

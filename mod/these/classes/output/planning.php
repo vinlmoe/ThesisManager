@@ -72,7 +72,7 @@ class planning implements \renderable, \templatable {
         $jury[] = parts::text($row['jury']);
         // Membre déjà engagé dans un autre jury sur le même créneau (personnel qui voit tous les dossiers).
         if (!empty($defense->source->rights->viewall)) {
-            foreach (\mod_these\local\jury::jury_conflicts($defense->dossier, $defense->jury) as $conflict) {
+            foreach (\mod_these\local\defenseconflicts::jury_conflicts($defense->dossier, $defense->jury) as $conflict) {
                 $jury[] = parts::br();
                 $jury[] = parts::badge(get_string('juryconflictshort', 'mod_these', (object) [
                     'member' => $conflict->member,
@@ -108,7 +108,7 @@ class planning implements \renderable, \templatable {
     protected function location_cell(stdClass $defense, string $location): array {
         $cell = [parts::text($location)];
         if (!empty($defense->source->rights->viewall)) {
-            foreach (\mod_these\local\jury::room_conflicts($defense->dossier) as $conflict) {
+            foreach (\mod_these\local\defenseconflicts::room_conflicts($defense->dossier) as $conflict) {
                 $cell[] = parts::br();
                 $cell[] = parts::badge(get_string('roomconflictshort', 'mod_these', (object) [
                     'student' => $conflict->student,

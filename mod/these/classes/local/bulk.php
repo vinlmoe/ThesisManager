@@ -94,7 +94,7 @@ class bulk {
                 if ($status < THESE_STATUS_DEFENSE_VALIDATED || $status > THESE_STATUS_SCHEDULED) {
                     return false;
                 }
-                return jury::notify_jury($these, $cm, $dossier)->sent > 0;
+                return juryaccess::notify_jury($these, $cm, $dossier)->sent > 0;
         }
         return false;
     }

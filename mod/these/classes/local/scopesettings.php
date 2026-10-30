@@ -255,7 +255,7 @@ class scopesettings {
      *
      * @param \MoodleQuickForm $mform
      * @param string[] $rooms Voir rooms().
-     * @param string $warning Avertissement affiché sous le champ (HTML, voir jury::render_room_conflicts()).
+     * @param string $warning Avertissement affiché sous le champ (HTML, voir defenseconflicts::render_room_conflicts()).
      * @return void
      */
     public static function add_location_field(\MoodleQuickForm $mform, array $rooms, $warning = '') {

@@ -24,6 +24,7 @@ use mod_these\local\bordereau;
 use mod_these\local\grid;
 use mod_these\local\signaturefields;
 use mod_these\local\documentrenderer;
+use mod_these\local\juryform;
 
 /**
  * Dépôt des documents de soutenance (phase 2, étape 1) : manuscrit (seul document déposé), date
@@ -84,7 +85,7 @@ class defense_form extends base_form {
         );
         $mform->addElement('advcheckbox', 'bvisio', '', get_string('visio', 'mod_these'));
 
-        jury::add_jury_fields($this, $mform, $this->_customdata['jurycount'] ?? 0, false, $this->_customdata['jurorids'] ?? []);
+        juryform::add_jury_fields($this, $mform, $this->_customdata['jurycount'] ?? 0, false, $this->_customdata['jurorids'] ?? []);
 
         // Identité et coordonnées : communes au bordereau ABES, à la fiche signalétique et au
         // contrat de diffusion.
@@ -262,7 +263,7 @@ class defense_form extends base_form {
         if (empty($data['gridconfirm'])) {
             $errors['gridconfirm'] = get_string('gridstudentconfirmrequired', 'mod_these');
         }
-        $juryerror = jury::validate_jury(jury::extract_submitted_jury($data), $this->_customdata['minjury']);
+        $juryerror = jury::validate_jury(juryform::extract_submitted_jury($data), $this->_customdata['minjury']);
         if ($juryerror !== null) {
             $errors['juryhelp'] = get_string('juryproblem', 'mod_these', $juryerror);
         }

@@ -537,7 +537,7 @@ class dossiers {
     ) {
         return self::dossier_operation($dossier, function () use ($these, $cm, $dossier, $data, $submit, $userid, $signature) {
             $context = context_module::instance($cm->id);
-            jury::save_jury($dossier->id, jury::extract_submitted_jury($data));
+            jury::save_jury($dossier->id, juryform::extract_submitted_jury($data));
 
             $fields = [
                 'proposeddate' => (int) $data->proposeddate,
