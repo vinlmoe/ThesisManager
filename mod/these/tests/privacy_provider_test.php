@@ -188,6 +188,40 @@ final class privacy_provider_test extends these_testcase {
     }
 
     /**
+     * Compte rattaché à un membre du jury : contexte et liste d'utilisateurs, export de ses jurys,
+     * suppression qui détache le compte sans retirer le membre du jury.
+     */
+    public function test_jury_member_account(): void {
+        global $DB;
+        $this->setup_activity();
+        $dossier = $this->make_dossier();
+        $juror = $this->getDataGenerator()->create_user(['email' => 'membre@example.com']);
+        $jury = $this->generator->default_jury();
+        foreach ($jury as $member) {
+            $member->eligible = true;
+        }
+        these_save_jury($dossier->id, $jury, $this->deve->id);
+        $member = $DB->get_record('these_jury', ['dossierid' => $dossier->id, 'juryrole' => 'member'], '*', MUST_EXIST);
+        $this->assertEquals($juror->id, $member->userid);
+
+        $this->assertEquals([$this->context->id], provider::get_contexts_for_userid($juror->id)->get_contextids());
+        $userlist = new userlist($this->context, 'mod_these');
+        provider::get_users_in_context($userlist);
+        $this->assertContains((int) $juror->id, array_map('intval', $userlist->get_userids()));
+
+        provider::export_user_data(new approved_contextlist($juror, 'mod_these', [$this->context->id]));
+        $data = writer::with_context($this->context)->get_data([get_string('staffactions', 'mod_these')]);
+        $this->assertEquals('Sujet de test', $data->juries[0]->dossier);
+        $this->assertEquals('member', $data->juries[0]->role);
+
+        provider::delete_data_for_user(new approved_contextlist($juror, 'mod_these', [$this->context->id]));
+        $member = $DB->get_record('these_jury', ['id' => $member->id], '*', MUST_EXIST);
+        $this->assertEquals(0, $member->userid);
+        $this->assertSame('Albert Membre', $member->fullname);
+        $this->assertEmpty(provider::get_contexts_for_userid($juror->id)->get_contextids());
+    }
+
+    /**
      * Signature enregistrée : contexte utilisateur remonté, exporté, puis effacé.
      */
     public function test_saved_signature_user_context(): void {

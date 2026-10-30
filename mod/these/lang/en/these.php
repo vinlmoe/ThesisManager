@@ -1477,6 +1477,7 @@ $string['privacy:metadata:these_signature:token'] = 'Hash of the personal signin
 $string['privacy:metadata:these_signature:contenthash'] = 'Hash of the signed content.';
 $string['privacy:metadata:these_signature:verifiedby'] = 'Registrar account that checked the identity of a signatory signing in person, or recorded a scan.';
 $string['privacy:metadata:these_jury:eligibleby'] = 'Registrar account that validated the eligibility of the jury member.';
+$string['privacy:metadata:these_jury:userid'] = 'Moodle account linked to the jury member (directory entry or single account with their address), through which they are recognised as a jury member.';
 $string['privacy:metadata:these_jury:accesstoken'] = 'Hash of the personal link giving the jury member access to the file documents.';
 $string['privacy:metadata:these_subjecthistory:directorid'] = 'Director of the previous subject.';
 $string['privacy:metadata:these_subjecthistory:directorname'] = 'Name of the director of the previous subject (external director included).';

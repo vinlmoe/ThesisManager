@@ -118,6 +118,7 @@ class provider implements
             'jurystatus' => 'privacy:metadata:these_jury:jurystatus',
             'eligibleby' => 'privacy:metadata:these_jury:eligibleby',
             'accesstoken' => 'privacy:metadata:these_jury:accesstoken',
+            'userid' => 'privacy:metadata:these_jury:userid',
         ], 'privacy:metadata:these_jury');
 
         // Annuaire du jury : enseignants désignés par leur nom et leur adresse, sans lien avec un compte.
@@ -218,7 +219,8 @@ class provider implements
                     OR EXISTS (SELECT 1 FROM {these_signature} sg
                                 WHERE sg.dossierid = d.id
                                   AND (sg.userid = :userid5 OR sg.verifiedby = :userid6 OR sg.validatedby = :userid7))
-                    OR EXISTS (SELECT 1 FROM {these_jury} j WHERE j.dossierid = d.id AND j.eligibleby = :userid8)
+                    OR EXISTS (SELECT 1 FROM {these_jury} j
+                                WHERE j.dossierid = d.id AND (j.eligibleby = :userid8 OR j.userid = :userid11))
                     OR EXISTS (SELECT 1 FROM {these_subjecthistory} h
                                 WHERE h.dossierid = d.id AND (h.directorid = :userid9 OR h.changedby = :userid10))";
     }
@@ -231,7 +233,7 @@ class provider implements
      */
     protected static function contexts_params(int $userid) {
         $params = ['contextlevel' => CONTEXT_MODULE, 'modname' => 'these'];
-        for ($i = 1; $i <= 10; $i++) {
+        for ($i = 1; $i <= 11; $i++) {
             $params['userid' . $i] = $userid;
         }
         return $params;
@@ -287,7 +289,7 @@ class provider implements
                                             WHERE cm.id = :instanceid", $params);
         $related = [
             'these_signature' => ['userid', 'verifiedby', 'validatedby'],
-            'these_jury' => ['eligibleby'],
+            'these_jury' => ['eligibleby', 'userid'],
             'these_subjecthistory' => ['directorid', 'changedby'],
         ];
         foreach ($related as $table => $fields) {
@@ -466,7 +468,8 @@ class provider implements
 
     /**
      * Exporte, pour un membre du personnel, ses interventions dans les dossiers des autres : les
-     * dossiers qu'il dirige et les actions qu'il a menées, avec ses commentaires.
+     * dossiers qu'il dirige, les jurys où il siège par son compte rattaché et les actions qu'il a
+     * menées, avec ses commentaires.
      *
      * @param context_module $context
      * @param \stdClass $cm
@@ -489,13 +492,24 @@ class provider implements
             'id',
             'id, title'
         );
-        if (!$logs && !$directed) {
+        $juries = $DB->get_records_sql(
+            "SELECT j.id, j.juryrole, d.title
+               FROM {these_jury} j
+               JOIN {these_dossier} d ON d.id = j.dossierid
+              WHERE d.theseid = :theseid AND d.userid <> :self AND j.userid = :userid
+           ORDER BY j.id",
+            ['theseid' => $cm->instance, 'self' => $userid, 'userid' => $userid]
+        );
+        if (!$logs && !$directed && !$juries) {
             return;
         }
         writer::with_context($context)->export_data([get_string('staffactions', 'mod_these')], (object) [
             'directed' => array_values(array_map(function ($dossier) {
                 return $dossier->title;
             }, $directed)),
+            'juries' => array_values(array_map(function ($member) {
+                return (object) ['dossier' => $member->title, 'role' => $member->juryrole];
+            }, $juries)),
             'actions' => array_values(array_map(function ($log) {
                 return (object) [
                     'dossier' => $log->title,
@@ -605,14 +619,15 @@ class provider implements
             "UPDATE {these_log} SET userid = 0, remark = '' WHERE dossierid $dsql AND userid $insql",
             array_merge($dparams, $inparams)
         );
-        // Comptes cités sans être signataires : validation d'éligibilité, ancien directeur ou auteur
-        // d'un changement de sujet, vérification d'identité ou validation d'une signature.
+        // Comptes cités sans être signataires : validation d'éligibilité, compte rattaché à un membre
+        // du jury (qui garde son nom, son adresse et son lien), ancien directeur ou auteur d'un
+        // changement de sujet, vérification d'identité ou validation d'une signature.
         $DB->execute(
             "UPDATE {these_subjecthistory} SET directorid = 0, directorname = '' WHERE dossierid $dsql AND directorid $insql",
             array_merge($dparams, $inparams)
         );
         $cited = [
-            'these_jury' => ['eligibleby'],
+            'these_jury' => ['eligibleby', 'userid'],
             'these_subjecthistory' => ['changedby'],
             'these_signature' => ['verifiedby', 'validatedby'],
         ];

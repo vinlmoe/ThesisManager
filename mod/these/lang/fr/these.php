@@ -1492,6 +1492,7 @@ $string['privacy:metadata:these_signature:token'] = "Empreinte du lien personnel
 $string['privacy:metadata:these_signature:contenthash'] = 'Empreinte du contenu signé.';
 $string['privacy:metadata:these_signature:verifiedby'] = "Compte DEVE qui a vérifié l'identité d'un signataire sur place, ou enregistré un scan.";
 $string['privacy:metadata:these_jury:eligibleby'] = "Compte DEVE qui a validé l'éligibilité du membre du jury.";
+$string['privacy:metadata:these_jury:userid'] = 'Compte Moodle rattaché au membre du jury (fiche de l\'annuaire ou compte unique à son adresse), par lequel il est reconnu comme membre du jury.';
 $string['privacy:metadata:these_jury:accesstoken'] = 'Empreinte du lien personnel donnant au membre du jury accès aux documents du dossier.';
 $string['privacy:metadata:these_subjecthistory:directorid'] = 'Directeur du sujet précédent.';
 $string['privacy:metadata:these_subjecthistory:directorname'] = 'Nom du directeur du sujet précédent (directeur extérieur compris).';

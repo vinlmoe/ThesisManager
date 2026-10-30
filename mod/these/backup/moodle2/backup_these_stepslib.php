@@ -82,7 +82,7 @@ class backup_these_activity_structure_step extends backup_activity_structure_ste
         $jurymembers = new backup_nested_element('jurymembers');
         $jurymember = new backup_nested_element('jurymember', ['id'], [
             'juryrole', 'fullname', 'jurytitle', 'institution', 'email', 'sortorder', 'timecreated',
-            'jurorid', 'jurystatus', 'eligible', 'eligibleby', 'eligibletime', 'notifiedtime',
+            'jurorid', 'jurystatus', 'eligible', 'eligibleby', 'eligibletime', 'notifiedtime', 'userid',
         ]);
 
         $subjecthistory = new backup_nested_element('subjecthistory');
@@ -154,6 +154,7 @@ class backup_these_activity_structure_step extends backup_activity_structure_ste
         $subject->annotate_ids('user', 'directorid');
         $subject->annotate_ids('user', 'changedby');
         $jurymember->annotate_ids('user', 'eligibleby');
+        $jurymember->annotate_ids('user', 'userid');
         $signature->annotate_ids('user', 'userid');
         $signature->annotate_ids('user', 'verifiedby');
         $signature->annotate_ids('user', 'validatedby');
