@@ -13,6 +13,14 @@ de version recalés sur la date. Les numéros entre parenthèses des sections de
 développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
 été étiquetée.
 
+## mod_these 0.23.1 (2026103000) — titre des enseignants internes repris de l'annuaire
+
+- **Plus de titre à saisir pour le directeur ou l'examinateur interne** au
+  dépôt du sujet : les champs « Titre du directeur » et « Titre de
+  l'examinateur interne » sont retirés du formulaire, le titre (Dr, Pr) étant
+  toujours repris de l'annuaire des enseignants à l'enregistrement. Chaînes
+  `directortitle_help` et `internalexaminertitle` supprimées. Guide 2.19.
+
 ## mod_these 0.23.0 (2026102901) et mod_thesesynthesis 0.7.2 (2026102901) — dépôt simplifié, rapport déposé, validation des études, date redemandée par la DEVE
 
 - **Plus de co-directeur.** Un directeur extérieur à l'établissement est

@@ -754,8 +754,6 @@ $string['externaldirector_help'] = "Le directeur extérieur, sans compte Moodle,
     . "Choisissez alors un examinateur interne, enseignant-chercheur de l'établissement : c'est lui qui fait les démarches dans le "
     . "module (validation des étapes, rapport, signatures en qualité de membre).";
 $string['directortitle'] = 'Titre du directeur';
-$string['directortitle_help'] = "Dr, Pr… tel qu'il doit figurer sur les documents. Demandé seulement si le directeur ne figure pas "
-    . "dans l'annuaire des enseignants, qui donne sinon son titre.";
 $string['extdirectorname'] = 'Directeur extérieur : titre, nom, prénom';
 $string['extdirectorgrade'] = 'Grade';
 $string['extdirectorinstitution'] = 'Établissement';
@@ -1406,7 +1404,6 @@ $string['privacy:metadata:these_subjecthistory:timecreated'] = 'Date du changeme
 $string['internalexaminer'] = 'Examinateur interne';
 $string['internalexaminer_help'] = "Enseignant-chercheur de l'établissement qui fait les démarches dans le module à la place du "
     . "directeur extérieur : il valide les étapes, dépose le rapport et signe en qualité de membre.";
-$string['internalexaminertitle'] = "Titre de l'examinateur interne";
 $string['exportextdirector'] = 'Directeur extérieur';
 $string['teachinglistreminder'] = "Rappel : votre manuscrit doit inclure la page de la liste à jour du corps enseignant, à télécharger "
     . "le jour du dépôt.";
