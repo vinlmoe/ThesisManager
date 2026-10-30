@@ -47,8 +47,8 @@ if ($scope->shared) {
     echo $OUTPUT->header();
     echo $OUTPUT->heading(get_string('scopesettings', 'mod_these'));
     echo these_render_navlinks($cm, $context);
-    echo \mod_these\local\doctemplates_page::shared_notice($scope, get_string('scopesettings', 'mod_these'));
+    echo \mod_these\page\doctemplates_page::shared_notice($scope, get_string('scopesettings', 'mod_these'));
     echo $OUTPUT->footer();
     exit;
 }
-\mod_these\local\scopesettings_page::output($scope, $baseurl, these_render_navlinks($cm, $context));
+\mod_these\page\scopesettings_page::output($scope, $baseurl, these_render_navlinks($cm, $context));

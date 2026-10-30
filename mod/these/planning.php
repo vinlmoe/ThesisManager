@@ -45,7 +45,7 @@ $PAGE->set_title(format_string($these->name) . ' - ' . get_string('planning', 'm
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($context);
 
-\mod_these\local\planning_page::output(
+\mod_these\page\planning_page::output(
     [these_planning_source($these, $cm, $context, $USER->id)],
     $baseurl,
     these_settings_scope($these),

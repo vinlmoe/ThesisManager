@@ -45,4 +45,4 @@ $PAGE->set_context($context);
 $scope = these_synthesis_scope($synthesis->id);
 $navigation = thesesynthesis_render_navlinks($cm, $context);
 
-\mod_these\local\questions_page::output($scope, $baseurl, $navigation);
+\mod_these\page\questions_page::output($scope, $baseurl, $navigation);

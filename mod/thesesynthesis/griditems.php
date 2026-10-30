@@ -44,7 +44,7 @@ $PAGE->set_context($context);
 $scope = these_synthesis_scope($synthesis->id);
 $navigation = thesesynthesis_render_navlinks($cm, $context);
 
-\mod_these\local\griditems_page::output(
+\mod_these\page\griditems_page::output(
     $scope,
     $baseurl,
     new moodle_url('/mod/thesesynthesis/doctemplates.php', ['id' => $cm->id, 'type' => 'grid', 'action' => 'preview']),

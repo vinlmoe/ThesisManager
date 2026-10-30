@@ -14,11 +14,13 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace mod_these\local;
+namespace mod_these\page;
 
+use mod_these\form\question_form;
+use mod_these\local\backlinks;
+use mod_these\local\questionnaire;
 use mod_these\output;
 use moodle_url;
-use mod_these\form\question_form;
 
 /**
  * Page des questions du questionnaire préalable au jury d'une portée de paramètres (activité

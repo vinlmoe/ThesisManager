@@ -14,9 +14,10 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace mod_these\local;
+namespace mod_these\page;
 
 use mod_these\form\scopesettings_form;
+use mod_these\local\scopesettings;
 use mod_these\output;
 use moodle_url;
 use stdClass;

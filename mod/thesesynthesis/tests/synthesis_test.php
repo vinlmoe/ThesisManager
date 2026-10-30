@@ -31,7 +31,7 @@ require_once($CFG->dirroot . '/mod/thesesynthesis/locallib.php');
  * @covers     ::thesesynthesis_get_dossiers
  * @covers     ::thesesynthesis_get_juries
  * @covers     ::thesesynthesis_get_available_activities
- * @covers     \mod_these\local\planning_page
+ * @covers     \mod_these\page\planning_page
  */
 final class synthesis_test extends \advanced_testcase {
     /**
@@ -228,7 +228,7 @@ final class synthesis_test extends \advanced_testcase {
             $PAGE->set_context($context);
             $PAGE->set_url(new \moodle_url('/mod/thesesynthesis/planning.php', ['id' => $cm->id]));
             ob_start();
-            \mod_these\local\planning_page::output(
+            \mod_these\page\planning_page::output(
                 thesesynthesis_get_active_links($env->synthesis->id, $user->id),
                 new \moodle_url('/mod/thesesynthesis/planning.php', ['id' => $cm->id]),
                 these_synthesis_scope($env->synthesis->id),

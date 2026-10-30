@@ -41,4 +41,4 @@ $PAGE->set_title(format_string($these->name) . ' - ' . get_string('jurors', 'mod
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($context);
 
-\mod_these\local\jurors_page::output($baseurl, these_render_navlinks($cm, $context));
+\mod_these\page\jurors_page::output($baseurl, these_render_navlinks($cm, $context));

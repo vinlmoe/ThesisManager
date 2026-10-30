@@ -46,11 +46,11 @@ if ($scope->shared) {
     echo $OUTPUT->header();
     echo $OUTPUT->heading(get_string('griditems', 'mod_these'));
     echo these_render_navlinks($cm, $context);
-    echo \mod_these\local\doctemplates_page::shared_notice($scope, get_string('griditems', 'mod_these'));
+    echo \mod_these\page\doctemplates_page::shared_notice($scope, get_string('griditems', 'mod_these'));
     echo $OUTPUT->footer();
     exit;
 }
-\mod_these\local\griditems_page::output(
+\mod_these\page\griditems_page::output(
     $scope,
     $PAGE->url,
     new moodle_url('/mod/these/doctemplates.php', ['id' => $cm->id, 'type' => 'grid', 'action' => 'preview']),

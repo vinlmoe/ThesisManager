@@ -47,4 +47,4 @@ $navigation = thesesynthesis_render_navlinks($cm, $context);
 
 // Aperçus : établissement de la première activité suivie, à défaut celui par défaut.
 $links = thesesynthesis_get_active_links($synthesis->id, $USER->id);
-\mod_these\local\doctemplates_page::output($scope, $baseurl, $links ? reset($links)->these : null, $navigation);
+\mod_these\page\doctemplates_page::output($scope, $baseurl, $links ? reset($links)->these : null, $navigation);

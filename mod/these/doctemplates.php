@@ -49,8 +49,8 @@ if ($scope->shared) {
     echo $OUTPUT->header();
     echo $OUTPUT->heading(get_string('doctemplates', 'mod_these'));
     echo these_render_navlinks($cm, $context);
-    echo \mod_these\local\doctemplates_page::shared_notice($scope, get_string('doctemplates', 'mod_these'));
+    echo \mod_these\page\doctemplates_page::shared_notice($scope, get_string('doctemplates', 'mod_these'));
     echo $OUTPUT->footer();
     exit;
 }
-\mod_these\local\doctemplates_page::output($scope, $listurl, $these, these_render_navlinks($cm, $context));
+\mod_these\page\doctemplates_page::output($scope, $listurl, $these, these_render_navlinks($cm, $context));

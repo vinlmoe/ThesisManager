@@ -46,7 +46,7 @@ $PAGE->set_context($context);
 $links = thesesynthesis_get_active_links($synthesis->id, $USER->id);
 $first = reset($links);
 
-\mod_these\local\planning_page::output(
+\mod_these\page\planning_page::output(
     $links,
     $baseurl,
     these_synthesis_scope($synthesis->id),
