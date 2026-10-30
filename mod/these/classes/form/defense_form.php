@@ -23,6 +23,7 @@ use mod_these\local\signatures;
 use mod_these\local\bordereau;
 use mod_these\local\grid;
 use mod_these\local\signaturefields;
+use mod_these\local\documentrenderer;
 
 /**
  * Dépôt des documents de soutenance (phase 2, étape 1) : manuscrit (seul document déposé), date
@@ -170,7 +171,7 @@ class defense_form extends base_form {
         $mform->addElement('textarea', 'conclusions', get_string('conclusionstext', 'mod_these'), [
             'rows' => 14,
             'cols' => 80,
-            'maxlength' => doctemplates::CONCLUSIONS_MAX,
+            'maxlength' => documentrenderer::CONCLUSIONS_MAX,
         ]);
         $mform->setType('conclusions', PARAM_TEXT);
         $mform->addHelpButton('conclusions', 'conclusionstext', 'mod_these');
@@ -275,7 +276,7 @@ class defense_form extends base_form {
             }
         }
         if (!isset($errors['conclusions'])) {
-            $conclusionserror = doctemplates::conclusions_error(
+            $conclusionserror = documentrenderer::conclusions_error(
                 $this->_customdata['these'],
                 $this->_customdata['context'] ?? null,
                 (string) $data['conclusions']

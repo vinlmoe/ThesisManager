@@ -243,7 +243,7 @@ class settingstransfer {
                     $result->skipped[] = get_string('transferskippeddoctemplate', 'mod_these', s($type));
                     continue;
                 }
-                $error = doctemplates::doctemplate_error(doctemplates::local_scope($these), $type, $content, $these);
+                $error = documentrenderer::doctemplate_error(doctemplates::local_scope($these), $type, $content, $these);
                 if ($error !== null) {
                     $result->skipped[] = doctemplates::doctemplate_label($type) . ' : ' . $error;
                     continue;

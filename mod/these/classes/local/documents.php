@@ -114,26 +114,26 @@ class documents {
     public static function generate_documents(stdClass $these, context $context, stdClass $dossier, $userid) {
         global $DB;
 
-        $data = doctemplates::document_context($these, $context, $dossier, null);
+        $data = documentcontext::document_context($these, $context, $dossier, null);
         $documents = [];
         $documents[self::document_filename('convocation-etudiant')] =
-            doctemplates::render_doctemplate($these, 'convocation', $data);
+            documentrenderer::render_doctemplate($these, 'convocation', $data);
         foreach (jury::get_jury($dossier->id) as $index => $member) {
             $documents[self::document_filename('convocation-jury-' . ($index + 1), $member->fullname)] =
-                doctemplates::render_doctemplate(
+                documentrenderer::render_doctemplate(
                     $these,
                     'convocation',
-                    doctemplates::document_context($these, $context, $dossier, null, $member)
+                    documentcontext::document_context($these, $context, $dossier, null, $member)
                 );
         }
-        $documents[self::document_filename('feuille-de-jury')] = doctemplates::render_doctemplate($these, 'jurysheet', $data);
-        $documents[self::document_filename('proces-verbal')] = doctemplates::render_doctemplate($these, 'minutes', $data);
+        $documents[self::document_filename('feuille-de-jury')] = documentrenderer::render_doctemplate($these, 'jurysheet', $data);
+        $documents[self::document_filename('proces-verbal')] = documentrenderer::render_doctemplate($these, 'minutes', $data);
         // Documents de l'établissement, dans leur état de signature à la génération. Les documents
         // réservés au personnel (rapport du directeur, grille) n'entrent pas dans cette zone, que
         // l'étudiant consulte : ils ne sont joints qu'à l'archive transmise à l'université.
         foreach (signatures::document_definitions() as $doctype => $definition) {
             if (!$definition['staffonly'] && signatures::document_available($dossier, $doctype)) {
-                $pdf = doctemplates::signed_document_pdf($these, $context, $dossier, $doctype);
+                $pdf = documentrenderer::signed_document_pdf($these, $context, $dossier, $doctype);
                 $documents[self::signed_document_filename($context, $dossier, $doctype)] = $pdf;
             }
         }
@@ -184,7 +184,7 @@ class documents {
                 continue;
             }
             $directory = $directory ?? make_request_directory();
-            $pdf = doctemplates::signed_document_pdf($these, $context, $dossier, $doctype);
+            $pdf = documentrenderer::signed_document_pdf($these, $context, $dossier, $doctype);
             $filename = self::signed_document_filename($context, $dossier, $doctype);
             $path = $directory . '/' . $filename;
             file_put_contents($path, $pdf);

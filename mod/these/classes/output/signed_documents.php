@@ -23,6 +23,7 @@ use mod_these\local\rights;
 use mod_these\local\signatures;
 use moodle_url;
 use stdClass;
+use mod_these\local\documentrenderer;
 
 /**
  * Documents signés d'un dossier, avec l'état de chaque signature.
@@ -184,7 +185,7 @@ class signed_documents implements \renderable, \templatable {
         $warning = false;
         if (
             $this->rights->deve && signatures::document_available($this->dossier, 'contract')
-                && ($problem = doctemplates::contract_template_problem($this->these())) !== null
+                && ($problem = documentrenderer::contract_template_problem($this->these())) !== null
         ) {
             $warning = get_string($problem, 'mod_these');
         }

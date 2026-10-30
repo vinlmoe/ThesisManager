@@ -17,6 +17,7 @@
 namespace mod_these\form;
 
 use mod_these\local\doctemplates;
+use mod_these\local\documentrenderer;
 
 /**
  * Modification du modèle d'un document de l'activité (DEVE) : le source HTML avec ses balises
@@ -66,7 +67,7 @@ class doctemplate_form extends base_form {
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
         if (empty($errors['content'])) {
-            $error = doctemplates::doctemplate_error(
+            $error = documentrenderer::doctemplate_error(
                 $this->_customdata['scope'],
                 $data['type'],
                 (string) $data['content'],

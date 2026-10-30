@@ -179,7 +179,7 @@ class university {
         if (!isset(self::pending($dossier)[$doctype])) {
             return null;
         }
-        $pdf = doctemplates::render_document_pdf($these, $context, $dossier, $doctype);
+        $pdf = documentrenderer::render_document_pdf($these, $context, $dossier, $doctype);
         $file = get_file_storage()->create_file_from_string([
             'contextid' => $context->id,
             'component' => 'mod_these',

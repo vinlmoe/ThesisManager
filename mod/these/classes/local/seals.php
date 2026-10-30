@@ -132,7 +132,7 @@ class seals {
         if (
             !self::document_fully_signed($dossier, $doctype)
                 || ($doctype === 'contract'
-                    && doctemplates::contract_template_problem($DB->get_record('these', ['id' => $dossier->theseid])) !== null)
+                    && documentrenderer::contract_template_problem($DB->get_record('these', ['id' => $dossier->theseid])) !== null)
         ) {
             return null;
         }
@@ -141,7 +141,7 @@ class seals {
             return null;
         }
         $these = $DB->get_record('these', ['id' => $dossier->theseid], '*', MUST_EXIST);
-        $pdf = doctemplates::render_document_pdf($these, $context, $dossier, $doctype);
+        $pdf = documentrenderer::render_document_pdf($these, $context, $dossier, $doctype);
         $file = get_file_storage()->create_file_from_string([
             'contextid' => $context->id,
             'component' => 'mod_these',

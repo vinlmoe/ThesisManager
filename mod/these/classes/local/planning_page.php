@@ -91,7 +91,7 @@ class planning_page {
         if ($format === 'pdf') {
             $data = planning::planning_document_context($defenses, $label, $establishment, $scope, $showpromotion);
             send_file(
-                doctemplates::render_scope_doctemplate($scope, 'planning', $data),
+                documentrenderer::render_scope_doctemplate($scope, 'planning', $data),
                 $filename . '.pdf',
                 0,
                 0,

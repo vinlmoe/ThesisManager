@@ -53,13 +53,13 @@ class doctemplates_page {
             throw new \moodle_exception('invalidparameter', 'debug');
         }
         $sample = function () use ($scope, $activity, $type) {
-            return doctemplates::doctemplate_sample_context($scope, $type, $activity);
+            return documentsamples::doctemplate_sample_context($scope, $type, $activity);
         };
 
         // Aperçu du modèle en vigueur.
         if ($type !== '' && $action === 'preview') {
             send_file(
-                doctemplates::render_scope_doctemplate($scope, $type, $sample()),
+                documentrenderer::render_scope_doctemplate($scope, $type, $sample()),
                 $type . '.pdf',
                 0,
                 0,
@@ -103,7 +103,7 @@ class doctemplates_page {
                 if (!empty($data->previewbutton)) {
                     // Aperçu du modèle en cours de modification, sans l'enregistrer.
                     send_file(
-                        doctemplates::render_scope_doctemplate($scope, $type, $sample(), $data->content),
+                        documentrenderer::render_scope_doctemplate($scope, $type, $sample(), $data->content),
                         $type . '.pdf',
                         0,
                         0,

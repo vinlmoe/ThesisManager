@@ -116,7 +116,7 @@ class subjectchange {
                     'itemid' => $dossier->id,
                     'filepath' => '/',
                     'filename' => 'sujet-' . userdate($now, '%Y-%m-%d') . '-' . $history->id . '.pdf',
-                ], doctemplates::signed_document_pdf($these, $context, $dossier, 'subject'));
+                ], documentrenderer::signed_document_pdf($these, $context, $dossier, 'subject'));
             } catch (\Throwable $e) {
                 debugging('Archivage du dépôt de sujet impossible : ' . $e->getMessage(), DEBUG_DEVELOPER);
             }

@@ -17,6 +17,7 @@
 namespace mod_these\output;
 
 use mod_these\local\doctemplates;
+use mod_these\local\documentsamples;
 
 /**
  * Variables disponibles dans un modèle de document, avec une valeur d'exemple tirée de données
@@ -47,7 +48,7 @@ class doctemplate_variables implements \renderable, \templatable {
      */
     public function export_for_template(\renderer_base $output): array {
         $rows = [];
-        foreach (doctemplates::doctemplate_variables($this->sample) as $name => $example) {
+        foreach (documentsamples::doctemplate_variables($this->sample) as $name => $example) {
             $rows[] = [[parts::code('{{' . $name . '}}')], [parts::text((string) $example)]];
         }
         $head = [get_string('doctplvariable', 'mod_these'), get_string('doctplexample', 'mod_these')];
