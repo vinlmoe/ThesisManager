@@ -193,14 +193,14 @@ jobs:
           COVERAGE: ${{ matrix.coverage }}
         run: |
           # Couverture des tests mesurée sur une seule configuration (pcov) : affichée dans le journal
-          # et conservée au format Clover (moodle-plugin-ci écrit moodle/coverage.xml, un fichier par
-          # module) pour l'artefact « coverage ».
+          # et conservée au format Clover (moodle-plugin-ci écrit coverage.xml dans le répertoire
+          # courant, un fichier par module) pour l'artefact « coverage ».
           options=""
           if [ "$COVERAGE" = "pcov" ]; then options="--coverage-text --coverage-clover"; mkdir -p coverage; fi
           check_status=0
           for plugin in these thesesynthesis; do
             moodle-plugin-ci phpunit $options "mod/$plugin" || check_status=1
-            if [ -f moodle/coverage.xml ]; then mv moodle/coverage.xml "coverage/$plugin.xml"; fi
+            if [ -f coverage.xml ]; then mv coverage.xml "coverage/$plugin.xml"; fi
           done
           exit "$check_status"
 

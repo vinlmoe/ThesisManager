@@ -55,6 +55,9 @@ final class select_context_test extends output_testcase {
             select_context::export('status', $options, 10, 'mr-2', 'these-status')
         );
         $expected = \html_writer::select($options, 'status', 10, false, ['id' => 'these-status', 'class' => 'mr-2']);
+        // Moodle 5.0 (Bootstrap 5) nomme la classe « form-select » ; le module garde « custom-select »,
+        // encore stylée par compatibilité.
+        $expected = str_replace('form-select', 'custom-select', $expected);
         // Même balisage, à l'ordre des attributs de la balise select près (sans effet).
         $sortattributes = function ($html) {
             return preg_replace_callback('/<select ([^>]*)>/', function ($match) {
