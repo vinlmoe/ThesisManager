@@ -287,4 +287,38 @@ final class deve_tools_test extends these_testcase {
         \mod_these\local\scopesettings::set(these_settings_scope($this->these), ['weeklydigest' => 0]);
         $this->assertSame(0, \mod_these\local\notifications::send_weekly_digests($now));
     }
+
+    /**
+     * Récapitulatif envoyé une fois par semaine : une seconde exécution de la tâche, même le
+     * lendemain, ne renvoie rien ; la semaine suivante, si.
+     *
+     * @covers \mod_these\task\send_digest
+     */
+    public function test_digest_sent_once_a_week(): void {
+        $this->setup_activity();
+        $now = time();
+        $this->generator->create_dossier($this->these, $this->student->id, ['status' => THESE_STATUS_SUBJECT_APPROVED]);
+
+        $sink = $this->redirectEmails();
+        $task = new \mod_these\task\send_digest();
+        ob_start();
+        $task->execute();
+        $task->execute();
+        $output = ob_get_clean();
+        $this->assertCount(1, $sink->get_messages());
+        $this->assertStringContainsString('1 récapitulatif(s)', $output);
+        $this->assertStringContainsString('0 récapitulatif(s)', $output);
+        $this->assertStringContainsString('déjà envoyé', $output);
+        $this->assertEqualsWithDelta($now, (int) get_config('mod_these', 'lastdigest' . $this->these->id), 5);
+
+        $lines = [];
+        $trace = function ($line) use (&$lines) {
+            $lines[] = $line;
+        };
+        $this->assertSame(0, \mod_these\local\notifications::send_weekly_digests($now + 5 * DAYSECS, $trace));
+        $this->assertSame(1, \mod_these\local\notifications::send_weekly_digests($now + 7 * DAYSECS, $trace));
+        $this->assertCount(2, $sink->get_messages());
+        $this->assertCount(2, $lines);
+        $this->assertStringContainsString('envoyé à la DEVE', $lines[1]);
+    }
 }

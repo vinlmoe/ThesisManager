@@ -543,12 +543,15 @@ class notifications {
      * délégation. La relance remet le délai à zéro ; elle est répétée tant que la signature manque.
      *
      * @param int|null $now
+     * @param callable|null $trace Reçoit une ligne par relance envoyée (mtrace dans la tâche).
      * @return int Signataires relancés.
      */
-    public static function send_signature_reminders($now = null) {
+    public static function send_signature_reminders($now = null, ?callable $trace = null) {
         global $DB;
 
         $now = $now ?? time();
+        $trace = $trace ?? function ($line) {
+        };
         [$statussql, $params] = $DB->get_in_or_equal(
             [THESE_STATUS_CLOSED, THESE_STATUS_CANCELLED],
             SQL_PARAMS_NAMED,
@@ -588,6 +591,7 @@ class notifications {
                         && these_request_signature($these, $cm, $dossier, $slot, $available) !== null
                 ) {
                     $sent++;
+                    $trace("Dossier $dossierid : signataire " . these_slot_label($slot) . " relancé ($email).");
                 }
             }
             if (
@@ -595,6 +599,7 @@ class notifications {
                     && these_request_agent_signatures($these, $cm, $dossier, $available) > 0
             ) {
                 $sent++;
+                $trace("Dossier $dossierid : agents DEVE signataires relancés.");
             }
         }
         return $sent;
@@ -659,29 +664,42 @@ class notifications {
 
     /**
      * Envoie à la DEVE de chaque activité son récapitulatif hebdomadaire (voir digest_content()), si
-     * le paramètre « weeklydigest » de la portée l'active et qu'il y a quelque chose à signaler.
+     * le paramètre « weeklydigest » de la portée l'active et qu'il y a quelque chose à signaler. La
+     * date du dernier envoi est conservée par activité (réglage lastdigest<id> du module) : rien
+     * n'est renvoyé moins de six jours après, même si la tâche est relancée à la main.
      *
      * @param int|null $now
+     * @param callable|null $trace Reçoit une ligne par activité traitée (mtrace dans la tâche).
      * @return int Activités pour lesquelles un récapitulatif est parti.
      */
-    public static function send_weekly_digests($now = null) {
+    public static function send_weekly_digests($now = null, ?callable $trace = null) {
         global $DB;
 
+        $now = $now ?? time();
+        $trace = $trace ?? function ($line) {
+        };
         $sent = 0;
         foreach ($DB->get_records('these') as $these) {
             $cm = get_coursemodule_from_instance('these', $these->id, 0, false, IGNORE_MISSING);
             if (!$cm || empty(scopesettings::for_these($these)['weeklydigest'])) {
                 continue;
             }
+            $name = format_string($these->name);
+            $last = (int) get_config('mod_these', 'lastdigest' . $these->id);
+            if ($last && $last > $now - 6 * DAYSECS) {
+                $trace("$name : récapitulatif déjà envoyé le " . userdate($last) . ', rien à renvoyer.');
+                continue;
+            }
             $content = self::digest_content($these, $now);
             if (!array_filter($content)) {
+                $trace("$name : rien à signaler.");
                 continue;
             }
             $lines = function (array $items) {
                 return $items ? '- ' . implode("\n- ", $items) : get_string('digestnone', 'mod_these');
             };
             $vars = [
-                'activity' => format_string($these->name),
+                'activity' => $name,
                 'todo' => $lines($content['todo']),
                 'signatures' => $lines($content['signatures']),
                 'defenses' => $lines($content['defenses']),
@@ -690,7 +708,11 @@ class notifications {
             ];
             $context = context_module::instance($cm->id);
             if (these_send_email($these, 'digest', these_get_service_recipients($these, $context, 'deve'), $vars)) {
+                set_config('lastdigest' . $these->id, $now, 'mod_these');
                 $sent++;
+                $trace("$name : récapitulatif envoyé à la DEVE.");
+            } else {
+                $trace("$name : aucun destinataire, récapitulatif non envoyé.");
             }
         }
         return $sent;

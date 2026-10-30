@@ -64,16 +64,16 @@ class send_reminders extends \core\task\scheduled_task {
             unset($dossier->reminderdays);
             if (these_send_reminder($these, $cm, $dossier)) {
                 $sent++;
+                mtrace("mod_these : dossier {$dossier->id} (" . format_string($these->name) . ') relancé, étape '
+                    . these_status_label($dossier->status) . '.');
             }
         }
-        if ($sent > 0) {
-            mtrace("mod_these : $sent relance(s) envoyée(s).");
-        }
+        mtrace("mod_these : $sent relance(s) envoyée(s).");
         // Signatures attendues depuis plus que le délai de relance.
-        $signers = \mod_these\local\notifications::send_signature_reminders();
-        if ($signers > 0) {
-            mtrace("mod_these : $signers signataire(s) relancé(s).");
-        }
+        $signers = \mod_these\local\notifications::send_signature_reminders(null, function ($line) {
+            mtrace('mod_these : ' . $line);
+        });
+        mtrace("mod_these : $signers signataire(s) relancé(s).");
         // Calendrier : soutenances arrêtées (y compris celles fixées avant la synchronisation).
         \mod_these\local\calendar::sync_all();
     }

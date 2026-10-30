@@ -302,7 +302,14 @@ production.
 `mod_these\task\send_reminders`, chaque jour à 7 h 15 : relance l'acteur
 attendu quand un dossier attend à la même étape depuis le délai de relance de
 son activité, puis à chaque nouveau délai écoulé. Brouillons et dossiers actifs
-ne sont jamais relancés.
+ne sont jamais relancés. Chaque relance est inscrite au journal de la tâche.
+
+`mod_these\task\send_digest`, le lundi matin : récapitulatif de la semaine à
+la DEVE de chaque activité qui l'a activé (*Paramètres du circuit*). La date du
+dernier envoi est conservée par activité (`lastdigest<id>` dans la
+configuration du module) : une exécution manuelle ou une reprise moins de six
+jours après ne renvoie rien. Le journal de la tâche indique, pour chaque
+activité, ce qui a été envoyé ou pourquoi rien ne l'a été.
 
 ## 4 bis. Conservation des procès-verbaux
 

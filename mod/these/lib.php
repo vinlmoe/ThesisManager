@@ -173,6 +173,8 @@ function these_delete_instance($id) {
     $DB->delete_records('these_griditem', ['theseid' => $id]);
     $DB->delete_records('these_question', ['theseid' => $id]);
     $DB->delete_records('these', ['id' => $id]);
+    // Date du dernier récapitulatif hebdomadaire de l'activité.
+    unset_config('lastdigest' . $id, 'mod_these');
 
     return true;
 }
