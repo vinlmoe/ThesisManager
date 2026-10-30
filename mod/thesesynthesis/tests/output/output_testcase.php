@@ -93,7 +93,8 @@ abstract class output_testcase extends \advanced_testcase {
         ]);
         these_save_answers($env->confidential, these_get_questions($env->scope), ['q' . $question => self::SECRETS['answer']]);
         these_save_jury($env->confidential->id, [(object) ['juryrole' => 'president', 'fullname' => 'Jules Juré',
-            'jurytitle' => 'Pr', 'institution' => '', 'email' => 'jury@example.org', 'jurorid' => 0, 'jurystatus' => 'pr']]);
+            'jurytitle' => 'Pr', 'institution' => '', 'email' => 'jury@example.org', 'jurorid' => 0, 'jurystatus' => 'pr',
+            'eligible' => true]], $env->deve->id);
         $thesegen->create_dossier($env->activities[1]->these, $gen->create_and_enrol($env->activities[1]->course, 'student')->id, [
             'directorid' => $env->director->id, 'status' => THESE_STATUS_SUBJECT_SUBMITTED, 'title' => 'Arthrose du chien',
         ]);

@@ -154,7 +154,8 @@ final class integrity_test extends these_testcase {
 
     /**
      * L'accès du jury expire après la soutenance et cesse à la clôture du dossier ; un membre ayant
-     * un compte y accède sans lien, reconnu à son adresse.
+     * un compte y accède sans lien, reconnu au compte rattaché à la validation de son éligibilité (pas
+     * à la seule égalité d'adresse).
      */
     public function test_jury_access_lifetime(): void {
         global $DB;
@@ -164,8 +165,9 @@ final class integrity_test extends these_testcase {
             'status' => THESE_STATUS_SCHEDULED, 'directorid' => $this->director->id, 'defensedate' => time() + DAYSECS,
         ]);
         $juror = $this->getDataGenerator()->create_user(['email' => 'juror@example.org']);
-        these_save_jury($dossier->id, [(object) ['juryrole' => 'president', 'fullname' => 'Jean MARTIN', 'jurytitle' => 'Pr',
-            'institution' => 'VetAgro Sup', 'email' => 'juror@example.org']]);
+        $president = (object) ['juryrole' => 'president', 'fullname' => 'Jean MARTIN', 'jurytitle' => 'Pr',
+            'institution' => 'VetAgro Sup', 'email' => 'juror@example.org', 'jurystatus' => 'pr', 'eligible' => true];
+        these_save_jury($dossier->id, [$president], $this->deve->id);
         these_notify_jury($this->these, $this->cm, $dossier);
         $token = $this->token_sent_to($sink->get_messages(), 'juror@example.org', 'jury.php');
         $member = these_get_jury($dossier->id)[0];
@@ -173,6 +175,8 @@ final class integrity_test extends these_testcase {
         $this->assertNotNull(these_get_jury_access($token));
         $this->assertNotNull(these_get_jury_member_access($member->id, $juror));
         $this->assertNull(these_get_jury_member_access($member->id, $this->student));
+        $homonym = $this->getDataGenerator()->create_user(['email' => 'juror@example.org']);
+        $this->assertNull(these_get_jury_member_access($member->id, $homonym));
 
         // Soutenance passée depuis plus longtemps que la durée de validité.
         $DB->set_field('these_dossier', 'defensedate', time() - THESE_TOKEN_LIFETIME - DAYSECS, ['id' => $dossier->id]);

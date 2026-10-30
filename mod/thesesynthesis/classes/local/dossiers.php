@@ -134,8 +134,8 @@ class dossiers {
     }
 
     /**
-     * Jurys où siège l'utilisateur, dans les activités liées : membre retenu avec son adresse, ou
-     * enseignant de l'annuaire portant son adresse.
+     * Jurys où siège l'utilisateur, dans les activités liées : membre auquel son compte est rattaché
+     * (voir \mod_these\local\rights::user_in_jury()), compte ni suspendu ni supprimé.
      *
      * @param array $links Voir links::get_active_links().
      * @param stdClass $user
@@ -144,8 +144,7 @@ class dossiers {
     public static function get_juries(array $links, stdClass $user) {
         global $DB;
 
-        $email = trim((string) $user->email);
-        if ($email === '' || !$links) {
+        if (empty($user->id) || !$links) {
             return [];
         }
         $byinstance = [];
@@ -153,15 +152,14 @@ class dossiers {
             $byinstance[(int) $link->these->id] = $link;
         }
         [$insql, $params] = $DB->get_in_or_equal(array_keys($byinstance), SQL_PARAMS_NAMED);
-        $params['email'] = core_text::strtolower($email);
-        $params['email2'] = core_text::strtolower($email);
+        $params['userid'] = (int) $user->id;
         $sql = "SELECT j.*, d.theseid
                   FROM {these_jury} j
                   JOIN {these_dossier} d ON d.id = j.dossierid
-             LEFT JOIN {these_juror} r ON r.id = j.jurorid
+                  JOIN {user} u ON u.id = j.userid AND u.deleted = 0 AND u.suspended = 0
                  WHERE d.theseid $insql
                    AND d.status <> :cancelled
-                   AND (LOWER(j.email) = :email OR LOWER(r.email) = :email2)
+                   AND j.userid = :userid
               ORDER BY d.defensedate DESC, j.id";
         $params['cancelled'] = THESE_STATUS_CANCELLED;
         $members = $DB->get_records_sql($sql, $params);

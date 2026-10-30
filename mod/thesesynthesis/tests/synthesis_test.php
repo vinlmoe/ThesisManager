@@ -106,9 +106,11 @@ final class synthesis_test extends \advanced_testcase {
     }
 
     /**
-     * Jurys de l'utilisateur, par son adresse ou par l'annuaire.
+     * Jurys de l'utilisateur : membre choisi dans l'annuaire ou rattaché à la validation de son
+     * éligibilité par la DEVE ; ni un autre compte portant la même adresse, ni un compte suspendu.
      */
     public function test_juries(): void {
+        global $DB;
         $this->resetAfterTest();
         $env = $this->setup_promotions();
         $jurorid = \mod_these\local\jurors::save((object) ['title' => 'Pr', 'lastname' => 'Jury', 'firstname' => 'Paul',
@@ -119,12 +121,18 @@ final class synthesis_test extends \advanced_testcase {
         ]);
         these_save_jury($env->activities[1]->dossier->id, [
             (object) ['juryrole' => 'member', 'fullname' => 'Paul Jury', 'jurytitle' => 'Pr', 'institution' => '',
-                'email' => 'jury@example.org', 'jurorid' => 0, 'jurystatus' => 'pr'],
-        ]);
+                'email' => 'jury@example.org', 'jurorid' => 0, 'jurystatus' => 'pr', 'eligible' => true],
+        ], $env->deve->id);
         $links = thesesynthesis_get_active_links($env->synthesis->id, $env->juror->id);
         $juries = thesesynthesis_get_juries($links, $env->juror);
         $this->assertCount(2, $juries);
         $this->assertSame([], thesesynthesis_get_juries($links, $env->director));
+
+        // Un autre compte à la même adresse n'est pas reconnu ; un compte suspendu ne l'est plus.
+        $homonym = $this->getDataGenerator()->create_user(['email' => 'jury@example.org']);
+        $this->assertSame([], thesesynthesis_get_juries($links, $homonym));
+        $DB->set_field('user', 'suspended', 1, ['id' => $env->juror->id]);
+        $this->assertSame([], thesesynthesis_get_juries($links, $env->juror));
     }
 
     /**

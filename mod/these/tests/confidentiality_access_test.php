@@ -112,13 +112,17 @@ final class confidentiality_access_test extends these_testcase {
                 'diffusion' => 'restricted', 'birthname' => 'MARTIN']),
         ]);
 
-        // Jury : un membre par son adresse, un par l'annuaire (sans adresse dans le jury).
+        // Jury validé par la DEVE : un membre extérieur rattaché à son compte à la validation, un par
+        // l'annuaire (sans adresse dans le jury, rattaché au compte de sa fiche).
         $jurorid = \mod_these\local\jurors::save((object) ['title' => 'Pr', 'lastname' => 'Annuaire', 'firstname' => 'Anne',
             'email' => 'ANNUAIRE@example.org', 'status' => 'pr', 'institution' => '', 'active' => 1]);
         $jury = $this->generator->default_jury();
         $jury[] = (object) ['juryrole' => 'member', 'fullname' => 'Anne ANNUAIRE', 'jurytitle' => 'Pr', 'institution' => '',
             'email' => '', 'jurorid' => $jurorid, 'jurystatus' => 'pr'];
-        these_save_jury($this->dossier->id, $jury);
+        foreach ($jury as $member) {
+            $member->eligible = true;
+        }
+        these_save_jury($this->dossier->id, $jury, $this->deve->id);
 
         // Questionnaire.
         $scope = these_settings_scope($this->these);
@@ -206,6 +210,38 @@ final class confidentiality_access_test extends these_testcase {
             $canview = these_can_view_dossier(these_get_rights($this->context, $this->dossier, $user->id));
             $this->assertSame($name === 'viewall', $canview, $name);
         }
+    }
+
+    /**
+     * Un membre du jury est reconnu au compte qui lui est rattaché, pas à son adresse : un autre compte
+     * portant la même adresse ne connaît pas le sujet ; un compte rattaché suspendu ou supprimé le perd.
+     */
+    public function test_jury_recognised_by_account_not_by_email(): void {
+        global $DB;
+        $this->setup_confidential();
+        $juror = $this->allowed['juror'];
+        $directoryjuror = $this->allowed['directoryjuror'];
+
+        $homonym = $this->getDataGenerator()->create_user(['email' => 'president@example.com']);
+        $directoryhomonym = $this->getDataGenerator()->create_user(['email' => 'annuaire@example.org']);
+        foreach ([$homonym, $directoryhomonym] as $user) {
+            $this->assertFalse(these_user_in_jury($this->dossier->id, $user->id));
+            $this->assertFalse(these_user_knows_subject($this->dossier, $this->context, $user->id));
+            $this->assert_no_secret(these_subject_field($this->dossier, 'title', $this->context, $user->id), 'homonyme');
+        }
+        $this->assertTrue(these_user_knows_subject($this->dossier, $this->context, $juror->id));
+
+        // Compte rattaché suspendu, puis rétabli.
+        $DB->set_field('user', 'suspended', 1, ['id' => $juror->id]);
+        $this->assertFalse(these_user_in_jury($this->dossier->id, $juror->id));
+        $this->assertFalse(these_user_knows_subject($this->dossier, $this->context, $juror->id));
+        $DB->set_field('user', 'suspended', 0, ['id' => $juror->id]);
+        $this->assertTrue(these_user_knows_subject($this->dossier, $this->context, $juror->id));
+
+        // Compte rattaché supprimé.
+        delete_user($directoryjuror);
+        $this->assertFalse(these_user_in_jury($this->dossier->id, $directoryjuror->id));
+        $this->assertFalse(these_user_knows_subject($this->dossier, $this->context, $directoryjuror->id));
     }
 
     /**

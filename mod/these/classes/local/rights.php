@@ -17,7 +17,6 @@
 namespace mod_these\local;
 
 use context;
-use core_text;
 use stdClass;
 
 /**
@@ -278,28 +277,17 @@ class rights {
     }
 
     /**
-     * Indique si un utilisateur siège au jury d'un dossier, reconnu à son adresse ou à celle de sa fiche
-     * dans l'annuaire du jury.
+     * Indique si un utilisateur siège au jury d'un dossier : membre auquel son compte est rattaché
+     * (au choix dans l'annuaire ou à la validation d'éligibilité, voir jury::save_jury()), compte ni
+     * suspendu ni supprimé. L'adresse du compte n'est pas prise en compte : un membre sans compte
+     * rattaché accède aux documents par son lien à jeton.
      *
      * @param int $dossierid
      * @param int $userid
      * @return bool
      */
     public static function user_in_jury($dossierid, $userid) {
-        global $DB;
-
-        $email = core_text::strtolower(trim((string) $DB->get_field('user', 'email', ['id' => $userid])));
-        if ($email === '') {
-            return false;
-        }
-        return $DB->record_exists_sql(
-            "SELECT 1
-               FROM {these_jury} j
-          LEFT JOIN {these_juror} r ON r.id = j.jurorid
-              WHERE j.dossierid = :dossierid
-                    AND (LOWER(j.email) = :email1 OR LOWER(r.email) = :email2)",
-            ['dossierid' => $dossierid, 'email1' => $email, 'email2' => $email]
-        );
+        return self::user_in_juries([$dossierid], $userid)[(int) $dossierid] ?? false;
     }
 
     /**
@@ -313,21 +301,16 @@ class rights {
         global $DB;
 
         $injury = array_fill_keys(array_map('intval', $dossierids), false);
-        if (!$injury) {
-            return [];
-        }
-        $email = core_text::strtolower(trim((string) $DB->get_field('user', 'email', ['id' => $userid])));
-        if ($email === '') {
+        if (!$injury || !$userid) {
             return $injury;
         }
         [$insql, $params] = $DB->get_in_or_equal(array_keys($injury), SQL_PARAMS_NAMED);
-        $params['email1'] = $email;
-        $params['email2'] = $email;
+        $params['userid'] = (int) $userid;
         $sql = "SELECT DISTINCT j.dossierid
                   FROM {these_jury} j
-             LEFT JOIN {these_juror} r ON r.id = j.jurorid
+                  JOIN {user} u ON u.id = j.userid AND u.deleted = 0 AND u.suspended = 0
                  WHERE j.dossierid $insql
-                       AND (LOWER(j.email) = :email1 OR LOWER(r.email) = :email2)";
+                       AND j.userid = :userid";
         foreach ($DB->get_fieldset_sql($sql, $params) as $dossierid) {
             $injury[(int) $dossierid] = true;
         }
