@@ -45,6 +45,32 @@ développement ne correspondent à aucune version installable ; 0.11.2 n'a jamai
   ISO-8859-1, guillemets, en-têtes), assertions structurelles sur le HTML
   rendu au lieu de balises exactes, attributs PHPUnit `CoversClass` et
   `CoversFunction` (PHPUnit 11), trois scénarios Behat pour le suivi.
+- **Test de charge** (`tools/stresstest/`) : peuplement de milliers de
+  dossiers, opérations du circuit tirées au hasard (annulations,
+  réouvertures, changements de sujet, renvois, signatures, procès-verbaux,
+  suppressions RGPD, comptes suspendus) avec vérification d'invariants,
+  plusieurs processus concurrents sur les mêmes dossiers, mesure des pages
+  lourdes. Défauts trouvés et corrigés, chacun avec un test :
+  - ancien sujet d'une thèse confidentielle visible par la scolarité après
+    un changement pour un sujet public (historique, PDF archivé) ;
+  - lien de signature encore utilisable sur un dossier abandonné ;
+  - modification du dossier par la DEVE, génération des documents,
+    signature hors validation et relance des signatures faites hors du
+    verrou du dossier : une action concurrente pouvait rétablir un statut
+    périmé, recréer une signature révoquée ou supprimer les fichiers en
+    cours d'envoi ;
+  - événement « Soutenance » resté au calendrier après l'effacement du
+    dossier ;
+  - erreur au changement de sujet quand le compte du directeur est
+    supprimé ;
+  - nouvelle date demandée par la DEVE restée en attente après un renvoi et
+    une nouvelle soumission.
+- **Performances avec 2 000 dossiers** : le lien « Mes signatures (n) » de la
+  navigation coûtait une quinzaine de requêtes par signature d'agent en
+  attente sur tout le site ; signatures en attente, planning, export du
+  registre, file « À traiter » et portée des paramètres lus par lot. Tableau
+  de bord DEVE de 6 188 à 62 lectures (1,7 s à 0,35 s), export du registre de
+  4 415 à 147 requêtes (3,2 s à 0,42 s).
 - Guide 2.21.
 
 ## mod_these 0.25.0 (2026103002) et mod_thesesynthesis 0.8.0 (2026103002) — dette architecturale, messagerie et événements

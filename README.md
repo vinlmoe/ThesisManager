@@ -111,7 +111,7 @@ Bibliothèque ──conformité du manuscrit──▶ DEVE ──convocations, f
 ## Qualité
 
 - Style : standard Moodle (`moodlehq/moodle-cs`), sans avertissement.
-- Tests PHPUnit (287 tests pour `mod_these`, 26 pour `mod_thesesynthesis`, couverture mesurée en CI) :
+- Tests PHPUnit (299 tests pour `mod_these`, 27 pour `mod_thesesynthesis`, couverture mesurée en CI) :
   circuit complet, corrections, rapport, renvois,
   droits, relances, documents générés, signatures et scellés, modèles,
   paramètres partagés, questionnaire, recherche, transfert des paramètres,
@@ -122,6 +122,9 @@ Bibliothèque ──conformité du manuscrit──▶ DEVE ──convocations, f
   sujet avec directeur extérieur, validation des études, liens invalides, thèse
   confidentielle, planning des soutenances, signatures de l'université, import
   et export du registre.
+- Test de charge (`tools/stresstest/`) : milliers de dossiers, opérations
+  du circuit au hasard et en concurrence, invariants vérifiés, temps et
+  requêtes des pages lourdes.
 - CI GitHub Actions : phpcs, lint, validation du plugin, savepoints, PHPDoc,
   PHPUnit et Behat sur Moodle 4.1 LTS (PHP 8.0, MariaDB), Moodle 4.5 LTS
   (PHP 8.2, PostgreSQL, couverture en artefact) et Moodle 5.0 (PHP 8.3,
