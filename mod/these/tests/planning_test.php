@@ -170,4 +170,43 @@ final class planning_test extends these_testcase {
         $this->assertFalse($empty['hasdefenses']);
         $this->assertStringStartsWith('%PDF', these_render_scope_doctemplate(null, 'planning', $empty));
     }
+
+    /**
+     * Le nombre de requêtes du planning ne croît pas avec le nombre de soutenances (jurys, étudiants et
+     * directeurs lus en une requête chacun). Mesure du test de charge (tools/stresstest) : trois
+     * requêtes par soutenance, soit 1 700 lectures pour le planning du suivi de trois promotions.
+     */
+    public function test_defenses_queries_do_not_grow(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setup_activity();
+        $monday = these_planning_week_start(make_timestamp(2026, 11, 2, 12));
+        $make = function (int $count) use ($monday) {
+            for ($i = 0; $i < $count; $i++) {
+                $student = $this->getDataGenerator()->create_and_enrol($this->course, 'student');
+                $dossier = $this->generator->create_dossier($this->these, $student->id, [
+                    'status' => THESE_STATUS_DEFENSE_VALIDATED, 'directorid' => $this->director->id,
+                    'defensedate' => $monday + DAYSECS + $i * HOURSECS,
+                ]);
+                these_save_jury($dossier->id, $this->generator->default_jury());
+            }
+        };
+        $sources = [these_planning_source($this->these, $this->cm, $this->context, $this->deve->id)];
+        $reads = function () use ($sources, $monday) {
+            global $DB;
+            $before = $DB->perf_get_reads();
+            $defenses = these_get_defenses($sources, $monday, these_planning_shift_week($monday, 1), $this->deve->id);
+            return [count($defenses), $DB->perf_get_reads() - $before, $defenses];
+        };
+        $make(2);
+        [$count, $few] = $reads();
+        $this->assertSame(2, $count);
+        $make(8);
+        [$count, $many, $defenses] = $reads();
+        $this->assertSame(10, $count);
+        $this->assertSame($few, $many, 'Requêtes du planning proportionnelles aux soutenances');
+        $this->assertSame('Paul Président', $defenses[0]->president->fullname);
+        $this->assertCount(4, $defenses[0]->jury);
+        $this->assertEquals($this->director->id, $defenses[0]->director->id);
+    }
 }
