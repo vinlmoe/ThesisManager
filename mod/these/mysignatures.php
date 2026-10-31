@@ -82,10 +82,14 @@ $renderer = $PAGE->get_renderer('mod_these');
 // après avoir consulté son PDF.
 $documents = [];
 $groups = [];
+// Étudiants des dossiers, lus en une requête.
+$students = $pending ? $DB->get_records_list('user', 'id', array_unique(array_map(function ($signature) {
+    return (int) $signature->dossier->userid;
+}, $pending))) : [];
 foreach ($pending as $signature) {
     $dossier = $signature->dossier;
     if (!isset($groups[$dossier->id])) {
-        $student = $DB->get_record('user', ['id' => $dossier->userid]);
+        $student = $students[(int) $dossier->userid] ?? null;
         $context = context_module::instance($signature->cm->id);
         $groups[$dossier->id] = ['heading' => get_string('mysignaturesdossier', 'mod_these', (object) [
             'student' => $student ? fullname($student) : '-',

@@ -151,11 +151,22 @@ class signatureagent {
      * « validé par … le … » : compte de l'équipe DEVE qui a validé l'étape dont un agent signe les
      * documents, et date de cette validation.
      *
+     * Les comptes des validateurs sont retenus pour la requête : la liste « Mes signatures » d'un agent
+     * en compte quelques-uns pour des centaines de signatures.
+     *
      * @param stdClass $signature Signature (validatedby, validatedtime).
      * @return string Vide sans validateur connu.
      */
     public static function validator_label(stdClass $signature) {
-        $validator = !empty($signature->validatedby) ? \core_user::get_user($signature->validatedby) : null;
+        $validator = null;
+        if (!empty($signature->validatedby)) {
+            $cache = \cache::make_from_params(\cache_store::MODE_REQUEST, 'mod_these', 'validators');
+            $validator = $cache->get((int) $signature->validatedby);
+            if ($validator === false) {
+                $validator = \core_user::get_user($signature->validatedby) ?: null;
+                $cache->set((int) $signature->validatedby, $validator);
+            }
+        }
         if (!$validator) {
             return '';
         }

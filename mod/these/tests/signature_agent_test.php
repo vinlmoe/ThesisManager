@@ -339,6 +339,14 @@ final class signature_agent_test extends these_testcase {
         $this->assertSame(15, $count);
         $this->assertSame($few, $many, 'Requêtes de « Mes signatures » proportionnelles aux signatures en attente');
 
+        // « validé par … » : le compte du validateur est lu une fois pour toute la liste.
+        $pending = these_get_user_pending_signatures($agent);
+        $before = $DB->perf_get_reads();
+        foreach ($pending as $signature) {
+            $this->assertStringContainsString(fullname($this->deve), \mod_these\local\signatureagent::validator_label($signature));
+        }
+        $this->assertLessThanOrEqual(1, $DB->perf_get_reads() - $before);
+
         // Un enseignant qui n'est agent nulle part : aucune signature d'agent, en quelques requêtes.
         [$count, $reads] = $reads($this->director);
         $this->assertSame(0, $count);
