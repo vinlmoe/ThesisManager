@@ -214,9 +214,12 @@ jobs:
 
       - name: Behat
         if: ${{ !cancelled() && steps.moodle_install.outcome == 'success' }}
+        # Chaque lancement démarre un conteneur Selenium nommé « selenium » : celui du premier module
+        # est retiré avant le second, qui sinon peut échouer sur un conflit de nom.
         run: |
           check_status=0
           moodle-plugin-ci behat --profile chrome mod/these || check_status=1
+          docker rm -f selenium > /dev/null 2>&1 || true
           moodle-plugin-ci behat --profile chrome mod/thesesynthesis || check_status=1
           exit "$check_status"
 
