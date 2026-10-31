@@ -130,21 +130,35 @@ class doctemplates {
      * modèles des documents, leurs images, la grille de conformité et le questionnaire préalable au
      * jury sont ainsi définis une fois pour toutes les promotions suivies.
      *
+     * La portée est retenue pour la requête (cache des paramètres, vidé par scopesettings::reset_cache()
+     * quand les activités suivies changent) : elle coûte plusieurs requêtes et sert pour chaque dossier
+     * d'une liste.
+     *
      * @param stdClass $these
      * @return stdClass Voir these_local_scope().
      */
     public static function settings_scope(stdClass $these) {
-        if (!empty($these->id)) {
+        if (empty($these->id)) {
+            return self::local_scope($these);
+        }
+        $cache = \cache::make_from_params(\cache_store::MODE_REQUEST, 'mod_these', 'scopesettings');
+        $key = 'settingsscope_' . (int) $these->id;
+        $scope = $cache->get($key);
+        if ($scope === false) {
+            $scope = null;
             foreach (get_plugins_with_function('these_settings_scope') as $plugins) {
                 foreach ($plugins as $function) {
-                    $scope = $function($these);
-                    if ($scope instanceof stdClass) {
-                        return $scope;
+                    $found = $function($these);
+                    if ($found instanceof stdClass) {
+                        $scope = $found;
+                        break 2;
                     }
                 }
             }
+            $scope = $scope ?? self::local_scope($these);
+            $cache->set($key, $scope);
         }
-        return self::local_scope($these);
+        return clone $scope;
     }
 
     /**

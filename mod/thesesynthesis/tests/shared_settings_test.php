@@ -180,6 +180,28 @@ final class shared_settings_test extends \advanced_testcase {
     }
 
     /**
+     * La portée des paramètres d'une activité est lue une fois par requête : chaque dossier d'une liste
+     * la redemandait (quatre requêtes à chaque fois). Changer les activités suivies la fait relire.
+     * Mesure du test de charge (tools/stresstest) : 240 des 490 lectures du tableau de bord de la DEVE.
+     */
+    public function test_settings_scope_read_once(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $env = $this->setup_env();
+        $these = $env->activities[1]->these;
+        \mod_these\local\scopesettings::reset_cache();
+        $this->assertTrue(these_settings_scope($these)->shared);
+        $before = $DB->perf_get_reads();
+        for ($i = 0; $i < 5; $i++) {
+            $this->assertEquals($env->synthesis->id, these_settings_scope($these)->synthesisid);
+        }
+        $this->assertSame(0, $DB->perf_get_reads() - $before);
+
+        thesesynthesis_set_links($env->synthesis->id, [$env->activities[0]->these->cmid]);
+        $this->assertFalse(these_settings_scope($these)->shared);
+    }
+
+    /**
      * Recherche : texte (sans accents), année, réponses au questionnaire ; visibilité selon les droits.
      */
     public function test_search(): void {

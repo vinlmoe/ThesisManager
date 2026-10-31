@@ -194,5 +194,7 @@ class restore_thesesynthesis_activity_structure_step extends restore_activity_st
 
             $DB->set_field('thesesynthesis_link', 'thesecmid', $newcmid, ['id' => $link->id]);
         }
+        // Activités suivies modifiées : portées des paramètres à relire.
+        \mod_these\local\scopesettings::reset_cache();
     }
 }
