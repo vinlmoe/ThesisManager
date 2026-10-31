@@ -299,6 +299,14 @@ function these_pluginfile($course, $cm, $context, $filearea, $args, $forcedownlo
     }
 
     $filename = array_pop($args);
+    // PDF d'un ancien sujet confidentiel : réservé à qui connaîtrait un sujet confidentiel du dossier,
+    // même quand le sujet en cours ne l'est plus.
+    if ($filearea === 'subjectarchive' && preg_match('/-(\d+)\.pdf$/', $filename, $match)) {
+        $entry = $DB->get_record('these_subjecthistory', ['id' => (int) $match[1], 'dossierid' => $dossier->id]);
+        if ($entry && !\mod_these\local\rights::user_knows_archived_subject($entry, $dossier, $context, $USER->id)) {
+            return false;
+        }
+    }
     $filepath = $args ? '/' . implode('/', $args) . '/' : '/';
     $fs = get_file_storage();
     $file = $fs->get_file($context->id, 'mod_these', $filearea, $dossierid, $filepath, $filename);

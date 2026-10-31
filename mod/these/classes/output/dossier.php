@@ -244,6 +244,8 @@ class dossier implements \renderable, \templatable {
      * @return array
      */
     public function export_for_template(\renderer_base $output): array {
+        global $USER;
+
         $dossier = $this->dossier;
         $rights = $this->rights;
         $status = (int) $dossier->status;
@@ -276,7 +278,10 @@ class dossier implements \renderable, \templatable {
 
         $data['signeddocuments'] = (new signed_documents($this->cm, $this->context, $dossier, $rights))
             ->export_for_template($output);
-        $data['history'] = (new history($dossier->id, $rights->viewall || $rights->director, $knows))
+        // Ancien titre cité par un changement de sujet : masqué aussi quand un ancien sujet confidentiel
+        // n'est pas connu de l'utilisateur, même si le sujet en cours ne l'est plus.
+        $knowsall = $knows && rights::user_knows_archived_subjects($dossier, $this->context, $USER->id);
+        $data['history'] = (new history($dossier->id, $rights->viewall || $rights->director, $knowsall))
             ->export_for_template($output);
         return $data;
     }

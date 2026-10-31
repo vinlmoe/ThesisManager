@@ -227,6 +227,43 @@ class rights {
     }
 
     /**
+     * Indique si un utilisateur peut connaître un ancien sujet d'un dossier, archivé à un changement de
+     * sujet (voir subjectchange) : un ancien sujet confidentiel reste réservé à ceux qui connaîtraient un
+     * sujet confidentiel de ce dossier (étudiant, directeur, DEVE, bibliothèque, jury), même quand le
+     * sujet en cours ne l'est plus.
+     *
+     * @param stdClass $entry Ancien sujet (these_subjecthistory).
+     * @param stdClass $dossier
+     * @param context $context Contexte de l'activité du dossier.
+     * @param int $userid
+     * @return bool
+     */
+    public static function user_knows_archived_subject(stdClass $entry, stdClass $dossier, context $context, $userid) {
+        if (empty($entry->confidential)) {
+            return true;
+        }
+        return self::user_knows_subject((object) (['confidential' => 1] + (array) $dossier), $context, $userid);
+    }
+
+    /**
+     * Indique si un utilisateur peut connaître tous les anciens sujets d'un dossier (voir
+     * user_knows_archived_subject()).
+     *
+     * @param stdClass $dossier
+     * @param context $context Contexte de l'activité du dossier.
+     * @param int $userid
+     * @return bool
+     */
+    public static function user_knows_archived_subjects(stdClass $dossier, context $context, $userid) {
+        global $DB;
+
+        if (!$DB->record_exists('these_subjecthistory', ['dossierid' => $dossier->id, 'confidential' => 1])) {
+            return true;
+        }
+        return self::user_knows_archived_subject((object) ['confidential' => 1], $dossier, $context, $userid);
+    }
+
+    /**
      * Même réponse que user_knows_subject(), pour plusieurs dossiers d'une même activité : les droits
      * de service, communs à tous les dossiers, sont vérifiés une fois, et les jurys où siège
      * l'utilisateur sont lus en une requête.

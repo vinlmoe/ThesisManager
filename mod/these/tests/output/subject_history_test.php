@@ -43,12 +43,21 @@ final class subject_history_test extends output_testcase {
             'filearea' => 'subjectarchive', 'itemid' => $dossier->id, 'filepath' => '/',
             'filename' => 'sujet-' . $entry->id . '.pdf'], 'x');
 
-        $data = (new subject_history($this->context, $dossier))->export_for_template($this->renderer());
+        // Vu par le directeur, qui connaît les sujets confidentiels du dossier.
+        $data = (new subject_history($this->context, $dossier, $this->director->id))->export_for_template($this->renderer());
         $this->assertTrue($data['hasentries']);
         $cells = $data['table']['rows'][0]['cells'];
         $this->assertSame(self::SECRETS['oldtitle'], $cells[1]['parts'][0]['phtml']['value']);
         $this->assertSame('Dr Ancien', $cells[2]['parts'][0]['ptext']['value']);
         $this->assertSame('sujet-' . $entry->id . '.pdf', $cells[4]['parts'][0]['plink']['value']);
+
+        // Vu par un autre enseignant : l'ancien sujet confidentiel est masqué (titre, motif, PDF).
+        $other = $this->getDataGenerator()->create_and_enrol($this->course, 'teacher');
+        $data = (new subject_history($this->context, $dossier, $other->id))->export_for_template($this->renderer());
+        $cells = $data['table']['rows'][0]['cells'];
+        $this->assertSame(get_string('confidentialtitle', 'mod_these'), $cells[1]['parts'][0]['pem']['value']);
+        $this->assertSame('-', $cells[3]['parts'][0]['ptext']['value']);
+        $this->assertSame('-', $cells[4]['parts'][0]['ptext']['value']);
 
         $DB->delete_records('these_subjecthistory', ['dossierid' => $dossier->id]);
         $this->assertFalse((new subject_history($this->context, $dossier))->export_for_template($this->renderer())['hasentries']);
