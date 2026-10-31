@@ -9,6 +9,7 @@
     </description>
 
     <file>mod</file>
+    <file>tools/stresstest</file>
 
     <!-- Bibliothèque tierce redistribuée telle quelle : elle suit ses propres conventions. -->
     <exclude-pattern>*/thirdparty/*</exclude-pattern>
