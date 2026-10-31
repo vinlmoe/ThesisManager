@@ -115,12 +115,13 @@ lectures d'une vérification ne se font pas dans un même instantané de la base
   sur un dossier abandonné (vérifiés avec les jetons envoyés), ancien lien sans effet après un
   nouvel envoi, lien expiré refusé, jeton inconnu refusé ;
 - un seul événement de calendrier par soutenance arrêtée, aucun pour un dossier supprimé ;
-- numéro DEVE unique dans l'activité ; nouvelle date plus attendue une fois la soutenance déposée de
-  nouveau ;
+- numéro DEVE unique sur tout le site ; nouvelle date plus attendue une fois la soutenance déposée
+  de nouveau ;
 - confidentialité : ni le titre d'une thèse confidentielle, ni celui d'un ancien sujet confidentiel
   n'apparaissent sur la page du dossier rendue pour la scolarité (`viewall`), et le PDF archivé d'un
   ancien sujet confidentiel ne lui est pas accessible ;
-- effacement RGPD : procès-verbal (fichiers et décision) conservé intact ;
+- effacement RGPD : procès-verbal (fichiers et décision) conservé intact ; dossier réduit au
+  procès-verbal clos, archivé (`erasedtime`), historique réduit à l'entrée d'effacement ;
 - base : aucun enregistrement (signature, jury, réponse, historique, ancien sujet), fichier ou
   événement de soutenance sans dossier.
 
@@ -166,22 +167,32 @@ Moodle 4.5, PHP 8.3, PostgreSQL 16, 4 processeurs, site de test vierge.
 | graine 2 et 7, 4 processus | 40 puis 150 étudiants, 2 promotions | 6 458 | `edit.php` qui remet un dossier dans son ancien statut ; génération des documents pendant leur transmission (erreur `ZipArchive`) ; signatures apposées sur un dossier qui vient de changer de statut ; événement de calendrier d'un dossier effacé |
 | graine 11, 6 processus, `--latency=20` | 150 étudiants, 2 promotions | 7 519 | `TypeError` au changement de sujet quand le compte du directeur est supprimé ; nouvelle date encore attendue après un nouveau dépôt ; relance des signatures sur un dossier qui change de statut ; première consultation simultanée de la grille (voir ci-dessous) |
 | graine 21, 4 processus | 2 000 étudiants, 3 promotions | 46 887 en 53 min (peuplement : 49 min) | plus d'erreur du module ; les pages et les opérations de signature ralentissaient avec le volume (voir les mesures) |
-| graine 31, 4 processus, `--focus=80 --latency=20`, après les corrections | 1 976 dossiers (reprise du passage précédent) | 3 000 en 66 s | aucune erreur inattendue ; seul invariant violé : numéros DEVE en double (voir ci-dessous) |
+| graine 31, 4 processus, `--focus=80 --latency=20`, après les corrections | 1 976 dossiers (reprise du passage précédent) | 3 000 en 66 s | aucune erreur inattendue ; seul invariant violé : numéros DEVE en double (corrigé depuis, voir ci-dessous) |
+| graine 41 puis 42, 4 processus, `--focus=80 --latency=20`, après la mise à jour 2026103100 | 1 975 dossiers (base du passage précédent) | 2 × 3 000 en 60 et 50 s | aucune erreur inattendue, aucun invariant violé |
 
-Restent signalés, sans correction :
+Corrigés après le passage de la graine 31 (version 2026103100) :
 
-- **numéro DEVE en double** quand deux validations de la DEVE sont enregistrées au même instant
-  sur deux dossiers : l'unicité n'est vérifiée que par le formulaire (`devenumber_taken()`), hors de
-  tout verrou commun aux dossiers ;
-- **première consultation simultanée de la grille de conformité** : les éléments d'origine sont
-  enregistrés à la première lecture ; deux lectures simultanées, dans deux opérations, se heurtent à
-  l'index unique (`dml_write_exception`). Le jeu de données les enregistre avant les opérations ;
+- **numéro DEVE en double** quand deux validations de la DEVE étaient enregistrées au même instant,
+  ou dans deux promotions la même année : l'unicité n'était vérifiée que par le formulaire, et par
+  activité. Le numéro est désormais unique sur tout le site, attribué sous un verrou commun et garanti
+  par un index unique ;
+- **première consultation simultanée de la grille de conformité** (`dml_write_exception`) : les
+  éléments d'origine sont enregistrés à la création de l'activité, la lecture n'écrit plus ;
+- **fichier déposé deux fois au même instant** (double envoi d'un formulaire) : les fichiers sont
+  enregistrés dans l'opération, sous le verrou du dossier ; le second envoi est refusé proprement ;
+- **effacement RGPD pendant une opération** sur le même dossier : l'effacement prend le verrou du
+  dossier ; le dossier réduit à son procès-verbal est clos, archivé et sorti du circuit.
+
+La mise à jour 2026103100, passée sur la base de la graine 31 (1 975 dossiers), a abouti en 1,5 s :
+elle a listé 225 numéros attribués à plusieurs dossiers (doublons entre promotions et doublons de
+la graine 31) et créé un index non unique, puis marqué 7 dossiers déjà réduits à leur procès-verbal
+(dont 2 où une opération concurrente avait écrit après l'effacement). Après renumérotation des
+doublons (320 dossiers), `mod/these/cli/devenumber_index.php` a rendu l'index unique.
+
+Reste signalé, sans correction :
+
 - **`mkdir(): File exists`** dans le stockage des fichiers de Moodle (deux processus créent le même
-  répertoire de contenu au même instant) : avertissement du cœur de Moodle, sans effet ;
-- **fichier déposé deux fois au même instant** (double envoi d'un formulaire) : les pages enregistrent
-  leurs fichiers hors du verrou du dossier, l'un des envois échoue (compté comme refus attendu) ;
-- **effacement RGPD pendant une opération** sur le même dossier : l'effacement ne prend pas le
-  verrou du dossier, une écriture concurrente peut laisser une entrée d'historique orpheline.
+  répertoire de contenu au même instant) : avertissement du cœur de Moodle, sans effet.
 
 ### Pages lourdes (2 000 dossiers, 3 promotions)
 
