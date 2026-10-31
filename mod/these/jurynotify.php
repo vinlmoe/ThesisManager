@@ -38,6 +38,8 @@ these_require_service($context, 'deve');
 require_sesskey();
 
 $dossier = $DB->get_record('these_dossier', ['id' => $dossierid, 'theseid' => $these->id], '*', MUST_EXIST);
+// Dossier réduit à son procès-verbal (données de l'étudiant effacées) : plus aucune action.
+\mod_these\local\dossiers::require_in_circuit($dossier);
 if ((int) $dossier->status < THESE_STATUS_DEFENSE_VALIDATED) {
     throw new moodle_exception('invalidparameter', 'debug');
 }

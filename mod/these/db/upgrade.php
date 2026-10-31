@@ -427,6 +427,15 @@ function xmldb_these_upgrade($oldversion) {
         // ne font pas échouer la mise à jour : l'index est alors non unique et les doublons sont
         // listés pour être corrigés, avant cli/devenumber_index.php (voir INSTALL.md).
         require_once(__DIR__ . '/upgradelib.php');
+        // Dossier réduit à son procès-verbal par l'effacement des données de l'étudiant : marqué, clos et
+        // sorti du circuit.
+        $dbman = $DB->get_manager();
+        $table = new xmldb_table('these_dossier');
+        $field = new xmldb_field('erasedtime', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'daterequestcomment');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        these_upgrade_mark_erased_dossiers();
         $duplicates = these_upgrade_devenumber_index();
         if ($duplicates) {
             $report = these_upgrade_devenumber_report($duplicates);

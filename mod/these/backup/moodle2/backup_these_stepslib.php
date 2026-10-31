@@ -76,7 +76,8 @@ class backup_these_activity_structure_step extends backup_activity_structure_ste
             'extdirectorinstitution', 'extdirectoremail', 'commitments', 'ethicsnumber', 'bordereau', 'conclusions',
             'reportfavorable', 'conformitygrid', 'agreement',
             'returnstatus', 'returncomment', 'returnedby', 'returntime', 'cancelledfromstatus',
-            'documentstime', 'senttime', 'remindertime', 'daterequested', 'daterequestcomment', 'timecreated', 'timemodified',
+            'documentstime', 'senttime', 'remindertime', 'daterequested', 'daterequestcomment', 'erasedtime', 'timecreated',
+            'timemodified',
         ]);
 
         $jurymembers = new backup_nested_element('jurymembers');

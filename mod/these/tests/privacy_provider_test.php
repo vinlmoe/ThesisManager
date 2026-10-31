@@ -374,9 +374,15 @@ final class privacy_provider_test extends these_testcase {
             foreach (['manuscript', 'sealed'] as $filearea) {
                 $this->assertSame([], $this->area_hashes($dossier->id, $filearea), "$path $filearea");
             }
-            foreach (['these_signature', 'these_log', 'these_answer', 'these_subjecthistory'] as $table) {
+            foreach (['these_signature', 'these_answer', 'these_subjecthistory'] as $table) {
                 $this->assertEquals(0, $DB->count_records($table, ['dossierid' => $dossier->id]), "$path $table");
             }
+            // Historique réduit à l'effacement ; dossier archivé, sorti du circuit.
+            $logs = $DB->get_records('these_log', ['dossierid' => $dossier->id]);
+            $this->assertCount(1, $logs, $path);
+            $this->assertSame('erased', reset($logs)->logaction);
+            $this->assertEquals(0, reset($logs)->userid);
+            $this->assertGreaterThan(0, $kept->erasedtime);
             $tokens = $DB->count_records_select('these_jury', 'dossierid = ? AND accesstoken IS NOT NULL', [$dossier->id]);
             $this->assertEquals(0, $tokens, $path);
             $this->assertTrue(get_file_storage()->is_area_empty($this->context->id, 'mod_these', 'signature'));
@@ -434,5 +440,93 @@ final class privacy_provider_test extends these_testcase {
         $this->assertEquals(0, $kept->directorid);
         $signatures = ['dossierid' => $dossier->id, 'userid' => $this->director->id];
         $this->assertEquals(0, $DB->count_records('these_signature', $signatures));
+    }
+
+    /**
+     * Dossier en corrections dont l'étudiant est effacé : réduit à son procès-verbal, il est clos,
+     * archivé et sorti du circuit. Plus aucune transition (dépôt des corrections, abandon, modification),
+     * plus aucune action proposée, le procès-verbal reste intact.
+     */
+    public function test_erased_dossier_leaves_circuit(): void {
+        global $DB;
+        // Opérations refusées (annulées) les unes après les autres : pas de transaction englobante.
+        $this->preventResetByRollback();
+        $this->setup_activity();
+        $dossier = $this->make_dossier_with_minutes();
+        $DB->update_record('these_dossier', (object) ['id' => $dossier->id, 'status' => THESE_STATUS_CORRECTIONS,
+            'correctionsrequested' => 1, 'correctionsnote' => 'Reprendre la conclusion.']);
+        $dossier = $this->reload($dossier->id);
+        $pv = $this->area_hashes($dossier->id, 'pv');
+
+        provider::delete_data_for_user(new approved_contextlist($this->student, 'mod_these', [$this->context->id]));
+
+        $kept = $this->reload($dossier->id);
+        $this->assertEquals(THESE_STATUS_CLOSED, $kept->status);
+        $this->assertTrue(\mod_these\local\dossiers::is_erased($kept));
+        $this->assertSame($pv, $this->area_hashes($dossier->id, 'pv'));
+        $this->assertEquals(THESE_RESULT_ADMITTED, $kept->defenseresult);
+
+        // Opérations vues sur l'ancien état (page ouverte avant l'effacement) comme sur le nouveau.
+        $attempts = [
+            'corrections' => function () use ($dossier) {
+                these_submit_corrections($this->these, $this->cm, $dossier, $this->student->id, 'Fait.');
+            },
+            'cancel' => function () use ($kept) {
+                \mod_these\local\dossiers::cancel_dossier($kept, $this->deve->id, 'Abandon');
+            },
+            'edit' => function () use ($kept) {
+                \mod_these\local\dossiers::edit_dossier($this->these, $this->cm, $kept, ['libraryref' => 'X'], [], $this->deve->id);
+            },
+            'status' => function () use ($kept) {
+                \mod_these\local\dossiers::set_status(clone $kept, THESE_STATUS_CANCELLED, $this->deve->id, 'cancelled');
+            },
+            'page' => function () use ($kept) {
+                \mod_these\local\dossiers::require_in_circuit($kept);
+            },
+        ];
+        foreach ($attempts as $name => $attempt) {
+            try {
+                $attempt();
+                $this->fail("$name accepté sur un dossier archivé");
+            } catch (\moodle_exception $e) {
+                $this->assertEquals('dossiererased', $e->errorcode, $name);
+            }
+        }
+        $this->assertEquals(1, $DB->count_records('these_log', ['dossierid' => $dossier->id]));
+        $this->assertEquals(THESE_STATUS_CLOSED, $this->reload($dossier->id)->status);
+
+        // Lecture seule : aucune action proposée à la DEVE, avis d'archivage sur la page du dossier.
+        $rights = these_get_rights($this->context, $kept, $this->deve->id);
+        $this->assertSame([], these_get_dossier_actions($this->cm, $kept, $rights));
+        $this->assertNull(\mod_these\local\rendering::primary_action($this->cm, $kept, $rights));
+        $this->assertFalse(\mod_these\local\rights::user_can_act($kept, $rights));
+        $this->assertFalse(\mod_these\local\calendar::has_event($kept));
+    }
+
+    /**
+     * L'effacement prend le verrou du dossier : tant qu'une opération le retient, il attend puis
+     * renonce (dossierbusy) sans rien effacer, plutôt que de laisser l'opération écrire dans un
+     * dossier effacé (historique orphelin).
+     */
+    public function test_erasure_takes_dossier_lock(): void {
+        global $CFG, $DB;
+        $this->setup_activity();
+        $dossier = $this->make_dossier();
+        // Verrous de fichiers : le verrou pris ici retient aussi les autres demandes du même processus.
+        $CFG->lock_factory = '\core\lock\file_lock_factory';
+        $lock = \core\lock\lock_config::get_lock_factory('mod_these')->get_lock('dossier' . $dossier->id, 0);
+        $this->assertNotFalse($lock);
+        try {
+            provider::delete_data_for_user(new approved_contextlist($this->student, 'mod_these', [$this->context->id]));
+            $this->fail('Effacement sans le verrou du dossier');
+        } catch (\moodle_exception $e) {
+            $this->assertEquals('dossierbusy', $e->errorcode);
+        } finally {
+            $lock->release();
+        }
+        $this->assertTrue($DB->record_exists('these_dossier', ['id' => $dossier->id]));
+
+        provider::delete_data_for_user(new approved_contextlist($this->student, 'mod_these', [$this->context->id]));
+        $this->assertFalse($DB->record_exists('these_dossier', ['id' => $dossier->id]));
     }
 }

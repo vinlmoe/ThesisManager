@@ -77,6 +77,8 @@ if ($token !== '') {
     require_login($course, true, $cm);
     these_require_service($context, 'deve');
     $dossier = $DB->get_record('these_dossier', ['id' => $dossierid, 'theseid' => $these->id], '*', MUST_EXIST);
+    // Dossier réduit à son procès-verbal (données de l'étudiant effacées) : plus aucune action.
+    \mod_these\local\dossiers::require_in_circuit($dossier);
     if (!in_array($slot, these_inperson_slots(), true)) {
         throw new moodle_exception('invalidparameter', 'debug');
     }

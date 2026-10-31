@@ -62,6 +62,10 @@ class bulk {
         $userid
     ) {
         $status = (int) $dossier->status;
+        if (dossiers::is_erased($dossier)) {
+            // Dossier réduit à son procès-verbal : sorti du circuit.
+            return false;
+        }
         switch ($action) {
             case 'remind':
                 // Signatures attendues des agents DEVE et des signataires sans compte.

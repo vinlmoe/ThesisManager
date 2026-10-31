@@ -408,7 +408,17 @@ qu'une décision du jury a été reportée.
   reste est effacé : résumé, mots-clés, bordereau, grille, agrément,
   conclusions, commentaires, autres fichiers déposés ou générés, documents
   scellés et signatures électroniques, réponses au questionnaire, historique
-  et journaux, liens d'accès du jury ;
+  et journaux, liens d'accès du jury, soutenance au calendrier. Le dossier
+  conservé **sort du circuit** : il passe au statut *Clos* et est marqué
+  archivé (date d'effacement, une seule entrée d'historique « Données de
+  l'étudiant effacées »), quel que soit le statut qu'il avait atteint
+  (corrections en cours, par exemple). Plus aucune action n'est possible
+  dessus — ni clôture, ni abandon, ni modification, ni signature : les pages
+  d'action le refusent et la page du dossier le présente en lecture seule,
+  avec un avis d'archivage. L'effacement prend le verrou du dossier : une
+  opération en cours se termine avant lui, une opération suivante est refusée.
+  La mise à jour 2026103100 marque de même les dossiers déjà réduits à leur
+  procès-verbal (historique vide, étudiant supprimé) ;
 - **membre du personnel** (directeur, DEVE, bibliothèque, agent signataire,
   membre du jury ayant un compte rattaché) : les dossiers des autres restent,
   mais ses références y sont dissociées (nom, image et adresse de ses

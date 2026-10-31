@@ -43,6 +43,7 @@ use mod_these\local\university;
 use mod_these\local\workflow;
 use mod_these\local\bordereau;
 use mod_these\local\seals;
+use mod_these\local\calendar;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -765,12 +766,17 @@ class provider implements
      * @return void
      */
     protected static function delete_student_dossiers(context_module $context, array $dossierids) {
-        $withminutes = array_filter($dossierids, function ($dossierid) use ($context) {
-            return self::has_minutes($context, (int) $dossierid);
-        });
-        dossiers::delete_dossiers(array_values(array_diff($dossierids, $withminutes)), $context);
-        foreach ($withminutes as $dossierid) {
-            self::keep_minutes_only($context, (int) $dossierid);
+        // Chaque dossier sous son verrou (celui des opérations du circuit) : une opération en cours se
+        // termine avant l'effacement et n'y laisse rien (historique, signature, fichier) ; une opération
+        // suivante trouve le dossier supprimé, ou archivé (dossiererased).
+        foreach ($dossierids as $dossierid) {
+            dossiers::with_dossier_lock((int) $dossierid, function () use ($context, $dossierid) {
+                if (self::has_minutes($context, (int) $dossierid)) {
+                    self::keep_minutes_only($context, (int) $dossierid);
+                } else {
+                    dossiers::delete_dossiers([(int) $dossierid], $context);
+                }
+            });
         }
     }
 
@@ -821,7 +827,12 @@ class provider implements
             'agreement' => null, 'extdirectoremail' => '', 'libraryref' => '', 'correctionsdone' => '',
             'returnstatus' => 0, 'returncomment' => '', 'returnedby' => 0, 'returntime' => 0, 'remindertime' => 0,
             'daterequested' => 0, 'timemodified' => time(),
+            // Sorti du circuit : clos et archivé, plus aucune action possible (voir dossiers::is_erased()).
+            'status' => THESE_STATUS_CLOSED, 'cancelledfromstatus' => 0, 'erasedtime' => time(),
         ]);
+        // Historique effacé, réduit à cette seule entrée (statut du dossier).
+        dossiers::log($dossierid, 0, 'erased', THESE_STATUS_CLOSED, THESE_STATUS_CLOSED);
+        calendar::sync($DB->get_record('these_dossier', ['id' => $dossierid], '*', MUST_EXIST));
     }
 
     /**

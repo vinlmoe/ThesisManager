@@ -44,13 +44,15 @@ class calendar {
     }
 
     /**
-     * Le dossier a-t-il une soutenance à afficher au calendrier ?
+     * Le dossier a-t-il une soutenance à afficher au calendrier ? Pas un dossier réduit à son
+     * procès-verbal (données de l'étudiant effacées) : l'événement porte le nom de l'étudiant.
      *
      * @param stdClass $dossier
      * @return bool
      */
     public static function has_event(stdClass $dossier) {
-        return !empty($dossier->defensedate) && (int) $dossier->status >= THESE_STATUS_DEFENSE_VALIDATED;
+        return !empty($dossier->defensedate) && (int) $dossier->status >= THESE_STATUS_DEFENSE_VALIDATED
+            && !dossiers::is_erased($dossier);
     }
 
     /**

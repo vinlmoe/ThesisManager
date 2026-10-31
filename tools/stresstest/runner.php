@@ -56,7 +56,7 @@ class stress_runner {
 
     /** Codes d'erreur Moodle qui traduisent un refus documenté. */
     const EXPECTED_CODES = ['dossierchanged', 'dossierbusy', 'notyourstep', 'nopermissions', 'refusenothing',
-        'requireloginerror', 'invalidaccess', 'accessdenied'];
+        'requireloginerror', 'invalidaccess', 'accessdenied', 'dossiererased', 'devenumbertaken'];
 
     /** @var int Graine du tirage. */
     public $seed;
@@ -338,7 +338,7 @@ class stress_runner {
 
     /**
      * Relit le dossier sur lequel porte une page : supprimé entre-temps (effacement RGPD dans un autre
-     * processus), la page ne le trouverait pas.
+     * processus), la page ne le trouverait pas ; réduit à son procès-verbal, elle le refuserait.
      *
      * @param int $id
      * @return stdClass
@@ -348,6 +348,8 @@ class stress_runner {
         if (!$dossier) {
             throw new stress_refusal('dossier supprimé');
         }
+        // Dossier réduit à son procès-verbal (effacement RGPD) : les pages d'action le refusent.
+        \mod_these\local\dossiers::require_in_circuit($dossier);
         return $dossier;
     }
 
@@ -2019,12 +2021,16 @@ class stress_runner {
             $violations[] = "statut inconnu $status";
         }
         $logs = array_values($DB->get_records('these_log', ['dossierid' => $id], 'id ASC'));
-        // Dossier réduit à son procès-verbal par un effacement RGPD (ici ou dans un autre processus).
-        $reduced = !$logs || $logs[0]->logaction !== 'created';
-        $minutes = (int) $dossier->defenseresult !== 0
-            || !get_file_storage()->is_area_empty($this->activity($dossier)->context->id, 'mod_these', 'pv', $id)
-            || !get_file_storage()->is_area_empty($this->activity($dossier)->context->id, 'mod_these', 'pvadjourned', $id);
-        $kept = !empty($this->keptminutes[$id]['erased']) || ($reduced && $minutes);
+        // Dossier réduit à son procès-verbal par un effacement RGPD (ici ou dans un autre processus) : clos,
+        // archivé, historique réduit à l'effacement.
+        $reduced = \mod_these\local\dossiers::is_erased($dossier);
+        $kept = !empty($this->keptminutes[$id]['erased']) || $reduced;
+        if (!empty($this->keptminutes[$id]['erased']) && !$reduced) {
+            $violations[] = 'dossier réduit au procès-verbal sans être archivé';
+        }
+        if ($reduced && ($status !== THESE_STATUS_CLOSED || count($logs) !== 1 || $logs[0]->logaction !== 'erased')) {
+            $violations[] = "dossier archivé après effacement : statut $status, historique de " . count($logs) . ' entrée(s)';
+        }
         if ($kept && empty($this->keptminutes[$id]['erased'])) {
             // Effacé par un autre processus : l'état d'avant n'est pas connu ici.
             unset($this->keptminutes[$id]);

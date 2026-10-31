@@ -220,6 +220,10 @@ class rendering {
         $params = ['id' => $cm->id, 'dossierid' => $dossier->id];
         $status = (int) $dossier->status;
         $links = [];
+        if (dossiers::is_erased($dossier)) {
+            // Dossier réduit à son procès-verbal : en lecture seule.
+            return $links;
+        }
 
         if ($rights->student && subjects::subject_editable($dossier)) {
             $links[get_string('editsubject', 'mod_these')] = new moodle_url('/mod/these/subject.php', $params);
@@ -294,6 +298,9 @@ class rendering {
 
         $params = ['id' => $cm->id, 'dossierid' => $dossier->id];
         $status = (int) $dossier->status;
+        if (dossiers::is_erased($dossier)) {
+            return null;
+        }
         $steps = workflow::review_steps();
         if (isset($steps[$status]) && !empty($rights->{$steps[$status]['actor']})) {
             return [get_string('review' . $steps[$status]['key'], 'mod_these'), new moodle_url('/mod/these/review.php', $params)];

@@ -41,6 +41,8 @@ $activity = page::load_activity($id);
 ['cm' => $cm, 'course' => $course, 'these' => $these, 'context' => $context] = (array) $activity;
 require_login($course, true, $cm);
 ['dossier' => $dossier, 'rights' => $rights] = (array) page::load_dossier($activity, $dossierid, $USER->id);
+// Dossier réduit à son procès-verbal (données de l'étudiant effacées) : plus aucune action.
+\mod_these\local\dossiers::require_in_circuit($dossier);
 $params = ['id' => $cm->id, 'dossierid' => $dossier->id];
 $dossierurl = new moodle_url('/mod/these/dossier.php', $params);
 if (!$rights->director) {

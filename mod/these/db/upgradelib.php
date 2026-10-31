@@ -101,6 +101,36 @@ function these_upgrade_devenumber_report(array $duplicates) {
 }
 
 /**
+ * Dossiers déjà réduits à leur procès-verbal par l'effacement des données de leur étudiant (versions
+ * antérieures à 2026103100) : reconnus à leur historique vide (effacé avec le reste, alors que tout
+ * dossier créé ou importé en a un) et à leur étudiant supprimé. Ils sont clos et marqués archivés,
+ * comme le fait désormais l'effacement (voir \mod_these\privacy\provider).
+ *
+ * @return int Nombre de dossiers marqués.
+ */
+function these_upgrade_mark_erased_dossiers() {
+    global $DB;
+
+    $ids = $DB->get_fieldset_sql(
+        "SELECT d.id
+           FROM {these_dossier} d
+      LEFT JOIN {user} u ON u.id = d.userid
+          WHERE d.erasedtime = 0
+            AND (u.id IS NULL OR u.deleted = 1)
+            AND NOT EXISTS (SELECT 1 FROM {these_log} l WHERE l.dossierid = d.id)"
+    );
+    $now = time();
+    $closed = 100; // THESE_STATUS_CLOSED, figé.
+    foreach ($ids as $id) {
+        $DB->update_record('these_dossier', (object) ['id' => $id, 'status' => $closed, 'erasedtime' => $now,
+            'cancelledfromstatus' => 0, 'timemodified' => $now]);
+        $DB->insert_record('these_log', (object) ['dossierid' => $id, 'userid' => 0, 'logaction' => 'erased',
+            'fromstatus' => $closed, 'tostatus' => $closed, 'remark' => '', 'timecreated' => $now]);
+    }
+    return count($ids);
+}
+
+/**
  * Éléments d'origine de la grille de conformité des activités « Gestion des thèses » et « Suivi des
  * thèses » qui n'en ont pas (voir \mod_these\local\grid::create_default_items()).
  *

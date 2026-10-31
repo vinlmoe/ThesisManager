@@ -97,6 +97,31 @@ class dossiers {
     }
 
     /**
+     * Le dossier a-t-il été réduit à son procès-verbal par l'effacement des données de son étudiant
+     * (voir \mod_these\privacy\provider) ? Il est alors clos, archivé et sorti du circuit : plus aucune
+     * action n'est possible, ses pages le présentent en lecture seule.
+     *
+     * @param stdClass $dossier
+     * @return bool
+     */
+    public static function is_erased(stdClass $dossier) {
+        return !empty($dossier->erasedtime);
+    }
+
+    /**
+     * Exige un dossier encore dans le circuit (pages d'action).
+     *
+     * @param stdClass $dossier
+     * @return void
+     * @throws moodle_exception dossiererased
+     */
+    public static function require_in_circuit(stdClass $dossier) {
+        if (self::is_erased($dossier)) {
+            throw new moodle_exception('dossiererased', 'mod_these');
+        }
+    }
+
+    /**
      * Inscrit une action dans l'historique d'un dossier.
      *
      * @param int $dossierid
@@ -143,6 +168,10 @@ class dossiers {
 
         $now = time();
         $fromstatus = (int) $dossier->status;
+        if (self::is_erased($dossier)) {
+            // Dossier réduit à son procès-verbal : sorti du circuit, plus aucune transition.
+            throw new moodle_exception('dossiererased', 'mod_these');
+        }
         if (!workflow::transition_allowed($fromstatus, $tostatus)) {
             throw new coding_exception('Transition de statut interdite : ' . $fromstatus . ' vers ' . (int) $tostatus);
         }
@@ -192,23 +221,60 @@ class dossiers {
      * @param callable $operation
      * @return mixed Résultat de l'opération.
      * @throws moodle_exception dossierchanged si le dossier a changé de statut entre-temps, dossierbusy
-     *                          si un autre traitement le retient.
+     *                          si un autre traitement le retient, dossiererased s'il a été réduit à son
+     *                          procès-verbal (effacement des données de l'étudiant).
      */
     public static function dossier_operation(stdClass $dossier, callable $operation) {
         global $DB;
 
-        if (empty($dossier->id) || !empty(self::$held[$dossier->id])) {
+        return self::locked((int) ($dossier->id ?? 0), $operation, function () use ($DB, $dossier) {
+            $current = $DB->get_record('these_dossier', ['id' => $dossier->id], 'id, status, erasedtime');
+            if ($current && !empty($current->erasedtime)) {
+                throw new moodle_exception('dossiererased', 'mod_these');
+            }
+            if (!$current || (int) $current->status !== (int) $dossier->status) {
+                throw new moodle_exception('dossierchanged', 'mod_these');
+            }
+        });
+    }
+
+    /**
+     * Exécute un traitement sous le verrou d'un dossier, dans une transaction, sans condition sur son
+     * statut : effacement des données personnelles (voir \mod_these\privacy\provider). Une opération
+     * en cours sur le dossier (dossier_operation()) se termine avant, une opération suivante trouve le
+     * dossier effacé.
+     *
+     * @param int $dossierid
+     * @param callable $callback
+     * @return mixed Résultat de $callback.
+     * @throws moodle_exception dossierbusy si un autre traitement retient le dossier.
+     */
+    public static function with_dossier_lock($dossierid, callable $callback) {
+        return self::locked((int) $dossierid, $callback);
+    }
+
+    /**
+     * Verrou du dossier, contrôle sous verrou, transaction ; voir dossier_operation().
+     *
+     * @param int $dossierid 0 : sans verrou (dossier pas encore créé).
+     * @param callable $operation
+     * @param callable|null $check Contrôle fait sous le verrou, avant la transaction.
+     * @return mixed
+     */
+    private static function locked(int $dossierid, callable $operation, ?callable $check = null) {
+        global $DB;
+
+        if (!$dossierid || !empty(self::$held[$dossierid])) {
             return $operation();
         }
-        $lock = \core\lock\lock_config::get_lock_factory('mod_these')->get_lock('dossier' . $dossier->id, self::LOCK_TIMEOUT);
+        $lock = \core\lock\lock_config::get_lock_factory('mod_these')->get_lock('dossier' . $dossierid, self::LOCK_TIMEOUT);
         if (!$lock) {
             throw new moodle_exception('dossierbusy', 'mod_these');
         }
-        self::$held[$dossier->id] = true;
+        self::$held[$dossierid] = true;
         try {
-            $status = $DB->get_field('these_dossier', 'status', ['id' => $dossier->id]);
-            if ($status === false || (int) $status !== (int) $dossier->status) {
-                throw new moodle_exception('dossierchanged', 'mod_these');
+            if ($check !== null) {
+                $check();
             }
             $transaction = $DB->start_delegated_transaction();
             try {
@@ -219,7 +285,7 @@ class dossiers {
             $transaction->allow_commit();
             return $result;
         } finally {
-            unset(self::$held[$dossier->id]);
+            unset(self::$held[$dossierid]);
             if (!self::$held) {
                 // Fin de l'opération la plus externe, transaction validée ou annulée : les verrous pris
                 // en chemin (numéros DEVE) sont rendus.

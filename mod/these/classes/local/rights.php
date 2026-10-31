@@ -175,6 +175,9 @@ class rights {
      * @return bool
      */
     public static function user_can_act(stdClass $dossier, stdClass $rights) {
+        if (dossiers::is_erased($dossier)) {
+            return false;
+        }
         $actor = workflow::step_actor($dossier->status);
         if ($actor === null) {
             return false;

@@ -35,6 +35,7 @@
     * waiting Acteur attendu et date du statut, ou false.
     * returnnotice Renvoi en cours (title, comment), ou false.
     * adjourned Avis d'ajournement, ou false.
+    * erased Avis du dossier réduit à son procès-verbal (archivé), ou false.
     * actionbar Contexte de mod_these/actions, ou false.
     * subject, registration Contextes de mod_these/detail_section.
     * embargo Contexte de mod_these/embargo.
@@ -57,6 +58,7 @@
         "waiting": "En attente : Directeur de thèse — Depuis le 6 janvier 2026",
         "returnnotice": false,
         "adjourned": false,
+        "erased": false,
         "actionbar": {"actions": [{"label": "Modifier le dossier",
             "url": "https://example.com/mod/these/edit.php?id=2&dossierid=3", "class": "btn btn-primary mr-1 mb-1"}]},
         "subject": {"hasrows": true, "heading": "Sujet de thèse",
@@ -94,6 +96,9 @@
 {{#adjourned}}
 <div class="alert alert-warning">{{adjourned}}</div>
 {{/adjourned}}
+{{#erased}}
+<div class="alert alert-info">{{erased}}</div>
+{{/erased}}
 {{#actionbar}}
 <div class="these-actions mb-3">{{> mod_these/actions}}</div>
 {{/actionbar}}

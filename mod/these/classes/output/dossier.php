@@ -258,6 +258,12 @@ class dossier implements \renderable, \templatable {
             'waiting' => $this->waiting_notice(),
             'returnnotice' => $this->return_notice(),
             'adjourned' => $this->adjourned_notice(),
+            // Dossier réduit à son procès-verbal (données de l'étudiant effacées) : lecture seule.
+            'erased' => \mod_these\local\dossiers::is_erased($dossier) ? get_string(
+                'dossiererasednotice',
+                'mod_these',
+                userdate($dossier->erasedtime, get_string('strftimedate', 'langconfig'))
+            ) : false,
             'actionbar' => $this->action_bar($output),
             'subject' => $this->subject_section($output)->export_for_template($output),
             'embargo' => (new embargo($dossier, $rights))->export_for_template($output),
