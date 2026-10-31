@@ -197,14 +197,21 @@ requête de chauffe), avant et après les corrections :
 | Export du registre, 660 dossiers (CSV) | 4 415 requêtes, 3,2 s | 147, 0,42 s |
 | Mes signatures (DEVE, directeur) | 5 730, 1,4 s | 28, 0,15 s |
 | Mes signatures (agent DEVE, 300 signatures en attente) | 6 150, 1,7 s | 55, 0,28 s |
-| Suivi des thèses (DEVE) | 6 870, 2,5 s | 109, 1,1 s |
-| Suivi des thèses (agent DEVE) | 7 171, 2,6 s | 118, 1,1 s |
-| Recherche du suivi des thèses | 93, 1,4 s | 93, 1,5 s |
+| Suivi des thèses (DEVE) | 6 870, 2,5 s | 105, 0,33 s |
+| Suivi des thèses (agent DEVE) | 7 171, 2,6 s | 114, 0,32 s |
+| Suivi des thèses (directeur) | | 83, 0,21 s |
+| Recherche du suivi des thèses (DEVE, un mot) | 93, 1,4 s | 86, 0,27 s |
 | Dossier au plus long historique (140 entrées) | 5 869, 1,5 s | 104, 0,27 s |
 | Mon dossier (étudiant) | 75, 0,19 s | 66, 0,20 s |
 
 Les 5 700 lectures communes à toutes les pages venaient du lien « Mes signatures (n) » de la barre de
-navigation du module : quinze requêtes par signature d'agent en attente sur tout le site. Le suivi
-des thèses et sa recherche restent proportionnels au nombre de dossiers en temps de calcul (tableau
-de tous les dossiers suivis, sans pagination ; recherche faite en PHP sur tous les dossiers), sans
-requête par dossier.
+navigation du module : quinze requêtes par signature d'agent en attente sur tout le site.
+
+Le suivi des thèses et sa recherche restaient ensuite proportionnels au nombre de dossiers en temps de
+calcul, sans requête par dossier : tableau de tous les dossiers suivis, sans pagination (111 lectures,
+1,07 s pour la DEVE ; 120, 1,03 s pour un agent DEVE), recherche filtrée en PHP sur tous les dossiers
+(93 lectures, 1,56 s). Ils sont désormais paginés par 50 en base (droits, filtres et total dans la
+requête) : 105 lectures et 0,33 s pour la DEVE, quelle que soit la page (page 1 ou 10, filtre de
+texte compris), 86 lectures et 0,27 s pour la recherche (page 1 ou 5, ou sans critère). Le texte y
+est cherché sans accents par une expression régulière sous PostgreSQL : un repli des accents par
+`TRANSLATE()` sur chaque ligne coûtait encore 0,2 s par requête.
