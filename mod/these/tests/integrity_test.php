@@ -347,6 +347,40 @@ final class integrity_test extends these_testcase {
     }
 
     /**
+     * Une relance des signatures (lien d'un signataire sans compte, demande aux agents DEVE) sur un dossier
+     * qui a changé de statut entre-temps est refusée : elle ne rouvre pas les signatures qu'un renvoi vient
+     * de révoquer. Scénario relevé par le test de charge en concurrence (tools/stresstest) : la relance
+     * inscrivait à l'historique un statut périmé et recréait des demandes sur un dossier renvoyé.
+     */
+    public function test_signature_request_on_changed_dossier_is_refused(): void {
+        global $DB;
+        $this->setup_activity();
+        \mod_these\local\scopesettings::set(these_settings_scope($this->these), ['deveagent' => $this->deve->username]);
+        $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
+            'status' => THESE_STATUS_SUBJECT_REGISTERED, 'directorid' => $this->director->id, 'title' => 'Sujet',
+            'externaldirector' => 1, 'extdirectorname' => 'Dr Externe', 'extdirectoremail' => 'externe@example.com',
+        ]);
+        $seen = clone $dossier;
+        these_return_dossier($this->these, $this->cm, $dossier, $this->librarian->id, 'student', 'À reprendre.');
+        $sink = $this->redirectEmails();
+        foreach (['extdirector', 'agents'] as $request) {
+            try {
+                if ($request === 'agents') {
+                    these_request_agent_signatures($this->these, $this->cm, $seen, ['subject']);
+                } else {
+                    these_request_signature($this->these, $this->cm, $seen, 'extdirector', ['subject']);
+                }
+                $this->fail('Relance sur un dossier périmé acceptée : ' . $request);
+            } catch (\moodle_exception $e) {
+                $this->assertSame('dossierchanged', $e->errorcode);
+            }
+        }
+        $this->assertSame([], $sink->get_messages());
+        $sink->close();
+        $this->assertFalse($DB->record_exists('these_signature', ['dossierid' => $dossier->id]));
+    }
+
+    /**
      * Les modèles ne peuvent faire lire à TCPDF que les images du module ou des images en ligne.
      */
     public function test_template_images_are_restricted(): void {

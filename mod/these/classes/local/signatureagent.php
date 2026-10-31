@@ -243,6 +243,10 @@ class signatureagent {
      * attribuées ; avec plusieurs, elles restent ouvertes à chacun d'eux. Sert aussi de relance : la date de la demande repart de
      * zéro.
      *
+     * Opération sur le dossier (voir dossiers::dossier_operation()) : une relance sur un dossier qui a
+     * changé de statut entre-temps est refusée, au lieu de rouvrir des signatures qu'un renvoi vient de
+     * révoquer.
+     *
      * @param stdClass $these
      * @param stdClass $cm
      * @param stdClass $dossier
@@ -258,29 +262,31 @@ class signatureagent {
         array $doctypes,
         $validatorid = 0
     ) {
-        $now = time();
-        $labels = [];
-        $slotagents = [];
-        foreach (self::slots_for($these) as $slot) {
-            $agents = self::agents_for_slot($these, $slot);
-            if (!$agents) {
-                continue;
-            }
-            $single = count($agents) === 1 ? reset($agents) : null;
-            foreach (signaturetokens::pending_documents_for_slot($dossier, $slot, $doctypes) as $doctype) {
-                if (!self::agent_document_due($dossier, $doctype)) {
+        return dossiers::dossier_operation($dossier, function () use ($these, $cm, $dossier, $doctypes, $validatorid) {
+            $now = time();
+            $labels = [];
+            $slotagents = [];
+            foreach (self::slots_for($these) as $slot) {
+                $agents = self::agents_for_slot($these, $slot);
+                if (!$agents) {
                     continue;
                 }
-                self::open_agent_signature($dossier, $doctype, $slot, $single, $validatorid, $now);
-                $labels[$slot][] = self::document_label($doctype, $slot);
-                $slotagents[$slot] = $agents;
+                $single = count($agents) === 1 ? reset($agents) : null;
+                foreach (signaturetokens::pending_documents_for_slot($dossier, $slot, $doctypes) as $doctype) {
+                    if (!self::agent_document_due($dossier, $doctype)) {
+                        continue;
+                    }
+                    self::open_agent_signature($dossier, $doctype, $slot, $single, $validatorid, $now);
+                    $labels[$slot][] = self::document_label($doctype, $slot);
+                    $slotagents[$slot] = $agents;
+                }
             }
-        }
-        if (!$labels) {
-            return 0;
-        }
-        self::notify_agents($these, $cm, $dossier, $labels, $slotagents, $validatorid, $now);
-        return count(array_merge(...array_values($labels)));
+            if (!$labels) {
+                return 0;
+            }
+            self::notify_agents($these, $cm, $dossier, $labels, $slotagents, $validatorid, $now);
+            return count(array_merge(...array_values($labels)));
+        });
     }
 
     /**
