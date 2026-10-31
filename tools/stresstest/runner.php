@@ -258,6 +258,11 @@ class stress_runner {
                 'required' => 1]);
             these_save_question($scope, (object) ['qtype' => 'text', 'label' => 'Laboratoire', 'options' => '', 'required' => 0]);
         }
+        // Éléments d'origine de la grille, enregistrés à la première consultation : enregistrés ici, avant les
+        // opérations simultanées (voir README.md, « première consultation simultanée »).
+        foreach ($this->activities as $activity) {
+            these_get_grid_items(these_settings_scope($activity->these));
+        }
         accesslib_clear_all_caches(true);
         \mod_these\local\scopesettings::reset_cache();
     }
@@ -334,6 +339,21 @@ class stress_runner {
     public function reload($id) {
         global $DB;
         return $DB->get_record('these_dossier', ['id' => $id]) ?: null;
+    }
+
+    /**
+     * Relit le dossier sur lequel porte une page : supprimé entre-temps (effacement RGPD dans un autre
+     * processus), la page ne le trouverait pas.
+     *
+     * @param int $id
+     * @return stdClass
+     */
+    protected function fresh($id) {
+        $dossier = $this->reload($id);
+        if (!$dossier) {
+            throw new stress_refusal('dossier supprimé');
+        }
+        return $dossier;
     }
 
     /**
@@ -471,11 +491,17 @@ class stress_runner {
     protected function put_file(context $context, $filearea, $dossierid, $filename) {
         $fs = get_file_storage();
         $fs->delete_area_files($context->id, 'mod_these', $filearea, $dossierid);
-        $fs->create_file_from_string(
-            ['contextid' => $context->id, 'component' => 'mod_these', 'filearea' => $filearea,
-            'itemid' => $dossierid, 'filepath' => '/', 'filename' => $filename],
-            "%PDF-1.4\n% " . $filearea . ' ' . random_string(16) . "\n%%EOF\n"
-        );
+        try {
+            $fs->create_file_from_string(
+                ['contextid' => $context->id, 'component' => 'mod_these', 'filearea' => $filearea,
+                'itemid' => $dossierid, 'filepath' => '/', 'filename' => $filename],
+                "%PDF-1.4\n% " . $filearea . ' ' . random_string(16) . "\n%%EOF\n"
+            );
+        } catch (stored_file_creation_exception $e) {
+            // Même fichier déposé au même instant par un autre processus (double envoi du formulaire) :
+            // la page, qui enregistre ses fichiers hors du verrou du dossier, échouerait de même.
+            throw new stress_refusal('fichier déposé en même temps (double envoi)');
+        }
     }
 
     /**
@@ -763,7 +789,7 @@ class stress_runner {
         if ($step['key'] === 'directordefense' && empty($dossier->reportfavorable) && $this->chance(70)) {
             // Rapport du directeur déposé avant la validation.
             $this->op_report($dossier->id, $touched);
-            $dossier = $this->reload($dossier->id);
+            $dossier = $this->fresh($dossier->id);
         }
         if ($step['key'] === 'devedefense' && $this->chance(80)) {
             $a6 = \mod_these\local\a6::get($dossier);
@@ -780,7 +806,7 @@ class stress_runner {
         $user = $this->act_as($actor);
         $context = $activity->context;
         these_require_view($context);
-        $dossier = $this->reload($dossier->id);
+        $dossier = $this->fresh($dossier->id);
         $rights = these_get_rights($context, $dossier, $user->id);
         if (!these_can_view_dossier($rights)) {
             throw new stress_refusal('dossier non visible');
@@ -890,7 +916,7 @@ class stress_runner {
             throw new stress_refusal('acteur absent');
         }
         $user = $this->act_as($actor);
-        $dossier = $this->reload($dossier->id);
+        $dossier = $this->fresh($dossier->id);
         $rights = these_get_rights($activity->context, $dossier, $user->id);
         $step = these_review_steps()[(int) $dossier->status] ?? null;
         if (!$step || empty($rights->{$step['actor']})) {
@@ -961,7 +987,7 @@ class stress_runner {
         $activity = $this->activity($dossier);
         $user = $this->act_as($this->users['deve']);
         these_require_service($activity->context, 'deve');
-        $dossier = $this->reload($dossier->id);
+        $dossier = $this->fresh($dossier->id);
         if (in_array((int) $dossier->status, [THESE_STATUS_CLOSED, THESE_STATUS_CANCELLED], true)) {
             throw new stress_refusal('dossier clos ou abandonné');
         }
@@ -986,7 +1012,7 @@ class stress_runner {
         $activity = $this->activity($dossier);
         $user = $this->act_as($this->users['deve']);
         these_require_service($activity->context, 'deve');
-        $dossier = $this->reload($dossier->id);
+        $dossier = $this->fresh($dossier->id);
         if ((int) $dossier->status !== THESE_STATUS_CANCELLED) {
             throw new stress_refusal('dossier non abandonné');
         }
@@ -1071,7 +1097,7 @@ class stress_runner {
             throw new stress_refusal('pas de directeur');
         }
         $user = $this->act_as($director);
-        $dossier = $this->reload($dossier->id);
+        $dossier = $this->fresh($dossier->id);
         $rights = these_get_rights($activity->context, $dossier, $user->id);
         if (!$rights->director) {
             throw new moodle_exception('notyourstep', 'mod_these');
@@ -1101,7 +1127,7 @@ class stress_runner {
         $activity = $this->activity($dossier);
         $user = $this->act_as($this->users['deve']);
         these_require_service($activity->context, 'deve');
-        $dossier = $this->reload($dossier->id);
+        $dossier = $this->fresh($dossier->id);
         if (!\mod_these\local\daterequest::allowed($dossier)) {
             throw new stress_refusal('demande de date impossible');
         }
@@ -1159,7 +1185,7 @@ class stress_runner {
         $activity = $this->activity($dossier);
         $user = $this->act_as($this->users['deve']);
         these_require_service($activity->context, 'deve');
-        $dossier = $this->reload($dossier->id);
+        $dossier = $this->fresh($dossier->id);
         $jury = these_get_jury($dossier->id);
         $fields = [];
         foreach (['title', 'titleen', 'summary', 'keywords', 'devenumber', 'libraryref', 'defenselocation'] as $field) {
@@ -1472,14 +1498,14 @@ class stress_runner {
         $activity = $this->activity($dossier);
         $user = $this->act_as($this->users['deve']);
         these_require_service($activity->context, 'deve');
-        $dossier = $this->reload($dossier->id);
+        $dossier = $this->fresh($dossier->id);
         if (!in_array((int) $dossier->status, [THESE_STATUS_CONFORM, THESE_STATUS_SCHEDULED], true)) {
             throw new stress_refusal('documents non disponibles');
         }
         $this->think();
         if (empty($dossier->documentstime) || $this->chance(30)) {
             these_generate_documents($activity->these, $activity->context, $dossier, $user->id);
-            $dossier = $this->reload($dossier->id);
+            $dossier = $this->fresh($dossier->id);
         }
         $unsigned = (int) $dossier->status === THESE_STATUS_CONFORM ? prerequisites::missing($dossier) : [];
         if ($unsigned) {
@@ -1505,7 +1531,7 @@ class stress_runner {
         $activity = $this->activity($dossier);
         $user = $this->act_as($this->users['deve']);
         these_require_service($activity->context, 'deve');
-        $dossier = $this->reload($dossier->id);
+        $dossier = $this->fresh($dossier->id);
         if ((int) $dossier->status !== THESE_STATUS_SCHEDULED) {
             throw new stress_refusal('pas de soutenance programmée');
         }
@@ -2011,6 +2037,7 @@ class stress_runner {
             if ($current !== null && (int) $log->fromstatus !== $current) {
                 $violations[] = "historique incohérent : « {$log->logaction} » part de {$log->fromstatus} alors que le dossier"
                     . " était en $current (entrée {$log->id})";
+                $current = null;
                 break;
             }
             if (!these_transition_allowed($log->fromstatus, $log->tostatus)) {
