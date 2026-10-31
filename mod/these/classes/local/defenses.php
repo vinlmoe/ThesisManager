@@ -159,6 +159,10 @@ class defenses {
                 return $dossier;
             }
 
+            // Le dossier déposé porte une date : une autre date demandée auparavant par la DEVE (avant un
+            // renvoi, par exemple) n'est plus attendue.
+            $fields['daterequested'] = 0;
+            $fields['daterequestcomment'] = '';
             $previous = clone $dossier;
             foreach ($fields as $field => $value) {
                 $dossier->$field = $value;
