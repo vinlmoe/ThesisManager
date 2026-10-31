@@ -147,6 +147,8 @@ function these_report_editable(stdClass $dossier) {
  * @param stdClass $dossier
  * @param int $userid
  * @param bool $favorable
+ * @param array $drafts Brouillons des gestionnaires de fichiers du formulaire (zone => draftitemid),
+ *                      enregistrés sous le verrou du dossier.
  * @return stdClass Le dossier à jour.
  */
 function these_save_report(stdClass $dossier, $userid, $favorable, array $drafts = []) {
@@ -243,6 +245,8 @@ function these_extract_bordereau(stdClass $data, array $existing) {
  * @param bool $submit
  * @param int $userid
  * @param stdClass|null $signature Signature de l'étudiant (voir these_signature_from_form()).
+ * @param array $drafts Brouillons des gestionnaires de fichiers du formulaire (zone => draftitemid),
+ *                      enregistrés sous le verrou du dossier.
  * @return stdClass Le dossier à jour.
  */
 function these_save_defense(
@@ -330,6 +334,8 @@ function these_reopen_dossier(stdClass $dossier, $userid, $comment = '') {
  * @param int $userid
  * @param stdClass $decision {result, mention, prizeproposal, correctionsrequested, correctionsnote}
  * @param string $remark
+ * @param array $drafts Brouillons des gestionnaires de fichiers du formulaire (zone => draftitemid),
+ *                      enregistrés sous le verrou du dossier.
  * @return stdClass Le dossier à jour.
  */
 function these_record_minutes(
@@ -376,6 +382,8 @@ function these_is_adjourned(stdClass $dossier) {
  * @param stdClass $dossier
  * @param int $userid
  * @param string $done Corrections apportées.
+ * @param array $drafts Brouillons des gestionnaires de fichiers du formulaire (zone => draftitemid),
+ *                      enregistrés sous le verrou du dossier.
  * @return stdClass Le dossier à jour.
  */
 function these_submit_corrections(stdClass $these, stdClass $cm, stdClass $dossier, $userid, $done, array $drafts = []) {
