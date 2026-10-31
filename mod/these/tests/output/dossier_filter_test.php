@@ -29,6 +29,7 @@ require_once(__DIR__ . '/output_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_these\output\dossier_filter
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\output\dossier_filter::class)]
 final class dossier_filter_test extends output_testcase {
     /**
      * Contexte : liste des statuts avec « tous », statut choisi, texte.
@@ -55,10 +56,11 @@ final class dossier_filter_test extends output_testcase {
         $this->setup_activity();
         $url = new \moodle_url('/mod/these/dashboard.php', ['id' => $this->cm->id]);
         $html = $this->renderer()->render(new dossier_filter($url, $this->cm->id, '', 'a & b'));
-        $this->assertStringStartsWith('<form method="get" action="https://www.example.com/moodle/mod/these/dashboard.php" '
-            . 'class="form-inline mb-3">', $html);
-        $this->assertStringContainsString('<label class="mr-1" for="these-status">', $html);
-        $this->assertStringContainsString('<select class="select custom-select mr-2" id="these-status" name="status">', $html);
-        $this->assertStringContainsString('value="a &amp; b"', $html);
+        $form = './*[1][self::form][@method = "get"][@action = "https://www.example.com/moodle/mod/these/dashboard.php"]';
+        $this->assert_html_has($html, $form . '[' . self::xclass('form-inline') . ']');
+        // Libellé associé à la liste des statuts.
+        $this->assert_html_has($html, $form . '//label[@for = "these-status"]');
+        $this->assert_html_has($html, $form . '//select[@id = "these-status"][@name = "status"]');
+        $this->assert_html_has($html, $form . '//input[@value = "a & b"]');
     }
 }

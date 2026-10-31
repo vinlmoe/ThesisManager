@@ -29,6 +29,7 @@ require_once(__DIR__ . '/output_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_these\output\external_signers
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\output\external_signers::class)]
 final class external_signers_test extends output_testcase {
     /**
      * Dossier programmé avec bordereau : le président et la direction ont des documents à signer.
@@ -116,12 +117,16 @@ final class external_signers_test extends output_testcase {
         $this->setUser($this->deve);
         $url = new \moodle_url('/mod/these/signatures.php');
         $html = $this->renderer()->render(new external_signers($this->cm, $dossier, $url));
-        $this->assertStringStartsWith('<h4 class="mt-4">' . get_string('externalsigners', 'mod_these') . '</h4>', $html);
-        $this->assertStringContainsString('class="btn btn-sm btn-primary">' . get_string('signinperson', 'mod_these'), $html);
+        $heading = './*[1][self::h4][normalize-space() = "' . get_string('externalsigners', 'mod_these') . '"]';
+        $this->assert_html_has($html, $heading);
+        $this->assert_html_has($html, './/a[@href][' . self::xclass('btn-primary') . '][starts-with(normalize-space(), "'
+            . get_string('signinperson', 'mod_these') . '")]');
         $plain = $this->generator->create_dossier($this->these, $this->getDataGenerator()->create_and_enrol($this->course)->id);
         $signers = new external_signers($this->cm, $plain, $url);
         $this->assertTrue($signers->is_empty());
-        $heading = '<h4 class="mt-4">' . get_string('externalsigners', 'mod_these') . '</h4>';
-        $this->assertSame($heading, $this->renderer()->render($signers));
+        // Sans signataire extérieur : le titre seul.
+        $empty = $this->renderer()->render($signers);
+        $this->assert_html_has($empty, $heading);
+        $this->assert_html_has($empty, './*', 1);
     }
 }

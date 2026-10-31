@@ -29,6 +29,7 @@ require_once(__DIR__ . '/output_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_these\output\dossier_table
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\output\dossier_table::class)]
 final class dossier_table_test extends output_testcase {
     /**
      * Contexte : le titre d'une thèse confidentielle n'est présent que pour qui connaît le sujet.
@@ -59,14 +60,18 @@ final class dossier_table_test extends output_testcase {
         $dossier = $this->confidential_dossier();
         $this->setUser($this->viewall_user());
         $html = $this->renderer()->render(new dossier_table([$dossier], $this->cm));
-        $this->assertStringContainsString('<table class="generaltable these-dossiers">', $html);
-        $this->assertStringContainsString('<em>' . get_string('confidentialtitle', 'mod_these') . '</em>', $html);
+        $table = './/table[' . self::xclass('generaltable') . ' and ' . self::xclass('these-dossiers') . ']';
+        $this->assert_html_has($html, $table);
+        // Titre confidentiel remplacé par la mention, en italique.
+        $confidential = get_string('confidentialtitle', 'mod_these');
+        $this->assert_html_has($html, $table . '//td//em[normalize-space() = "' . $confidential . '"]');
         $this->assertStringContainsString(these_render_status_badge(THESE_STATUS_SCHEDULED), $html);
-        $this->assertStringContainsString('<td class="header c6 lastcol"></td>', $html);
+        // Colonne des actions : sans titre.
+        $this->assert_html_has($html, '(' . $table . '//thead/tr)[1]/*[last()][not(normalize-space())]');
         $this->assert_no_secret($html);
-        $this->assertSame(
-            '<div class="alert alert-info">' . get_string('nodossiers', 'mod_these') . '</div>',
-            these_render_dossier_table([], $this->cm)
-        );
+        $empty = these_render_dossier_table([], $this->cm);
+        $this->assert_html_lacks($empty, './/table');
+        $alert = './div[' . self::xclass('alert-info') . ']';
+        $this->assertSame([get_string('nodossiers', 'mod_these')], $this->html_texts($empty, $alert));
     }
 }

@@ -29,6 +29,7 @@ require_once(__DIR__ . '/output_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_thesesynthesis\output\dossier_filters
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_thesesynthesis\output\dossier_filters::class)]
 final class dossier_filters_test extends output_testcase {
     /**
      * Contexte : promotions et statuts avec la valeur choisie, texte recherché.
@@ -60,11 +61,12 @@ final class dossier_filters_test extends output_testcase {
         $links = $this->links_for($this->env->director);
         $base = new \moodle_url('/mod/thesesynthesis/view.php', ['id' => $this->env->cm->id]);
         $html = $this->renderer()->render(new dossier_filters($base, $this->env->cm->id, $links, 0, -999, 'a & b'));
-        $this->assertStringStartsWith('<form method="get" action="https://www.example.com/moodle/mod/thesesynthesis/view.php" '
-            . 'class="form-inline mb-3">', $html);
-        $this->assertStringContainsString('<select class="select custom-select custom-select mr-2 mb-1" id="menustatus" '
-            . 'name="status"><option selected="selected" value="-999">', $html);
-        $this->assertStringContainsString('value="a &amp; b"', $html);
-        $this->assertStringContainsString('<button type="submit" class="btn btn-secondary mb-1">', $html);
+        $form = './*[1][self::form][@method = "get"][@action = "https://www.example.com/moodle/mod/thesesynthesis/view.php"]';
+        $this->assert_html_has($html, $form . '[' . self::xclass('form-inline') . ']');
+        // Statut choisi (-999 : à traiter) présélectionné en tête de la liste.
+        $status = $form . '//select[@id = "menustatus"][@name = "status"]';
+        $this->assert_html_has($html, $status . '/option[1][@value = "-999"][@selected]');
+        $this->assert_html_has($html, $form . '//input[@value = "a & b"]');
+        $this->assert_html_has($html, $form . '//button[@type = "submit"]');
     }
 }

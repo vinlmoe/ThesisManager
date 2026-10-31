@@ -62,15 +62,27 @@ class external_signers implements \renderable, \templatable {
      * @return array[] Cellules (listes de fragments).
      */
     protected function get_rows(): array {
-        if ($this->rows !== null) {
-            return $this->rows;
-        }
         global $DB;
+
+        if ($this->rows === null) {
+            $these = $DB->get_record('these', ['id' => $this->dossier->theseid], '*', MUST_EXIST);
+            $this->rows = array_merge($this->signer_rows($these), $this->agent_rows($these));
+        }
+        return $this->rows;
+    }
+
+    /**
+     * Lignes des signataires (sans compte, étudiant et directeur) qui ont des documents à signer.
+     *
+     * Étudiant et directeur : signature sur place seulement, pour les documents dont la signature a
+     * commencé (une signature déjà apposée ou demandée) ; signataires sans compte : lien ou sur place.
+     *
+     * @param stdClass $these
+     * @return array[]
+     */
+    protected function signer_rows(stdClass $these): array {
         $dossier = $this->dossier;
-        $these = $DB->get_record('these', ['id' => $dossier->theseid], '*', MUST_EXIST);
-        $this->rows = [];
-        // Étudiant et directeur : signature sur place seulement, pour les documents dont la signature a
-        // commencé (une signature déjà apposée ou demandée) ; signataires sans compte : lien ou sur place.
+        $rows = [];
         $started = array_unique(array_column(signatures::get_signatures($dossier->id), 'doctype'));
         foreach (signatures::inperson_slots() as $slot) {
             $signer = signatures::inperson_signer($dossier, $slot);
@@ -94,30 +106,53 @@ class external_signers implements \renderable, \templatable {
                 // Direction générale et université signées par délégation : voir la ligne de leurs agents.
                 continue;
             }
-            $actions = [];
-            $external = in_array($slot, signatures::external_slots(), true) && $signer['email'] !== '';
-            if ($external && university::sends_link($these, $slot)) {
-                $actions[] = parts::link(
-                    new moodle_url($this->pageurl, ['resend' => $slot, 'sesskey' => sesskey()]),
-                    get_string('resendsignature', 'mod_these'),
-                    'btn btn-sm btn-secondary mr-1'
-                );
-            }
-            $actions[] = parts::link(
-                new moodle_url('/mod/these/sign.php', ['id' => $this->cm->id, 'dossierid' => $dossier->id, 'slot' => $slot]),
-                get_string('signinperson', 'mod_these'),
-                'btn btn-sm btn-primary'
-            );
-            $this->rows[] = [
+            $rows[] = [
                 [parts::text(signatures::slot_label($slot) . ($signer['name'] !== '' ? ' — ' . $signer['name'] : ''))],
                 [$signer['email'] !== '' ? parts::text($signer['email'])
                     : parts::span(get_string('noemail', 'mod_these'), 'text-muted')],
-                [parts::text(implode(', ', array_map('these_document_label', $pending)))],
-                $actions,
+                [parts::text(implode(', ', array_map([signatures::class, 'document_label'], $pending)))],
+                $this->signer_actions($these, $slot, $signer),
             ];
         }
-        // Agents : agents DEVE (leurs signatures et celles de la direction générale qu'ils signent par
-        // délégation), puis délégataires internes de chaque signataire de l'université.
+        return $rows;
+    }
+
+    /**
+     * Actions sur la ligne d'un signataire : relance par courriel (signataire sans compte à qui un
+     * lien est envoyé) et signature sur place.
+     *
+     * @param stdClass $these
+     * @param string $slot
+     * @param array $signer Voir signatures::inperson_signer().
+     * @return array
+     */
+    protected function signer_actions(stdClass $these, string $slot, array $signer): array {
+        $actions = [];
+        $external = in_array($slot, signatures::external_slots(), true) && $signer['email'] !== '';
+        if ($external && university::sends_link($these, $slot)) {
+            $actions[] = parts::link(
+                new moodle_url($this->pageurl, ['resend' => $slot, 'sesskey' => sesskey()]),
+                get_string('resendsignature', 'mod_these'),
+                'btn btn-sm btn-secondary mr-1'
+            );
+        }
+        $actions[] = parts::link(
+            new moodle_url('/mod/these/sign.php', ['id' => $this->cm->id, 'dossierid' => $this->dossier->id, 'slot' => $slot]),
+            get_string('signinperson', 'mod_these'),
+            'btn btn-sm btn-primary'
+        );
+        return $actions;
+    }
+
+    /**
+     * Lignes des agents : agents DEVE (leurs signatures et celles de la direction générale qu'ils
+     * signent par délégation), puis délégataires internes de chaque signataire de l'université.
+     *
+     * @param stdClass $these
+     * @return array[]
+     */
+    protected function agent_rows(stdClass $these): array {
+        $dossier = $this->dossier;
         $groups = [];
         foreach (signatureagent::slots_for($these) as $slot) {
             $university = in_array($slot, university::delegated_slots($these), true);
@@ -136,11 +171,12 @@ class external_signers implements \renderable, \templatable {
                 }
             }
         }
+        $rows = [];
         foreach ($groups as $group) {
             if (!$group['agents'] || !$group['pending']) {
                 continue;
             }
-            $this->rows[] = [
+            $rows[] = [
                 [parts::text($group['label'] . ' — ' . implode(', ', array_map('fullname', $group['agents'])))],
                 [parts::text(implode(', ', array_column($group['agents'], 'email')))],
                 [parts::text(implode(', ', $group['pending']))],
@@ -151,7 +187,7 @@ class external_signers implements \renderable, \templatable {
                 )],
             ];
         }
-        return $this->rows;
+        return $rows;
     }
 
     /**

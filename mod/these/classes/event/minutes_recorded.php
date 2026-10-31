@@ -17,7 +17,7 @@
 namespace mod_these\event;
 
 /**
- * Événement : procès-verbal de soutenance enregistré (voir dossiers::record_minutes()).
+ * Événement : procès-verbal de soutenance enregistré (voir \mod_these\local\minutes::record_minutes()).
  *
  * @property-read array $other {
  *      - int result: THESE_RESULT_ADMITTED ou THESE_RESULT_ADJOURNED.

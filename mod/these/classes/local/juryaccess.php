@@ -16,7 +16,6 @@
 
 namespace mod_these\local;
 
-use core_text;
 use moodle_url;
 use stdClass;
 
@@ -101,7 +100,7 @@ class juryaccess {
 
     /**
      * Membre du jury consultant les documents depuis son compte Moodle (activité « Suivi des thèses »),
-     * reconnu à son adresse ou à celle de sa fiche dans l'annuaire du jury.
+     * reconnu au compte qui lui est rattaché (voir rights::user_in_jury()), ni suspendu ni supprimé.
      *
      * @param int $memberid
      * @param stdClass $user
@@ -110,16 +109,14 @@ class juryaccess {
     public static function get_jury_member_access($memberid, stdClass $user) {
         global $DB;
 
-        $email = core_text::strtolower(trim((string) $user->email));
         $member = $DB->get_record('these_jury', ['id' => $memberid]);
-        if (!$member || $email === '' || empty($member->notifiedtime)) {
+        if (!$member || empty($user->id) || empty($member->notifiedtime) || (int) $member->userid !== (int) $user->id) {
             return null;
         }
-        $emails = [core_text::strtolower(trim((string) $member->email))];
-        if (!empty($member->jurorid)) {
-            $emails[] = core_text::strtolower(trim((string) $DB->get_field('these_juror', 'email', ['id' => $member->jurorid])));
+        if (!$DB->record_exists('user', ['id' => $user->id, 'deleted' => 0, 'suspended' => 0])) {
+            return null;
         }
-        return in_array($email, $emails, true) ? self::jury_access_member($member) : null;
+        return self::jury_access_member($member);
     }
 
     /**

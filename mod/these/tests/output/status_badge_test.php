@@ -29,6 +29,7 @@ require_once(__DIR__ . '/output_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_these\output\status_badge
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\output\status_badge::class)]
 final class status_badge_test extends output_testcase {
     /**
      * Contexte : libellé et classe du statut.

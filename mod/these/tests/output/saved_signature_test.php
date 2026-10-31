@@ -29,6 +29,7 @@ require_once(__DIR__ . '/output_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_these\output\saved_signature
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\output\saved_signature::class)]
 final class saved_signature_test extends output_testcase {
     /**
      * Contexte : image en data URI et adresse de suppression ; absence de signature.
@@ -49,11 +50,15 @@ final class saved_signature_test extends output_testcase {
         $this->resetAfterTest();
         $url = new \moodle_url('/mod/these/mysignatures.php', ['deletesaved' => 1]);
         $html = $this->renderer()->render(new saved_signature('PNG', $url));
-        $this->assertStringStartsWith('<div class="mb-2"><img src="data:image/png;base64,UE5H"', $html);
-        $this->assertStringContainsString('class="btn btn-secondary">' . get_string('signaturesaveddelete', 'mod_these'), $html);
+        // L'image en premier, puis le bouton de suppression vers l'adresse donnée.
+        $this->assert_html_has($html, '(.//img)[1][@src = "data:image/png;base64,UE5H"]');
+        $this->assert_html_has($html, '(.//img)[1]/following::a[1][@href = "' . $url->out(false) . '"]['
+            . self::xclass('btn') . '][starts-with(normalize-space(), "' . get_string('signaturesaveddelete', 'mod_these') . '")]');
+        $none = $this->renderer()->render(new saved_signature(null, $url));
+        $this->assert_html_lacks($none, './/img');
         $this->assertSame(
-            '<div class="text-muted">' . s(get_string('signaturesavednone', 'mod_these')) . '</div>',
-            $this->renderer()->render(new saved_signature(null, $url))
+            [get_string('signaturesavednone', 'mod_these')],
+            $this->html_texts($none, './div[' . self::xclass('text-muted') . ']')
         );
     }
 }

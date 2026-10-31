@@ -135,8 +135,19 @@ class planning {
                 $where .= ' AND directorid = :directorid';
                 $params['directorid'] = $userid;
             }
-            foreach ($DB->get_records_select('these_dossier', $where, $params, 'defensedate ASC, id ASC') as $dossier) {
-                $jury = array_values(jury::get_jury($dossier->id));
+            $dossiers = $DB->get_records_select('these_dossier', $where, $params, 'defensedate ASC, id ASC');
+            if (!$dossiers) {
+                continue;
+            }
+            // Jurys, étudiants et directeurs lus en une requête chacun pour toute la période.
+            $juries = jury::get_juries(array_keys($dossiers));
+            $userids = array_filter(array_unique(array_merge(
+                array_column($dossiers, 'userid'),
+                array_column($dossiers, 'directorid')
+            )));
+            $users = $DB->get_records_list('user', 'id', $userids);
+            foreach ($dossiers as $dossier) {
+                $jury = array_values($juries[(int) $dossier->id] ?? []);
                 $president = null;
                 foreach ($jury as $member) {
                     if ($member->juryrole === 'president') {
@@ -147,8 +158,8 @@ class planning {
                 $defenses[] = (object) [
                     'dossier' => $dossier,
                     'source' => $source,
-                    'student' => $DB->get_record('user', ['id' => $dossier->userid]),
-                    'director' => $dossier->directorid ? $DB->get_record('user', ['id' => $dossier->directorid]) : null,
+                    'student' => $users[(int) $dossier->userid] ?? false,
+                    'director' => $dossier->directorid ? ($users[(int) $dossier->directorid] ?? false) : null,
                     'president' => $president,
                     'jury' => $jury,
                     'confirmed' => rendering::rank_reached($dossier, THESE_STATUS_DEFENSE_VALIDATED),

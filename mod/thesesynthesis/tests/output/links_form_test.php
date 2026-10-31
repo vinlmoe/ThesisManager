@@ -29,6 +29,7 @@ require_once(__DIR__ . '/output_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_thesesynthesis\output\links_form
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_thesesynthesis\output\links_form::class)]
 final class links_form_test extends output_testcase {
     /**
      * Contexte : une case par activité proposée, cochée si elle est suivie ; badge d'un cours caché.
@@ -59,11 +60,12 @@ final class links_form_test extends output_testcase {
         $available = thesesynthesis_get_available_activities($this->env->deve->id);
         $url = new \moodle_url('/mod/thesesynthesis/administration.php', ['id' => $this->env->cm->id]);
         $html = $this->renderer()->render(new links_form($url, $available, []));
-        $start = '<form method="post" action="' . s($url->out(false)) . '"><input type="hidden" name="sesskey"';
-        $this->assertStringStartsWith($start, $html);
-        $checkbox = '#<input id="thesecmid_\d+" type="checkbox" value="\d+" name="thesecmid\[\]" />#';
-        $this->assertMatchesRegularExpression($checkbox, $html);
-        $end = '<button type="submit" class="btn btn-primary">' . get_string('savechanges') . '</button></form>';
-        $this->assertStringEndsWith($end, $html);
+        $form = './*[1][self::form][@method = "post"][@action = "' . $url->out(false) . '"]';
+        $this->assert_html_has($html, $form . '//input[@type = "hidden"][@name = "sesskey"][@value = "' . sesskey() . '"]');
+        // Une case par activité proposée, identifiée par son module de cours.
+        $boxes = $form . '//input[@type = "checkbox"][@name = "thesecmid[]"]';
+        $this->assert_html_has($html, $boxes . '[@id = concat("thesecmid_", @value)]', count($available));
+        $this->assert_html_has($html, $form . '/*[last()][self::button][@type = "submit"][' . self::xclass('btn-primary') . ']'
+            . '[normalize-space() = "' . get_string('savechanges') . '"]');
     }
 }

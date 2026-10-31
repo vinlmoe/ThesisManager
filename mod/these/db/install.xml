@@ -118,6 +118,8 @@
             COMMENT="Nouvelle date de soutenance demandée par la DEVE, en attente de l'étudiant (0 : aucune demande)"/>
         <FIELD NAME="daterequestcomment" TYPE="text" NOTNULL="false" SEQUENCE="false"
             COMMENT="Motif de la demande de nouvelle date"/>
+        <FIELD NAME="erasedtime" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
+            COMMENT="Effacement des données de l'étudiant (RGPD) : dossier réduit au procès-verbal, clos et sorti du circuit (0 : non)"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
       </FIELDS>
@@ -131,6 +133,7 @@
         <INDEX NAME="status" UNIQUE="false" FIELDS="status"/>
         <INDEX NAME="directorid" UNIQUE="false" FIELDS="directorid"/>
         <INDEX NAME="defensedate" UNIQUE="false" FIELDS="defensedate"/>
+        <INDEX NAME="devenumber" UNIQUE="true" FIELDS="devenumber" COMMENT="Numéro DEVE unique sur le site (NULL quand il est vide)"/>
       </INDEXES>
     </TABLE>
 
@@ -158,6 +161,8 @@
         <FIELD NAME="accesstoken" TYPE="char" LENGTH="64" NOTNULL="false" SEQUENCE="false"
             COMMENT="Empreinte SHA-256 du jeton d'accès du membre aux documents du dossier"/>
         <FIELD NAME="notifiedtime" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"
+            COMMENT="Compte Moodle rattaché au membre (fiche de l'annuaire ou compte unique à son adresse), à la validation d'éligibilité ou au choix dans l'annuaire ; 0 sans compte (accès par lien à jeton)"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
@@ -166,6 +171,7 @@
       <INDEXES>
         <INDEX NAME="accesstoken" UNIQUE="false" FIELDS="accesstoken"/>
         <INDEX NAME="jurorid" UNIQUE="false" FIELDS="jurorid"/>
+        <INDEX NAME="userid" UNIQUE="false" FIELDS="userid"/>
       </INDEXES>
     </TABLE>
 

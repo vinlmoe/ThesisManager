@@ -32,6 +32,9 @@ require_once(__DIR__ . '/these_testcase.php');
  * @covers     ::these_import_settings
  * @covers     ::these_settings_transfer_sources
  */
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_export_settings')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_import_settings')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_settings_transfer_sources')]
 final class settings_transfer_test extends these_testcase {
     /**
      * Seconde activité, dans un autre cours où la DEVE est aussi enseignante.

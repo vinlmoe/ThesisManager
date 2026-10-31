@@ -32,6 +32,9 @@ require_once(__DIR__ . '/these_testcase.php');
  * @covers     \mod_these\local\import
  * @covers     \mod_these\local\rendering::register_row
  */
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_import_dossiers')]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\import::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\rendering::class)]
 final class import_test extends these_testcase {
     /**
      * Contenu CSV de test : une ligne valide, un étudiant inconnu, un doublon, un directeur
@@ -173,6 +176,170 @@ final class import_test extends these_testcase {
         $this->assertSame('Sujet Excel', $dossier->title);
         $this->assertEquals(THESE_STATUS_CLOSED, $dossier->status);
         $this->assertEquals(make_timestamp(2025, 6, 12, 10, 30), $dossier->defensedate);
+    }
+
+    /**
+     * Importe un contenu CSV avec un séparateur et un encodage proposés par le formulaire d'import.
+     *
+     * @param string $content
+     * @param string $delimiter Clé de csv_import_reader::get_delimiter_list().
+     * @param string $encoding Clé de core_text::get_encodings().
+     * @return array Compte rendu.
+     */
+    private function import_csv(string $content, string $delimiter = 'semicolon', string $encoding = 'UTF-8'): array {
+        global $CFG;
+        require_once($CFG->libdir . '/csvlib.class.php');
+        $this->assertArrayHasKey($delimiter, \csv_import_reader::get_delimiter_list());
+        $this->assertArrayHasKey($encoding, \core_text::get_encodings());
+        return these_import_dossiers($this->these, $content, $delimiter, $encoding, false, $this->deve->id);
+    }
+
+    /**
+     * CSV en UTF-8 précédé de l'indicateur d'ordre des octets (BOM), comme l'enregistre Excel en
+     * « CSV UTF-8 » : la première colonne reste reconnue.
+     */
+    public function test_csv_utf8_bom(): void {
+        $this->setup_activity();
+        $content = "\xEF\xBB\xBFstudent;title\n{$this->student->username};Étude de l'œdème chez le chien\n";
+
+        $report = $this->import_csv($content);
+        $this->assertTrue($report[0]['ok'], $report[0]['message']);
+        $dossier = these_get_user_dossier($this->these->id, $this->student->id);
+        $this->assertSame("Étude de l'œdème chez le chien", $dossier->title);
+    }
+
+    /**
+     * CSV d'Excel en français : séparateur « ; », fins de ligne Windows, encodage Windows-1252
+     * (caractères absents d'ISO-8859-1 compris : œ, tiret cadratin, apostrophe courbe).
+     */
+    public function test_csv_excel_french(): void {
+        $this->setup_activity();
+        $title = 'Maladie de Carré — l’œil du furet';
+        $content = "student;title;defenselocation;mention;status;defensedate\r\n"
+            . "{$this->student->username};{$title};Amphithéâtre Bourgelat;Très honorable;closed;12/06/2025\r\n";
+        $content = \core_text::convert($content, 'UTF-8', 'WINDOWS-1252');
+        $this->assertFalse(mb_check_encoding($content, 'UTF-8'));
+
+        $report = $this->import_csv($content, 'semicolon', 'WINDOWS-1252');
+        $this->assertTrue($report[0]['ok'], $report[0]['message']);
+        $dossier = these_get_user_dossier($this->these->id, $this->student->id);
+        $this->assertSame($title, $dossier->title);
+        $this->assertSame('Amphithéâtre Bourgelat', $dossier->defenselocation);
+        $this->assertSame('treshonorable', $dossier->mention);
+        $this->assertEquals(THESE_STATUS_CLOSED, $dossier->status);
+    }
+
+    /**
+     * CSV en ISO-8859-1 (Latin-1) : les accents sont convertis.
+     */
+    public function test_csv_latin1(): void {
+        $this->setup_activity();
+        $content = "student;title\n{$this->student->username};Sérologie équine à Évreux\n";
+        $content = \core_text::convert($content, 'UTF-8', 'ISO-8859-1');
+
+        $report = $this->import_csv($content, 'semicolon', 'ISO-8859-1');
+        $this->assertTrue($report[0]['ok'], $report[0]['message']);
+        $dossier = these_get_user_dossier($this->these->id, $this->student->id);
+        $this->assertSame('Sérologie équine à Évreux', $dossier->title);
+    }
+
+    /**
+     * Valeurs entre guillemets : séparateur, guillemets doublés et retour à la ligne à l'intérieur
+     * d'une valeur ; séparateur virgule.
+     */
+    public function test_csv_quoted_values(): void {
+        $this->setup_activity();
+        $other = $this->getDataGenerator()->create_and_enrol($this->course, 'student');
+        $content = "student,title,summary,keywords\n"
+            . "{$this->student->username},\"Chiens, chats et furets\",\"Résumé sur\ndeux lignes\",\"chien; chat\"\n"
+            . "{$other->username},\"Le \"\"syndrome\"\" du chat\",,\n";
+
+        $report = $this->import_csv($content, 'comma');
+        $this->assertEquals([true, true], array_column($report, 'ok'));
+        $dossier = these_get_user_dossier($this->these->id, $this->student->id);
+        $this->assertSame('Chiens, chats et furets', $dossier->title);
+        $this->assertSame("Résumé sur\ndeux lignes", $dossier->summary);
+        $this->assertSame('chien; chat', $dossier->keywords);
+        $this->assertSame('Le "syndrome" du chat', these_get_user_dossier($this->these->id, $other->id)->title);
+    }
+
+    /**
+     * En-têtes en majuscules, entourés d'espaces, dans un ordre quelconque ; colonnes inconnues
+     * ignorées ; valeurs débarrassées de leurs espaces.
+     */
+    public function test_csv_header_case_and_spaces(): void {
+        $this->setup_activity();
+        $content = " Title ;Remarque; STUDENT ;DevENumber \n"
+            . "  Sujet avec espaces  ;à ignorer; {$this->student->username} ; 2026-010 \n";
+
+        $report = $this->import_csv($content);
+        $this->assertTrue($report[0]['ok'], $report[0]['message']);
+        $dossier = these_get_user_dossier($this->these->id, $this->student->id);
+        $this->assertSame('Sujet avec espaces', $dossier->title);
+        $this->assertSame('2026-010', $dossier->devenumber);
+    }
+
+    /**
+     * Séparateur tabulation : une valeur vide en fin de ligne n'est pas perdue.
+     */
+    public function test_csv_tab(): void {
+        $this->setup_activity();
+        $content = "student\ttitle\tdirector\n{$this->student->username}\tSujet\t\n";
+
+        $report = $this->import_csv($content, 'tab');
+        $this->assertTrue($report[0]['ok'], $report[0]['message']);
+        $this->assertEquals(0, these_get_user_dossier($this->these->id, $this->student->id)->directorid);
+    }
+
+    /**
+     * Mauvais séparateur choisi : la ligne d'en-tête n'est qu'une colonne, l'import est refusé
+     * avant toute création.
+     */
+    public function test_csv_wrong_delimiter(): void {
+        global $DB;
+        $this->setup_activity();
+        try {
+            $this->import_csv("student;title\n{$this->student->username};Sujet\n", 'comma');
+            $this->fail('Import accepté sans colonne « student » reconnue.');
+        } catch (\moodle_exception $e) {
+            $this->assertSame('importmissingcolumn', $e->errorcode);
+        }
+        $this->assertEquals(0, $DB->count_records('these_dossier', ['theseid' => $this->these->id]));
+    }
+
+    /**
+     * Fichier vide (un BOM et une fin de ligne) : refusé avec le message de l'import.
+     */
+    public function test_csv_empty(): void {
+        $this->setup_activity();
+        try {
+            $this->import_csv("\xEF\xBB\xBF\r\n");
+            $this->fail('Fichier vide accepté.');
+        } catch (\moodle_exception $e) {
+            $this->assertSame('importinvalidfile', $e->errorcode);
+        }
+    }
+
+    /**
+     * Fichier .csv lu comme un tableur (voir a6::read_rows()) : séparateur deviné d'après la ligne
+     * d'en-tête, Windows-1252 reconnu, BOM UTF-8 retiré de la première cellule.
+     */
+    public function test_read_rows_csv(): void {
+        $this->setup_activity();
+        $dir = make_request_directory();
+        $username = $this->student->username;
+
+        $content = "student;title\r\n{$username};Œdème, « cas » cliniques\r\n";
+        file_put_contents($dir . '/excel.csv', \core_text::convert($content, 'UTF-8', 'WINDOWS-1252'));
+        $rows = \mod_these\local\a6::read_rows($dir . '/excel.csv', 'excel.csv');
+        $this->assertSame([['student', 'title'], [$username, 'Œdème, « cas » cliniques']], $rows);
+
+        file_put_contents($dir . '/bom.csv', "\xEF\xBB\xBFstudent,title\n{$username},\"Chiens; chats\"\n");
+        $rows = \mod_these\local\a6::read_rows($dir . '/bom.csv', 'bom.csv');
+        $this->assertSame([['student', 'title'], [$username, 'Chiens; chats']], $rows);
+
+        $report = \mod_these\local\import::import_rows($this->these, $rows, false, $this->deve->id);
+        $this->assertTrue($report[0]['ok'], $report[0]['message']);
     }
 
     /**

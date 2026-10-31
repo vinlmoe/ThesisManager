@@ -112,45 +112,47 @@ function these_submission_target(stdClass $dossier) {
 }
 
 /**
- * Voir \mod_these\local\dossiers::subject_editable().
+ * Voir \mod_these\local\subjects::subject_editable().
  *
  * @param stdClass $dossier
  * @return bool
  */
 function these_subject_editable(stdClass $dossier) {
-    return \mod_these\local\dossiers::subject_editable($dossier);
+    return \mod_these\local\subjects::subject_editable($dossier);
 }
 
 /**
- * Voir \mod_these\local\dossiers::defense_editable().
+ * Voir \mod_these\local\defenses::defense_editable().
  *
  * @param stdClass $dossier
  * @return bool
  */
 function these_defense_editable(stdClass $dossier) {
-    return \mod_these\local\dossiers::defense_editable($dossier);
+    return \mod_these\local\defenses::defense_editable($dossier);
 }
 
 /**
- * Voir \mod_these\local\dossiers::report_editable().
+ * Voir \mod_these\local\defenses::report_editable().
  *
  * @param stdClass $dossier
  * @return bool
  */
 function these_report_editable(stdClass $dossier) {
-    return \mod_these\local\dossiers::report_editable($dossier);
+    return \mod_these\local\defenses::report_editable($dossier);
 }
 
 /**
- * Voir \mod_these\local\dossiers::save_report().
+ * Voir \mod_these\local\defenses::save_report().
  *
  * @param stdClass $dossier
  * @param int $userid
  * @param bool $favorable
+ * @param array $drafts Brouillons des gestionnaires de fichiers du formulaire (zone => draftitemid),
+ *                      enregistrés sous le verrou du dossier.
  * @return stdClass Le dossier à jour.
  */
-function these_save_report(stdClass $dossier, $userid, $favorable) {
-    return \mod_these\local\dossiers::save_report($dossier, $userid, $favorable);
+function these_save_report(stdClass $dossier, $userid, $favorable, array $drafts = []) {
+    return \mod_these\local\defenses::save_report($dossier, $userid, $favorable, $drafts);
 }
 
 /**
@@ -164,13 +166,13 @@ function these_signature_from_form(stdClass $data) {
 }
 
 /**
- * Voir \mod_these\local\dossiers::split_keywords().
+ * Voir \mod_these\local\subjects::split_keywords().
  *
  * @param string $keywords
  * @return string[]
  */
 function these_split_keywords($keywords) {
-    return \mod_these\local\dossiers::split_keywords($keywords);
+    return \mod_these\local\subjects::split_keywords($keywords);
 }
 
 /**
@@ -197,7 +199,7 @@ function these_resubmission_target(stdClass $dossier, array $invalidated) {
 }
 
 /**
- * Voir \mod_these\local\dossiers::save_subject().
+ * Voir \mod_these\local\subjects::save_subject().
  *
  * @param stdClass $these Instance.
  * @param stdClass $cm Course module.
@@ -217,22 +219,22 @@ function these_save_subject(
     $userid,
     ?stdClass $signature = null
 ) {
-    return \mod_these\local\dossiers::save_subject($these, $cm, $dossier, $data, $submit, $userid, $signature);
+    return \mod_these\local\subjects::save_subject($these, $cm, $dossier, $data, $submit, $userid, $signature);
 }
 
 /**
- * Voir \mod_these\local\dossiers::extract_bordereau().
+ * Voir \mod_these\local\defenses::extract_bordereau().
  *
  * @param stdClass $data
  * @param array $existing
  * @return array
  */
 function these_extract_bordereau(stdClass $data, array $existing) {
-    return \mod_these\local\dossiers::extract_bordereau($data, $existing);
+    return \mod_these\local\defenses::extract_bordereau($data, $existing);
 }
 
 /**
- * Voir \mod_these\local\dossiers::save_defense().
+ * Voir \mod_these\local\defenses::save_defense().
  *
  * @param stdClass $these
  * @param stdClass $cm
@@ -243,6 +245,8 @@ function these_extract_bordereau(stdClass $data, array $existing) {
  * @param bool $submit
  * @param int $userid
  * @param stdClass|null $signature Signature de l'étudiant (voir these_signature_from_form()).
+ * @param array $drafts Brouillons des gestionnaires de fichiers du formulaire (zone => draftitemid),
+ *                      enregistrés sous le verrou du dossier.
  * @return stdClass Le dossier à jour.
  */
 function these_save_defense(
@@ -252,13 +256,14 @@ function these_save_defense(
     stdClass $data,
     $submit,
     $userid,
-    ?stdClass $signature = null
+    ?stdClass $signature = null,
+    array $drafts = []
 ) {
-    return \mod_these\local\dossiers::save_defense($these, $cm, $dossier, $data, $submit, $userid, $signature);
+    return \mod_these\local\defenses::save_defense($these, $cm, $dossier, $data, $submit, $userid, $signature, $drafts);
 }
 
 /**
- * Voir \mod_these\local\dossiers::validate_step().
+ * Voir \mod_these\local\reviews::validate_step().
  *
  * @param stdClass $these
  * @param stdClass $cm
@@ -278,11 +283,11 @@ function these_validate_step(
     $remark = '',
     ?stdClass $signature = null
 ) {
-    return \mod_these\local\dossiers::validate_step($these, $cm, $dossier, $userid, $fields, $remark, $signature);
+    return \mod_these\local\reviews::validate_step($these, $cm, $dossier, $userid, $fields, $remark, $signature);
 }
 
 /**
- * Voir \mod_these\local\dossiers::return_dossier().
+ * Voir \mod_these\local\reviews::return_dossier().
  *
  * @param stdClass $these
  * @param stdClass $cm
@@ -293,7 +298,7 @@ function these_validate_step(
  * @return stdClass Le dossier à jour.
  */
 function these_return_dossier(stdClass $these, stdClass $cm, stdClass $dossier, $userid, $target, $comment) {
-    return \mod_these\local\dossiers::return_dossier($these, $cm, $dossier, $userid, $target, $comment);
+    return \mod_these\local\reviews::return_dossier($these, $cm, $dossier, $userid, $target, $comment);
 }
 
 /**
@@ -321,7 +326,7 @@ function these_reopen_dossier(stdClass $dossier, $userid, $comment = '') {
 }
 
 /**
- * Voir \mod_these\local\dossiers::record_minutes().
+ * Voir \mod_these\local\minutes::record_minutes().
  *
  * @param stdClass $these
  * @param stdClass $cm
@@ -329,14 +334,24 @@ function these_reopen_dossier(stdClass $dossier, $userid, $comment = '') {
  * @param int $userid
  * @param stdClass $decision {result, mention, prizeproposal, correctionsrequested, correctionsnote}
  * @param string $remark
+ * @param array $drafts Brouillons des gestionnaires de fichiers du formulaire (zone => draftitemid),
+ *                      enregistrés sous le verrou du dossier.
  * @return stdClass Le dossier à jour.
  */
-function these_record_minutes(stdClass $these, stdClass $cm, stdClass $dossier, $userid, stdClass $decision, $remark = '') {
-    return \mod_these\local\dossiers::record_minutes($these, $cm, $dossier, $userid, $decision, $remark);
+function these_record_minutes(
+    stdClass $these,
+    stdClass $cm,
+    stdClass $dossier,
+    $userid,
+    stdClass $decision,
+    $remark = '',
+    array $drafts = []
+) {
+    return \mod_these\local\minutes::record_minutes($these, $cm, $dossier, $userid, $decision, $remark, $drafts);
 }
 
 /**
- * Voir \mod_these\local\dossiers::adjourn_dossier().
+ * Voir \mod_these\local\minutes::adjourn_dossier().
  *
  * @param stdClass $these
  * @param stdClass $cm
@@ -346,31 +361,33 @@ function these_record_minutes(stdClass $these, stdClass $cm, stdClass $dossier, 
  * @return stdClass Le dossier à jour.
  */
 function these_adjourn_dossier(stdClass $these, stdClass $cm, stdClass $dossier, $userid, $remark = '') {
-    return \mod_these\local\dossiers::adjourn_dossier($these, $cm, $dossier, $userid, $remark);
+    return \mod_these\local\minutes::adjourn_dossier($these, $cm, $dossier, $userid, $remark);
 }
 
 /**
- * Voir \mod_these\local\dossiers::is_adjourned().
+ * Voir \mod_these\local\minutes::is_adjourned().
  *
  * @param stdClass $dossier
  * @return bool
  */
 function these_is_adjourned(stdClass $dossier) {
-    return \mod_these\local\dossiers::is_adjourned($dossier);
+    return \mod_these\local\minutes::is_adjourned($dossier);
 }
 
 /**
- * Voir \mod_these\local\dossiers::submit_corrections().
+ * Voir \mod_these\local\minutes::submit_corrections().
  *
  * @param stdClass $these
  * @param stdClass $cm
  * @param stdClass $dossier
  * @param int $userid
  * @param string $done Corrections apportées.
+ * @param array $drafts Brouillons des gestionnaires de fichiers du formulaire (zone => draftitemid),
+ *                      enregistrés sous le verrou du dossier.
  * @return stdClass Le dossier à jour.
  */
-function these_submit_corrections(stdClass $these, stdClass $cm, stdClass $dossier, $userid, $done) {
-    return \mod_these\local\dossiers::submit_corrections($these, $cm, $dossier, $userid, $done);
+function these_submit_corrections(stdClass $these, stdClass $cm, stdClass $dossier, $userid, $done, array $drafts = []) {
+    return \mod_these\local\minutes::submit_corrections($these, $cm, $dossier, $userid, $done, $drafts);
 }
 
 /**
@@ -390,22 +407,20 @@ function these_delete_dossiers(array $dossierids, ?context $context = null) {
 /**
  * Voir \mod_these\local\dossiers::suggest_devenumber().
  *
- * @param int $theseid
  * @param int|null $time Date de référence (année), maintenant par défaut.
  * @return string
  */
-function these_suggest_devenumber($theseid, $time = null) {
-    return \mod_these\local\dossiers::suggest_devenumber($theseid, $time);
+function these_suggest_devenumber($time = null) {
+    return \mod_these\local\dossiers::suggest_devenumber($time);
 }
 
 /**
  * Voir \mod_these\local\dossiers::devenumber_taken().
  *
- * @param int $theseid
  * @param string $number
  * @param int $excludeid Dossier à ignorer (celui qu'on enregistre).
  * @return bool
  */
-function these_devenumber_taken($theseid, $number, $excludeid = 0) {
-    return \mod_these\local\dossiers::devenumber_taken($theseid, $number, $excludeid);
+function these_devenumber_taken($number, $excludeid = 0) {
+    return \mod_these\local\dossiers::devenumber_taken($number, $excludeid);
 }

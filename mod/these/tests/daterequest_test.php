@@ -32,6 +32,7 @@ require_once(__DIR__ . '/these_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_these\local\daterequest
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\daterequest::class)]
 final class daterequest_test extends these_testcase {
     /**
      * Demande, puis nouvelle proposition de l'étudiant.
@@ -94,5 +95,33 @@ final class daterequest_test extends these_testcase {
         }
         // Une demande restée en attente après la validation ne bloque plus rien.
         $this->assertFalse(daterequest::pending((object) ['status' => THESE_STATUS_DEFENSE_VALIDATED, 'daterequested' => time()]));
+    }
+
+    /**
+     * Une autre date demandée, puis le dossier renvoyé à l'étudiant : la nouvelle soumission, qui porte
+     * une date, répond à la demande ; la DEVE peut valider sans attendre une seconde proposition.
+     * Scénario relevé par le test de charge (tools/stresstest).
+     */
+    public function test_request_answered_by_resubmission(): void {
+        $this->resetAfterTest();
+        $this->setup_activity();
+        $date = time() + 3 * WEEKSECS;
+        $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
+            'status' => THESE_STATUS_DEFENSE_APPROVED, 'directorid' => $this->director->id,
+            'proposeddate' => $date, 'defensedate' => $date, 'title' => 'Sujet',
+        ]);
+        $sink = $this->redirectEmails();
+        $dossier = daterequest::request($this->these, $this->cm, $dossier, $this->deve->id, 'Aucune salle libre.');
+        $dossier = $this->reload($dossier->id);
+        $dossier = these_return_dossier($this->these, $this->cm, $dossier, $this->deve->id, 'student', 'Jury à revoir.');
+        $data = $this->defense_data();
+        these_save_defense($this->these, $this->cm, $this->reload($dossier->id), $data, true, $this->student->id);
+        $sink->close();
+
+        $dossier = $this->reload($dossier->id);
+        $this->assertEquals(THESE_STATUS_DEFENSE_SUBMITTED, $dossier->status);
+        $this->assertEquals($data->proposeddate, $dossier->proposeddate);
+        $this->assertFalse(daterequest::pending($dossier));
+        $this->assertSame('', $dossier->daterequestcomment);
     }
 }

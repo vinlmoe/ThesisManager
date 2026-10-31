@@ -32,6 +32,7 @@ require_once(__DIR__ . '/these_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_these\local\backlinks
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\backlinks::class)]
 final class backlinks_test extends these_testcase {
     /**
      * Sans page d'origine, un dossier revient au tableau de bord pour le personnel et au dossier de

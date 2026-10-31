@@ -91,13 +91,14 @@ class prerequisites {
      * Signatures encore manquantes pour quitter le statut actuel du dossier.
      *
      * @param stdClass $dossier
+     * @param array|null $signatures Signatures du dossier déjà lues (voir signatures::get_signatures()).
      * @return array Liste de ['doctype' => string, 'slot' => string, 'requesttime' => int].
      */
-    public static function missing(stdClass $dossier) {
-        $signatures = signatures::get_signatures($dossier->id);
+    public static function missing(stdClass $dossier, ?array $signatures = null) {
+        $signatures = $signatures ?? signatures::get_signatures($dossier->id);
         $missing = [];
         foreach (self::required($dossier->status) as $doctype => $required) {
-            if (!signatures::document_available($dossier, $doctype)) {
+            if (!signatures::document_available($dossier, $doctype, $signatures)) {
                 continue;
             }
             foreach (signatures::document_slots($dossier, $doctype) as $slot) {

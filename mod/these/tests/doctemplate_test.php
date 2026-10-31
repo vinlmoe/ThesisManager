@@ -33,6 +33,10 @@ require_once($CFG->dirroot . '/mod/these/locallib.php');
  * @covers     ::these_build_document_context
  * @covers     \mod_these\pdf\html_document
  */
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_render_doctemplate')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_set_doctemplate')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_build_document_context')]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\pdf\html_document::class)]
 final class doctemplate_test extends \advanced_testcase {
     /**
      * Chaque modèle d'origine produit un PDF avec les données d'exemple.

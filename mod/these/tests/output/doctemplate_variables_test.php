@@ -29,6 +29,7 @@ require_once(__DIR__ . '/output_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_these\output\doctemplate_variables
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\output\doctemplate_variables::class)]
 final class doctemplate_variables_test extends output_testcase {
     /**
      * Contexte : nom de la variable entre accolades et valeur d'exemple, en texte brut.
@@ -53,7 +54,7 @@ final class doctemplate_variables_test extends output_testcase {
         $sample = these_doctemplate_sample_context(these_settings_scope($this->these), 'subject', $this->these);
         $html = $this->renderer()->render(new doctemplate_variables($sample));
         $first = array_key_first(these_doctemplate_variables($sample));
-        $this->assertStringContainsString('<code>{{' . $first . '}}</code>', $html);
+        $this->assert_html_has($html, './/code[normalize-space() = "{{' . $first . '}}"]');
         $this->assertStringContainsString('{{{...}}}', $html);
     }
 }

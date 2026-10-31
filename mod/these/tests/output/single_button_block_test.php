@@ -29,6 +29,7 @@ require_once(__DIR__ . '/output_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_these\output\single_button_block
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\output\single_button_block::class)]
 final class single_button_block_test extends output_testcase {
     /**
      * Contexte : bloc et contexte du bouton du cœur.
@@ -48,9 +49,11 @@ final class single_button_block_test extends output_testcase {
     public function test_render(): void {
         $this->resetAfterTest();
         $html = $this->renderer()->render(new single_button_block(new \moodle_url('/a.php'), 'Ajouter', 'get'));
-        $this->assertStringStartsWith('<div class="mb-3">', $html);
-        $this->assertStringEndsWith('</div>', $html);
-        $this->assertMatchesRegularExpression('#<form method="get" action="https://www.example.com/moodle/a.php"#', $html);
-        $this->assertStringContainsString('Ajouter', $html);
+        // Un seul bloc, qui contient le formulaire du bouton.
+        $this->assert_html_has($html, './*', 1);
+        $form = './div//form[@method = "get"][@action = "https://www.example.com/moodle/a.php"]';
+        $this->assert_html_has($html, $form);
+        $button = '(self::button and normalize-space() = "Ajouter") or (self::input and @value = "Ajouter")';
+        $this->assert_html_has($html, $form . '//*[' . $button . ']');
     }
 }

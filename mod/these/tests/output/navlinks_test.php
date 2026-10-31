@@ -29,6 +29,7 @@ require_once(__DIR__ . '/output_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_these\output\navlinks
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\output\navlinks::class)]
 final class navlinks_test extends output_testcase {
     /**
      * Contexte : la DEVE a les liens de gestion ; le directeur le tableau de bord, le planning et
@@ -69,7 +70,7 @@ final class navlinks_test extends output_testcase {
         $this->setup_activity();
         $this->setUser($this->director);
         $html = $this->renderer()->render(new navlinks($this->cm, $this->context));
-        $this->assertStringStartsWith('<div class="these-navlinks mb-3"><a href=', $html);
+        $this->assert_html_has($html, './*[1][self::div][' . self::xclass('these-navlinks') . ']/a[@href]');
         $back = \mod_these\local\backlinks::render(\mod_these\local\backlinks::activity_home($this->cm, $this->context));
         $this->assertStringContainsString('dashboard.php', $back);
         $this->assertSame($back . $html, these_render_navlinks($this->cm, $this->context));

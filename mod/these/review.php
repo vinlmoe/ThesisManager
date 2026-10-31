@@ -48,6 +48,8 @@ require_login($course, true, $cm);
 these_require_view($context);
 
 ['dossier' => $dossier, 'rights' => $rights] = (array) page::load_dossier($activity, $dossierid, $USER->id);
+// Dossier réduit à son procès-verbal (données de l'étudiant effacées) : plus aucune action.
+\mod_these\local\dossiers::require_in_circuit($dossier);
 $dossierurl = new moodle_url('/mod/these/dossier.php', ['id' => $cm->id, 'dossierid' => $dossier->id]);
 
 $steps = these_review_steps();
@@ -125,7 +127,8 @@ switch ($step['key']) {
         // Grille de conformité : le directeur la remplit lui-même, sans reprendre les cases de l'étudiant.
         break;
     case 'devedefense':
-        $formdata->devenumber = $dossier->devenumber ?: these_suggest_devenumber($these->id);
+        $formdata->devenumber = $dossier->devenumber ?: these_suggest_devenumber();
+        $formdata->devenumberproposed = $dossier->devenumber ? '' : $formdata->devenumber;
         $formdata->defensedate = $dossier->defensedate ?: $dossier->proposeddate;
         $formdata->defenselocation = $dossier->defenselocation;
         $formdata = (object) array_merge((array) $formdata, these_jury_form_data($jury));
@@ -179,6 +182,7 @@ if ($mform->is_cancelled()) {
             break;
         case 'devedefense':
             $fields['devenumber'] = trim($data->devenumber);
+            $fields['devenumberproposed'] = (string) ($data->devenumberproposed ?? '');
             $fields['defensedate'] = (int) $data->defensedate;
             $fields['defenselocation'] = trim($data->defenselocation);
             // DEFV de la validation des études, repris dans l'agrément que la DEVE signe.
@@ -189,7 +193,7 @@ if ($mform->is_cancelled()) {
             these_save_jury($dossier->id, these_extract_submitted_jury($data, true), $USER->id);
             break;
     }
-    these_validate_step(
+    $validated = these_validate_step(
         $these,
         $cm,
         $dossier,
@@ -199,6 +203,10 @@ if ($mform->is_cancelled()) {
         $signs ? these_signature_from_form($data) : null
     );
     $message = get_string('stepvalidated', 'mod_these');
+    if (isset($fields['devenumber']) && (string) $validated->devenumber !== $fields['devenumber']) {
+        // Numéro proposé attribué entre-temps à un autre dossier : le suivant a été retenu.
+        $message .= ' ' . get_string('devenumberreassigned', 'mod_these', s($validated->devenumber));
+    }
     if ($step['key'] === 'devedefense') {
         // Éligibilité validée : les membres du jury sont prévenus et reçoivent l'accès aux documents.
         $notified = these_notify_jury($these, $cm, $DB->get_record('these_dossier', ['id' => $dossier->id]));
@@ -212,7 +220,7 @@ if ($mform->is_cancelled()) {
 
 $student = $DB->get_record('user', ['id' => $dossier->userid]);
 $director = $dossier->directorid ? $DB->get_record('user', ['id' => $dossier->directorid]) : null;
-$extdirector = \mod_these\local\dossiers::external_director_summary($dossier);
+$extdirector = \mod_these\local\subjects::external_director_summary($dossier);
 
 $renderer = $PAGE->get_renderer('mod_these');
 // Résumé du dossier au-dessus de la décision ; le dossier complet suit, replié, pour ne pas

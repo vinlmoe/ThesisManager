@@ -105,6 +105,11 @@ class documents {
      * à la place des précédents : une convocation pour l'étudiant, une par membre du jury, la feuille
      * de jury (émargement) et le procès-verbal à compléter et signer le jour de la soutenance.
      *
+     * Comme la transmission, la génération est une opération sur le dossier (voir
+     * dossiers::dossier_operation()) : deux générations, ou une génération et une transmission, ne
+     * s'entremêlent pas (fichiers supprimés pendant leur envoi), et un dossier qui a changé de statut
+     * entre-temps n'est pas régénéré.
+     *
      * @param stdClass $these
      * @param context $context
      * @param stdClass $dossier
@@ -112,52 +117,55 @@ class documents {
      * @return stored_file[]
      */
     public static function generate_documents(stdClass $these, context $context, stdClass $dossier, $userid) {
-        global $DB;
+        return dossiers::dossier_operation($dossier, function () use ($these, $context, $dossier, $userid) {
+            global $DB;
 
-        $data = documentcontext::document_context($these, $context, $dossier, null);
-        $documents = [];
-        $documents[self::document_filename('convocation-etudiant')] =
-            documentrenderer::render_doctemplate($these, 'convocation', $data);
-        foreach (jury::get_jury($dossier->id) as $index => $member) {
-            $documents[self::document_filename('convocation-jury-' . ($index + 1), $member->fullname)] =
-                documentrenderer::render_doctemplate(
-                    $these,
-                    'convocation',
-                    documentcontext::document_context($these, $context, $dossier, null, $member)
-                );
-        }
-        $documents[self::document_filename('feuille-de-jury')] = documentrenderer::render_doctemplate($these, 'jurysheet', $data);
-        $documents[self::document_filename('proces-verbal')] = documentrenderer::render_doctemplate($these, 'minutes', $data);
-        // Documents de l'établissement, dans leur état de signature à la génération. Les documents
-        // réservés au personnel (rapport du directeur, grille) n'entrent pas dans cette zone, que
-        // l'étudiant consulte : ils ne sont joints qu'à l'archive transmise à l'université.
-        foreach (signatures::document_definitions() as $doctype => $definition) {
-            if (!$definition['staffonly'] && signatures::document_available($dossier, $doctype)) {
-                $pdf = documentrenderer::signed_document_pdf($these, $context, $dossier, $doctype);
-                $documents[self::signed_document_filename($context, $dossier, $doctype)] = $pdf;
+            $data = documentcontext::document_context($these, $context, $dossier, null);
+            $documents = [];
+            $documents[self::document_filename('convocation-etudiant')] =
+                documentrenderer::render_doctemplate($these, 'convocation', $data);
+            foreach (jury::get_jury($dossier->id) as $index => $member) {
+                $documents[self::document_filename('convocation-jury-' . ($index + 1), $member->fullname)] =
+                    documentrenderer::render_doctemplate(
+                        $these,
+                        'convocation',
+                        documentcontext::document_context($these, $context, $dossier, null, $member)
+                    );
             }
-        }
+            $documents[self::document_filename('feuille-de-jury')] =
+                documentrenderer::render_doctemplate($these, 'jurysheet', $data);
+            $documents[self::document_filename('proces-verbal')] = documentrenderer::render_doctemplate($these, 'minutes', $data);
+            // Documents de l'établissement, dans leur état de signature à la génération. Les documents
+            // réservés au personnel (rapport du directeur, grille) n'entrent pas dans cette zone, que
+            // l'étudiant consulte : ils ne sont joints qu'à l'archive transmise à l'université.
+            foreach (signatures::document_definitions() as $doctype => $definition) {
+                if (!$definition['staffonly'] && signatures::document_available($dossier, $doctype)) {
+                    $pdf = documentrenderer::signed_document_pdf($these, $context, $dossier, $doctype);
+                    $documents[self::signed_document_filename($context, $dossier, $doctype)] = $pdf;
+                }
+            }
 
-        $fs = get_file_storage();
-        $fs->delete_area_files($context->id, 'mod_these', 'generated', $dossier->id);
-        $files = [];
-        foreach ($documents as $filename => $content) {
-            $files[] = $fs->create_file_from_string([
-                'contextid' => $context->id,
-                'component' => 'mod_these',
-                'filearea' => 'generated',
-                'itemid' => $dossier->id,
-                'filepath' => '/',
-                'filename' => $filename,
-                'userid' => $userid,
-            ], $content);
-        }
+            $fs = get_file_storage();
+            $fs->delete_area_files($context->id, 'mod_these', 'generated', $dossier->id);
+            $files = [];
+            foreach ($documents as $filename => $content) {
+                $files[] = $fs->create_file_from_string([
+                    'contextid' => $context->id,
+                    'component' => 'mod_these',
+                    'filearea' => 'generated',
+                    'itemid' => $dossier->id,
+                    'filepath' => '/',
+                    'filename' => $filename,
+                    'userid' => $userid,
+                ], $content);
+            }
 
-        $now = time();
-        $DB->update_record('these_dossier', (object) ['id' => $dossier->id, 'documentstime' => $now, 'timemodified' => $now]);
-        $dossier->documentstime = $now;
-        dossiers::log($dossier->id, $userid, 'documentsgenerated', $dossier->status, $dossier->status);
-        return $files;
+            $now = time();
+            $DB->update_record('these_dossier', (object) ['id' => $dossier->id, 'documentstime' => $now, 'timemodified' => $now]);
+            $dossier->documentstime = $now;
+            dossiers::log($dossier->id, $userid, 'documentsgenerated', $dossier->status, $dossier->status);
+            return $files;
+        });
     }
 
     /**

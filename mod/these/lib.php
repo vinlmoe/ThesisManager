@@ -130,7 +130,11 @@ function these_add_instance($moduleinstance, $mform = null) {
     $moduleinstance->timecreated = time();
     $moduleinstance->timemodified = $moduleinstance->timecreated;
 
-    return $DB->insert_record('these', $moduleinstance);
+    $id = $DB->insert_record('these', $moduleinstance);
+    // Grille de conformité de l'activité : éléments d'origine enregistrés dès la création, jamais à la
+    // lecture (voir \mod_these\local\grid::create_default_items()).
+    \mod_these\local\grid::create_default_items((object) ['theseid' => $id, 'synthesisid' => 0]);
+    return $id;
 }
 
 /**
@@ -299,6 +303,14 @@ function these_pluginfile($course, $cm, $context, $filearea, $args, $forcedownlo
     }
 
     $filename = array_pop($args);
+    // PDF d'un ancien sujet confidentiel : réservé à qui connaîtrait un sujet confidentiel du dossier,
+    // même quand le sujet en cours ne l'est plus.
+    if ($filearea === 'subjectarchive' && preg_match('/-(\d+)\.pdf$/', $filename, $match)) {
+        $entry = $DB->get_record('these_subjecthistory', ['id' => (int) $match[1], 'dossierid' => $dossier->id]);
+        if ($entry && !\mod_these\local\rights::user_knows_archived_subject($entry, $dossier, $context, $USER->id)) {
+            return false;
+        }
+    }
     $filepath = $args ? '/' . implode('/', $args) . '/' : '/';
     $fs = get_file_storage();
     $file = $fs->get_file($context->id, 'mod_these', $filearea, $dossierid, $filepath, $filename);

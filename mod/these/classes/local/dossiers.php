@@ -18,19 +18,16 @@ namespace mod_these\local;
 
 use coding_exception;
 use context;
-use context_module;
-use mod_these\event\defense_scheduled;
 use mod_these\event\dossier_created;
 use mod_these\event\dossier_event;
 use mod_these\event\dossier_status_changed;
-use mod_these\event\minutes_recorded;
-use mod_these\event\subject_submitted;
 use moodle_exception;
-use résultat;
 use stdClass;
 
 /**
- * Cycle de vie des dossiers : création, soumissions, validations, renvois, procès-verbal, numéro DEVE.
+ * Cycle de vie des dossiers : création, changements de statut, opérations atomiques, abandon et
+ * réouverture, suppression, numéro DEVE. Les étapes du circuit sont dans subjects (sujet), defenses
+ * (soutenance), reviews (validations et renvois) et minutes (procès-verbal et corrections).
  *
  * Les fonctions these_*() correspondantes de locallib.php sont des façades de ces méthodes.
  *
@@ -39,6 +36,18 @@ use stdClass;
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class dossiers {
+    /** Attente maximale d'un verrou (dossier, numéros DEVE d'une activité), en secondes. */
+    const LOCK_TIMEOUT = 10;
+
+    /** @var bool[] Dossiers dont l'opération en cours tient le verrou (identifiant => true). */
+    private static $held = [];
+
+    /** @var \core\lock\lock[] Verrous pris pendant l'opération en cours, rendus après sa transaction. */
+    private static $operationlocks = [];
+
+    /** @var \core\lock\lock[] Verrous des numéros DEVE pris par with_devenumbers_locked(). */
+    private static $scopelocks = [];
+
     /**
      * Dossier d'un étudiant dans une instance, s'il existe.
      *
@@ -88,6 +97,31 @@ class dossiers {
     }
 
     /**
+     * Le dossier a-t-il été réduit à son procès-verbal par l'effacement des données de son étudiant
+     * (voir \mod_these\privacy\provider) ? Il est alors clos, archivé et sorti du circuit : plus aucune
+     * action n'est possible, ses pages le présentent en lecture seule.
+     *
+     * @param stdClass $dossier
+     * @return bool
+     */
+    public static function is_erased(stdClass $dossier) {
+        return !empty($dossier->erasedtime);
+    }
+
+    /**
+     * Exige un dossier encore dans le circuit (pages d'action).
+     *
+     * @param stdClass $dossier
+     * @return void
+     * @throws moodle_exception dossiererased
+     */
+    public static function require_in_circuit(stdClass $dossier) {
+        if (self::is_erased($dossier)) {
+            throw new moodle_exception('dossiererased', 'mod_these');
+        }
+    }
+
+    /**
      * Inscrit une action dans l'historique d'un dossier.
      *
      * @param int $dossierid
@@ -123,16 +157,31 @@ class dossiers {
      * @param int $userid Auteur de l'action.
      * @param string $action Voir these_log().
      * @param string $remark
-     * @param array $fields Autres champs du dossier à enregistrer.
+     * @param array $fields Autres champs du dossier à enregistrer. Un numéro DEVE (devenumber) est
+     *                      attribué par claim_devenumber(), avec, s'il y a lieu, le numéro proposé par
+     *                      le formulaire (clé devenumberproposed, non enregistrée).
      * @return stdClass Le dossier à jour.
+     * @throws moodle_exception devenumbertaken si le numéro saisi est attribué à un autre dossier.
      */
     public static function set_status(stdClass $dossier, $tostatus, $userid, $action, $remark = '', array $fields = []) {
         global $DB;
 
         $now = time();
         $fromstatus = (int) $dossier->status;
+        if (self::is_erased($dossier)) {
+            // Dossier réduit à son procès-verbal : sorti du circuit, plus aucune transition.
+            throw new moodle_exception('dossiererased', 'mod_these');
+        }
         if (!workflow::transition_allowed($fromstatus, $tostatus)) {
             throw new coding_exception('Transition de statut interdite : ' . $fromstatus . ' vers ' . (int) $tostatus);
+        }
+        // Numéro DEVE : contrôlé et attribué sous le verrou des numéros du site, s'il change.
+        $proposed = $fields['devenumberproposed'] ?? null;
+        unset($fields['devenumberproposed']);
+        if (array_key_exists('devenumber', $fields)) {
+            $number = self::normalise_devenumber($fields['devenumber']);
+            $fields['devenumber'] = $number === self::normalise_devenumber($dossier->devenumber ?? null)
+                ? $number : self::claim_devenumber($dossier->id, $number, $proposed);
         }
         $update = array_merge($fields, ['id' => $dossier->id, 'status' => (int) $tostatus, 'timemodified' => $now]);
         if ((int) $tostatus !== $fromstatus) {
@@ -172,35 +221,79 @@ class dossiers {
      * @param callable $operation
      * @return mixed Résultat de l'opération.
      * @throws moodle_exception dossierchanged si le dossier a changé de statut entre-temps, dossierbusy
-     *                          si un autre traitement le retient.
+     *                          si un autre traitement le retient, dossiererased s'il a été réduit à son
+     *                          procès-verbal (effacement des données de l'étudiant).
      */
     public static function dossier_operation(stdClass $dossier, callable $operation) {
         global $DB;
-        static $held = [];
 
-        if (empty($dossier->id) || !empty($held[$dossier->id])) {
+        return self::locked((int) ($dossier->id ?? 0), $operation, function () use ($DB, $dossier) {
+            $current = $DB->get_record('these_dossier', ['id' => $dossier->id], 'id, status, erasedtime');
+            if ($current && !empty($current->erasedtime)) {
+                throw new moodle_exception('dossiererased', 'mod_these');
+            }
+            if (!$current || (int) $current->status !== (int) $dossier->status) {
+                throw new moodle_exception('dossierchanged', 'mod_these');
+            }
+        });
+    }
+
+    /**
+     * Exécute un traitement sous le verrou d'un dossier, dans une transaction, sans condition sur son
+     * statut : effacement des données personnelles (voir \mod_these\privacy\provider). Une opération
+     * en cours sur le dossier (dossier_operation()) se termine avant, une opération suivante trouve le
+     * dossier effacé.
+     *
+     * @param int $dossierid
+     * @param callable $callback
+     * @return mixed Résultat de $callback.
+     * @throws moodle_exception dossierbusy si un autre traitement retient le dossier.
+     */
+    public static function with_dossier_lock($dossierid, callable $callback) {
+        return self::locked((int) $dossierid, $callback);
+    }
+
+    /**
+     * Verrou du dossier, contrôle sous verrou, transaction ; voir dossier_operation().
+     *
+     * @param int $dossierid 0 : sans verrou (dossier pas encore créé).
+     * @param callable $operation
+     * @param callable|null $check Contrôle fait sous le verrou, avant la transaction.
+     * @return mixed
+     */
+    private static function locked(int $dossierid, callable $operation, ?callable $check = null) {
+        global $DB;
+
+        if (!$dossierid || !empty(self::$held[$dossierid])) {
             return $operation();
         }
-        $lock = \core\lock\lock_config::get_lock_factory('mod_these')->get_lock('dossier' . $dossier->id, 10);
+        $lock = \core\lock\lock_config::get_lock_factory('mod_these')->get_lock('dossier' . $dossierid, self::LOCK_TIMEOUT);
         if (!$lock) {
             throw new moodle_exception('dossierbusy', 'mod_these');
         }
-        $held[$dossier->id] = true;
+        self::$held[$dossierid] = true;
         try {
-            $status = $DB->get_field('these_dossier', 'status', ['id' => $dossier->id]);
-            if ($status === false || (int) $status !== (int) $dossier->status) {
-                throw new moodle_exception('dossierchanged', 'mod_these');
+            if ($check !== null) {
+                $check();
             }
             $transaction = $DB->start_delegated_transaction();
             try {
                 $result = $operation();
-                $transaction->allow_commit();
             } catch (\Throwable $e) {
                 $transaction->rollback($e);
             }
+            $transaction->allow_commit();
             return $result;
         } finally {
-            unset($held[$dossier->id]);
+            unset(self::$held[$dossierid]);
+            if (!self::$held) {
+                // Fin de l'opération la plus externe, transaction validée ou annulée : les verrous pris
+                // en chemin (numéros DEVE) sont rendus.
+                foreach (self::$operationlocks as $operationlock) {
+                    $operationlock->release();
+                }
+                self::$operationlocks = [];
+            }
             $lock->release();
         }
     }
@@ -239,54 +332,6 @@ class dossiers {
     }
 
     /**
-     * Indique si la fiche de sujet peut être modifiée par l'étudiant.
-     *
-     * @param stdClass $dossier
-     * @return bool
-     */
-    public static function subject_editable(stdClass $dossier) {
-        return in_array((int) $dossier->status, [THESE_STATUS_DRAFT, THESE_STATUS_SUBJECT_RETURNED], true);
-    }
-
-    /**
-     * Indique si le dossier de soutenance peut être déposé ou modifié par l'étudiant.
-     *
-     * @param stdClass $dossier
-     * @return bool
-     */
-    public static function defense_editable(stdClass $dossier) {
-        return in_array((int) $dossier->status, [THESE_STATUS_ACTIVE, THESE_STATUS_DEFENSE_RETURNED], true);
-    }
-
-    /**
-     * Indique si le rapport du directeur peut être déposé : tant que le directeur n'a pas validé la
-     * soutenance.
-     *
-     * @param stdClass $dossier
-     * @return bool
-     */
-    public static function report_editable(stdClass $dossier) {
-        return (int) $dossier->status === THESE_STATUS_DEFENSE_SUBMITTED;
-    }
-
-    /**
-     * Enregistre l'avis du directeur sur son rapport (sans changer le statut du dossier) ; le rapport
-     * lui-même est un fichier, déposé par l'appelant (zone directorreport).
-     *
-     * @param stdClass $dossier
-     * @param int $userid
-     * @param bool $favorable
-     * @return stdClass Le dossier à jour.
-     */
-    public static function save_report(stdClass $dossier, $userid, $favorable) {
-        return self::dossier_operation($dossier, function () use ($dossier, $userid, $favorable) {
-            return self::set_status($dossier, $dossier->status, $userid, 'reportsaved', '', [
-                'reportfavorable' => $favorable ? 1 : 0,
-            ]);
-        });
-    }
-
-    /**
      * Signature transmise par un formulaire (voir these_add_signature_fields()).
      *
      * @param stdClass $data
@@ -309,16 +354,6 @@ class dossiers {
     }
 
     /**
-     * Découpe une liste de mots-clés séparés par des virgules ou des points-virgules.
-     *
-     * @param string $keywords
-     * @return string[]
-     */
-    public static function split_keywords($keywords) {
-        return array_values(array_filter(array_map('trim', preg_split('/[;,]/', (string) $keywords)), 'strlen'));
-    }
-
-    /**
      * Valeur d'un champ soumis, ou valeur actuelle du dossier si le formulaire ne le contient pas.
      *
      * @param stdClass $data
@@ -331,49 +366,6 @@ class dossiers {
             return is_string($data->$field) ? trim($data->$field) : $data->$field;
         }
         return $dossier->$field ?? '';
-    }
-
-    /**
-     * Champs de sujet dépendant des personnes : titre du directeur, repris de l'annuaire quand il y
-     * figure (l'étudiant ne le saisit pas).
-     *
-     * @param array $fields Champs du sujet déjà relevés (directorid, directortitle...).
-     * @param stdClass $data Formulaire soumis.
-     * @return array Les champs, complétés.
-     */
-    public static function people_fields(array $fields, stdClass $data) {
-        $title = jurors::titles_for_users([(int) ($fields['directorid'] ?? 0)]);
-        if ($title) {
-            $fields['directortitle'] = reset($title);
-        }
-        return $fields;
-    }
-
-    /**
-     * Directeur extérieur déclaré par l'étudiant, en une ligne : nom, grade, établissement et adresse
-     * (celle à laquelle son lien de signature sera envoyé), pour que le validateur la vérifie avant de
-     * valider le sujet. Chaîne vide si le directeur n'est pas extérieur.
-     *
-     * @param stdClass $dossier
-     * @return string Texte brut.
-     */
-    public static function external_director_summary(stdClass $dossier) {
-        if (empty($dossier->externaldirector)) {
-            return '';
-        }
-        $details = array_values(array_filter(array_map('trim', [
-            (string) ($dossier->extdirectorgrade ?? ''),
-            (string) ($dossier->extdirectorinstitution ?? ''),
-        ]), 'strlen'));
-        $summary = trim((string) ($dossier->extdirectorname ?? ''));
-        if ($details) {
-            $summary .= ' (' . implode(', ', $details) . ')';
-        }
-        $email = trim((string) ($dossier->extdirectoremail ?? ''));
-        if ($email !== '') {
-            $summary .= ' — ' . $email;
-        }
-        return trim($summary);
     }
 
     /**
@@ -395,342 +387,6 @@ class dossiers {
             }
         }
         return $target;
-    }
-
-    /**
-     * Enregistre la fiche de sujet (phase 1, étape 1) et, si demandé, la soumet signée.
-     *
-     * Toute modification du contenu invalide les signatures déjà apposées sur le formulaire de dépôt
-     * de sujet (voir these_refresh_signatures()). À la soumission, la signature de l'étudiant est
-     * apposée ; si le directeur est extérieur, sa signature ne lui est demandée par courriel qu'une
-     * fois le sujet validé par le directeur interne (voir these_review_steps()), l'adresse saisie par
-     * l'étudiant n'étant pas vérifiée avant.
-     *
-     * @param stdClass $these Instance.
-     * @param stdClass $cm Course module.
-     * @param stdClass $dossier Dossier en brouillon ou renvoyé.
-     * @param stdClass $data Champs du formulaire de sujet ; les champs absents sont conservés.
-     * @param bool $submit True pour soumettre, false pour un simple enregistrement.
-     * @param int $userid Auteur.
-     * @param stdClass|null $signature Signature de l'étudiant (voir these_signature_from_form()).
-     * @return stdClass Le dossier à jour.
-     */
-    public static function save_subject(
-        stdClass $these,
-        stdClass $cm,
-        stdClass $dossier,
-        stdClass $data,
-        $submit,
-        $userid,
-        ?stdClass $signature = null
-    ) {
-        return self::dossier_operation($dossier, function () use ($these, $cm, $dossier, $data, $submit, $userid, $signature) {
-            $context = context_module::instance($cm->id);
-            $fields = [];
-            foreach (
-                ['title', 'titleen', 'summary', 'keywords', 'studyyear', 'directortitle',
-                    'extdirectorname', 'extdirectorgrade', 'extdirectorinstitution', 'extdirectoremail'] as $field
-            ) {
-                $fields[$field] = (string) self::submitted_value($data, $dossier, $field);
-            }
-            foreach (['directorid', 'confidential', 'externaldirector'] as $field) {
-                $fields[$field] = (int) self::submitted_value($data, $dossier, $field);
-            }
-            $fields = self::people_fields($fields, $data);
-            if (property_exists($data, 'commitguide')) {
-                $fields['commitments'] = (!empty($data->commitguide) ? signatures::COMMIT_GUIDE : 0)
-                    | (!empty($data->commitduplicate) ? signatures::COMMIT_DUPLICATE : 0)
-                    | (!empty($data->commitethics) ? signatures::COMMIT_ETHICS : 0);
-            }
-            if (empty($fields['externaldirector'])) {
-                foreach (['extdirectorname', 'extdirectorgrade', 'extdirectorinstitution', 'extdirectoremail'] as $field) {
-                    $fields[$field] = '';
-                }
-            }
-
-            if (!$submit) {
-                $dossier = self::set_status($dossier, $dossier->status, $userid, 'subjectsaved', '', $fields);
-                signatures::refresh_signatures($context, $dossier);
-                return $dossier;
-            }
-
-            $previous = clone $dossier;
-            foreach ($fields as $field => $value) {
-                $dossier->$field = $value;
-            }
-            $invalidated = signatures::refresh_signatures($context, $dossier);
-            $target = self::resubmission_target($previous, $invalidated);
-            $resubmitted = (int) $previous->status === THESE_STATUS_SUBJECT_RETURNED;
-            $dossier = self::set_status(
-                $previous,
-                $target,
-                $userid,
-                $resubmitted ? 'subjectresubmitted' : 'subjectsubmitted',
-                '',
-                array_merge($fields, self::cleared_return_fields())
-            );
-            if ($signature !== null) {
-                signatures::sign_document($context, $dossier, 'subject', 'student', $userid, $signature->name, $signature->png);
-            }
-            subject_submitted::create_from_dossier($dossier, $context, $userid, ['resubmitted' => $resubmitted])->trigger();
-            notifications::notify_actor($these, $cm, $dossier);
-            return $dossier;
-        });
-    }
-
-    /**
-     * Données de l'étudiant soumises avec le dépôt de soutenance (voir these_bordereau_fields()),
-     * fusionnées avec celles déjà enregistrées.
-     *
-     * @param stdClass $data
-     * @param array $existing
-     * @return array
-     */
-    public static function extract_bordereau(stdClass $data, array $existing) {
-        $bordereau = $existing;
-        foreach (bordereau::bordereau_fields() as $field) {
-            if ($field === 'keywords') {
-                if (property_exists($data, 'bkeyword')) {
-                    $bordereau['keywords'] = array_values(array_filter(array_map('trim', (array) $data->bkeyword), 'strlen'));
-                }
-            } else if (property_exists($data, 'b' . $field)) {
-                $value = $data->{'b' . $field};
-                $bordereau[$field] = is_string($value) ? trim($value) : $value;
-            }
-        }
-        // L'embargo dure désormais la durée demandée après la soutenance (voir these_embargo_until()) :
-        // une date saisie avec l'ancien formulaire ne vaut plus dès que l'étudiant enregistre le nouveau.
-        if (property_exists($data, 'bembargo') && !property_exists($data, 'bembargountil')) {
-            $bordereau['embargountil'] = 0;
-        }
-        if (empty($bordereau['embargo'])) {
-            unset($bordereau['embargoreason'], $bordereau['embargomonths']);
-        }
-        return $bordereau;
-    }
-
-    /**
-     * Enregistre le dossier de soutenance (phase 2, étape 1) : date proposée, jury, données du
-     * bordereau, de la fiche signalétique et du contrat de diffusion, conclusions, et, si demandé, le
-     * soumet signé (bordereau et contrat de diffusion). Le manuscrit est enregistré par l'appelant ;
-     * la salle est attribuée par la DEVE à la validation du dossier.
-     *
-     * @param stdClass $these
-     * @param stdClass $cm
-     * @param stdClass $dossier Dossier actif ou renvoyé en phase 2.
-     * @param stdClass $data {proposeddate}, les champs de jury (voir
-     *                       these_extract_submitted_jury()) et, facultativement, titleen,
-     *                       conclusions et les champs du bordereau (préfixés « b »).
-     * @param bool $submit
-     * @param int $userid
-     * @param stdClass|null $signature Signature de l'étudiant (voir these_signature_from_form()).
-     * @return stdClass Le dossier à jour.
-     */
-    public static function save_defense(
-        stdClass $these,
-        stdClass $cm,
-        stdClass $dossier,
-        stdClass $data,
-        $submit,
-        $userid,
-        ?stdClass $signature = null
-    ) {
-        return self::dossier_operation($dossier, function () use ($these, $cm, $dossier, $data, $submit, $userid, $signature) {
-            $context = context_module::instance($cm->id);
-            jury::save_jury($dossier->id, juryform::extract_submitted_jury($data));
-
-            $fields = [
-                'proposeddate' => (int) $data->proposeddate,
-                'titleen' => (string) self::submitted_value($data, $dossier, 'titleen'),
-                'conclusions' => (string) self::submitted_value($data, $dossier, 'conclusions'),
-                'bordereau' => json_encode(
-                    self::extract_bordereau($data, bordereau::get_bordereau($dossier)),
-                    JSON_UNESCAPED_UNICODE
-                ),
-            ];
-            // Grille de conformité remplie par l'étudiant ; le directeur la vérifie et la signe ensuite.
-            if (property_exists($data, 'ethicsnumber')) {
-                $grid = [];
-                foreach (grid::get_grid_items(doctemplates::settings_scope($these)) as $items) {
-                    foreach (array_keys($items) as $item) {
-                        $grid[$item] = (int) !empty($data->{'grid_' . $item});
-                    }
-                }
-                $fields['conformitygrid'] = json_encode($grid);
-                $fields['ethicsnumber'] = trim((string) $data->ethicsnumber);
-            }
-            // Tant que la DEVE n'a pas arrêté la date, la date retenue suit la proposition de l'étudiant.
-            if ((int) $dossier->status === THESE_STATUS_ACTIVE || empty($dossier->defensedate)) {
-                $fields['defensedate'] = (int) $data->proposeddate;
-            }
-
-            if (!$submit) {
-                $dossier = self::set_status($dossier, $dossier->status, $userid, 'defensesaved', '', $fields);
-                signatures::refresh_signatures($context, $dossier);
-                return $dossier;
-            }
-
-            $previous = clone $dossier;
-            foreach ($fields as $field => $value) {
-                $dossier->$field = $value;
-            }
-            $invalidated = signatures::refresh_signatures($context, $dossier);
-            $target = self::resubmission_target($previous, $invalidated);
-            $resubmitted = (int) $previous->status === THESE_STATUS_DEFENSE_RETURNED;
-            $dossier = self::set_status(
-                $previous,
-                $target,
-                $userid,
-                $resubmitted ? 'defenseresubmitted' : 'defensesubmitted',
-                '',
-                array_merge($fields, self::cleared_return_fields())
-            );
-            if ($signature !== null) {
-                foreach (['bordereau', 'contract'] as $doctype) {
-                    signatures::sign_document($context, $dossier, $doctype, 'student', $userid, $signature->name, $signature->png);
-                }
-            }
-            notifications::notify_actor($these, $cm, $dossier);
-            return $dossier;
-        });
-    }
-
-    /**
-     * Valide l'étape de validation courante du dossier (voir these_review_steps()) : enregistre les
-     * champs propres à l'étape, appose la signature de l'acteur sur les documents de l'étape, invite
-     * les signataires sans compte attendus, et prévient l'acteur suivant.
-     *
-     * @param stdClass $these
-     * @param stdClass $cm
-     * @param stdClass $dossier
-     * @param int $userid
-     * @param array $fields Champs propres à l'étape (numéro DEVE, notice, rapport, date retenue...).
-     * @param string $remark Avis ou commentaire facultatif, inscrit à l'historique.
-     * @param stdClass|null $signature Signature de l'acteur (voir these_signature_from_form()).
-     * @return stdClass Le dossier à jour.
-     */
-    public static function validate_step(
-        stdClass $these,
-        stdClass $cm,
-        stdClass $dossier,
-        $userid,
-        array $fields = [],
-        $remark = '',
-        ?stdClass $signature = null
-    ) {
-        return self::dossier_operation($dossier, function () use ($these, $cm, $dossier, $userid, $fields, $remark, $signature) {
-            $steps = workflow::review_steps();
-            $step = $steps[(int) $dossier->status] ?? null;
-            if ($step === null) {
-                throw new coding_exception('Aucune étape de validation pour le statut ' . $dossier->status);
-            }
-            $context = context_module::instance($cm->id);
-
-            $dossier = self::set_status(
-                $dossier,
-                $step['next'],
-                $userid,
-                'validated' . $step['key'],
-                $remark,
-                array_merge($fields, self::cleared_return_fields())
-            );
-            if ($step['key'] === 'devedefense') {
-                // La DEVE arrête la date de soutenance en validant le dossier.
-                defense_scheduled::create_from_dossier($dossier, $context, $userid, [
-                    'defensedate' => (int) $dossier->defensedate,
-                ])->trigger();
-            }
-            signatures::refresh_signatures($context, $dossier);
-            $agentdoctypes = [];
-            foreach ($step['sign'] as $slot => $doctypes) {
-                if (!signatureagent::signs_slot_at_validation($slot, $userid, $these)) {
-                    // Emplacement de l'agent DEVE : il signe ensuite, depuis « Mes signatures ».
-                    $agentdoctypes = array_merge($agentdoctypes, $doctypes);
-                    continue;
-                }
-                foreach ($doctypes as $doctype) {
-                    if ($signature !== null && in_array($slot, signatures::document_slots($dossier, $doctype), true)) {
-                        signatures::sign_document($context, $dossier, $doctype, $slot, $userid, $signature->name, $signature->png);
-                    }
-                }
-            }
-            if ($step['request']) {
-                // Direction générale et université par délégation : demandées à leurs agents, s'il y en a,
-                // dans le même courriel.
-                $agentdoctypes = array_merge($agentdoctypes, $step['request']);
-            }
-            if ($agentdoctypes) {
-                signatureagent::request_agent_signatures($these, $cm, $dossier, array_unique($agentdoctypes), $userid);
-            }
-            if ($step['request']) {
-                // Un seul appel pour tous les documents : chaque signataire reçoit un seul lien.
-                signaturetokens::request_external_signatures($these, $cm, $dossier, $step['request']);
-            }
-
-            if ((int) $dossier->status === THESE_STATUS_ACTIVE) {
-                notifications::notify_subject_active($these, $cm, $dossier);
-            } else if ((int) $dossier->status === THESE_STATUS_CLOSED) {
-                notifications::notify_closed($these, $cm, $dossier);
-            } else {
-                notifications::notify_actor($these, $cm, $dossier);
-            }
-            return $dossier;
-        });
-    }
-
-    /**
-     * Renvoie le dossier, depuis l'étape de validation courante, à l'étudiant ou au directeur.
-     *
-     * Les documents signés de la phase sont révoqués, et leurs signatures redemandées quand le dossier
-     * repasse le circuit (voir signatures::revoke_signatures()) : renvoyé à l'étudiant, le dossier
-     * passe au statut « renvoyé » de sa phase et, à la nouvelle soumission, refait toute la phase
-     * (directeur, DEVE, bibliothèque) ; renvoyé au directeur (par la DEVE), il revient à l'étape de
-     * validation du directeur, et seules les signatures de l'étudiant (et du directeur extérieur sur le
-     * dépôt de sujet) sont conservées. Pendant les corrections, sans document signé, le dossier
-     * revient directement à l'étape qui l'a renvoyé.
-     *
-     * @param stdClass $these
-     * @param stdClass $cm
-     * @param stdClass $dossier
-     * @param int $userid
-     * @param string $target 'student' ou 'director'.
-     * @param string $comment Motif, obligatoire, transmis au destinataire.
-     * @return stdClass Le dossier à jour.
-     */
-    public static function return_dossier(stdClass $these, stdClass $cm, stdClass $dossier, $userid, $target, $comment) {
-        return self::dossier_operation($dossier, function () use ($these, $cm, $dossier, $userid, $target, $comment) {
-            $steps = workflow::review_steps();
-            $step = $steps[(int) $dossier->status] ?? null;
-            if ($step === null || !in_array($target, $step['returnto'], true)) {
-                throw new coding_exception('Renvoi impossible depuis le statut ' . $dossier->status . ' vers ' . $target);
-            }
-
-            $phase = workflow::phase($dossier->status);
-            $fields = [
-                'returncomment' => $comment,
-                'returnedby' => $userid,
-                'returntime' => time(),
-            ];
-            $context = context_module::instance($cm->id);
-            if ($target === 'student' && workflow::in_corrections($dossier->status)) {
-                $tostatus = THESE_STATUS_CORRECTIONS;
-                $fields['returnstatus'] = (int) $dossier->status;
-            } else if ($target === 'student') {
-                $tostatus = $phase === 1 ? THESE_STATUS_SUBJECT_RETURNED : THESE_STATUS_DEFENSE_RETURNED;
-                // Toutes les signatures de la phase sont redemandées : la phase est refaite en entier.
-                $fields['returnstatus'] = 0;
-                signatures::revoke_signatures($context, $dossier, $userid, signatures::phase_documents($phase));
-            } else {
-                $tostatus = $phase === 1 ? THESE_STATUS_SUBJECT_SUBMITTED : THESE_STATUS_DEFENSE_SUBMITTED;
-                $fields['returnstatus'] = 0;
-                $keep = $phase === 1 ? ['student', 'extdirector'] : ['student'];
-                signatures::revoke_signatures($context, $dossier, $userid, signatures::phase_documents($phase), $keep);
-            }
-
-            $dossier = self::set_status($dossier, $tostatus, $userid, 'returnedto' . $target, $comment, $fields);
-            notifications::notify_returned($these, $cm, $dossier, $target, $comment);
-            return $dossier;
-        });
     }
 
     /**
@@ -766,167 +422,51 @@ class dossiers {
     }
 
     /**
-     * Enregistre les décisions du jury reportées par la DEVE depuis le procès-verbal scanné (le fichier
-     * est enregistré par l'appelant) : résultat, mention, proposition pour un prix de thèse,
-     * corrections demandées. Sans corrections, le dossier est clos ; avec corrections, l'étudiant doit
-     * déposer son manuscrit corrigé, que le directeur, la bibliothèque et la DEVE valident avant la
-     * clôture.
-     *
-     * Une thèse ajournée ne reçoit ni mention, ni proposition de prix, ni corrections : le dossier
-     * revient en phase de soutenance (voir these_adjourn_dossier()).
+     * Modification d'un dossier par la DEVE (edit.php) : sujet, numéros, directeur, date, lieu et jury,
+     * sans changement de statut. Comme les autres opérations, elle ne s'applique que si le dossier est
+     * encore dans le statut où la DEVE l'a vu : sinon, l'enregistrement remettrait le dossier dans ce
+     * statut, effaçant une validation, un renvoi ou un abandon enregistrés entre-temps.
      *
      * @param stdClass $these
      * @param stdClass $cm
-     * @param stdClass $dossier
+     * @param stdClass $dossier Dossier tel que la DEVE l'a vu.
+     * @param array $fields Champs du formulaire (title, titleen, summary, keywords, devenumber, libraryref,
+     *                      defenselocation, directorid, defensedate).
+     * @param array $newjury Jury soumis (voir juryform::extract_submitted_jury()).
      * @param int $userid
-     * @param stdClass $decision {result, mention, prizeproposal, correctionsrequested, correctionsnote}
-     * @param string $remark
      * @return stdClass Le dossier à jour.
      */
-    public static function record_minutes(
-        stdClass $these,
-        stdClass $cm,
-        stdClass $dossier,
-        $userid,
-        stdClass $decision,
-        $remark = ''
-    ) {
-        return self::dossier_operation($dossier, function () use ($these, $cm, $dossier, $userid, $decision, $remark) {
-            $admitted = (int) $decision->result === THESE_RESULT_ADMITTED;
-            $mention = (string) ($decision->mention ?? '');
-            $corrections = $admitted && !empty($decision->correctionsrequested);
-            if ((int) $decision->result === THESE_RESULT_ADJOURNED) {
-                $dossier = self::adjourn_dossier($these, $cm, $dossier, $userid, $remark);
-            } else {
-                $fields = [
-                    'defenseresult' => (int) $decision->result,
-                    'mention' => $admitted && array_key_exists($mention, workflow::mention_options()) ? $mention : '',
-                    'prizeproposal' => $admitted && !empty($decision->prizeproposal) ? 1 : 0,
-                    'correctionsrequested' => $corrections ? 1 : 0,
-                    'correctionsnote' => $corrections ? trim((string) ($decision->correctionsnote ?? '')) : '',
-                ];
-                if ($corrections) {
-                    $dossier = self::set_status(
-                        $dossier,
-                        THESE_STATUS_CORRECTIONS,
-                        $userid,
-                        'minutescorrections',
-                        $remark,
-                        array_merge($fields, self::cleared_return_fields())
-                    );
-                    notifications::notify_actor($these, $cm, $dossier);
-                } else {
-                    $dossier = self::set_status($dossier, THESE_STATUS_CLOSED, $userid, 'closed', $remark, $fields);
-                    notifications::notify_closed($these, $cm, $dossier);
+    public static function edit_dossier(stdClass $these, stdClass $cm, stdClass $dossier, array $fields, array $newjury, $userid) {
+        return self::dossier_operation($dossier, function () use ($these, $cm, $dossier, $fields, $newjury, $userid) {
+            $jury = jury::get_jury($dossier->id);
+            $signature = function ($member) {
+                return [$member->juryrole, $member->fullname, $member->jurytitle, $member->institution, $member->email,
+                    (int) ($member->jurorid ?? 0), (string) ($member->jurystatus ?? '')];
+            };
+            $eligibility = function ($member) {
+                return (int) !empty($member->eligible);
+            };
+            $jurychanged = array_map($signature, $jury) !== array_map($signature, $newjury);
+            $eligibilitychanged = array_map($eligibility, $jury) !== array_map($eligibility, $newjury);
+            if ($jurychanged || $eligibilitychanged) {
+                jury::save_jury($dossier->id, $newjury, $userid);
+                // Jury déjà validé par la DEVE : les nouveaux membres sont prévenus à leur tour.
+                if ((int) $dossier->status >= THESE_STATUS_DEFENSE_VALIDATED) {
+                    juryaccess::notify_jury($these, $cm, $dossier);
                 }
             }
-            minutes_recorded::create_from_dossier($dossier, context_module::instance($cm->id), $userid, [
-                'result' => (int) $decision->result, 'corrections' => $corrections,
-            ])->trigger();
-            return $dossier;
+            $defensechanged = $jurychanged || (int) ($fields['defensedate'] ?? 0) !== (int) $dossier->defensedate
+                || (string) ($fields['defenselocation'] ?? '') !== (string) $dossier->defenselocation;
+            if ($defensechanged && !empty($dossier->documentstime)) {
+                $fields['documentstime'] = 0;
+            }
+            return self::set_status($dossier, $dossier->status, $userid, 'edited', '', $fields);
         });
     }
 
     /**
-     * Ajournement de la soutenance : le dossier revient en phase de soutenance (dossier actif), sujet,
-     * enregistrements et numéro conservés. L'étudiant dépose un nouveau dossier de soutenance, qui
-     * suit de nouveau tout le circuit.
-     *
-     * Le procès-verbal d'ajournement est archivé (zone pvadjourned, nom préfixé par la date) ; les
-     * documents générés et les signatures des documents de soutenance sont supprimés, pour être
-     * produits et signés de nouveau ; les accès du jury sont révoqués et son éligibilité sera revue.
-     * Le texte du rapport et les données déjà saisies restent proposés.
-     *
-     * @param stdClass $these
-     * @param stdClass $cm
-     * @param stdClass $dossier
-     * @param int $userid
-     * @param string $remark
-     * @return stdClass Le dossier à jour.
-     */
-    public static function adjourn_dossier(stdClass $these, stdClass $cm, stdClass $dossier, $userid, $remark = '') {
-        return self::dossier_operation($dossier, function () use ($these, $cm, $dossier, $userid, $remark) {
-            global $DB;
-
-            $context = context_module::instance($cm->id);
-            $fs = get_file_storage();
-            $prefix = 'ajournement-' . userdate(time(), '%Y-%m-%d') . '-';
-            foreach ($fs->get_area_files($context->id, 'mod_these', 'pv', $dossier->id, 'filename', false) as $file) {
-                $filename = $prefix . $file->get_filename();
-                if (!$fs->file_exists($context->id, 'mod_these', 'pvadjourned', $dossier->id, '/', $filename)) {
-                    $fs->create_file_from_storedfile(['filearea' => 'pvadjourned', 'filename' => $filename], $file);
-                }
-            }
-            $fs->delete_area_files($context->id, 'mod_these', 'pv', $dossier->id);
-            $fs->delete_area_files($context->id, 'mod_these', 'generated', $dossier->id);
-            foreach (signatures::get_signatures($dossier->id) as $signature) {
-                if ($signature->doctype !== 'subject') {
-                    signatures::delete_signature($context, $signature);
-                }
-            }
-            $DB->set_field('these_jury', 'notifiedtime', 0, ['dossierid' => $dossier->id]);
-            $DB->set_field('these_jury', 'accesstoken', null, ['dossierid' => $dossier->id]);
-            $DB->set_field('these_jury', 'eligible', 0, ['dossierid' => $dossier->id]);
-
-            $dossier = self::set_status($dossier, THESE_STATUS_ACTIVE, $userid, 'adjourned', $remark, array_merge([
-                'defenseresult' => THESE_RESULT_ADJOURNED,
-                'mention' => '',
-                'prizeproposal' => 0,
-                'correctionsrequested' => 0,
-                'correctionsnote' => '',
-                'reportfavorable' => 0,
-                'documentstime' => 0,
-                'senttime' => 0,
-            ], self::cleared_return_fields()));
-            $vars = notifications::email_base_vars($these, $cm, $dossier);
-            $recipients = notifications::get_student_and_director($dossier);
-            notifications::send_email($these, 'adjourned', $recipients, $vars, '', '', $dossier);
-            return $dossier;
-        });
-    }
-
-    /**
-     * Indique si le dossier est en attente d'une nouvelle soutenance après un ajournement.
-     *
-     * @param stdClass $dossier
-     * @return bool
-     */
-    public static function is_adjourned(stdClass $dossier) {
-        return (int) $dossier->status === THESE_STATUS_ACTIVE && (int) $dossier->defenseresult === THESE_RESULT_ADJOURNED;
-    }
-
-    /**
-     * Dépôt du manuscrit corrigé par l'étudiant (les fichiers sont enregistrés par l'appelant) : le
-     * dossier passe au directeur, ou revient à l'étape qui l'avait renvoyé.
-     *
-     * @param stdClass $these
-     * @param stdClass $cm
-     * @param stdClass $dossier
-     * @param int $userid
-     * @param string $done Corrections apportées.
-     * @return stdClass Le dossier à jour.
-     */
-    public static function submit_corrections(stdClass $these, stdClass $cm, stdClass $dossier, $userid, $done) {
-        return self::dossier_operation($dossier, function () use ($these, $cm, $dossier, $userid, $done) {
-            if ((int) $dossier->status !== THESE_STATUS_CORRECTIONS) {
-                throw new coding_exception('Dépôt des corrections impossible au statut ' . $dossier->status);
-            }
-            $resubmitted = !empty($dossier->returnstatus);
-            $dossier = self::set_status(
-                $dossier,
-                self::submission_target($dossier),
-                $userid,
-                $resubmitted ? 'correctionsresubmitted' : 'correctionssubmitted',
-                '',
-                array_merge(['correctionsdone' => trim((string) $done)], self::cleared_return_fields())
-            );
-            notifications::notify_actor($these, $cm, $dossier);
-            return $dossier;
-        });
-    }
-
-    /**
-     * Supprime des dossiers et tout ce qui leur est rattaché (jury, historique, fichiers).
+     * Supprime des dossiers et tout ce qui leur est rattaché (jury, historique, fichiers, soutenance au
+     * calendrier).
      *
      * @param int[] $dossierids
      * @param context|null $context Contexte du module, pour supprimer aussi les fichiers. Sans
@@ -960,26 +500,22 @@ class dossiers {
         $DB->delete_records_select('these_subjecthistory', "dossierid $insql", $inparams);
         $DB->delete_records_select('these_log', "dossierid $insql", $inparams);
         $DB->delete_records_select('these_dossier', "id $insql", $inparams);
+        calendar::delete_events($dossierids);
     }
 
     /**
      * Propose le numéro d'enregistrement DEVE suivant, au format AAAA-NNN : l'année en cours et le
-     * premier numéro d'ordre libre de cette année dans l'activité.
+     * premier numéro d'ordre libre de cette année sur le site (la numérotation continue d'une activité,
+     * d'une promotion, à l'autre).
      *
-     * @param int $theseid
      * @param int|null $time Date de référence (année), maintenant par défaut.
      * @return string
      */
-    public static function suggest_devenumber($theseid, $time = null) {
+    public static function suggest_devenumber($time = null) {
         global $DB;
 
         $year = userdate($time ?? time(), '%Y');
-        $numbers = $DB->get_fieldset_select(
-            'these_dossier',
-            'devenumber',
-            'theseid = ? AND ' . $DB->sql_like('devenumber', '?'),
-            [$theseid, $year . '-%']
-        );
+        $numbers = $DB->get_fieldset_select('these_dossier', 'devenumber', $DB->sql_like('devenumber', '?'), [$year . '-%']);
         $max = 0;
         foreach ($numbers as $number) {
             if (preg_match('/^' . $year . '-(\d+)$/', (string) $number, $matches)) {
@@ -990,20 +526,108 @@ class dossiers {
     }
 
     /**
-     * Indique si un numéro DEVE est déjà attribué à un autre dossier de l'activité.
+     * Indique si un numéro DEVE est déjà attribué à un autre dossier du site.
      *
-     * @param int $theseid
-     * @param string $number
+     * @param string|null $number
      * @param int $excludeid Dossier à ignorer (celui qu'on enregistre).
      * @return bool
      */
-    public static function devenumber_taken($theseid, $number, $excludeid = 0) {
+    public static function devenumber_taken($number, $excludeid = 0) {
         global $DB;
 
-        return $DB->record_exists_select(
-            'these_dossier',
-            'theseid = ? AND devenumber = ? AND id <> ?',
-            [$theseid, trim($number), $excludeid]
-        );
+        $number = self::normalise_devenumber($number);
+        if ($number === null) {
+            return false;
+        }
+        return $DB->record_exists_select('these_dossier', 'devenumber = ? AND id <> ?', [$number, (int) $excludeid]);
+    }
+
+    /**
+     * Numéro DEVE tel qu'il est enregistré : sans espaces autour, null s'il est vide (l'index unique
+     * du numéro ignore les valeurs nulles, pas les chaînes vides).
+     *
+     * @param string|null $number
+     * @return string|null
+     */
+    public static function normalise_devenumber($number) {
+        $number = trim((string) $number);
+        return $number === '' ? null : $number;
+    }
+
+    /**
+     * Attribue un numéro DEVE à un dossier, sous le verrou des numéros du site : à appeler dans une
+     * opération sur le dossier (dossier_operation() ; le verrou est alors gardé jusqu'à la fin de sa
+     * transaction) ou dans with_devenumbers_locked(). Deux attributions simultanées ne peuvent donc pas
+     * retenir le même numéro.
+     *
+     * @param int $dossierid Dossier à qui le numéro est attribué (0 pour un dossier à créer).
+     * @param string|null $number Numéro saisi.
+     * @param string|null $proposed Numéro proposé par le formulaire (suggest_devenumber()) : s'il a été
+     *                              gardé tel quel et qu'il vient d'être attribué à un autre dossier, le
+     *                              numéro libre suivant est attribué à sa place.
+     * @return string|null Numéro attribué, null s'il est vide.
+     * @throws moodle_exception devenumbertaken si le numéro saisi est déjà attribué à un autre dossier.
+     */
+    public static function claim_devenumber($dossierid, $number, $proposed = null) {
+        $number = self::normalise_devenumber($number);
+        if ($number === null) {
+            return null;
+        }
+        self::lock_devenumbers();
+        if (self::devenumber_taken($number, $dossierid)) {
+            if ($number === self::normalise_devenumber($proposed)) {
+                return self::suggest_devenumber();
+            }
+            throw new moodle_exception('devenumbertaken', 'mod_these');
+        }
+        return $number;
+    }
+
+    /**
+     * Exécute, hors d'une opération sur un dossier (import, par exemple), une écriture de numéros DEVE
+     * sous le verrou des numéros du site. Les écritures doivent être validées avant la fin de
+     * $callback (pas de transaction englobante).
+     *
+     * @param callable $callback
+     * @return mixed Résultat de $callback.
+     * @throws moodle_exception dossierbusy si le verrou n'a pas pu être pris.
+     */
+    public static function with_devenumbers_locked(callable $callback) {
+        if (self::$scopelocks || isset(self::$operationlocks['devenumbers'])) {
+            return $callback();
+        }
+        $lock = \core\lock\lock_config::get_lock_factory('mod_these')->get_lock('devenumbers', self::LOCK_TIMEOUT);
+        if (!$lock) {
+            throw new moodle_exception('dossierbusy', 'mod_these');
+        }
+        self::$scopelocks['devenumbers'] = $lock;
+        try {
+            return $callback();
+        } finally {
+            unset(self::$scopelocks['devenumbers']);
+            $lock->release();
+        }
+    }
+
+    /**
+     * Prend le verrou des numéros DEVE du site pour l'opération en cours, jusqu'à la fin de sa
+     * transaction (voir dossier_operation()).
+     *
+     * @return void
+     * @throws coding_exception hors d'une opération sur un dossier ou de with_devenumbers_locked().
+     * @throws moodle_exception dossierbusy si le verrou n'a pas pu être pris.
+     */
+    private static function lock_devenumbers() {
+        if (self::$scopelocks || isset(self::$operationlocks['devenumbers'])) {
+            return;
+        }
+        if (!self::$held) {
+            throw new coding_exception('Numéro DEVE attribué hors d\'une opération sur un dossier');
+        }
+        $lock = \core\lock\lock_config::get_lock_factory('mod_these')->get_lock('devenumbers', self::LOCK_TIMEOUT);
+        if (!$lock) {
+            throw new moodle_exception('dossierbusy', 'mod_these');
+        }
+        self::$operationlocks['devenumbers'] = $lock;
     }
 }

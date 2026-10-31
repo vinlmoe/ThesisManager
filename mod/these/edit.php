@@ -40,6 +40,8 @@ require_login($course, true, $cm);
 these_require_service($context, 'deve');
 
 ['dossier' => $dossier, 'rights' => $rights] = (array) page::load_dossier($activity, $dossierid, $USER->id);
+// Dossier réduit à son procès-verbal (données de l'étudiant effacées) : plus aucune action.
+\mod_these\local\dossiers::require_in_circuit($dossier);
 $dossierurl = new moodle_url('/mod/these/dossier.php', ['id' => $cm->id, 'dossierid' => $dossier->id]);
 $student = $DB->get_record('user', ['id' => $dossier->userid]);
 $PAGE->set_url('/mod/these/edit.php', ['id' => $cm->id, 'dossierid' => $dossier->id]);
@@ -80,31 +82,9 @@ if ($mform->is_cancelled()) {
     $fields['directorid'] = (int) $data->directorid;
     $fields['defensedate'] = (int) ($data->defensedate ?? 0);
 
-    $newjury = these_extract_submitted_jury($data, true);
-    $signature = function ($member) {
-        return [$member->juryrole, $member->fullname, $member->jurytitle, $member->institution, $member->email,
-            (int) ($member->jurorid ?? 0), (string) ($member->jurystatus ?? '')];
-    };
-    $jurychanged = array_map($signature, $jury) !== array_map($signature, $newjury);
-    $eligibilitychanged = array_map(function ($member) {
-        return (int) !empty($member->eligible);
-    }, $jury) !== array_map(function ($member) {
-        return (int) !empty($member->eligible);
-    }, $newjury);
-    if ($jurychanged || $eligibilitychanged) {
-        these_save_jury($dossier->id, $newjury, $USER->id);
-        // Jury déjà validé par la DEVE : les nouveaux membres sont prévenus à leur tour.
-        if ((int) $dossier->status >= THESE_STATUS_DEFENSE_VALIDATED) {
-            these_notify_jury($these, $cm, $dossier);
-        }
-    }
-    $defensechanged = $jurychanged || $fields['defensedate'] !== (int) $dossier->defensedate
-        || $fields['defenselocation'] !== (string) $dossier->defenselocation;
-    if ($defensechanged && !empty($dossier->documentstime)) {
-        $fields['documentstime'] = 0;
-    }
-
-    these_set_status($dossier, $dossier->status, $USER->id, 'edited', '', $fields);
+    // Jury, date et lieu modifiés : documents à régénérer, nouveaux membres prévenus (voir
+    // dossiers::edit_dossier()).
+    \mod_these\local\dossiers::edit_dossier($these, $cm, $dossier, $fields, these_extract_submitted_jury($data, true), $USER->id);
     redirect(
         backlinks::after_action($cm, $dossierurl),
         get_string('dossiersaved', 'mod_these'),

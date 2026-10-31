@@ -29,6 +29,7 @@ require_once(__DIR__ . '/output_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_these\output\history
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\output\history::class)]
 final class history_test extends output_testcase {
     /**
      * Prépare un dossier avec un renvoi au directeur et un changement de sujet dans l'historique.
@@ -79,7 +80,7 @@ final class history_test extends output_testcase {
         $this->setup_activity();
         $dossier = $this->dossier_with_logs();
         $html = $this->renderer()->render(new history($dossier->id, false, false));
-        $this->assertStringContainsString('<table class="generaltable these-history">', $html);
+        $this->assert_html_has($html, './/table[' . self::xclass('generaltable') . ' and ' . self::xclass('these-history') . ']');
         $returned = strpos($html, s(get_string('logreturnedtodirector', 'mod_these')));
         $this->assertLessThan($returned, strpos($html, s(get_string('logsubjectchanged', 'mod_these'))));
         $this->assert_no_secret($html);

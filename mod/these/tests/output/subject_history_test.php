@@ -29,6 +29,7 @@ require_once(__DIR__ . '/output_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_these\output\subject_history
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\output\subject_history::class)]
 final class subject_history_test extends output_testcase {
     /**
      * Contexte : ancien titre, directeur, motif ; lien vers le PDF archivé quand il existe.
@@ -42,12 +43,21 @@ final class subject_history_test extends output_testcase {
             'filearea' => 'subjectarchive', 'itemid' => $dossier->id, 'filepath' => '/',
             'filename' => 'sujet-' . $entry->id . '.pdf'], 'x');
 
-        $data = (new subject_history($this->context, $dossier))->export_for_template($this->renderer());
+        // Vu par le directeur, qui connaît les sujets confidentiels du dossier.
+        $data = (new subject_history($this->context, $dossier, $this->director->id))->export_for_template($this->renderer());
         $this->assertTrue($data['hasentries']);
         $cells = $data['table']['rows'][0]['cells'];
         $this->assertSame(self::SECRETS['oldtitle'], $cells[1]['parts'][0]['phtml']['value']);
         $this->assertSame('Dr Ancien', $cells[2]['parts'][0]['ptext']['value']);
         $this->assertSame('sujet-' . $entry->id . '.pdf', $cells[4]['parts'][0]['plink']['value']);
+
+        // Vu par un autre enseignant : l'ancien sujet confidentiel est masqué (titre, motif, PDF).
+        $other = $this->getDataGenerator()->create_and_enrol($this->course, 'teacher');
+        $data = (new subject_history($this->context, $dossier, $other->id))->export_for_template($this->renderer());
+        $cells = $data['table']['rows'][0]['cells'];
+        $this->assertSame(get_string('confidentialtitle', 'mod_these'), $cells[1]['parts'][0]['pem']['value']);
+        $this->assertSame('-', $cells[3]['parts'][0]['ptext']['value']);
+        $this->assertSame('-', $cells[4]['parts'][0]['ptext']['value']);
 
         $DB->delete_records('these_subjecthistory', ['dossierid' => $dossier->id]);
         $this->assertFalse((new subject_history($this->context, $dossier))->export_for_template($this->renderer())['hasentries']);
@@ -61,8 +71,10 @@ final class subject_history_test extends output_testcase {
         $this->setup_activity();
         $dossier = $this->confidential_dossier();
         $html = $this->renderer()->render(new subject_history($this->context, $dossier));
-        $this->assertStringContainsString('<table class="generaltable these-subjecthistory">', $html);
-        $this->assertStringContainsString('<td class="cell c4 lastcol">-</td>', $html);
+        $table = './/table[' . self::xclass('generaltable') . ' and ' . self::xclass('these-subjecthistory') . ']';
+        $this->assert_html_has($html, $table);
+        // Dernière colonne (PDF archivé) : « - » sans fichier.
+        $this->assert_html_has($html, $table . '//tbody/tr/td[last()][normalize-space() = "-"]');
         $DB->delete_records('these_subjecthistory', ['dossierid' => $dossier->id]);
         $this->assertSame('', these_render_subject_history($this->context, $dossier));
     }

@@ -151,11 +151,22 @@ class signatureagent {
      * « validé par … le … » : compte de l'équipe DEVE qui a validé l'étape dont un agent signe les
      * documents, et date de cette validation.
      *
+     * Les comptes des validateurs sont retenus pour la requête : la liste « Mes signatures » d'un agent
+     * en compte quelques-uns pour des centaines de signatures.
+     *
      * @param stdClass $signature Signature (validatedby, validatedtime).
      * @return string Vide sans validateur connu.
      */
     public static function validator_label(stdClass $signature) {
-        $validator = !empty($signature->validatedby) ? \core_user::get_user($signature->validatedby) : null;
+        $validator = null;
+        if (!empty($signature->validatedby)) {
+            $cache = \cache::make_from_params(\cache_store::MODE_REQUEST, 'mod_these', 'validators');
+            $validator = $cache->get((int) $signature->validatedby);
+            if ($validator === false) {
+                $validator = \core_user::get_user($signature->validatedby) ?: null;
+                $cache->set((int) $signature->validatedby, $validator);
+            }
+        }
         if (!$validator) {
             return '';
         }
@@ -243,6 +254,10 @@ class signatureagent {
      * attribuées ; avec plusieurs, elles restent ouvertes à chacun d'eux. Sert aussi de relance : la date de la demande repart de
      * zéro.
      *
+     * Opération sur le dossier (voir dossiers::dossier_operation()) : une relance sur un dossier qui a
+     * changé de statut entre-temps est refusée, au lieu de rouvrir des signatures qu'un renvoi vient de
+     * révoquer.
+     *
      * @param stdClass $these
      * @param stdClass $cm
      * @param stdClass $dossier
@@ -258,53 +273,96 @@ class signatureagent {
         array $doctypes,
         $validatorid = 0
     ) {
-        global $DB;
-
-        $now = time();
-        $labels = [];
-        $slotagents = [];
-        foreach (self::slots_for($these) as $slot) {
-            $agents = self::agents_for_slot($these, $slot);
-            if (!$agents) {
-                continue;
-            }
-            $single = count($agents) === 1 ? reset($agents) : null;
-            foreach (signaturetokens::pending_documents_for_slot($dossier, $slot, $doctypes) as $doctype) {
-                if (!self::agent_document_due($dossier, $doctype)) {
+        return dossiers::dossier_operation($dossier, function () use ($these, $cm, $dossier, $doctypes, $validatorid) {
+            $now = time();
+            $labels = [];
+            $slotagents = [];
+            foreach (self::slots_for($these) as $slot) {
+                $agents = self::agents_for_slot($these, $slot);
+                if (!$agents) {
                     continue;
                 }
-                $signature = $DB->get_record(
-                    'these_signature',
-                    ['dossierid' => $dossier->id, 'doctype' => $doctype, 'slot' => $slot]
-                );
-                $record = (object) [
-                    'dossierid' => $dossier->id,
-                    'doctype' => $doctype,
-                    'slot' => $slot,
-                    'userid' => $single ? (int) $single->id : 0,
-                    'signername' => $single ? fullname($single) : '',
-                    'signeremail' => $single ? $single->email : '',
-                    'token' => null,
-                    'requesttime' => $now,
-                    'timesigned' => 0,
-                    'contenthash' => null,
-                    'validatedby' => (int) $validatorid ?: (int) ($signature->validatedby ?? 0),
-                    'validatedtime' => $validatorid ? $now : (int) ($signature->validatedtime ?? 0),
-                ];
-                if ($signature) {
-                    $record->id = $signature->id;
-                    $DB->update_record('these_signature', $record);
-                } else {
-                    $record->timecreated = $now;
-                    $DB->insert_record('these_signature', $record);
+                $single = count($agents) === 1 ? reset($agents) : null;
+                foreach (signaturetokens::pending_documents_for_slot($dossier, $slot, $doctypes) as $doctype) {
+                    if (!self::agent_document_due($dossier, $doctype)) {
+                        continue;
+                    }
+                    self::open_agent_signature($dossier, $doctype, $slot, $single, $validatorid, $now);
+                    $labels[$slot][] = self::document_label($doctype, $slot);
+                    $slotagents[$slot] = $agents;
                 }
-                $labels[$slot][] = self::document_label($doctype, $slot);
-                $slotagents[$slot] = $agents;
             }
+            if (!$labels) {
+                return 0;
+            }
+            self::notify_agents($these, $cm, $dossier, $labels, $slotagents, $validatorid, $now);
+            return count(array_merge(...array_values($labels)));
+        });
+    }
+
+    /**
+     * Ouvre (ou rouvre) la signature d'un document attendue d'un agent.
+     *
+     * @param stdClass $dossier
+     * @param string $doctype
+     * @param string $slot
+     * @param stdClass|null $single Agent attitré quand il est seul pour l'emplacement.
+     * @param int $validatorid Voir request_agent_signatures().
+     * @param int $now Date de la demande.
+     * @return void
+     */
+    private static function open_agent_signature(stdClass $dossier, $doctype, $slot, ?stdClass $single, $validatorid, $now) {
+        global $DB;
+
+        $signature = $DB->get_record(
+            'these_signature',
+            ['dossierid' => $dossier->id, 'doctype' => $doctype, 'slot' => $slot]
+        );
+        $record = (object) [
+            'dossierid' => $dossier->id,
+            'doctype' => $doctype,
+            'slot' => $slot,
+            'userid' => $single ? (int) $single->id : 0,
+            'signername' => $single ? fullname($single) : '',
+            'signeremail' => $single ? $single->email : '',
+            'token' => null,
+            'requesttime' => $now,
+            'timesigned' => 0,
+            'contenthash' => null,
+            'validatedby' => (int) $validatorid ?: (int) ($signature->validatedby ?? 0),
+            'validatedtime' => $validatorid ? $now : (int) ($signature->validatedtime ?? 0),
+        ];
+        if ($signature) {
+            $record->id = $signature->id;
+            $DB->update_record('these_signature', $record);
+        } else {
+            $record->timecreated = $now;
+            $DB->insert_record('these_signature', $record);
         }
-        if (!$labels) {
-            return 0;
-        }
+    }
+
+    /**
+     * Prévient les agents (un courriel chacun, pour les documents des emplacements qu'il signe) et
+     * inscrit les demandes à l'historique du dossier.
+     *
+     * @param stdClass $these
+     * @param stdClass $cm
+     * @param stdClass $dossier
+     * @param array $labels Libellés des documents demandés, par emplacement.
+     * @param array $slotagents Agents, par emplacement.
+     * @param int $validatorid Voir request_agent_signatures().
+     * @param int $now Date de la demande.
+     * @return void
+     */
+    private static function notify_agents(
+        stdClass $these,
+        stdClass $cm,
+        stdClass $dossier,
+        array $labels,
+        array $slotagents,
+        $validatorid,
+        $now
+    ) {
         // Validateur : compte qui a validé les documents, et quand, donnés aux agents avec la demande.
         $validated = $validatorid
             ? self::validator_label((object) ['validatedby' => $validatorid, 'validatedtime' => $now]) : '';
@@ -335,7 +393,6 @@ class signatureagent {
                 $actor . ' (' . implode(', ', array_map('fullname', $agents)) . ') — ' . implode(', ', $labels[$slot])
             );
         }
-        return count(array_merge(...array_values($labels)));
     }
 
     /**
@@ -353,13 +410,16 @@ class signatureagent {
     public static function get_user_pending_signatures(stdClass $user) {
         global $DB;
 
-        // Les agents sont désignés par activité : les signatures d'agent sont toutes lues, puis
-        // gardées pour les activités dont l'utilisateur est agent.
+        // Les agents sont désignés par activité : les signatures d'agent sont lues seulement pour un compte
+        // désigné agent quelque part, puis gardées pour les activités dont il est agent.
         $agentslots = array_merge(self::agent_slots(), ['dg'], prerequisites::UNIVERSITY_SLOTS);
         $params = ['userid' => $user->id];
-        [$slotsql, $slotparams] = $DB->get_in_or_equal($agentslots, SQL_PARAMS_NAMED, 'agentslot');
-        $agentsql = " OR (s.token IS NULL AND s.slot $slotsql)";
-        $params += $slotparams;
+        $agentsql = '';
+        if (self::listed_as_agent($user)) {
+            [$slotsql, $slotparams] = $DB->get_in_or_equal($agentslots, SQL_PARAMS_NAMED, 'agentslot');
+            $agentsql = " OR (s.token IS NULL AND s.slot $slotsql)";
+            $params += $slotparams;
+        }
         $records = $DB->get_records_sql(
             "SELECT s.*
                FROM {these_signature} s
@@ -370,23 +430,40 @@ class signatureagent {
            ORDER BY s.dossierid, s.id",
             $params
         );
+        // Dossiers et activités lus en une requête chacun ; modules de cours, emplacements et agents, une
+        // fois par activité (la liste ne doit pas coûter quelques requêtes par signature en attente).
+        $dossiers = $records ? $DB->get_records_list('these_dossier', 'id', array_unique(array_column($records, 'dossierid')))
+            : [];
+        $theses = $dossiers ? $DB->get_records_list('these', 'id', array_unique(array_column($dossiers, 'theseid'))) : [];
+        $cms = [];
+        $slots = [];
+        $agents = [];
         $pending = [];
         foreach ($records as $signature) {
-            $dossier = $DB->get_record('these_dossier', ['id' => $signature->dossierid]);
-            $cm = $dossier ? get_coursemodule_from_instance('these', $dossier->theseid, 0, false, IGNORE_MISSING) : null;
+            $dossier = $dossiers[(int) $signature->dossierid] ?? null;
+            $these = $dossier ? ($theses[(int) $dossier->theseid] ?? null) : null;
+            if (!$these) {
+                continue;
+            }
+            if (!array_key_exists((int) $these->id, $cms)) {
+                $cms[(int) $these->id] = get_coursemodule_from_instance('these', $these->id, 0, false, IGNORE_MISSING);
+            }
+            $cm = $cms[(int) $these->id];
             if (!$cm || !signatures::document_available($dossier, $signature->doctype)) {
                 continue;
             }
-            $these = $DB->get_record('these', ['id' => $dossier->theseid]);
             // Signature d'agent : réservée aux agents désignés de l'activité (sinon à la personne qui l'a
             // validée), une fois l'étape validée par l'équipe. Direction générale : seulement tant que
             // les agents la signent par délégation.
             if ($signature->token === null && in_array($signature->slot, $agentslots, true)) {
-                if (!in_array($signature->slot, self::slots_for($these), true)) {
+                $slots[(int) $these->id] = $slots[(int) $these->id] ?? self::slots_for($these);
+                if (!in_array($signature->slot, $slots[(int) $these->id], true)) {
                     continue;
                 }
-                $agents = self::agents_for_slot($these, $signature->slot);
-                $allowed = $agents ? isset($agents[(int) $user->id]) : (int) $signature->userid === (int) $user->id;
+                $key = $these->id . ':' . $signature->slot;
+                $agents[$key] = $agents[$key] ?? self::agents_for_slot($these, $signature->slot);
+                $allowed = $agents[$key] ? isset($agents[$key][(int) $user->id])
+                    : (int) $signature->userid === (int) $user->id;
                 if (!$allowed || !self::agent_document_due($dossier, $signature->doctype)) {
                     continue;
                 }
@@ -397,5 +474,30 @@ class signatureagent {
             $pending[$signature->id] = $signature;
         }
         return $pending;
+    }
+
+    /**
+     * Indique si un compte est désigné agent (DEVE, ou délégataire de l'université) dans au moins une
+     * portée de paramètres.
+     *
+     * @param stdClass $user
+     * @return bool
+     */
+    protected static function listed_as_agent(stdClass $user) {
+        global $DB;
+
+        if (empty($user->id)) {
+            return false;
+        }
+        $names = array_merge(['deveagent'], array_map(function ($slot) {
+            return $slot . 'agent';
+        }, prerequisites::UNIVERSITY_SLOTS));
+        [$insql, $params] = $DB->get_in_or_equal($names);
+        foreach (array_unique($DB->get_fieldset_select('these_setting', 'value', "name $insql", $params)) as $value) {
+            if (isset(scopesettings::listed_users($value)[(int) $user->id])) {
+                return true;
+            }
+        }
+        return false;
     }
 }

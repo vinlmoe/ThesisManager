@@ -34,6 +34,7 @@ $text = optional_param('q', '', PARAM_TEXT);
 $filtercmid = optional_param('cmid', 0, PARAM_INT);
 $status = optional_param('status', -999, PARAM_INT);
 $year = optional_param('year', 0, PARAM_INT);
+$page = optional_param('page', 0, PARAM_INT);
 
 $cm = get_coursemodule_from_id('thesesynthesis', $id, 0, false, MUST_EXIST);
 $course = get_course($cm->course);
@@ -95,14 +96,33 @@ if (!$searched) {
     exit;
 }
 
-$rows = thesesynthesis_search($links, $USER->id, [
+$filters = [
     'text' => $text,
     'cmid' => $filtercmid,
     'status' => $status === -999 ? null : $status,
     'year' => $year,
     'answers' => $answerfilters,
-], $questions);
+];
+// Résultats paginés en base ; une page hors limites ramène à la dernière. Les critères sont repris dans
+// les liens de pagination.
+$perpage = \mod_thesesynthesis\local\dossiers::PERPAGE;
+$count = thesesynthesis_count_search($links, $USER->id, $filters, $questions);
+$page = max(0, min($page, (int) ceil($count / $perpage) - 1));
+$rows = thesesynthesis_search($links, $USER->id, $filters, $questions, $page * $perpage, $perpage);
+$pageurl = new moodle_url($baseurl, ['search' => 1]);
+foreach (['q' => $text, 'cmid' => $filtercmid, 'year' => $year] as $name => $value) {
+    if ($value) {
+        $pageurl->param($name, $value);
+    }
+}
+if ($status !== -999) {
+    $pageurl->param('status', $status);
+}
+foreach ($answerfilters as $questionid => $value) {
+    $pageurl->param('a' . $questionid, $value);
+}
 
-echo $OUTPUT->heading(get_string('searchresults', 'mod_thesesynthesis', count($rows)), 3, 'mt-4');
+echo $OUTPUT->heading(get_string('searchresults', 'mod_thesesynthesis', $count), 3, 'mt-4');
 echo thesesynthesis_render_search_results($rows, $questions);
+echo $OUTPUT->paging_bar($count, $page, $perpage, $pageurl);
 echo $OUTPUT->footer();

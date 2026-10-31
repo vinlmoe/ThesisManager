@@ -18,6 +18,7 @@ namespace mod_these\output;
 
 use context;
 use mod_these\local\files;
+use mod_these\local\rights;
 use mod_these\local\subjectchange;
 use moodle_url;
 use stdClass;
@@ -25,8 +26,10 @@ use stdClass;
 /**
  * Historique des sujets d'un dossier (changements de sujet), avec le PDF archivé de chaque ancien sujet.
  *
- * Les anciens titres sont montrés tels quels : l'appelant n'affiche ce composant qu'à qui connaît le
- * sujet (voir dossier::export_for_template()).
+ * L'appelant n'affiche ce composant qu'à qui connaît le sujet en cours (voir
+ * dossier::export_for_template()) ; un ancien sujet confidentiel reste en outre masqué (titre, motif et PDF
+ * archivé) à qui ne connaîtrait pas un sujet confidentiel de ce dossier (voir
+ * rights::user_knows_archived_subject()).
  *
  * @package   mod_these
  * @copyright 2026 Sébastien Lefebvre
@@ -37,16 +40,22 @@ class subject_history implements \renderable, \templatable {
     protected $context;
     /** @var stdClass */
     protected $dossier;
+    /** @var int */
+    protected $userid;
 
     /**
      * Constructeur.
      *
      * @param context $context Contexte de l'activité.
      * @param stdClass $dossier
+     * @param int|null $userid Utilisateur qui consulte (l'utilisateur courant par défaut).
      */
-    public function __construct(context $context, stdClass $dossier) {
+    public function __construct(context $context, stdClass $dossier, $userid = null) {
+        global $USER;
+
         $this->context = $context;
         $this->dossier = $dossier;
+        $this->userid = (int) ($userid ?? $USER->id);
     }
 
     /**
@@ -70,6 +79,16 @@ class subject_history implements \renderable, \templatable {
             get_string('subjectchangereason', 'mod_these'), get_string('subjectarchive', 'mod_these')];
         $rows = [];
         foreach ($history as $entry) {
+            if (!rights::user_knows_archived_subject($entry, $this->dossier, $this->context, $this->userid)) {
+                $rows[] = [
+                    [parts::text(userdate($entry->timecreated, get_string('strftimedate', 'langconfig')))],
+                    [parts::em(get_string('confidentialtitle', 'mod_these'))],
+                    [parts::text($entry->directorname)],
+                    [parts::text('-')],
+                    [parts::text('-')],
+                ];
+                continue;
+            }
             $file = $files[(int) $entry->id] ?? null;
             $rows[] = [
                 [parts::text(userdate($entry->timecreated, get_string('strftimedate', 'langconfig')))],

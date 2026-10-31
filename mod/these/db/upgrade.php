@@ -29,7 +29,7 @@
  * @return bool
  */
 function xmldb_these_upgrade($oldversion) {
-    global $DB;
+    global $DB, $OUTPUT;
 
     if ($oldversion < 2026102504) {
         // Les documents réservés au personnel (rapport du directeur, grille de conformité) ne sont
@@ -366,6 +366,89 @@ function xmldb_these_upgrade($oldversion) {
         $dbman->change_field_precision($table, $field);
         $dbman->add_index($table, $index);
         upgrade_mod_savepoint(true, 2026103001, 'these');
+    }
+
+    if ($oldversion < 2026103003) {
+        $dbman = $DB->get_manager();
+        // Compte Moodle rattaché au membre du jury : les droits (sujet d'une thèse confidentielle,
+        // jurys du suivi) ne reconnaissent plus un membre à l'égalité de son adresse avec celle d'un
+        // compte.
+        $table = new xmldb_table('these_jury');
+        $field = new xmldb_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'notifiedtime');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        $index = new xmldb_index('userid', XMLDB_INDEX_NOTUNIQUE, ['userid']);
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+        // Rattachement des membres existants : le compte de leur fiche de l'annuaire, sinon l'unique
+        // compte confirmé, actif et non supprimé portant leur adresse ; aucun si l'adresse est
+        // inconnue ou partagée par plusieurs comptes.
+        $accounts = [];
+        $account = function ($email) use ($DB, &$accounts) {
+            $email = core_text::strtolower(trim((string) $email));
+            if ($email === '') {
+                return 0;
+            }
+            if (!array_key_exists($email, $accounts)) {
+                $users = $DB->get_records_select(
+                    'user',
+                    'LOWER(email) = :email AND confirmed = 1 AND suspended = 0 AND deleted = 0',
+                    ['email' => $email],
+                    '',
+                    'id',
+                    0,
+                    2
+                );
+                $accounts[$email] = count($users) === 1 ? (int) key($users) : 0;
+            }
+            return $accounts[$email];
+        };
+        $members = $DB->get_recordset_sql(
+            "SELECT j.id, j.email, r.email AS juroremail
+               FROM {these_jury} j
+          LEFT JOIN {these_juror} r ON r.id = j.jurorid
+              WHERE j.userid = 0"
+        );
+        foreach ($members as $member) {
+            $userid = $account($member->juroremail) ?: $account($member->email);
+            if ($userid) {
+                $DB->set_field('these_jury', 'userid', $userid, ['id' => $member->id]);
+            }
+        }
+        $members->close();
+        upgrade_mod_savepoint(true, 2026103003, 'these');
+    }
+
+    if ($oldversion < 2026103100) {
+        // Numéro DEVE unique sur le site, garanti par un index unique (NULL pour un numéro vide). Des
+        // doublons enregistrés auparavant (unicité contrôlée par le seul formulaire, et par activité)
+        // ne font pas échouer la mise à jour : l'index est alors non unique et les doublons sont
+        // listés pour être corrigés, avant cli/devenumber_index.php (voir INSTALL.md).
+        require_once(__DIR__ . '/upgradelib.php');
+        // Dossier réduit à son procès-verbal par l'effacement des données de l'étudiant : marqué, clos et
+        // sorti du circuit.
+        $dbman = $DB->get_manager();
+        $table = new xmldb_table('these_dossier');
+        $field = new xmldb_field('erasedtime', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'daterequestcomment');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        these_upgrade_mark_erased_dossiers();
+        $duplicates = these_upgrade_devenumber_index();
+        if ($duplicates) {
+            $report = these_upgrade_devenumber_report($duplicates);
+            if (CLI_SCRIPT) {
+                mtrace($report);
+            } else {
+                echo $OUTPUT->notification(nl2br(s($report)), \core\output\notification::NOTIFY_WARNING);
+            }
+        }
+        // Grille de conformité enregistrée à la création de l'activité et plus à la première lecture :
+        // éléments d'origine des activités (et des activités de suivi) qui n'en ont pas encore.
+        these_upgrade_create_grid_items();
+        upgrade_mod_savepoint(true, 2026103100, 'these');
     }
 
     return true;

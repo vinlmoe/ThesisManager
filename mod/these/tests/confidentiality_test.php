@@ -36,13 +36,20 @@ require_once(__DIR__ . '/these_testcase.php');
  * @covers     ::these_embargo_until
  * @covers     ::these_extract_bordereau
  */
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_user_knows_subject')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_subject_field')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_can_view_filearea')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_can_view_document')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_send_email')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_embargo_until')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_extract_bordereau')]
 final class confidentiality_test extends these_testcase {
     /** @var string Titre de la thèse confidentielle des tests. */
     const TITLE = 'Vaccin expérimental contre la maladie de Carré';
 
     /**
-     * Dossier confidentiel au statut voulu, dirigé par le directeur des tests, avec un jury dont un
-     * membre a un compte.
+     * Dossier confidentiel au statut voulu, dirigé par le directeur des tests, avec un jury validé par
+     * la DEVE dont un membre a un compte, rattaché à cette validation.
      *
      * @param int $status
      * @return array [dossier, membre du jury ayant un compte]
@@ -53,7 +60,11 @@ final class confidentiality_test extends these_testcase {
             'titleen' => 'Experimental distemper vaccine', 'keywords' => 'vaccin ; Carré',
         ]);
         $juror = $this->getDataGenerator()->create_user(['email' => 'President@Example.com']);
-        these_save_jury($dossier->id, $this->generator->default_jury());
+        $jury = $this->generator->default_jury();
+        foreach ($jury as $member) {
+            $member->eligible = true;
+        }
+        these_save_jury($dossier->id, $jury, $this->deve->id);
         return [$dossier, $juror];
     }
 

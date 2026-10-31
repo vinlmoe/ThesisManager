@@ -307,7 +307,7 @@ class documentcontext {
      * @return array
      */
     protected static function thesis_context(stdClass $d) {
-        $keywords = dossiers::split_keywords((string) $d->keywords);
+        $keywords = subjects::split_keywords((string) $d->keywords);
         return [
             'title' => (string) $d->title,
             'titleupper' => self::upper($d->title),

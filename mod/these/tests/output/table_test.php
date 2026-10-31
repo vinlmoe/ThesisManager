@@ -29,6 +29,7 @@ require_once(__DIR__ . '/output_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_these\output\table
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\output\table::class)]
 final class table_test extends output_testcase {
     /**
      * Contexte : celui de table_context ; tableau vide.
@@ -49,8 +50,10 @@ final class table_test extends output_testcase {
     public function test_render(): void {
         $this->resetAfterTest();
         $html = $this->renderer()->render(new table(['Nom', ''], [[[parts::text('a')], [parts::text('b')]]], 'generaltable x'));
-        $this->assertStringContainsString('<table class="generaltable x">', $html);
-        $this->assertStringContainsString('<td class="header c1 lastcol"></td>', $html);
-        $this->assertStringNotContainsString('<thead>', $this->renderer()->render(new table([], [[[parts::text('a')]]])));
+        $this->assert_html_has($html, './/table[' . self::xclass('generaltable') . ' and ' . self::xclass('x') . ']');
+        $this->assert_html_has($html, './/thead/tr/th[normalize-space() = "Nom"]');
+        // En-tête vide : une cellule td, comme html_writer::table().
+        $this->assert_html_has($html, './/thead/tr/*[last()][self::td][' . self::xclass('header') . '][not(normalize-space())]');
+        $this->assert_html_lacks($this->renderer()->render(new table([], [[[parts::text('a')]]])), './/thead');
     }
 }

@@ -20,6 +20,7 @@ defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 require_once($CFG->dirroot . '/mod/thesesynthesis/locallib.php');
+require_once($CFG->dirroot . '/mod/these/tests/html_assertions.php');
 
 /**
  * Socle des tests des composants de rendu de mod_thesesynthesis : deux promotions suivies, une thèse
@@ -31,6 +32,8 @@ require_once($CFG->dirroot . '/mod/thesesynthesis/locallib.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 abstract class output_testcase extends \advanced_testcase {
+    use \mod_these\html_assertions;
+
     /** @var string[] Marqueurs de chaque donnée qui révèle le sujet. */
     const SECRETS = [
         'title' => 'SECRETTITRE',
@@ -93,7 +96,8 @@ abstract class output_testcase extends \advanced_testcase {
         ]);
         these_save_answers($env->confidential, these_get_questions($env->scope), ['q' . $question => self::SECRETS['answer']]);
         these_save_jury($env->confidential->id, [(object) ['juryrole' => 'president', 'fullname' => 'Jules Juré',
-            'jurytitle' => 'Pr', 'institution' => '', 'email' => 'jury@example.org', 'jurorid' => 0, 'jurystatus' => 'pr']]);
+            'jurytitle' => 'Pr', 'institution' => '', 'email' => 'jury@example.org', 'jurorid' => 0, 'jurystatus' => 'pr',
+            'eligible' => true]], $env->deve->id);
         $thesegen->create_dossier($env->activities[1]->these, $gen->create_and_enrol($env->activities[1]->course, 'student')->id, [
             'directorid' => $env->director->id, 'status' => THESE_STATUS_SUBJECT_SUBMITTED, 'title' => 'Arthrose du chien',
         ]);

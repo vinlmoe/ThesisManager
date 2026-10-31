@@ -73,15 +73,8 @@ $mform->set_data($params + ['corrections' => $draftitemid, 'correctionsdone' => 
 if ($mform->is_cancelled()) {
     redirect($viewurl);
 } else if ($data = $mform->get_data()) {
-    file_save_draft_area_files(
-        $data->corrections,
-        $context->id,
-        'mod_these',
-        'corrections',
-        $dossier->id,
-        these_filemanager_options('corrections')
-    );
-    these_submit_corrections($these, $cm, $dossier, $USER->id, $data->correctionsdone);
+    // Manuscrit corrigé enregistré dans l'opération, sous le verrou du dossier (double envoi du formulaire).
+    these_submit_corrections($these, $cm, $dossier, $USER->id, $data->correctionsdone, ['corrections' => $data->corrections]);
     redirect($viewurl, get_string('correctionssubmittedmsg', 'mod_these'), null, \core\output\notification::NOTIFY_SUCCESS);
 }
 

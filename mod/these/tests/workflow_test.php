@@ -38,6 +38,14 @@ require_once(__DIR__ . '/these_testcase.php');
  * @covers     ::these_record_minutes
  * @covers     ::these_submit_corrections
  */
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_save_subject')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_render_email_placeholders')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_validate_step')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_save_defense')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_generate_documents')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_transmit_documents')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_record_minutes')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_submit_corrections')]
 final class workflow_test extends these_testcase {
     /**
      * Phase 1 : sujet déposé, validé par le directeur, enregistré par la DEVE puis par la
@@ -123,7 +131,7 @@ final class workflow_test extends these_testcase {
         $dossier = $this->reload($dossier->id);
         $this->assertEquals(THESE_STATUS_DEFENSE_APPROVED, $dossier->status);
         $date = time() + 40 * DAYSECS;
-        $number = these_suggest_devenumber($this->these->id);
+        $number = these_suggest_devenumber();
         these_validate_step($this->these, $this->cm, $dossier, $this->deve->id, ['defensedate' => $date,
             'devenumber' => $number]);
         $dossier = $this->reload($dossier->id);

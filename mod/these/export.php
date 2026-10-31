@@ -73,17 +73,20 @@ if ($dataformat !== '') {
     $dossiers = these_get_dossiers($these->id);
     $students = $DB->get_records_list('user', 'id', array_column($dossiers, 'userid'));
     $directors = $DB->get_records_list('user', 'id', array_filter(array_column($dossiers, 'directorid')));
+    // Jurys, signatures, A6 et refus de tous les dossiers lus d'avance : quelques requêtes pour tout le registre.
+    $preloaded = \mod_these\local\rendering::register_preload($dossiers);
 
     $rows = new ArrayIterator(array_values($dossiers));
     $filename = clean_filename(format_string($these->name) . '-' . userdate(time(), '%Y%m%d'));
     \core\dataformat::download_data($filename, $dataformat, $columns, $rows, function ($dossier) use (
         $students,
         $directors,
-        $context
+        $context,
+        $preloaded
     ) {
         $director = $directors[$dossier->directorid] ?? null;
         return \mod_these\local\rendering::spreadsheet_safe(
-            these_register_row($dossier, $context, $students[$dossier->userid] ?? null, $director)
+            these_register_row($dossier, $context, $students[$dossier->userid] ?? null, $director, $preloaded)
         );
     });
     die();

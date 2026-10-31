@@ -4,9 +4,9 @@
 
 % Version du guide : à mettre à jour à chaque modification, avec une ligne dans l'historique.
 \newcommand{\titreguide}{Guide de la gestion des thèses}
-\newcommand{\versionguide}{2.20}
-\newcommand{\dateguide}{30 octobre 2026}
-\newcommand{\versionthese}{0.23.1}
+\newcommand{\versionguide}{2.22}
+\newcommand{\dateguide}{31 octobre 2026}
+\newcommand{\versionthese}{0.26.0}
 
 \usepackage{guide-commun}
 \usepackage{tikz}
@@ -164,6 +164,14 @@ l'annuaire des enseignants. \\
 la validation de l'examinateur interne, adresse affichée au validateur ; « Mes
 signatures » réservé aux signatures de compte ; import limité aux comptes
 inscrits ; manuscrit en PDF. \\
+2.21 & 30 octobre 2026 & Membres du jury reconnus par leur compte, rattaché au
+choix dans l'annuaire et à la validation de l'éligibilité ; sans compte, accès par
+le lien. Procès-verbal conservé intact lors des suppressions de données
+personnelles. \\
+2.22 & 31 octobre 2026 & Numéro d'enregistrement DEVE unique sur tout le site,
+numérotation poursuivie d'une promotion à l'autre. Dossier réduit à son
+procès-verbal par l'effacement des données de l'étudiant : clos, archivé et en
+lecture seule. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -932,7 +940,11 @@ le dépôt de sujet. Le numéro d'enregistrement n'est pas encore attribué.}
   \item Vérifiez le manuscrit, les documents, le rapport et la grille du
         directeur, les réponses au questionnaire.
   \item Contrôlez le \textbf{numéro d'enregistrement DEVE} proposé (le
-        suivant de l'année, modifiable mais unique).
+        suivant de l'année, la numérotation se poursuivant d'une promotion à
+        l'autre ; modifiable mais unique sur tout le site). Si le numéro
+        proposé est attribué entre-temps à un autre dossier (deux validations
+        au même moment), le dossier reçoit le suivant, indiqué dans le message
+        de confirmation ; un numéro saisi déjà pris est refusé.
   \item Arrêtez la date et l'heure (celles proposées par l'étudiant sont
         reprises) et \textbf{attribuez la salle} : l'étudiant ne la choisit
         pas, les salles des paramètres sont proposées. Un conflit de salle
@@ -942,7 +954,10 @@ le dépôt de sujet. Le numéro d'enregistrement n'est pas encore attribué.}
         \bouton{Éligibilité de \ldots{} vérifiée (DEVE)} ; elle est déjà validée
         pour les enseignants de l'annuaire dont le statut convient. Pour changer
         un membre, cochez \bouton{Modifier la composition du jury} : la saisie
-        complète s'ouvre.
+        complète s'ouvre. La validation rattache à chaque membre son compte
+        Moodle (celui de sa fiche de l'annuaire, sinon l'unique compte actif à
+        son adresse) ; le tableau du jury du dossier indique ce compte, ou
+        l'accès par lien seul.
   \item Complétez l'agrément administratif (mobilité). L'obtention du DEFV et
         la validation de l'A6 y sont rappelées : elles se saisissent sur la page
         \og Validation des études\fg{} (section~\ref{sec:a6}), que
@@ -1364,9 +1379,9 @@ DEVE génère les documents de soutenance.}
 \begin{procedure}{Consulter les documents du dossier}{Membre du jury}
 \begin{etapes}
   \item Après la validation du jury par la DEVE, ouvrez le lien personnel reçu
-        par courriel (aucun compte n'est nécessaire), ou, si vous avez un
-        compte, la rubrique \bouton{Mes jurys} de l'activité \og Suivi des
-        thèses\fg{}. Le lien vaut jusqu'à 60~jours après la soutenance ; un
+        par courriel (aucun compte n'est nécessaire), ou, si votre compte vous
+        a été rattaché par la DEVE à la validation du jury, la rubrique
+        \bouton{Mes jurys} de l'activité \og Suivi des thèses\fg{}. Le lien vaut jusqu'à 60~jours après la soutenance ; un
         nouvel envoi par la DEVE le remplace, et il cesse à la clôture du
         dossier.
   \item Consultez le manuscrit, le rapport du directeur, la grille, les
@@ -1629,9 +1644,13 @@ une fois. Le lien est personnel, vaut 60~jours et cesse de fonctionner une fois
 utilisé ; un nouvel envoi par la DEVE remplace le précédent. Seule une empreinte
 du lien est conservée en base. Le lien d'accès du jury aux documents vaut
 jusqu'à 60~jours après la soutenance et cesse à la clôture ou à l'abandon du
-dossier ; un membre du jury qui a un compte Moodle à la même adresse consulte
+dossier ; un membre du jury dont le compte Moodle lui est rattaché consulte
 aussi les documents depuis \bouton{Mes jurys} de l'activité \og Suivi des
-thèses\fg{}.
+thèses\fg{}. Ce compte est rattaché quand le membre est choisi dans l'annuaire
+et quand la DEVE valide son éligibilité (compte de sa fiche, sinon l'unique
+compte actif à son adresse) ; la seule égalité d'adresse ne suffit pas, et un
+compte suspendu ou supprimé perd cet accès. Sans compte rattaché, le membre
+utilise son lien.
 
 La page \bouton{Suivi des signatures} du dossier (DEVE) montre l'état de chaque
 emplacement, permet de \bouton{Envoyer le lien} ou de \bouton{signer sur place}
@@ -1963,7 +1982,11 @@ thèses\fg{} (une par promotion) à suivre. Chacun y trouve :
   \item[Mes jurys] les jurys où il siège, avec la date, le lieu et l'accès aux
         documents dès la validation du jury par la DEVE ;
   \item[Dossiers suivis] ses thèses dirigées, ou tous les dossiers pour la DEVE
-        et la bibliothèque, filtrables par promotion, statut et recherche ;
+        et la bibliothèque, filtrables par promotion, statut et recherche (chaque
+        mot cherché dans le nom de l'étudiant, le numéro DEVE ou le titre). Cette
+        liste et la file \og À traiter\fg{} s'affichent par pages de 50 dossiers,
+        les plus récemment modifiés d'abord ; les filtres sont conservés d'une
+        page à l'autre ;
   \item[Planning des soutenances] les soutenances de la semaine ou du mois de
         toutes les promotions suivies, avec la promotion de chaque étudiant, et
         le planning mensuel imprimable (section~\ref{sec:planning}).
@@ -1987,7 +2010,9 @@ l'étudiant, du directeur et des membres du jury, réponses au questionnaire,
 sans tenir compte des accents), promotion, année de soutenance, statut, et
 réponse à chaque question du questionnaire (un choix pour une liste ou un QCM,
 un texte contenu pour une question ouverte). Chaque résultat se déplie sur ses
-mots-clés, son résumé et ses réponses.
+mots-clés, son résumé et ses réponses. Les résultats, classés par année de
+soutenance puis par titre, s'affichent par pages de 50, critères conservés
+d'une page à l'autre.
 
 \begin{center}
 \small
@@ -2078,7 +2103,15 @@ désactive dans les \bouton{Paramètres du circuit}, rubrique
 Le module implémente l'API de confidentialité de Moodle : l'étudiant peut
 exporter son dossier (sans le rapport du directeur) et sa validation des études,
 et en demander l'effacement ; un membre du personnel supprimé est dissocié des dossiers qu'il a
-traités, sans que ceux-ci disparaissent. La sauvegarde et la restauration de
+traités, sans que ceux-ci disparaissent. Le procès-verbal de soutenance, acte
+administratif à conserver comme archive publique, n'est jamais effacé ni
+anonymisé : à l'effacement d'un étudiant dont le procès-verbal est enregistré,
+le module garde le PV scanné, les décisions du jury, le jury et les champs du
+dossier qu'il cite (titre, date de soutenance), et efface tout le reste. Ce dossier
+réduit au procès-verbal sort du circuit : il est clos et archivé, quel que soit
+le statut qu'il avait atteint, et plus aucune action n'est possible dessus (ni
+abandon, ni modification, ni signature) ; sa page l'affiche en lecture seule,
+avec un avis d'archivage. La sauvegarde et la restauration de
 cours recopient le paramétrage (réglages, courriels, modèles et images, grille,
 questionnaire) et, si les données utilisateur sont incluses, les dossiers, leur
 jury, leur historique, leurs fichiers, leurs signatures et leurs documents

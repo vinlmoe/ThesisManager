@@ -88,11 +88,25 @@ function thesesynthesis_load_users(array $dossiers) {
  *
  * @param array $links Voir thesesynthesis_get_active_links().
  * @param int $userid
- * @param array $filters {status (int|null), search (string), cmid (int)}
+ * @param array $filters {status (int|null), search (string), cmid (int), todo (bool)}
+ * @param int $limitfrom Rang du premier dossier de la page.
+ * @param int $limitnum Dossiers par page (0 : tous).
  * @return array Liste d'objets {dossier, link, student, director, actor, todo, knowssubject}
  */
-function thesesynthesis_get_dossiers(array $links, $userid, array $filters = []) {
-    return \mod_thesesynthesis\local\dossiers::get_dossiers($links, $userid, $filters);
+function thesesynthesis_get_dossiers(array $links, $userid, array $filters = [], $limitfrom = 0, $limitnum = 0) {
+    return \mod_thesesynthesis\local\dossiers::get_dossiers($links, $userid, $filters, $limitfrom, $limitnum);
+}
+
+/**
+ * Voir \mod_thesesynthesis\local\dossiers::count_dossiers().
+ *
+ * @param array $links Voir thesesynthesis_get_active_links().
+ * @param int $userid
+ * @param array $filters Voir thesesynthesis_get_dossiers().
+ * @return int
+ */
+function thesesynthesis_count_dossiers(array $links, $userid, array $filters = []) {
+    return \mod_thesesynthesis\local\dossiers::count_dossiers($links, $userid, $filters);
 }
 
 /**
@@ -192,11 +206,26 @@ function thesesynthesis_defense_year(stdClass $dossier) {
  * @param int $userid
  * @param array $filters {text, cmid, status (int|null), year (int), answers (questionid => valeur)}
  * @param array $questions Questions filtrables (voir these_get_questions()).
+ * @param int $limitfrom Rang du premier résultat de la page.
+ * @param int $limitnum Résultats par page (0 : tous).
  * @return array Liste d'objets {dossier, link, student, director, canopen, answers, year,
  *                     knowssubject}
  */
-function thesesynthesis_search(array $links, $userid, array $filters, array $questions = []) {
-    return \mod_thesesynthesis\local\search::find($links, $userid, $filters, $questions);
+function thesesynthesis_search(array $links, $userid, array $filters, array $questions = [], $limitfrom = 0, $limitnum = 0) {
+    return \mod_thesesynthesis\local\search::find($links, $userid, $filters, $questions, $limitfrom, $limitnum);
+}
+
+/**
+ * Voir \mod_thesesynthesis\local\search::count().
+ *
+ * @param array $links Voir thesesynthesis_get_active_links().
+ * @param int $userid
+ * @param array $filters Voir thesesynthesis_search().
+ * @param array $questions Questions filtrables (voir these_get_questions()).
+ * @return int
+ */
+function thesesynthesis_count_search(array $links, $userid, array $filters, array $questions = []) {
+    return \mod_thesesynthesis\local\search::count($links, $userid, $filters, $questions);
 }
 
 /**

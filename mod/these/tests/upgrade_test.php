@@ -22,6 +22,7 @@ global $CFG;
 require_once($CFG->dirroot . '/mod/these/tests/these_testcase.php');
 require_once($CFG->libdir . '/upgradelib.php');
 require_once($CFG->dirroot . '/mod/these/db/upgrade.php');
+require_once($CFG->dirroot . '/mod/these/db/upgradelib.php');
 
 /**
  * Étapes de mise à jour du module.
@@ -32,6 +33,7 @@ require_once($CFG->dirroot . '/mod/these/db/upgrade.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     ::xmldb_these_upgrade
  */
+#[\PHPUnit\Framework\Attributes\CoversFunction('xmldb_these_upgrade')]
 final class upgrade_test extends these_testcase {
     /**
      * 2026102504 : les documents réservés au personnel déposés dans la zone « generated » par les
@@ -121,5 +123,194 @@ final class upgrade_test extends these_testcase {
         set_config('version', $previous, 'mod_these');
         $this->assertTrue(xmldb_these_upgrade($previous));
         $this->assertSame([], $exists(), 'rejouée');
+    }
+
+    /**
+     * 2026103003 : colonne userid du jury ajoutée et remplie : compte de la fiche de l'annuaire, sinon
+     * unique compte actif portant l'adresse du membre ; aucun pour une adresse ambiguë, inconnue ou
+     * celle d'un compte suspendu.
+     */
+    public function test_jury_userid_backfill(): void {
+        global $DB;
+        $this->setup_activity();
+        $dbman = $DB->get_manager();
+        $dossier = $this->generator->create_dossier($this->these, $this->student->id, ['directorid' => $this->director->id]);
+
+        $teacher = $this->getDataGenerator()->create_user(['email' => 'Fiche@Example.com']);
+        $external = $this->getDataGenerator()->create_user(['email' => 'externe@example.com']);
+        $this->getDataGenerator()->create_user(['email' => 'double@example.com']);
+        $this->getDataGenerator()->create_user(['email' => 'double@example.com']);
+        $this->getDataGenerator()->create_user(['email' => 'suspendu@example.com', 'suspended' => 1]);
+        $jurorid = \mod_these\local\jurors::save((object) ['title' => 'Pr', 'lastname' => 'Fiche', 'firstname' => 'Félix',
+            'email' => 'fiche@example.com', 'status' => 'pr', 'active' => 1]);
+        $member = function ($email, $jurorid = 0) use ($DB, $dossier) {
+            return (int) $DB->insert_record('these_jury', (object) ['dossierid' => $dossier->id, 'juryrole' => 'member',
+                'fullname' => $email, 'email' => $email, 'timecreated' => time(), 'jurorid' => $jurorid]);
+        };
+        $ids = [
+            'fiche' => $member('ancienne@example.com', $jurorid),
+            'externe' => $member('EXTERNE@example.com'),
+            'ambigu' => $member('double@example.com'),
+            'suspendu' => $member('suspendu@example.com'),
+            'inconnu' => $member('inconnu@example.com'),
+            'sansadresse' => $member(''),
+        ];
+
+        // Schéma de la version précédente : sans la colonne ni son index.
+        $table = new \xmldb_table('these_jury');
+        $index = new \xmldb_index('userid', XMLDB_INDEX_NOTUNIQUE, ['userid']);
+        $dbman->drop_index($table, $index);
+        $dbman->drop_field($table, new \xmldb_field('userid'));
+        $this->assertArrayNotHasKey('userid', $DB->get_columns('these_jury', false));
+
+        $previous = 2026103002;
+        set_config('version', $previous, 'mod_these');
+        $this->assertTrue(xmldb_these_upgrade($previous));
+        $this->assertTrue($dbman->index_exists($table, $index));
+        $userids = array_map(function ($id) use ($DB) {
+            return (int) $DB->get_field('these_jury', 'userid', ['id' => $id]);
+        }, $ids);
+        $this->assertSame(['fiche' => (int) $teacher->id, 'externe' => (int) $external->id, 'ambigu' => 0,
+            'suspendu' => 0, 'inconnu' => 0, 'sansadresse' => 0], $userids);
+        $this->assertGreaterThan($previous, (int) get_config('mod_these', 'version'));
+
+        // Rejouée : un rattachement existant est conservé.
+        $DB->set_field('these_jury', 'userid', $this->director->id, ['id' => $ids['externe']]);
+        set_config('version', $previous, 'mod_these');
+        $this->assertTrue(xmldb_these_upgrade($previous));
+        $this->assertEquals($this->director->id, $DB->get_field('these_jury', 'userid', ['id' => $ids['externe']]));
+    }
+
+    /**
+     * Index du numéro DEVE (unique, ou non unique s'il y a des doublons), sur le schéma de la version
+     * précédente (sans index).
+     *
+     * @return bool|null true : unique, false : non unique, null : absent.
+     */
+    private function devenumber_index_unique() {
+        global $DB;
+        foreach ($DB->get_indexes('these_dossier') as $index) {
+            if ($index['columns'] === ['devenumber']) {
+                return (bool) $index['unique'];
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Retire l'index du numéro DEVE (schéma antérieur à 2026103100).
+     *
+     * @return void
+     */
+    private function drop_devenumber_index(): void {
+        global $DB;
+        $DB->get_manager()->drop_index(
+            new \xmldb_table('these_dossier'),
+            new \xmldb_index('devenumber', XMLDB_INDEX_UNIQUE, ['devenumber'])
+        );
+        $this->assertNull($this->devenumber_index_unique());
+    }
+
+    /**
+     * 2026103100 sans doublon : numéros vides convertis en NULL, index unique créé.
+     */
+    public function test_devenumber_unique_index(): void {
+        global $DB;
+        $this->setup_activity();
+        $this->assertTrue($this->devenumber_index_unique(), 'install.xml');
+        $this->drop_devenumber_index();
+        $other = $this->getDataGenerator()->create_and_enrol($this->course, 'student');
+        $a = $this->generator->create_dossier($this->these, $this->student->id, ['devenumber' => '']);
+        $b = $this->generator->create_dossier($this->these, $other->id, ['devenumber' => '2026-001']);
+
+        $previous = 2026103003;
+        set_config('version', $previous, 'mod_these');
+        $this->assertTrue(xmldb_these_upgrade($previous));
+        $this->assertTrue($this->devenumber_index_unique());
+        $this->assertNull($DB->get_field('these_dossier', 'devenumber', ['id' => $a->id]));
+        $this->assertEquals('2026-001', $DB->get_field('these_dossier', 'devenumber', ['id' => $b->id]));
+    }
+
+    /**
+     * 2026103100 avec des doublons (entre deux activités du site) : la mise à jour aboutit avec un index
+     * non unique et liste les doublons ; une fois ceux-ci corrigés, cli/devenumber_index.php (même
+     * fonction) rend l'index unique.
+     */
+    public function test_devenumber_duplicates_reported(): void {
+        global $DB;
+        $this->setup_activity();
+        $this->drop_devenumber_index();
+        $these2 = $this->getDataGenerator()->create_module('these', ['course' => $this->course->id, 'name' => 'Promotion B']);
+        $other = $this->getDataGenerator()->create_and_enrol($this->course, 'student');
+        $a = $this->generator->create_dossier($this->these, $this->student->id, ['devenumber' => '2026-001']);
+        $b = $this->generator->create_dossier($these2, $other->id, ['devenumber' => '2026-001']);
+
+        $previous = 2026103003;
+        set_config('version', $previous, 'mod_these');
+        $this->expectOutputRegex('/2026-001.*' . $a->id . '.*' . $b->id . '.*Promotion B/s');
+        $this->assertTrue(xmldb_these_upgrade($previous));
+        $this->assertFalse($this->devenumber_index_unique());
+        $this->assertGreaterThan($previous, (int) get_config('mod_these', 'version'));
+
+        $DB->set_field('these_dossier', 'devenumber', '2026-002', ['id' => $b->id]);
+        $this->assertSame([], these_upgrade_devenumber_index());
+        $this->assertTrue($this->devenumber_index_unique());
+    }
+
+    /**
+     * 2026103100 : éléments d'origine de la grille créés pour les activités (et activités de suivi) qui
+     * n'en ont pas ; une grille modifiée par la DEVE est conservée telle quelle.
+     */
+    public function test_grid_items_created(): void {
+        global $DB;
+        $this->setup_activity();
+        $synthesis = $this->getDataGenerator()->create_module('thesesynthesis', ['course' => $this->course->id]);
+        $custom = $this->getDataGenerator()->create_module('these', ['course' => $this->course->id]);
+        these_save_grid_items(these_local_scope($custom), [
+            (object) ['itemkey' => '', 'section' => 'fond', 'label' => 'Seul élément', 'conditional' => 0],
+        ]);
+        // Activités antérieures à la mise à jour : grille enregistrée à la première lecture, jamais lue.
+        $DB->delete_records('these_griditem', ['theseid' => $this->these->id]);
+        $DB->delete_records('these_griditem', ['synthesisid' => $synthesis->id]);
+
+        $previous = 2026103003;
+        set_config('version', $previous, 'mod_these');
+        $this->assertTrue(xmldb_these_upgrade($previous));
+        $this->assertEquals(21, $DB->count_records('these_griditem', ['theseid' => $this->these->id, 'synthesisid' => 0]));
+        $this->assertEquals(21, $DB->count_records('these_griditem', ['theseid' => 0, 'synthesisid' => $synthesis->id]));
+        $this->assertEquals(1, $DB->count_records('these_griditem', ['theseid' => $custom->id]));
+    }
+
+    /**
+     * 2026103100 : dossiers déjà réduits à leur procès-verbal par l'ancien effacement (historique sans
+     * création, PV enregistré) clos et archivés, entrées inscrites après l'effacement retirées ; un
+     * dossier ordinaire n'est pas touché.
+     */
+    public function test_erased_dossiers_marked(): void {
+        global $DB;
+        $this->setup_activity();
+        $gen = $this->getDataGenerator();
+        $minutes = ['status' => THESE_STATUS_CORRECTIONS, 'defenseresult' => THESE_RESULT_ADMITTED];
+        $erased = $this->generator->create_dossier($this->these, $this->student->id, $minutes);
+        $stray = $this->generator->create_dossier($this->these, $gen->create_and_enrol($this->course)->id, $minutes);
+        these_log($stray->id, $this->deve->id, 'edited', THESE_STATUS_CORRECTIONS, THESE_STATUS_CORRECTIONS);
+        $ordinary = $this->generator->create_dossier($this->these, $gen->create_and_enrol($this->course)->id, $minutes);
+        these_log($ordinary->id, $this->deve->id, 'created', THESE_STATUS_DRAFT, THESE_STATUS_DRAFT);
+        $DB->set_field('these_dossier', 'defensedate', time() - WEEKSECS, ['id' => $erased->id]);
+        \mod_these\local\calendar::sync($this->reload($erased->id));
+        $this->assertTrue($DB->record_exists('event', ['uuid' => 'these-dossier-' . $erased->id]));
+
+        $previous = 2026103003;
+        set_config('version', $previous, 'mod_these');
+        $this->assertTrue(xmldb_these_upgrade($previous));
+        foreach ([$erased, $stray] as $dossier) {
+            $dossier = $this->reload($dossier->id);
+            $this->assertEquals(THESE_STATUS_CLOSED, $dossier->status);
+            $this->assertGreaterThan(0, $dossier->erasedtime);
+            $this->assertEquals(['erased'], $DB->get_fieldset_select('these_log', 'logaction', 'dossierid = ?', [$dossier->id]));
+        }
+        $this->assertFalse($DB->record_exists('event', ['uuid' => 'these-dossier-' . $erased->id]));
+        $this->assertEquals(0, $this->reload($ordinary->id)->erasedtime);
+        $this->assertEquals(THESE_STATUS_CORRECTIONS, $this->reload($ordinary->id)->status);
     }
 }

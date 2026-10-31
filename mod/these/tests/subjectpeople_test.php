@@ -31,10 +31,13 @@ require_once(__DIR__ . '/these_testcase.php');
  * @package    mod_these
  * @copyright  2026 Sébastien Lefebvre
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \mod_these\local\dossiers::people_fields
+ * @covers     \mod_these\local\subjects::people_fields
  * @covers     \mod_these\local\jurors::titles_for_users
  * @covers     \mod_these\form\subject_form::apply_examiner
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\subjects::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\jurors::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\form\subject_form::class)]
 final class subjectpeople_test extends these_testcase {
     /**
      * Titre du directeur : celui de l'annuaire s'il y figure, sinon celui des données transmises (import).

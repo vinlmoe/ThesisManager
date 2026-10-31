@@ -33,6 +33,8 @@ require_once($CFG->dirroot . '/backup/util/includes/restore_includes.php');
  * @covers     \backup_these_activity_structure_step
  * @covers     \restore_these_activity_structure_step
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\backup_these_activity_structure_step::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\restore_these_activity_structure_step::class)]
 final class backup_restore_test extends these_testcase {
     /**
      * Sauvegarde un cours puis le restaure dans un nouveau cours, données utilisateur comprises.
@@ -84,7 +86,13 @@ final class backup_restore_test extends these_testcase {
         $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
             'status' => THESE_STATUS_DEFENSE_SUBMITTED, 'directorid' => $this->director->id, 'devenumber' => '2026-010',
         ]);
-        these_save_jury($dossier->id, $this->generator->default_jury());
+        // Membre du jury rattaché à son compte par la validation d'éligibilité.
+        $juror = $this->getDataGenerator()->create_and_enrol($this->course, 'teacher', ['email' => 'president@example.com']);
+        $jury = $this->generator->default_jury();
+        foreach ($jury as $member) {
+            $member->eligible = true;
+        }
+        these_save_jury($dossier->id, $jury, $this->deve->id);
         these_log($dossier->id, $this->student->id, 'defensesubmitted', THESE_STATUS_ACTIVE, THESE_STATUS_DEFENSE_SUBMITTED);
         get_file_storage()->create_file_from_string([
             'contextid' => $this->context->id, 'component' => 'mod_these', 'filearea' => 'manuscript',
@@ -102,9 +110,14 @@ final class backup_restore_test extends these_testcase {
         $this->assertEquals($this->student->id, $newdossier->userid);
         $this->assertEquals($this->director->id, $newdossier->directorid);
         $this->assertEquals(THESE_STATUS_DEFENSE_SUBMITTED, $newdossier->status);
-        $this->assertEquals('2026-010', $newdossier->devenumber);
+        // Numéro DEVE unique sur le site : celui du dossier d'origine, toujours là, n'est pas repris.
+        $this->assertNull($newdossier->devenumber);
+        $this->assertEquals('2026-010', $DB->get_field('these_dossier', 'devenumber', ['id' => $dossier->id]));
         $this->assertEquals(4, $DB->count_records('these_jury', ['dossierid' => $newdossier->id]));
         $this->assertEquals(1, $DB->count_records('these_log', ['dossierid' => $newdossier->id]));
+        $president = $DB->get_record('these_jury', ['dossierid' => $newdossier->id, 'juryrole' => 'president'], '*', MUST_EXIST);
+        $this->assertEquals($juror->id, $president->userid);
+        $this->assertEquals(0, $DB->get_field('these_jury', 'userid', ['dossierid' => $newdossier->id, 'juryrole' => 'guest']));
 
         $newcm = get_coursemodule_from_instance('these', $newthese->id);
         $newcontext = \context_module::instance($newcm->id);

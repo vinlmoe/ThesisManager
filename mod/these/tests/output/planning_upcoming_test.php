@@ -29,6 +29,7 @@ require_once(__DIR__ . '/output_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_these\output\planning_upcoming
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\output\planning_upcoming::class)]
 final class planning_upcoming_test extends output_testcase {
     /**
      * Contexte : une entrée par semaine, avec ses dates et son nombre de soutenances.
@@ -54,8 +55,9 @@ final class planning_upcoming_test extends output_testcase {
     public function test_render(): void {
         $this->resetAfterTest();
         $html = $this->renderer()->render(new planning_upcoming(new \moodle_url('/mod/these/planning.php'), [1 => 3]));
-        $this->assertStringStartsWith('<ul>', $html);
-        $this->assertSame(1, substr_count($html, '<li><a href='));
-        $this->assertStringContainsString('</a> — ' . get_string('planningcount', 'mod_these', 3) . '</li>', $html);
+        $this->assert_html_has($html, './ul/li', 1);
+        $item = $this->assert_html_has($html, './ul/li[a[@href]]');
+        // Lien de la semaine, puis le nombre de soutenances.
+        $this->assertStringEndsWith('— ' . get_string('planningcount', 'mod_these', 3), trim($item->textContent));
     }
 }

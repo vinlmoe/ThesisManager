@@ -31,6 +31,8 @@ require_once(__DIR__ . '/these_testcase.php');
  * @covers     \mod_these\local\messaging
  * @covers     \mod_these\local\notifications::send_email
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\messaging::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\notifications::class)]
 final class messaging_test extends these_testcase {
     /**
      * Un destinataire qui a un compte reçoit un message de la messagerie (fournisseur de la famille

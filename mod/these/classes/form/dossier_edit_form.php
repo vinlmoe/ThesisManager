@@ -103,7 +103,7 @@ class dossier_edit_form extends base_form {
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
         $number = trim((string) $data['devenumber']);
-        if ($number !== '' && dossiers::devenumber_taken($this->_customdata['theseid'], $number, $data['dossierid'])) {
+        if ($number !== '' && dossiers::devenumber_taken($number, $data['dossierid'])) {
             $errors['devenumber'] = get_string('devenumbertaken', 'mod_these');
         }
         $members = juryform::extract_submitted_jury($data);

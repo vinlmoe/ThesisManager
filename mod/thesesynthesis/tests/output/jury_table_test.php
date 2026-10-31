@@ -29,6 +29,7 @@ require_once(__DIR__ . '/output_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_thesesynthesis\output\jury_table
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_thesesynthesis\output\jury_table::class)]
 final class jury_table_test extends output_testcase {
     /**
      * Contexte : le juré voit son jury et le titre (il connaît le sujet) ; accès en attente tant
@@ -68,11 +69,14 @@ final class jury_table_test extends output_testcase {
         $juror = $this->env->juror;
         $this->setUser($juror);
         $html = $this->renderer()->render(new jury_table(thesesynthesis_get_juries($this->links_for($juror), $juror)));
-        $this->assertStringContainsString('<table class="generaltable">', $html);
-        $this->assertStringContainsString('<span class="text-muted">', $html);
+        $table = './/table[' . self::xclass('generaltable') . ']';
+        $this->assert_html_has($html, $table);
+        $this->assert_html_has($html, $table . '//td//span[' . self::xclass('text-muted') . ']');
+        $empty = $this->renderer()->render(new jury_table([]));
+        $this->assert_html_lacks($empty, './/table');
         $this->assertSame(
-            '<div class="alert alert-info">' . s(get_string('nojuries', 'mod_thesesynthesis')) . '</div>',
-            $this->renderer()->render(new jury_table([]))
+            [get_string('nojuries', 'mod_thesesynthesis')],
+            $this->html_texts($empty, './div[' . self::xclass('alert-info') . ']')
         );
     }
 }

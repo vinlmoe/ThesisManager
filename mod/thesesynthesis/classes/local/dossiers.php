@@ -16,7 +16,6 @@
 
 namespace mod_thesesynthesis\local;
 
-use core_text;
 use mod_these\local\rights;
 use mod_these\local\workflow;
 use stdClass;
@@ -32,6 +31,9 @@ use stdClass;
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class dossiers {
+    /** Dossiers par page dans les listes paginées du suivi (à traiter, dossiers suivis, recherche). */
+    public const PERPAGE = 50;
+
     /**
      * Étudiants et directeurs de dossiers, lus en une requête : les champs du nom, pour fullname().
      *
@@ -70,72 +72,181 @@ class dossiers {
 
     /**
      * Dossiers suivis par l'utilisateur dans les activités liées : tous ceux des activités où il voit
-     * tous les dossiers (DEVE, bibliothèque), et ceux qu'il dirige ailleurs.
+     * tous les dossiers (DEVE, bibliothèque, scolarité), et ceux qu'il dirige ailleurs.
+     *
+     * Droits et filtres sont appliqués dans la requête, pour qu'une page ne compte que des dossiers
+     * affichables ; tri du plus récemment modifié au plus ancien.
      *
      * @param array $links Voir links::get_active_links().
      * @param int $userid
-     * @param array $filters {status (int|null), search (string), cmid (int)}
+     * @param array $filters {status (int|null), search (string : chaque mot dans le nom de l'étudiant, le
+     *                       numéro DEVE ou le titre), cmid (int), todo (bool : seulement les dossiers
+     *                       qui attendent l'utilisateur)}
+     * @param int $limitfrom Rang du premier dossier de la page.
+     * @param int $limitnum Dossiers par page (0 : tous).
      * @return array Liste d'objets {dossier, link, student, director, actor, todo, knowssubject}
      */
-    public static function get_dossiers(array $links, $userid, array $filters = []) {
+    public static function get_dossiers(array $links, $userid, array $filters = [], $limitfrom = 0, $limitnum = 0) {
         global $DB;
 
+        $query = self::dossiers_query($links, $userid, $filters);
+        if (!$query) {
+            return [];
+        }
+        [$from, $params, $bytheseid] = $query;
+        $records = $DB->get_records_sql("SELECT d.* $from ORDER BY d.timemodified DESC, d.id DESC", $params, $limitfrom, $limitnum);
+        $users = self::load_users($records);
+        $knowssubjects = self::knows_subjects($records, $bytheseid, $userid);
         $rows = [];
-        foreach ($links as $link) {
-            if (!empty($filters['cmid']) && (int) $filters['cmid'] !== (int) $link->cm->id) {
-                continue;
-            }
-            if ($link->rights->viewall) {
-                $records = $DB->get_records('these_dossier', ['theseid' => $link->these->id], 'timemodified DESC');
-            } else if ($link->direct) {
-                $records = $DB->get_records(
-                    'these_dossier',
-                    ['theseid' => $link->these->id, 'directorid' => $userid],
-                    'timemodified DESC'
-                );
-            } else {
-                continue;
-            }
-            if (isset($filters['status']) && $filters['status'] !== null) {
-                $records = array_filter($records, function ($dossier) use ($filters) {
-                    return (int) $dossier->status === (int) $filters['status'];
-                });
-            }
-            $users = self::load_users($records);
-            // Thèse confidentielle : titre masqué, et absent de la recherche, pour qui ne doit pas le
-            // connaître.
-            $knowssubjects = rights::user_knows_subjects($records, $link->context, $userid);
-            foreach ($records as $dossier) {
-                $student = $users[(int) $dossier->userid] ?? null;
-                $knows = $knowssubjects[(int) $dossier->id];
-                $search = core_text::strtolower(trim((string) ($filters['search'] ?? '')));
-                if (
-                    $search !== '' && strpos(core_text::strtolower(($student ? fullname($student) : '') . ' '
-                        . ($knows ? $dossier->title : '') . ' ' . $dossier->devenumber), $search) === false
-                ) {
-                    continue;
-                }
-                $actor = workflow::step_actor($dossier->status);
-                $todo = ($actor === 'director' && (int) $dossier->directorid === (int) $userid && $link->direct)
-                    || ($actor === 'deve' && $link->rights->deve)
-                    || ($actor === 'library' && $link->rights->library);
-                $rows[] = (object) [
-                    'dossier' => $dossier,
-                    'link' => $link,
-                    'student' => $student,
-                    'director' => $dossier->directorid ? ($users[(int) $dossier->directorid] ?? null) : null,
-                    'actor' => $actor,
-                    'todo' => $todo,
-                    'knowssubject' => $knows,
-                ];
-            }
+        foreach ($records as $dossier) {
+            $link = $bytheseid[(int) $dossier->theseid];
+            $rows[] = (object) [
+                'dossier' => $dossier,
+                'link' => $link,
+                'student' => $users[(int) $dossier->userid] ?? null,
+                'director' => $dossier->directorid ? ($users[(int) $dossier->directorid] ?? null) : null,
+                'actor' => workflow::step_actor($dossier->status),
+                'todo' => self::is_todo($dossier, $link, $userid),
+                'knowssubject' => $knowssubjects[(int) $dossier->id],
+            ];
         }
         return $rows;
     }
 
     /**
-     * Jurys où siège l'utilisateur, dans les activités liées : membre retenu avec son adresse, ou
-     * enseignant de l'annuaire portant son adresse.
+     * Nombre de dossiers suivis (voir get_dossiers()), compté en base.
+     *
+     * @param array $links Voir links::get_active_links().
+     * @param int $userid
+     * @param array $filters Voir get_dossiers().
+     * @return int
+     */
+    public static function count_dossiers(array $links, $userid, array $filters = []) {
+        global $DB;
+
+        $query = self::dossiers_query($links, $userid, $filters);
+        return $query ? (int) $DB->count_records_sql('SELECT COUNT(1) ' . $query[0], $query[1]) : 0;
+    }
+
+    /**
+     * Connaissance du sujet des dossiers d'une page (voir \mod_these\local\rights::user_knows_subjects()),
+     * activité par activité.
+     *
+     * @param stdClass[] $records Dossiers.
+     * @param array $bytheseid Activités liées par instance (theseid => lien).
+     * @param int $userid
+     * @return bool[] dossierid => l'utilisateur connaît le sujet.
+     */
+    public static function knows_subjects(array $records, array $bytheseid, $userid) {
+        $bythese = [];
+        foreach ($records as $dossier) {
+            $bythese[(int) $dossier->theseid][(int) $dossier->id] = $dossier;
+        }
+        $known = [];
+        foreach ($bythese as $theseid => $dossiers) {
+            $known += rights::user_knows_subjects($dossiers, $bytheseid[$theseid]->context, $userid);
+        }
+        return $known;
+    }
+
+    /**
+     * Le dossier attend-il l'utilisateur ? Directeur à l'étape du directeur d'une thèse qu'il dirige,
+     * DEVE ou bibliothèque à leur étape.
+     *
+     * @param stdClass $dossier
+     * @param stdClass $link
+     * @param int $userid
+     * @return bool
+     */
+    protected static function is_todo(stdClass $dossier, stdClass $link, $userid) {
+        $actor = workflow::step_actor($dossier->status);
+        return ($actor === 'director' && (int) $dossier->directorid === (int) $userid && $link->direct)
+            || ($actor === 'deve' && $link->rights->deve)
+            || ($actor === 'library' && $link->rights->library);
+    }
+
+    /**
+     * Statuts dont l'étape attend un acteur.
+     *
+     * @param string $actor Voir \mod_these\local\workflow::step_actor().
+     * @return int[]
+     */
+    protected static function actor_statuses($actor) {
+        return array_values(array_filter(workflow::all_statuses(), function ($status) use ($actor) {
+            return workflow::step_actor($status) === $actor;
+        }));
+    }
+
+    /**
+     * Requête des dossiers suivis : droits de l'utilisateur dans chaque activité, puis filtres. La
+     * condition « à traiter » reprend is_todo(), la recherche dans le titre la règle de
+     * \mod_these\local\rights::user_knows_subject() (voir sqlfilter::knows_subject()).
+     *
+     * @param array $links Voir links::get_active_links().
+     * @param int $userid
+     * @param array $filters Voir get_dossiers().
+     * @return array|null [clause FROM ... WHERE, paramètres, activités par instance (theseid => lien)] ;
+     *                    null si aucune activité n'a de dossier à montrer.
+     */
+    protected static function dossiers_query(array $links, $userid, array $filters) {
+        $sql = new sqlfilter();
+        $bytheseid = [];
+        $visible = [];
+        foreach ($links as $link) {
+            if (!empty($filters['cmid']) && (int) $filters['cmid'] !== (int) $link->cm->id) {
+                continue;
+            }
+            $theseid = (int) $link->these->id;
+            if ($link->rights->viewall) {
+                $condition = 'd.theseid = ' . $sql->param($theseid);
+            } else if ($link->direct) {
+                $condition = 'd.theseid = ' . $sql->param($theseid) . ' AND d.directorid = ' . $sql->param((int) $userid);
+            } else {
+                continue;
+            }
+            if (!empty($filters['todo'])) {
+                $todo = [];
+                if ($link->rights->deve) {
+                    $todo[] = $sql->in('d.status', self::actor_statuses('deve'));
+                }
+                if ($link->rights->library) {
+                    $todo[] = $sql->in('d.status', self::actor_statuses('library'));
+                }
+                if ($link->direct) {
+                    $todo[] = '(d.directorid = ' . $sql->param((int) $userid) . ' AND '
+                        . $sql->in('d.status', self::actor_statuses('director')) . ')';
+                }
+                if (!$todo) {
+                    continue;
+                }
+                $condition .= ' AND (' . implode(' OR ', $todo) . ')';
+            }
+            $bytheseid[$theseid] = $link;
+            $visible[] = "($condition)";
+        }
+        if (!$visible) {
+            return null;
+        }
+        $where = ['(' . implode(' OR ', $visible) . ')'];
+        if (isset($filters['status']) && $filters['status'] !== null) {
+            $where[] = 'd.status = ' . $sql->param((int) $filters['status']);
+        }
+        // Texte : chaque mot dans le nom de l'étudiant, le numéro DEVE ou, pour qui doit le connaître, le
+        // titre de la thèse.
+        foreach (sqlfilter::words($filters['search'] ?? '') as $word) {
+            $where[] = '(' . $sql->contains(sqlfilter::concat(['su.firstname', 'su.lastname', 'd.devenumber']), $word)
+                . ' OR (' . $sql->knows_subject(array_values($bytheseid), $userid) . ' AND '
+                . $sql->contains('d.title', $word) . '))';
+        }
+        $from = 'FROM {these_dossier} d
+            LEFT JOIN {user} su ON su.id = d.userid
+                WHERE ' . implode(' AND ', $where);
+        return [$from, $sql->get_params(), $bytheseid];
+    }
+
+    /**
+     * Jurys où siège l'utilisateur, dans les activités liées : membre auquel son compte est rattaché
+     * (voir \mod_these\local\rights::user_in_jury()), compte ni suspendu ni supprimé.
      *
      * @param array $links Voir links::get_active_links().
      * @param stdClass $user
@@ -144,8 +255,7 @@ class dossiers {
     public static function get_juries(array $links, stdClass $user) {
         global $DB;
 
-        $email = trim((string) $user->email);
-        if ($email === '' || !$links) {
+        if (empty($user->id) || !$links) {
             return [];
         }
         $byinstance = [];
@@ -153,15 +263,14 @@ class dossiers {
             $byinstance[(int) $link->these->id] = $link;
         }
         [$insql, $params] = $DB->get_in_or_equal(array_keys($byinstance), SQL_PARAMS_NAMED);
-        $params['email'] = core_text::strtolower($email);
-        $params['email2'] = core_text::strtolower($email);
+        $params['userid'] = (int) $user->id;
         $sql = "SELECT j.*, d.theseid
                   FROM {these_jury} j
                   JOIN {these_dossier} d ON d.id = j.dossierid
-             LEFT JOIN {these_juror} r ON r.id = j.jurorid
+                  JOIN {user} u ON u.id = j.userid AND u.deleted = 0 AND u.suspended = 0
                  WHERE d.theseid $insql
                    AND d.status <> :cancelled
-                   AND (LOWER(j.email) = :email OR LOWER(r.email) = :email2)
+                   AND j.userid = :userid
               ORDER BY d.defensedate DESC, j.id";
         $params['cancelled'] = THESE_STATUS_CANCELLED;
         $members = $DB->get_records_sql($sql, $params);

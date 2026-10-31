@@ -20,6 +20,7 @@ defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 require_once(__DIR__ . '/../these_testcase.php');
+require_once(__DIR__ . '/../html_assertions.php');
 
 /**
  * Socle des tests des composants de rendu : un dossier confidentiel dont chaque donnée qui révèle le
@@ -30,6 +31,8 @@ require_once(__DIR__ . '/../these_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 abstract class output_testcase extends \mod_these\these_testcase {
+    use \mod_these\html_assertions;
+
     /** @var string[] Marqueurs de chaque donnée qui révèle le sujet. */
     const SECRETS = [
         'title' => 'SECRETTITRE',

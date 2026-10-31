@@ -21,6 +21,35 @@ php admin/cli/upgrade.php
 Ou se connecter en administrateur : Moodle détecte le plugin et propose de
 l'installer.
 
+### Mise à jour vers 2026103100 : numéros DEVE en double
+
+Le numéro d'enregistrement DEVE devient unique sur tout le site (index unique
+sur `these_dossier.devenumber`, numéro vide enregistré NULL). Avant cette
+version, l'unicité n'était contrôlée que par les formulaires, et par activité :
+deux promotions ont pu recevoir le même numéro, deux validations simultanées
+aussi. La mise à jour ne s'arrête pas sur ces doublons : elle crée alors un
+index **non unique** et affiche la liste des numéros en double, avec pour
+chacun les dossiers (identifiant) et leur activité — en ligne de commande dans
+la sortie de `admin/cli/upgrade.php`, sinon en avertissement sur la page de
+mise à jour :
+
+```
+Numéros d'enregistrement DEVE attribués à plusieurs dossiers : ...
+- numéro 2026-001 : dossier 12 (Promotion 2026), dossier 87 (Promotion 2027)
+```
+
+Tant que les doublons restent, rien n'empêche d'en créer de nouveaux en dehors
+du module ; le module, lui, contrôle déjà chaque nouvelle attribution sous
+verrou. La DEVE corrige chaque doublon (*Modifier le dossier*, champ du
+numéro), puis l'administrateur lance :
+
+```bash
+php mod/these/cli/devenumber_index.php
+```
+
+qui liste les doublons restants (code de sortie 1) ou, s'il n'y en a plus, rend
+l'index unique.
+
 ## 2. Rôles et capacités
 
 | Acteur | Rôle Moodle | Capacités |
@@ -150,9 +179,10 @@ dessous). La direction générale peut signer par délégation. Au dépôt du sc
 d'un document signé à la main, la DEVE coche les signataires couverts, sans
 saisir leur nom : PDF et suivi des signatures sont mis à jour. Le lien d'accès du
 jury vaut jusqu'à 60 jours après la soutenance et cesse à la clôture ou à
-l'abandon du dossier ; un membre du jury qui a un compte Moodle à la même adresse
-consulte aussi les documents depuis *Suivi des thèses*, sans lien. Seule
-l'empreinte des jetons de ces liens est conservée en base.
+l'abandon du dossier ; un membre du jury dont le compte Moodle lui est rattaché
+(voir *Éligibilité* ci-dessous) consulte aussi les documents depuis *Suivi des
+thèses*, sans lien. Seule l'empreinte des jetons de ces liens est conservée en
+base.
 
 **Valeur des signatures.** Le tracé apposé dans le module est une signature
 électronique *simple* au sens du règlement eIDAS : elle identifie le signataire
@@ -196,6 +226,19 @@ signés.
   vers les documents du dossier (manuscrit, rapport, grille, conclusions, fiche
   signalétique), sans compte Moodle. La DEVE peut renvoyer cet accès depuis le
   dossier.
+- **Compte rattaché** : un membre du jury est reconnu par **son compte Moodle**,
+  jamais par la seule égalité de son adresse avec celle d'un compte. Ce compte
+  lui est rattaché quand il est choisi dans l'annuaire et quand la DEVE valide
+  son éligibilité : celui de sa fiche de l'annuaire, sinon l'unique compte
+  confirmé, non suspendu et non supprimé portant son adresse (aucun si
+  l'adresse est inconnue ou partagée par plusieurs comptes). Il est conservé
+  d'une saisie à l'autre et recalculé si l'adresse change. La vue du dossier
+  de la DEVE indique, pour chaque membre, le compte rattaché ou l'accès par
+  lien seul. Le compte rattaché donne la connaissance du sujet d'une thèse
+  confidentielle, *Mes jurys* et l'accès aux documents depuis *Suivi des
+  thèses* tant qu'il n'est ni suspendu ni supprimé. Un membre sans compte
+  rattaché accède aux documents par son lien à jeton. À la mise à jour vers la
+  version 2026103003, les membres existants sont rattachés selon la même règle.
 - **Suivi multi-promotions** : voir le module `mod_thesesynthesis`.
 
 ## 3 bis (compléments). Thèse confidentielle, embargo
@@ -204,8 +247,8 @@ signés.
   anglais, résumé, mots-clés) n'est connu que de l'étudiant, de la DEVE (rôle ou
   `mod/these:managedeve`), de la bibliothèque (rôle ou
   `mod/these:managelibrary`, et sa boîte de service), du directeur de thèse et
-  des membres du jury (reconnus à leur adresse ou à celle de leur fiche de
-  l'annuaire). Pour tous les autres, dont les détenteurs de `mod/these:viewall`
+  des membres du jury (reconnus au compte qui leur est rattaché, voir
+  *Compte rattaché*). Pour tous les autres, dont les détenteurs de `mod/these:viewall`
   sans rôle de service, il est remplacé par « Thèse confidentielle » dans le
   dossier (titre, titre anglais, résumé et mots-clés), les listes, le planning,
   la recherche (y compris dans *Suivi des thèses*, où la thèse se trouve par
@@ -231,6 +274,14 @@ signés.
   utilisées par la recherche des thèses (`mod_thesesynthesis`).
 - **Numéro d'enregistrement DEVE** : attribué à la validation du dossier de
   soutenance (après le dépôt de la thèse), et non plus à l'enregistrement du sujet.
+  Il est **unique sur tout le site** : la numérotation AAAA-NNN se poursuit
+  d'une promotion (activité) à l'autre. L'attribution se fait sous un verrou
+  commun et la base l'impose par un index unique : si le numéro proposé est
+  attribué entre-temps à un autre dossier, le suivant est retenu (et indiqué à
+  la DEVE) ; un numéro saisi déjà pris est refusé, à la validation, à la
+  modification du dossier comme à l'import. À la restauration d'une sauvegarde,
+  un numéro déjà attribué sur le site est vidé (signalé dans le journal de la
+  restauration).
 - **Rapport du directeur** : déposé en fichier (PDF ou Word) sur sa propre page
   (*Déposer le rapport*), rédigé à partir du modèle Word proposé dans les
   paramètres du circuit (*Modèle du rapport du directeur*, téléchargeable
@@ -338,24 +389,50 @@ activité, ce qui a été envoyé ou pourquoi rien ne l'a été.
 
 Le module applique l'API de confidentialité de Moodle (export et suppression
 des données personnelles, *Administration du site* → *Utilisateurs* →
-*Confidentialité et règlements*). Son comportement actuel à la suppression est
-le suivant :
+*Confidentialité et règlements*).
 
-- **étudiant** : son dossier est effacé en entier, procès-verbal scellé, PV
-  scanné, documents signés, jury et historique compris ;
-- **membre du personnel** (directeur, DEVE, bibliothèque, agent signataire) :
-  les dossiers des autres restent, mais ses références y sont dissociées (nom,
-  image et adresse de ses signatures effacés, comptes de validation remis à
-  zéro, commentaires supprimés) et tout document scellé qui portait sa
-  signature est **descellé**, puis reconstitué sans elle.
+**Règle.** Le procès-verbal de soutenance est un acte administratif, archive
+publique que l'établissement doit conserver (code du patrimoine, livre II) :
+au titre de l'article 17, paragraphe 3, b) et d) du RGPD, il échappe au droit
+à l'effacement. Il n'est donc **ni effacé ni anonymisé** lors d'une
+suppression de données personnelles. Un dossier a un procès-verbal enregistré
+dès que la DEVE a déposé le PV scanné, qu'un PV d'ajournement a été archivé ou
+qu'une décision du jury a été reportée.
 
-Un procès-verbal de soutenance a une valeur d'archive publique que
-l'établissement peut être tenu de conserver au-delà du compte de l'étudiant ou
-de l'agent. Le délégué à la protection des données doit en tenir compte avant
-d'approuver une demande de suppression : exporter ou archiver hors du module
-le PV et les documents signés concernés, ou refuser la suppression du dossier
-pendant la durée légale de conservation. Le module ne propose pas encore
-d'anonymisation qui garderait le document en effaçant seulement l'identité.
+- **étudiant** : sans procès-verbal enregistré, son dossier est effacé en
+  entier. Avec un procès-verbal enregistré, le module conserve
+  l'enregistrement du dossier réduit aux champs du PV (étudiant, titre,
+  directeur, date et lieu de soutenance, numéro DEVE, décisions du jury :
+  résultat, mention, proposition de prix, corrections demandées), le jury et
+  les fichiers du PV (PV scanné, PV d'ajournement archivés), intacts ; tout le
+  reste est effacé : résumé, mots-clés, bordereau, grille, agrément,
+  conclusions, commentaires, autres fichiers déposés ou générés, documents
+  scellés et signatures électroniques, réponses au questionnaire, historique
+  et journaux, liens d'accès du jury, soutenance au calendrier. Le dossier
+  conservé **sort du circuit** : il passe au statut *Clos* et est marqué
+  archivé (date d'effacement, une seule entrée d'historique « Données de
+  l'étudiant effacées »), quel que soit le statut qu'il avait atteint
+  (corrections en cours, par exemple). Plus aucune action n'est possible
+  dessus — ni clôture, ni abandon, ni modification, ni signature : les pages
+  d'action le refusent et la page du dossier le présente en lecture seule,
+  avec un avis d'archivage. L'effacement prend le verrou du dossier : une
+  opération en cours se termine avant lui, une opération suivante est refusée.
+  La mise à jour 2026103100 marque de même les dossiers déjà réduits à leur
+  procès-verbal (procès-verbal enregistré, historique sans création ni import :
+  l'ancien effacement le supprimait ; les entrées inscrites après lui par une
+  opération concurrente sont retirées) ;
+- **membre du personnel** (directeur, DEVE, bibliothèque, agent signataire,
+  membre du jury ayant un compte rattaché) : les dossiers des autres restent,
+  mais ses références y sont dissociées (nom, image et adresse de ses
+  signatures effacés, comptes de validation et compte rattaché à un membre du
+  jury remis à zéro, commentaires supprimés) et tout document scellé qui
+  portait sa signature est **descellé**, puis reconstitué sans elle. Le PV,
+  document papier signé par le jury puis scanné, ne porte ni signature ni
+  scellé du module : il n'est jamais modifié.
+
+L'export des données de l'étudiant continue d'inclure son procès-verbal (PV
+scanné et décisions). La durée de conservation du PV et son versement aux
+archives relèvent de l'établissement, hors du module.
 
 ## 5 bis. Sauvegarde et restauration
 
@@ -371,7 +448,9 @@ du DEFV** (`these_a6`, liées à l'étudiant). Elles suivent la sauvegarde de la
 base du site. À la restauration d'un cours sur le même site, un membre du jury
 reste rattaché à sa fiche de l'annuaire si elle existe encore ; sur un autre
 site, la fiche est retrouvée par son adresse de courriel, à défaut le membre
-devient un membre saisi. De même, une réponse à une question définie dans une
+devient un membre saisi. Le compte rattaché à un membre suit les comptes
+restaurés ; s'il n'est pas restauré, le membre n'a plus de compte rattaché
+(accès par lien). De même, une réponse à une question définie dans une
 activité *Suivi des thèses* n'est conservée que sur le même site. Un dossier
 dont l'étudiant n'a pas été restauré, ou qui ferait doublon, est ignoré et
 signalé dans le journal de la restauration.

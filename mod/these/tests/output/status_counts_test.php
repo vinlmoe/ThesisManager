@@ -29,6 +29,7 @@ require_once(__DIR__ . '/output_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_these\output\status_counts
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\output\status_counts::class)]
 final class status_counts_test extends output_testcase {
     /**
      * Contexte : un badge par statut qui a des dossiers, dans l'ordre du circuit.
@@ -53,8 +54,11 @@ final class status_counts_test extends output_testcase {
     public function test_render(): void {
         $this->setup_activity();
         $html = $this->renderer()->render(new status_counts($this->cm, [THESE_STATUS_ACTIVE => 3, THESE_STATUS_CLOSED => 1]));
-        $this->assertStringStartsWith('<div class="these-counts mb-3"><a href=', $html);
-        $this->assertStringContainsString('</a> <a href=', $html);
+        $counts = './div[' . self::xclass('these-counts') . ']';
+        $this->assert_html_has($html, $counts . '/a[@href]', 2);
+        // Une espace sépare deux badges.
+        $this->assert_html_has($html, $counts . '/a[following-sibling::node()[1][self::text() and normalize-space() = ""]]'
+            . '[following-sibling::*[1][self::a]]');
         $this->assertSame('', $this->renderer()->render(new status_counts($this->cm, [])));
     }
 }

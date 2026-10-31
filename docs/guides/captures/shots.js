@@ -29,10 +29,54 @@ const ts = (date) => String(Math.floor(new Date(date).getTime() / 1000));
 
 let browser;
 
+// Contrôle du parcours : chaque page chargée est vérifiée (code HTTP, page d'erreur Moodle,
+// message de débogage PHP, erreur JavaScript). Une capture n'échoue pas pour autant : les
+// problèmes sont listés à la fin, avec la capture en cours.
+let current = '';
+const problems = [];
+
+function note(kind, detail) {
+  const line = `${current} : ${kind} : ${String(detail).split('\n')[0].slice(0, 200)}`;
+  if (!problems.includes(line)) {
+    problems.push(line);
+    console.log('PROBLÈME', line);
+  }
+}
+
+function watch(page) {
+  page.on('pageerror', (e) => note('erreur JavaScript', e.message));
+  page.on('response', (r) => {
+    if (r.request().isNavigationRequest() && r.frame() === page.mainFrame() && r.status() >= 400) {
+      note('HTTP ' + r.status(), r.url());
+    }
+  });
+  page.on('load', async () => {
+    try {
+      const found = await page.evaluate(() => {
+        const out = [];
+        for (const el of document.querySelectorAll('.debuggingmessage, .errorbox, .notifytiny, body#page-site-error')) {
+          out.push(el.textContent.replace(/\s+/g, ' ').trim());
+        }
+        const text = document.body ? document.body.innerText : '';
+        for (const m of text.match(/(Coding error detected|Exception - |Fatal error|Warning: |Notice: |Deprecated: )[^\n]*/g) || []) {
+          out.push(m);
+        }
+        return out;
+      });
+      for (const f of found) {
+        note('page ' + page.url().replace(BASE, ''), f);
+      }
+    } catch (e) {
+      // Page fermée ou remplacée pendant la vérification.
+    }
+  });
+}
+
 // Contexte connecté (connexion vérifiée : la première tentative échoue parfois).
 async function as(username) {
   const ctx = await browser.newContext({ viewport: { width: WIDTH, height: 900 }, locale: 'fr-FR' });
   const page = await ctx.newPage();
+  watch(page);
   if (!username) {
     return page;
   }
@@ -491,10 +535,6 @@ const steps = {
     await open(p, these('mysignatures.php'));
     await upto(p, '65_agent_signature_enregistree');
   },
-  async '66_president_mes_signatures'() {
-    const p = await open(await as('jdupont'), these('mysignatures.php'));
-    await upto(p, '66_president_mes_signatures');
-  },
   async '50_acces_jury'() {
     const p = await open(await as(null), these('jury.php', { token: ids.juryaccess }));
     await upto(p, '50_acces_jury');
@@ -736,6 +776,7 @@ const steps = {
       if (!steps[name]) {
         throw new Error('Capture inconnue : ' + name);
       }
+      current = name;
       try {
         await steps[name]();
       } catch (e) {
@@ -755,5 +796,14 @@ const steps = {
   if (failed.length) {
     console.log('Échecs :', failed.join(' '));
     process.exitCode = 1;
+  }
+  if (problems.length) {
+    console.log(problems.length + ' problème(s) relevé(s) sur les pages parcourues :');
+    for (const p of problems) {
+      console.log('  ' + p);
+    }
+    process.exitCode = 1;
+  } else {
+    console.log('Aucune erreur relevée sur les pages parcourues.');
   }
 })();

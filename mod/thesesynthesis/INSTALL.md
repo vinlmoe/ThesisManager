@@ -41,9 +41,12 @@ php admin/cli/upgrade.php
 - **À traiter** : les dossiers qui attendent l'utilisateur, toutes promotions
   confondues (directeur pour ses thèses ; DEVE et bibliothèque selon leurs
   droits dans chaque promotion).
-- **Mes jurys** : les jurys où l'utilisateur siège (son adresse, ou celle de sa
-  fiche dans l'annuaire), avec la date, le lieu et l'accès aux documents dès
-  que la DEVE a validé le jury.
+- **Mes jurys** : les jurys où l'utilisateur siège, reconnu par son compte
+  rattaché au membre du jury (au choix dans l'annuaire ou à la validation de
+  l'éligibilité par la DEVE, jamais par la seule égalité d'adresse ; compte ni
+  suspendu ni supprimé), avec la date, le lieu et l'accès aux documents dès
+  que la DEVE a validé le jury. Un membre sans compte rattaché utilise le lien
+  reçu par courriel.
 - **Dossiers suivis** : ses thèses dirigées, ou tous les dossiers pour la DEVE
   et la bibliothèque, filtrables par promotion, statut et recherche.
 - **Rechercher des thèses** : texte libre (titre, résumé, mots-clés, noms,

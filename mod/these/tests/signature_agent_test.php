@@ -34,6 +34,11 @@ require_once(__DIR__ . '/these_testcase.php');
  * @covers     \mod_these\local\notifications::send_signature_reminders
  * @covers     ::these_signature_from_form
  */
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_request_agent_signatures')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_get_user_pending_signatures')]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\signatureagent::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\notifications::class)]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_signature_from_form')]
 final class signature_agent_test extends these_testcase {
     /**
      * L'équipe DEVE valide sans signer ; l'agent est prévenu, retrouve le document dans « Mes
@@ -176,7 +181,7 @@ final class signature_agent_test extends these_testcase {
 
         // Validation par l'équipe DEVE : un seul courriel à l'agent, rien à la direction générale.
         these_validate_step($this->these, $this->cm, $dossier, $this->deve->id, [
-            'defensedate' => time() + 40 * DAYSECS, 'devenumber' => these_suggest_devenumber($this->these->id),
+            'defensedate' => time() + 40 * DAYSECS, 'devenumber' => these_suggest_devenumber(),
         ]);
         $dossier = $this->reload($dossier->id);
         $this->assertEquals(THESE_STATUS_DEFENSE_VALIDATED, $dossier->status);
@@ -296,5 +301,56 @@ final class signature_agent_test extends these_testcase {
         these_delete_saved_signature($this->director->id);
         $this->assertNull(these_get_saved_signature($this->director->id));
         $this->assertNull(these_signature_from_form((object) ['usesavedsignature' => 1, 'signername' => 'H']));
+    }
+
+    /**
+     * « Mes signatures » (et le lien « Mes signatures (n) » de chaque page du module) : le nombre de
+     * requêtes ne croît pas avec le nombre de signatures en attente, et un compte qui n'est agent nulle
+     * part ne lit pas les signatures des agents. Mesure du test de charge (tools/stresstest) : quelques
+     * requêtes par signature en attente, soit plusieurs milliers sur un site de 2 000 dossiers.
+     */
+    public function test_pending_signatures_queries_do_not_grow(): void {
+        global $DB;
+        $this->setup_activity();
+        $agent = $this->getDataGenerator()->create_user(['username' => 'agentdeve']);
+        \mod_these\local\scopesettings::set(these_local_scope($this->these), ['deveagent' => 'agentdeve']);
+        $sink = $this->redirectEmails();
+        $make = function (int $count) {
+            for ($i = 0; $i < $count; $i++) {
+                $student = $this->getDataGenerator()->create_and_enrol($this->course, 'student');
+                $dossier = $this->generator->create_dossier($this->these, $student->id, [
+                    'status' => THESE_STATUS_SUBJECT_APPROVED, 'directorid' => $this->director->id,
+                ]);
+                these_validate_step($this->these, $this->cm, $dossier, $this->deve->id);
+            }
+        };
+        $reads = function (\stdClass $user) {
+            global $DB;
+            \mod_these\local\scopesettings::reset_cache();
+            $before = $DB->perf_get_reads();
+            $count = count(these_get_user_pending_signatures($user));
+            return [$count, $DB->perf_get_reads() - $before];
+        };
+        $make(3);
+        [$count, $few] = $reads($agent);
+        $this->assertSame(3, $count);
+        $make(12);
+        [$count, $many] = $reads($agent);
+        $this->assertSame(15, $count);
+        $this->assertSame($few, $many, 'Requêtes de « Mes signatures » proportionnelles aux signatures en attente');
+
+        // « validé par … » : le compte du validateur est lu une fois pour toute la liste.
+        $pending = these_get_user_pending_signatures($agent);
+        $before = $DB->perf_get_reads();
+        foreach ($pending as $signature) {
+            $this->assertStringContainsString(fullname($this->deve), \mod_these\local\signatureagent::validator_label($signature));
+        }
+        $this->assertLessThanOrEqual(1, $DB->perf_get_reads() - $before);
+
+        // Un enseignant qui n'est agent nulle part : aucune signature d'agent, en quelques requêtes.
+        [$count, $reads] = $reads($this->director);
+        $this->assertSame(0, $count);
+        $this->assertLessThanOrEqual(3, $reads);
+        $sink->close();
     }
 }

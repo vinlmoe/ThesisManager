@@ -103,6 +103,8 @@ function thesesynthesis_delete_instance($id) {
     $DB->delete_records('these_griditem', ['synthesisid' => $id]);
     $DB->delete_records('thesesynthesis_link', ['synthesisid' => $id]);
     $DB->delete_records('thesesynthesis', ['id' => $id]);
+    // Les activités qu'elle suivait reprennent leurs propres paramètres.
+    \mod_these\local\scopesettings::reset_cache();
 
     return true;
 }

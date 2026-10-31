@@ -290,7 +290,7 @@ $advance = function (stdClass $student, array $spec, int $target) use (
             $a6 = \mod_these\local\a6::get($d);
             \mod_these\local\a6::set($d, $a6['date'], '', $deve->id, ['date' => make_timestamp(2023, 7, 3, 12), 'school' => 'lyon']);
             these_validate_step($these, $cm, $d, $deve->id, ['defensedate' => $spec['date'],
-                'defenselocation' => 'Amphithéâtre Bourgelat', 'devenumber' => these_suggest_devenumber($these->id)]);
+                'defenselocation' => 'Amphithéâtre Bourgelat', 'devenumber' => these_suggest_devenumber()]);
         },
         THESE_STATUS_CONFORM => fn($d) => these_validate_step($these, $cm, $d, $library->id, [], '', $sig($library)),
         THESE_STATUS_SCHEDULED => function ($d) use ($these, $cm, $context, $deve, $reload) {

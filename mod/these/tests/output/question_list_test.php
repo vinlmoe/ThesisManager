@@ -29,6 +29,7 @@ require_once(__DIR__ . '/output_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_these\output\question_list
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\output\question_list::class)]
 final class question_list_test extends output_testcase {
     /**
      * Contexte : libellé formaté, type, options, obligatoire ; « monter » sauf pour la première,
@@ -64,7 +65,10 @@ final class question_list_test extends output_testcase {
         these_save_question($scope, (object) ['qtype' => 'text', 'label' => 'Labo', 'options' => '', 'required' => 1]);
         $url = new \moodle_url('/mod/these/questions.php', ['id' => $this->cm->id]);
         $html = $this->renderer()->render(new question_list(these_get_questions($scope), $url));
-        $this->assertStringContainsString('<table class="generaltable these-questions">', $html);
-        $this->assertStringContainsString('</a> | <a href=', $html);
+        $table = './/table[' . self::xclass('generaltable') . ' and ' . self::xclass('these-questions') . ']';
+        $this->assert_html_has($html, $table);
+        // Actions d'une question : liens séparés par « | ».
+        $this->assert_html_has($html, $table . '//a[@href][normalize-space(following-sibling::node()[1]) = "|"]'
+            . '[following-sibling::*[1][self::a]]');
     }
 }

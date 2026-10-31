@@ -29,7 +29,10 @@ require_once(__DIR__ . '/these_testcase.php');
  * @copyright  2026 Sébastien Lefebvre
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     ::these_change_subject
+ * @covers     \mod_these\local\rights
  */
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_change_subject')]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\rights::class)]
 final class subjectchange_test extends these_testcase {
     /**
      * Changement de sujet d'un dossier actif, avec un nouveau directeur.
@@ -129,5 +132,73 @@ final class subjectchange_test extends these_testcase {
         $history = array_values(these_get_subject_history($dossier->id));
         $this->assertCount(1, $history);
         $this->assertSame('Sujet abandonné', $history[0]->title);
+    }
+
+    /**
+     * Un ancien sujet confidentiel reste confidentiel quand le nouveau sujet ne l'est pas : la scolarité
+     * (mod/these:viewall) ne voit ni son titre (sujets précédents, historique) ni son PDF archivé ; la DEVE
+     * et le directeur, si. Scénario relevé par le test de charge (tools/stresstest).
+     */
+    public function test_former_confidential_subject_stays_hidden(): void {
+        global $PAGE;
+        $this->setup_activity();
+        $staff = $this->viewall_user();
+        $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
+            'status' => THESE_STATUS_ACTIVE, 'directorid' => $this->director->id, 'title' => 'Brevet secret XQZ',
+            'confidential' => 1,
+        ]);
+        $data = (object) ['title' => 'Sujet public', 'titleen' => '', 'summary' => 'Résumé', 'keywords' => 'x ; y',
+            'studyyear' => 'A5', 'directorid' => $this->director->id, 'confidential' => 0, 'externaldirector' => 0];
+        these_change_subject($this->these, $this->cm, $dossier, $data, $this->student->id, 'Projet abandonné.');
+        $dossier = $this->reload($dossier->id);
+        $entry = current(these_get_subject_history($dossier->id));
+        $this->assertCount(1, these_get_files($this->context, 'subjectarchive', $dossier->id));
+
+        $PAGE->set_url(new \moodle_url('/mod/these/dossier.php'));
+        $PAGE->set_context($this->context);
+        $this->setUser($staff);
+        $rights = these_get_rights($this->context, $dossier, $staff->id);
+        $this->assertTrue($rights->knowssubject, 'Le sujet en cours est public.');
+        $html = these_render_dossier($this->these, $this->cm, $this->context, $dossier, $rights);
+        $this->assertStringContainsString('Sujet public', $html);
+        $this->assertStringNotContainsString('XQZ', $html);
+        $this->assertStringNotContainsString('Projet abandonné', $html);
+        $this->assertFalse(\mod_these\local\rights::user_knows_archived_subject($entry, $dossier, $this->context, $staff->id));
+
+        foreach ([$this->deve, $this->director, $this->student] as $user) {
+            $this->setUser($user);
+            $rights = these_get_rights($this->context, $dossier, $user->id);
+            $html = these_render_dossier($this->these, $this->cm, $this->context, $dossier, $rights);
+            $this->assertStringContainsString('XQZ', $html);
+            $this->assertTrue(\mod_these\local\rights::user_knows_archived_subject($entry, $dossier, $this->context, $user->id));
+        }
+    }
+
+    /**
+     * Changement de sujet d'un dossier dont le directeur a vu son compte supprimé : le changement est
+     * enregistré (l'ancien sujet est archivé sans nom de directeur) au lieu d'échouer sur une TypeError.
+     * Scénario relevé par le test de charge (tools/stresstest).
+     */
+    public function test_change_subject_with_deleted_director(): void {
+        $this->setup_activity();
+        $newdirector = $this->getDataGenerator()->create_and_enrol($this->course, 'teacher');
+        $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
+            'status' => THESE_STATUS_ACTIVE, 'directorid' => $this->director->id, 'title' => 'Ancien sujet',
+        ]);
+        delete_user($this->director);
+        $sink = $this->redirectEmails();
+
+        $data = (object) ['title' => 'Nouveau sujet', 'titleen' => '', 'summary' => 'Résumé', 'keywords' => 'x ; y',
+            'studyyear' => 'A5', 'directorid' => $newdirector->id, 'confidential' => 0, 'externaldirector' => 0];
+        these_change_subject($this->these, $this->cm, $dossier, $data, $this->student->id, 'Directeur parti.');
+        $sink->close();
+
+        $dossier = $this->reload($dossier->id);
+        $this->assertEquals(THESE_STATUS_SUBJECT_SUBMITTED, $dossier->status);
+        $this->assertEquals($newdirector->id, $dossier->directorid);
+        $history = array_values(these_get_subject_history($dossier->id));
+        $this->assertCount(1, $history);
+        $this->assertSame('Ancien sujet', $history[0]->title);
+        $this->assertSame('', $history[0]->directorname);
     }
 }

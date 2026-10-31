@@ -29,6 +29,7 @@ require_once(__DIR__ . '/output_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_these\output\dossier
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\output\dossier::class)]
 final class dossier_test extends output_testcase {
     /**
      * Contexte pour un utilisateur.
@@ -114,24 +115,23 @@ final class dossier_test extends output_testcase {
         $html = $this->renderer()->render(new dossier($this->these, $this->cm, $this->context, $dossier, $rights));
         $this->assertSame($html, these_render_dossier($this->these, $this->cm, $this->context, $dossier, $rights));
         $this->assert_no_secret($html);
-        $this->assertStringStartsWith('<div class="these-progress-compact', $html);
-        $this->assertStringContainsString('<ol class="these-progress">', $html);
-        $order = [
-            '<div class="mb-3"><span class="badge ',
-            '<h4 class="mt-4">' . get_string('subject', 'mod_these') . '</h4>',
-            '<h4 class="mt-4">' . get_string('diffusion', 'mod_these') . '</h4>',
-            '<h4 class="mt-4">' . get_string('registration', 'mod_these') . '</h4>',
-            '<h4 class="mt-4">' . get_string('defense', 'mod_these') . '</h4>',
-            '<h4 class="mt-4">' . get_string('jury', 'mod_these') . '</h4>',
-        ];
-        $last = -1;
-        foreach ($order as $needle) {
-            $position = strpos($html, $needle);
-            $this->assertNotFalse($position, $needle);
-            $this->assertGreaterThan($last, $position, $needle);
-            $last = $position;
+        // Avancement en tête, puis le statut, puis les rubriques dans cet ordre.
+        $this->assert_html_has($html, './*[1][' . self::xclass('these-progress-compact') . ']');
+        $this->assert_html_has($html, './/ol[' . self::xclass('these-progress') . ']');
+        $sections = ['subject', 'diffusion', 'registration', 'defense', 'jury'];
+        $headings = $this->html_texts($html, './/h4');
+        $positions = [];
+        foreach ($sections as $section) {
+            $position = array_search(get_string($section, 'mod_these'), $headings, true);
+            $this->assertNotFalse($position, $section);
+            $positions[] = $position;
         }
-        $this->assertStringContainsString('<em>' . get_string('confidentialtitle', 'mod_these') . '</em>', $html);
-        $this->assertStringContainsString('<span class="badge badge-danger">', $html);
+        $sorted = $positions;
+        sort($sorted);
+        $this->assertSame($sorted, $positions);
+        $first = get_string('subject', 'mod_these');
+        $this->assert_html_has($html, './/span[' . self::xclass('badge') . ']/following::h4[normalize-space() = "' . $first . '"]');
+        $this->assert_html_has($html, './/em[normalize-space() = "' . get_string('confidentialtitle', 'mod_these') . '"]');
+        $this->assert_html_has($html, './/span[' . self::xclass('badge') . ' and ' . self::xclass('badge-danger') . ']');
     }
 }

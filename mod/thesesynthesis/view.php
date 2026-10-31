@@ -33,6 +33,8 @@ $id = required_param('id', PARAM_INT);
 $status = optional_param('status', -999, PARAM_INT);
 $search = optional_param('search', '', PARAM_TEXT);
 $filtercmid = optional_param('cmid', 0, PARAM_INT);
+$page = optional_param('page', 0, PARAM_INT);
+$todopage = optional_param('todopage', 0, PARAM_INT);
 
 $cm = get_coursemodule_from_id('thesesynthesis', $id, 0, false, MUST_EXIST);
 $course = get_course($cm->course);
@@ -50,7 +52,15 @@ $PAGE->set_context($context);
 
 $links = thesesynthesis_get_active_links($synthesis->id, $USER->id);
 $filters = ['status' => $status === -999 ? null : $status, 'search' => $search, 'cmid' => $filtercmid];
-// Page d'origine des dossiers ouverts d'ici, filtres compris (voir \mod_these\local\backlinks).
+// Listes paginées en base (dossiers à traiter, dossiers suivis) : une page hors limites ramène à la
+// dernière.
+$perpage = \mod_thesesynthesis\local\dossiers::PERPAGE;
+$todocount = thesesynthesis_count_dossiers($links, $USER->id, ['todo' => true]);
+$todopage = max(0, min($todopage, (int) ceil($todocount / $perpage) - 1));
+$count = thesesynthesis_count_dossiers($links, $USER->id, $filters);
+$page = max(0, min($page, (int) ceil($count / $perpage) - 1));
+// Filtres et pages, repris dans les liens de pagination et dans la page d'origine des dossiers ouverts
+// d'ici (voir \mod_these\local\backlinks).
 $originparams = [];
 if ($status !== -999) {
     $originparams['status'] = $status;
@@ -61,17 +71,22 @@ if ($search !== '') {
 if ($filtercmid) {
     $originparams['cmid'] = $filtercmid;
 }
+if ($todopage) {
+    $originparams['todopage'] = $todopage;
+}
+if ($page) {
+    $originparams['page'] = $page;
+}
+$pageurl = new moodle_url($baseurl, $originparams);
 \mod_these\local\backlinks::remember(
-    new moodle_url($baseurl, $originparams),
+    $pageurl,
     get_string('modulename', 'mod_thesesynthesis'),
     array_map(function ($link) {
         return (int) $link->these->id;
     }, $links)
 );
-$rows = thesesynthesis_get_dossiers($links, $USER->id, $filters);
-$alltodo = array_filter(thesesynthesis_get_dossiers($links, $USER->id), function ($row) {
-    return $row->todo;
-});
+$rows = thesesynthesis_get_dossiers($links, $USER->id, $filters, $page * $perpage, $perpage);
+$todo = thesesynthesis_get_dossiers($links, $USER->id, ['todo' => true], $todopage * $perpage, $perpage);
 $juries = thesesynthesis_get_juries($links, $USER);
 
 $renderer = $PAGE->get_renderer('mod_thesesynthesis');
@@ -86,8 +101,9 @@ if (!$links) {
 }
 
 // À traiter.
-echo $OUTPUT->heading(get_string('todo', 'mod_these'), 3);
-echo $renderer->render(new output\dossier_table($alltodo, get_string('nothingtodo', 'mod_these'), true));
+echo $OUTPUT->heading(get_string('todo', 'mod_these'), 3, null, 'todo');
+echo $renderer->render(new output\dossier_table($todo, get_string('nothingtodo', 'mod_these'), true));
+echo $OUTPUT->paging_bar($todocount, $todopage, $perpage, new moodle_url($pageurl, null, 'todo'), 'todopage');
 
 // Signatures, centralisées : celles que l'utilisateur appose, puis, pour la DEVE, celles attendues
 // d'autres signataires.
@@ -108,8 +124,9 @@ echo $OUTPUT->heading(get_string('myjuries', 'mod_thesesynthesis'), 3, 'mt-4');
 echo $renderer->render(new output\jury_table($juries));
 
 // Dossiers suivis, avec filtres.
-echo $OUTPUT->heading(get_string('followed', 'mod_thesesynthesis'), 3, 'mt-4');
+echo $OUTPUT->heading(get_string('followed', 'mod_thesesynthesis'), 3, 'mt-4', 'followed');
 echo $renderer->render(new output\dossier_filters($baseurl, $cm->id, $links, $filtercmid, $status, $search));
 echo $renderer->render(new output\dossier_table($rows, get_string('nodossiers', 'mod_thesesynthesis')));
+echo $OUTPUT->paging_bar($count, $page, $perpage, new moodle_url($pageurl, null, 'followed'), 'page');
 
 echo $OUTPUT->footer();

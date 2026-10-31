@@ -231,7 +231,19 @@ class restore_these_activity_structure_step extends restore_activity_structure_s
         }
         $data->directorid = $this->map_user($data->directorid);
         $data->returnedby = $this->map_user($data->returnedby);
-        $newid = $DB->insert_record('these_dossier', $data);
+        // Numéro DEVE unique sur le site : un numéro déjà attribué à un autre dossier (celui de l'activité
+        // sauvegardée, sur le même site) est vidé, à attribuer de nouveau par la DEVE.
+        $data->devenumber = \mod_these\local\dossiers::normalise_devenumber($data->devenumber ?? null);
+        $number = $data->devenumber;
+        $newid = \mod_these\local\dossiers::with_devenumbers_locked(function () use ($DB, $data) {
+            if (\mod_these\local\dossiers::devenumber_taken($data->devenumber)) {
+                $data->devenumber = null;
+            }
+            return $DB->insert_record('these_dossier', $data);
+        });
+        if ($number !== null && $data->devenumber === null) {
+            $this->log("Dossier de thèse $oldid : numéro DEVE $number déjà attribué sur le site, vidé", backup::LOG_WARNING);
+        }
         $this->set_mapping('these_dossier', $oldid, $newid, true);
     }
 
@@ -254,6 +266,8 @@ class restore_these_activity_structure_step extends restore_activity_structure_s
         // sauvegardé (secret d'accès sans compte).
         $data->jurorid = $this->map_juror((int) ($data->jurorid ?? 0), (string) ($data->email ?? ''));
         $data->eligibleby = $this->map_user($data->eligibleby ?? 0);
+        // Compte rattaché au membre : 0 s'il n'est pas restauré (le membre accède alors par son lien).
+        $data->userid = $this->map_user($data->userid ?? 0);
         unset($data->accesstoken);
         $DB->insert_record('these_jury', $data);
     }
@@ -331,5 +345,10 @@ class restore_these_activity_structure_step extends restore_activity_structure_s
         $this->add_related_files('mod_these', 'signature', 'these_signature');
         $this->add_related_files('mod_these', 'sealed', 'these_dossier');
         $this->add_related_files('mod_these', 'universityseal', 'these_dossier');
+        // Sauvegarde antérieure à 2026103100, sans grille enregistrée : éléments d'origine, comme à la
+        // création d'une activité.
+        if ($theseid = $this->task->get_activityid()) {
+            \mod_these\local\grid::create_default_items((object) ['theseid' => $theseid, 'synthesisid' => 0]);
+        }
     }
 }

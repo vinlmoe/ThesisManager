@@ -34,6 +34,11 @@ require_once(__DIR__ . '/these_testcase.php');
  * @covers     ::these_generate_documents
  * @covers     \mod_these\local\documents
  */
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_get_rights')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_user_can_act')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_can_view_filearea')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_generate_documents')]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\documents::class)]
 final class rights_test extends these_testcase {
     /**
      * Chaque statut n'autorise que son acteur.

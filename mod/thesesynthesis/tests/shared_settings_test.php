@@ -31,9 +31,16 @@ require_once($CFG->dirroot . '/mod/thesesynthesis/locallib.php');
  * @covers     ::these_settings_scope
  * @covers     \mod_these\local\scopesettings
  * @covers     ::thesesynthesis_search
+ * @covers     ::thesesynthesis_count_search
  * @covers     ::thesesynthesis_render_search_results
  * @covers     ::thesesynthesis_delete_instance
  */
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_settings_scope')]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\scopesettings::class)]
+#[\PHPUnit\Framework\Attributes\CoversFunction('thesesynthesis_search')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('thesesynthesis_count_search')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('thesesynthesis_render_search_results')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('thesesynthesis_delete_instance')]
 final class shared_settings_test extends \advanced_testcase {
     /**
      * Deux promotions suivies par une activité de suivi ; une troisième activité non suivie.
@@ -172,6 +179,28 @@ final class shared_settings_test extends \advanced_testcase {
         // Retirée du suivi, l'activité reprend ses propres paramètres.
         thesesynthesis_set_links($env->synthesis->id, [$env->activities[1]->these->cmid]);
         $this->assertSame([], these_deve_agents($followed));
+    }
+
+    /**
+     * La portée des paramètres d'une activité est lue une fois par requête : chaque dossier d'une liste
+     * la redemandait (quatre requêtes à chaque fois). Changer les activités suivies la fait relire.
+     * Mesure du test de charge (tools/stresstest) : 240 des 490 lectures du tableau de bord de la DEVE.
+     */
+    public function test_settings_scope_read_once(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $env = $this->setup_env();
+        $these = $env->activities[1]->these;
+        \mod_these\local\scopesettings::reset_cache();
+        $this->assertTrue(these_settings_scope($these)->shared);
+        $before = $DB->perf_get_reads();
+        for ($i = 0; $i < 5; $i++) {
+            $this->assertEquals($env->synthesis->id, these_settings_scope($these)->synthesisid);
+        }
+        $this->assertSame(0, $DB->perf_get_reads() - $before);
+
+        thesesynthesis_set_links($env->synthesis->id, [$env->activities[0]->these->cmid]);
+        $this->assertFalse(these_settings_scope($these)->shared);
     }
 
     /**
@@ -359,6 +388,111 @@ final class shared_settings_test extends \advanced_testcase {
         $this->assertCount(1, $defenses);
         $this->assertSame(get_string('confidentialtitle', 'mod_these'), these_defense_row($defenses[0])['title']);
         $this->assertStringNotContainsString('SECRETTITRE', these_render_planning($defenses, true));
+    }
+
+    /**
+     * Recherche paginée en base : pages pleines et bout à bout égales à la liste complète, total compté
+     * en base, tri par année décroissante puis par titre ; texte sans casse ni accents (lettres latines),
+     * noms dans une autre écriture, réponses à choix exactes ; thèse confidentielle jamais trouvée par son
+     * sujet ou ses réponses par qui ne doit pas le connaître, ni dans une page ni dans le total, mais
+     * trouvée par son sujet par un juré dont le compte est rattaché.
+     */
+    public function test_search_pagination(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $env = $this->setup_env();
+        $gen = $this->getDataGenerator();
+        $thesegen = $gen->get_plugin_generator('mod_these');
+        $activity = $env->activities[0];
+        $list = these_save_question($env->scope, (object) ['qtype' => 'multi', 'label' => 'Espèces',
+            'options' => "Chien\nChat\nChat/Lynx", 'required' => 0]);
+        $choice = these_save_question($env->scope, (object) ['qtype' => 'list', 'label' => 'Discipline',
+            'options' => "Clinique\nRecherche", 'required' => 0]);
+        $questions = these_get_questions($env->scope);
+        // Douze thèses enregistrées sur trois années, dont une sur trois confidentielle.
+        $titles = [];
+        for ($n = 0; $n < 12; $n++) {
+            $student = $gen->create_and_enrol($activity->course, 'student', ['lastname' => $n === 5 ? 'Κουρής' : 'Étudiant']);
+            $dossier = $thesegen->create_dossier($activity->these, $student->id, [
+                'status' => THESE_STATUS_ACTIVE,
+                'confidential' => (int) ($n % 3 === 2),
+                'title' => 'Étude ' . chr(ord('L') - $n) . ' de la rage',
+                'keywords' => 'Œdème',
+                'defensedate' => make_timestamp(2026 + $n % 3, 6, 1),
+            ]);
+            $titles[$dossier->id] = $dossier->title;
+            these_save_answers($dossier, $questions, ['q' . $list . '_' . ($n % 3) => 1, 'q' . $choice => $n % 2 ? 'Recherche'
+                : 'Clinique']);
+        }
+        $ids = function (array $rows) {
+            return array_map(function ($row) {
+                return (int) $row->dossier->id;
+            }, $rows);
+        };
+        $check = function (\stdClass $user, array $filters, int $expected) use ($env, $questions, $ids) {
+            $links = thesesynthesis_get_active_links($env->synthesis->id, $user->id);
+            $all = thesesynthesis_search($links, $user->id, $filters, $questions);
+            $this->assertCount($expected, $all, json_encode($filters));
+            $this->assertSame($expected, thesesynthesis_count_search($links, $user->id, $filters, $questions));
+            // Année décroissante, puis titre.
+            $order = array_map(function ($row) {
+                return [-$row->year, $row->dossier->title, (int) $row->dossier->id];
+            }, $all);
+            $sorted = $order;
+            sort($sorted);
+            $this->assertSame($sorted, $order, json_encode($filters));
+            $paged = [];
+            for ($page = 0; $page * 5 < $expected; $page++) {
+                $rows = thesesynthesis_search($links, $user->id, $filters, $questions, $page * 5, 5);
+                $this->assertCount(min(5, $expected - $page * 5), $rows);
+                $paged = array_merge($paged, $ids($rows));
+            }
+            $this->assertSame($ids($all), $paged, json_encode($filters));
+            return $all;
+        };
+
+        // La DEVE : texte sans accents ni casse, mots dans plusieurs champs, année, réponses.
+        $check($env->deve, ['text' => 'ETUDE rage'], 12);
+        $check($env->deve, ['text' => 'oedeme'], 12);
+        $check($env->deve, ['text' => 'κουρής'], 1);
+        // Caractères spéciaux pris littéralement (jokers de LIKE, expressions régulières).
+        $check($env->deve, ['text' => '.*'], 0);
+        $check($env->deve, ['text' => '%'], 0);
+        $check($env->deve, ['text' => 'rage['], 0);
+        $check($env->deve, ['text' => 'etude rage', 'year' => 2027], 4);
+        $check($env->deve, ['answers' => [$list => 'Chat']], 4);
+        $check($env->deve, ['answers' => [$list => 'Chat/Lynx']], 4);
+        $check($env->deve, ['answers' => [$list => 'chat']], 0);
+        $check($env->deve, ['answers' => [$choice => 'Recherche'], 'year' => 2026], 2);
+        $check($env->deve, ['answers' => [$choice => 'Recherch']], 0);
+
+        // Un enseignant : thèses enregistrées, confidentielles comprises, mais jamais par leur sujet.
+        $check($env->teacher, ['text' => 'etudiant'], 11);
+        $rows = $check($env->teacher, ['text' => 'rage'], 9);
+        $this->assertNotContains((int) $env->confidential->id, $ids($rows));
+        foreach ($rows as $row) {
+            $this->assertTrue($row->knowssubject);
+        }
+        $check($env->teacher, ['answers' => [$list => 'Chat/Lynx']], 0);
+        $check($env->teacher, ['answers' => [$list => 'Chien']], 4);
+        $rows = $check($env->teacher, ['year' => 2028], 4);
+        foreach ($rows as $row) {
+            $this->assertSame(!$row->dossier->confidential, $row->knowssubject);
+            $this->assertSame($row->knowssubject ? 1 : 0, count(array_filter($row->answers)) ? 1 : 0);
+        }
+
+        // Juré dont le compte est rattaché : il connaît le sujet de cette thèse-là, et la trouve par lui.
+        $confidential = array_values(array_filter($rows, function ($row) {
+            return (bool) $row->dossier->confidential;
+        }))[0]->dossier;
+        these_save_jury($confidential->id, [(object) ['juryrole' => 'member', 'fullname' => 'Thérèse Juré',
+            'jurytitle' => 'Pr', 'institution' => '', 'email' => '', 'jurorid' => 0, 'jurystatus' => 'pr']]);
+        $DB->set_field('these_jury', 'userid', $env->teacher->id, ['dossierid' => $confidential->id]);
+        $rows = $check($env->teacher, ['text' => 'rage'], 10);
+        $this->assertContains((int) $confidential->id, $ids($rows));
+        $check($env->teacher, ['answers' => [$list => 'Chat/Lynx']], 1);
+        // Le nom du juré se cherche pour tous.
+        $check($env->director, ['text' => 'therese'], 1);
     }
 
     /**

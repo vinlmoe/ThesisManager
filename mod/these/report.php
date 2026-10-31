@@ -41,6 +41,8 @@ $activity = page::load_activity($id);
 ['cm' => $cm, 'course' => $course, 'these' => $these, 'context' => $context] = (array) $activity;
 require_login($course, true, $cm);
 ['dossier' => $dossier, 'rights' => $rights] = (array) page::load_dossier($activity, $dossierid, $USER->id);
+// Dossier réduit à son procès-verbal (données de l'étudiant effacées) : plus aucune action.
+\mod_these\local\dossiers::require_in_circuit($dossier);
 $params = ['id' => $cm->id, 'dossierid' => $dossier->id];
 $dossierurl = new moodle_url('/mod/these/dossier.php', $params);
 if (!$rights->director) {
@@ -76,15 +78,8 @@ $mform->set_data($params + [
 if ($mform->is_cancelled()) {
     redirect(backlinks::to_dossier($cm, $dossier)->url);
 } else if ($data = $mform->get_data()) {
-    file_save_draft_area_files(
-        $data->directorreport,
-        $context->id,
-        'mod_these',
-        'directorreport',
-        $dossier->id,
-        these_filemanager_options('directorreport')
-    );
-    these_save_report($dossier, $USER->id, !empty($data->reportfavorable));
+    // Rapport enregistré dans l'opération, sous le verrou du dossier (double envoi du formulaire).
+    these_save_report($dossier, $USER->id, !empty($data->reportfavorable), ['directorreport' => $data->directorreport]);
     redirect(
         backlinks::after_action($cm, $dossierurl),
         get_string('reportsaved', 'mod_these'),

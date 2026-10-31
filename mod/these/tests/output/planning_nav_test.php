@@ -29,6 +29,7 @@ require_once(__DIR__ . '/output_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_these\output\planning_nav
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\output\planning_nav::class)]
 final class planning_nav_test extends output_testcase {
     /**
      * Composant de la vue par semaine (semaine du 2 novembre 2026, période en cours), date demandée le 12.
@@ -111,13 +112,14 @@ final class planning_nav_test extends output_testcase {
     public function test_render(): void {
         $this->resetAfterTest();
         $html = $this->renderer()->render($this->week_nav());
-        $this->assertStringStartsWith('<div class="mb-3"><a href=', $html);
-        $this->assertStringContainsString('</a><a href=', $html);
-        $this->assertStringContainsString('<div class="these-planning-nav mb-3">', $html);
-        $action = 'action="https://www.example.com/moodle/mod/these/planning.php"';
-        $this->assertStringContainsString('<form method="get" ' . $action, $html);
-        $this->assertStringContainsString('<input type="hidden" name="id" value="7" />', $html);
-        $this->assertStringContainsString('<label class="mr-1" for="these-planning-goto">', $html);
-        $this->assertStringContainsString('id="these-planning-goto"', $html);
+        // Premier bloc : les liens des vues, collés (aucun texte, pas même une espace, entre deux boutons).
+        $this->assert_html_has($html, './*[1][self::div]/a[@href]');
+        $this->assert_html_has($html, './*[1][self::div]/a[following-sibling::node()[1][self::a]]');
+        $nav = './div[' . self::xclass('these-planning-nav') . ']';
+        $this->assert_html_has($html, $nav);
+        $form = $nav . '//form[@method = "get"][@action = "https://www.example.com/moodle/mod/these/planning.php"]';
+        $this->assert_html_has($html, $form . '//input[@type = "hidden"][@name = "id"][@value = "7"]');
+        $this->assert_html_has($html, $form . '//label[@for = "these-planning-goto"]');
+        $this->assert_html_has($html, $form . '//input[@id = "these-planning-goto"]');
     }
 }

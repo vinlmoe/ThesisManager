@@ -44,13 +44,15 @@ class calendar {
     }
 
     /**
-     * Le dossier a-t-il une soutenance à afficher au calendrier ?
+     * Le dossier a-t-il une soutenance à afficher au calendrier ? Pas un dossier réduit à son
+     * procès-verbal (données de l'étudiant effacées) : l'événement porte le nom de l'étudiant.
      *
      * @param stdClass $dossier
      * @return bool
      */
     public static function has_event(stdClass $dossier) {
-        return !empty($dossier->defensedate) && (int) $dossier->status >= THESE_STATUS_DEFENSE_VALIDATED;
+        return !empty($dossier->defensedate) && (int) $dossier->status >= THESE_STATUS_DEFENSE_VALIDATED
+            && !dossiers::is_erased($dossier);
     }
 
     /**
@@ -131,6 +133,32 @@ class calendar {
             'timeduration' => defenseconflicts::defense_duration($dossier),
             'visible' => (int) $cm->visible,
         ];
+    }
+
+    /**
+     * Supprime les événements de soutenance de dossiers supprimés (effacement RGPD d'un étudiant, par
+     * exemple), sans attendre la synchronisation quotidienne.
+     *
+     * @param int[] $dossierids
+     * @return void
+     */
+    public static function delete_events(array $dossierids) {
+        global $CFG, $DB;
+
+        if (!$dossierids) {
+            return;
+        }
+        require_once($CFG->dirroot . '/calendar/lib.php');
+        $uuids = array_map(function ($id) {
+            return 'these-dossier-' . (int) $id;
+        }, $dossierids);
+        [$insql, $params] = $DB->get_in_or_equal($uuids, SQL_PARAMS_NAMED);
+        $params['modulename'] = 'these';
+        $params['eventtype'] = self::EVENTTYPE;
+        $events = $DB->get_records_select('event', "modulename = :modulename AND eventtype = :eventtype AND uuid $insql", $params);
+        foreach ($events as $record) {
+            \calendar_event::load($record)->delete();
+        }
     }
 
     /**

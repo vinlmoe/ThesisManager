@@ -29,6 +29,7 @@ require_once(__DIR__ . '/output_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_these\output\doctemplate_list
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\output\doctemplate_list::class)]
 final class doctemplate_list_test extends output_testcase {
     /**
      * Contexte : un modèle par type ; badge et bouton de retour à l'origine pour un modèle modifié.
@@ -56,8 +57,12 @@ final class doctemplate_list_test extends output_testcase {
         $this->setup_activity();
         $url = new \moodle_url('/mod/these/doctemplates.php', ['id' => $this->cm->id]);
         $html = $this->renderer()->render(new doctemplate_list(these_settings_scope($this->these), $url));
-        $this->assertStringContainsString('class="btn btn-sm btn-primary">' . get_string('edit') . '</a> <a href=', $html);
-        $this->assertStringContainsString('class="btn btn-sm btn-secondary" target="_blank">', $html);
+        // Bouton principal « Modifier », suivi d'une espace puis du bouton suivant.
+        $edit = './/a[@href][' . self::xclass('btn-primary') . '][normalize-space() = "' . get_string('edit') . '"]';
+        $this->assert_html_has($html, $edit . '[following-sibling::node()[1][self::text() and normalize-space() = ""]]'
+            . '[following-sibling::*[1][self::a[@href]]]');
+        // Aperçu : bouton secondaire, dans un nouvel onglet.
+        $this->assert_html_has($html, './/a[@href][' . self::xclass('btn-secondary') . '][@target = "_blank"]');
         $this->assertStringNotContainsString('btn-outline-danger', $html);
     }
 }

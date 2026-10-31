@@ -122,6 +122,45 @@ class scans {
         $remark = '',
         array $slots = []
     ) {
+        // Sous le verrou du dossier, comme les autres opérations : deux envois simultanés ne se disputent
+        // plus les noms de fichier de la zone ; ils sont joints l'un après l'autre.
+        return dossiers::dossier_operation($dossier, function () use (
+            $context,
+            $dossier,
+            $userid,
+            $doctype,
+            $signeddate,
+            $draftitemid,
+            $remark,
+            $slots
+        ) {
+            return self::add_files($context, $dossier, $userid, $doctype, $signeddate, $draftitemid, $remark, $slots);
+        });
+    }
+
+    /**
+     * Voir add(), dans l'opération sur le dossier.
+     *
+     * @param context $context
+     * @param stdClass $dossier
+     * @param int $userid
+     * @param string $doctype
+     * @param int $signeddate
+     * @param int $draftitemid
+     * @param string $remark
+     * @param array $slots
+     * @return int
+     */
+    protected static function add_files(
+        context $context,
+        stdClass $dossier,
+        $userid,
+        $doctype,
+        $signeddate,
+        $draftitemid,
+        $remark,
+        array $slots
+    ) {
         $fs = get_file_storage();
         $usercontext = \context_user::instance($userid);
         $drafts = $fs->get_area_files($usercontext->id, 'user', 'draft', $draftitemid, 'filename', false);

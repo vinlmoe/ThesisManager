@@ -13,6 +13,93 @@ de version recalés sur la date. Les numéros entre parenthèses des sections de
 développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
 été étiquetée.
 
+## mod_these 0.26.0 (2026103100) et mod_thesesynthesis 0.8.1 (2026103100) — jury reconnu par son compte, procès-verbal conservé, fin de la dette, test de charge
+
+- **Membres du jury reconnus par leur compte, plus par leur adresse.** Le
+  dernier constat de sécurité de l'analyse du 30 octobre est fermé : la
+  connaissance du sujet d'une thèse confidentielle, l'accès aux documents
+  depuis le compte et les jurys du suivi reposent sur le compte rattaché au
+  membre (`these_jury.userid`), actif seulement (ni suspendu ni supprimé).
+  Le compte est rattaché quand le membre est choisi dans l'annuaire et quand
+  la DEVE valide son éligibilité, recalculé si l'adresse change ; la DEVE
+  voit si un membre a un compte rattaché. Sans compte, le membre accède
+  toujours par son lien. L'étape 2026103003 ajoute la colonne et rattache les
+  membres existants (compte unique, confirmé et actif portant l'adresse de la
+  fiche d'annuaire ou du membre ; aucun si l'adresse est ambiguë).
+  Sauvegarde, restauration et confidentialité suivent. Chaînes
+  `juryuseraccount`, `jurynoaccount`.
+- **Procès-verbal conservé intact lors des suppressions de données
+  personnelles** (archives publiques ; RGPD art. 17.3 b et d) : un dossier dont
+  le PV est enregistré garde, après la suppression de l'étudiant, les champs
+  du PV, le jury et les fichiers du PV ; le reste est effacé. La suppression
+  d'un membre du personnel ne touche jamais le PV. L'export inclut toujours
+  le PV. Décrit dans INSTALL (§ 4 bis) et le guide.
+- **Code** : `dossiers` scindée par étape du circuit (`subjects`, `defenses`,
+  `reviews`, `minutes`) ; méthodes longues découpées (import des paramètres,
+  changement de sujet, import des dossiers, demande de signatures aux agents,
+  apposition d'une signature, export du dossier, suivi des signatures,
+  export RGPD) ; erreurs des `catch (\Throwable)` tracées en mode
+  développeur.
+- **Tests** : 287 + 26 (231 + 26 auparavant) — validation de 23 formulaires,
+  import CSV dans les formats réels (BOM, `;` et Windows-1252 d'Excel,
+  ISO-8859-1, guillemets, en-têtes), assertions structurelles sur le HTML
+  rendu au lieu de balises exactes, attributs PHPUnit `CoversClass` et
+  `CoversFunction` (PHPUnit 11), trois scénarios Behat pour le suivi.
+- **Test de charge** (`tools/stresstest/`) : peuplement de milliers de
+  dossiers, opérations du circuit tirées au hasard (annulations,
+  réouvertures, changements de sujet, renvois, signatures, procès-verbaux,
+  suppressions RGPD, comptes suspendus) avec vérification d'invariants,
+  plusieurs processus concurrents sur les mêmes dossiers, mesure des pages
+  lourdes. Défauts trouvés et corrigés, chacun avec un test :
+  - ancien sujet d'une thèse confidentielle visible par la scolarité après
+    un changement pour un sujet public (historique, PDF archivé) ;
+  - lien de signature encore utilisable sur un dossier abandonné ;
+  - modification du dossier par la DEVE, génération des documents,
+    signature hors validation et relance des signatures faites hors du
+    verrou du dossier : une action concurrente pouvait rétablir un statut
+    périmé, recréer une signature révoquée ou supprimer les fichiers en
+    cours d'envoi ;
+  - événement « Soutenance » resté au calendrier après l'effacement du
+    dossier ;
+  - erreur au changement de sujet quand le compte du directeur est
+    supprimé ;
+  - nouvelle date demandée par la DEVE restée en attente après un renvoi et
+    une nouvelle soumission.
+- **Performances avec 2 000 dossiers** : le lien « Mes signatures (n) » de la
+  navigation coûtait une quinzaine de requêtes par signature d'agent en
+  attente sur tout le site ; signatures en attente, planning, export du
+  registre, file « À traiter » et portée des paramètres lus par lot. Tableau
+  de bord DEVE de 6 188 à 62 lectures (1,7 s à 0,35 s), export du registre de
+  4 415 à 147 requêtes (3,2 s à 0,42 s).
+- **Numéro d'enregistrement DEVE unique sur tout le site** (auparavant par
+  activité : deux promotions la même année recevaient toutes deux 2026-001).
+  La numérotation AAAA-NNN continue d'une promotion à l'autre ; le numéro est
+  attribué sous un verrou commun au site (s'il est pris entre-temps, le
+  dossier reçoit le suivant, annoncé à la DEVE) et garanti par un index
+  unique ; un numéro saisi déjà pris est refusé. L'étape 2026103100 convertit
+  les numéros vides en NULL et liste les doublons existants à corriger :
+  l'index reste alors non unique jusqu'à `php mod/these/cli/devenumber_index.php`
+  (voir INSTALL). Une restauration vide un numéro déjà attribué sur le site.
+- **Grille de conformité enregistrée à la création de l'activité** (et de
+  l'activité de suivi, à la restauration, et par l'étape 2026103100 pour les
+  activités existantes) au lieu de la première lecture, qui échouait quand
+  deux lectures étaient simultanées.
+- **Dossier réduit à son procès-verbal après effacement RGPD : clos, archivé
+  et sorti du circuit** (champ `these_dossier.erasedtime`) : plus aucune
+  action possible, procès-verbal en lecture seule avec un avis d'archivage,
+  soutenance retirée du calendrier. L'effacement prend le verrou de chaque
+  dossier. L'étape 2026103100 reconnaît les dossiers déjà effacés.
+- **Fichiers des formulaires enregistrés sous le verrou du dossier**
+  (soutenance, rapport, procès-verbal, corrections, scans) : un double envoi
+  est refusé proprement au lieu d'échouer.
+- **Suivi des thèses paginé** (50 dossiers par page, « À traiter » comprise)
+  et **recherche faite en base**, droits et sujet confidentiel compris : avec
+  2 000 dossiers, suivi de la DEVE de 1,07 s à 0,33 s, recherche de 1,56 s à
+  0,27 s. Le filtre texte cherche chaque mot, sans casse ni accents
+  (« oedeme » trouve « Œdème », aussi sous MySQL et MariaDB) ; les dossiers
+  suivis sont triés par dernière modification sur toutes les promotions.
+- Guide 2.22.
+
 ## mod_these 0.25.0 (2026103002) et mod_thesesynthesis 0.8.0 (2026103002) — dette architecturale, messagerie et événements
 
 Actions 12 à 14 du plan de `docs/qualite/analyse-qualite-2026-10-30.tex`.

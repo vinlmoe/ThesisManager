@@ -32,6 +32,7 @@ require_once(__DIR__ . '/these_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_these\local\scans
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\scans::class)]
 final class scans_test extends these_testcase {
     /**
      * Brouillon de l'utilisateur contenant un fichier.

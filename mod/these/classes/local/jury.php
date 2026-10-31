@@ -146,7 +146,8 @@ class jury {
      * Remplace le jury d'un dossier. Un membre déjà présent (même enseignant de l'annuaire, ou mêmes
      * nom et adresse) garde son accès aux documents et la trace de sa notification ; son éligibilité
      * validée est conservée s'il garde le même rôle et le même statut, sauf si $member->eligible est
-     * fourni (saisie de la DEVE).
+     * fourni (saisie de la DEVE). Le compte Moodle rattaché au membre est fixé au choix dans l'annuaire
+     * et à la validation d'éligibilité (voir member_userid()).
      *
      * @param int $dossierid
      * @param array $members Liste d'objets {juryrole, fullname, jurytitle, institution, email, jurorid?,
@@ -191,8 +192,78 @@ class jury {
                 $record->eligibleby = $old->eligibleby;
                 $record->eligibletime = $old->eligibletime;
             }
+            $record->userid = self::member_userid($record, $old, isset($member->eligible) && $member->eligible);
             $DB->insert_record('these_jury', $record);
         }
+    }
+
+    /**
+     * Compte Moodle rattaché à un membre du jury enregistré, qui seul le fait reconnaître comme
+     * membre du jury (sujet d'une thèse confidentielle, jurys du suivi). Le rattachement est décidé
+     * quand le membre est choisi dans l'annuaire et quand la DEVE valide son éligibilité ; il est
+     * conservé tant que l'adresse du membre ne change pas, et recalculé sinon.
+     *
+     * @param stdClass $record Membre tel qu'il va être enregistré.
+     * @param stdClass|null $old Même membre dans le jury précédent.
+     * @param bool $validated La DEVE valide (ou confirme) l'éligibilité du membre.
+     * @return int Identifiant du compte, 0 sans compte rattaché.
+     */
+    protected static function member_userid(stdClass $record, ?stdClass $old, $validated) {
+        $email = function ($member) {
+            return core_text::strtolower(trim((string) ($member->email ?? '')));
+        };
+        $userid = 0;
+        if ($old && $email($old) === $email($record)) {
+            $userid = (int) ($old->userid ?? 0);
+        } else if ($old && !empty($old->userid)) {
+            // Adresse changée : le rattachement est recalculé.
+            return self::resolve_userid($record);
+        }
+        if (!empty($record->jurorid) || ($validated && !$userid)) {
+            $userid = self::resolve_userid($record) ?: $userid;
+        }
+        return $userid;
+    }
+
+    /**
+     * Compte Moodle d'un membre du jury : celui de sa fiche dans l'annuaire, reconnu à l'adresse de
+     * la fiche, sinon l'unique compte confirmé, non suspendu et non supprimé portant l'adresse du
+     * membre. Aucun si l'adresse est inconnue ou partagée par plusieurs comptes.
+     *
+     * @param stdClass $member {email, jurorid?}
+     * @return int Identifiant du compte, 0 si aucun.
+     */
+    public static function resolve_userid(stdClass $member) {
+        $juror = !empty($member->jurorid) ? jurors::get((int) $member->jurorid) : null;
+        if ($juror && ($userid = self::active_account((string) $juror->email))) {
+            return $userid;
+        }
+        return self::active_account((string) ($member->email ?? ''));
+    }
+
+    /**
+     * Unique compte confirmé, non suspendu et non supprimé portant une adresse.
+     *
+     * @param string $email
+     * @return int Identifiant du compte, 0 si aucun ou si plusieurs comptes portent cette adresse.
+     */
+    protected static function active_account($email) {
+        global $DB;
+
+        $email = core_text::strtolower(trim($email));
+        if ($email === '') {
+            return 0;
+        }
+        $users = $DB->get_records_select(
+            'user',
+            'LOWER(email) = :email AND confirmed = 1 AND suspended = 0 AND deleted = 0',
+            ['email' => $email],
+            '',
+            'id',
+            0,
+            2
+        );
+        return count($users) === 1 ? (int) key($users) : 0;
     }
 
     /**

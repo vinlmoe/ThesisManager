@@ -40,6 +40,14 @@ require_once(__DIR__ . '/these_testcase.php');
  * @covers     \mod_these\local\notifications::digest_content
  * @covers     \mod_these\local\notifications::send_weekly_digests
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\defenseconflicts::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\rendering::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\bulk::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\scopesettings::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\rights::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\calendar::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\notifications::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\task\send_digest::class)]
 final class deve_tools_test extends these_testcase {
     /**
      * Même salle (casse et espaces ignorés) sur des soutenances qui se chevauchent ; une autre salle,
@@ -91,6 +99,64 @@ final class deve_tools_test extends these_testcase {
         $dossier->status = THESE_STATUS_SCHEDULED;
         $url = these_primary_action($this->cm, $dossier, $rights($this->deve, $dossier))[1];
         $this->assertStringContainsString('/mod/these/minutes.php', $url->out(false));
+    }
+
+    /**
+     * Export du registre et file « À traiter » : les données de chaque dossier (jury, signatures, A6,
+     * refus, activité) sont lues d'avance pour toute la liste, et le nombre de requêtes ne croît pas
+     * avec le nombre de dossiers ; les lignes sont les mêmes qu'avec une lecture dossier par dossier.
+     * Mesure du test de charge (tools/stresstest) : 4 400 requêtes et 3,4 s pour exporter une
+     * promotion de 660 dossiers ; deux requêtes par soutenance programmée dans la file de la DEVE.
+     */
+    public function test_register_and_queue_queries_do_not_grow(): void {
+        global $DB;
+        $this->setup_activity();
+        $make = function (int $count) {
+            for ($i = 0; $i < $count; $i++) {
+                $student = $this->getDataGenerator()->create_and_enrol($this->course, 'student');
+                $dossier = $this->generator->create_dossier($this->these, $student->id, [
+                    'status' => THESE_STATUS_SCHEDULED, 'directorid' => $this->director->id,
+                    'defensedate' => time() + WEEKSECS, 'devenumber' => '2026-' . $student->id,
+                    'agreement' => json_encode(['directorfunction' => 'MCF']),
+                ]);
+                these_save_jury($dossier->id, $this->generator->default_jury());
+                $png = these_sample_signature_image();
+                these_sign_document($this->context, $dossier, 'agreement', 'director', $this->director->id, 'Directeur', $png);
+                these_log($dossier->id, $this->deve->id, 'agentrefused', $dossier->status, $dossier->status, 'Refus ' . $i);
+                \mod_these\local\a6::set($dossier, time(), 'lyon', $this->deve->id);
+            }
+        };
+        $measure = function () {
+            global $DB;
+            $dossiers = these_get_dossiers($this->these->id);
+            $rights = these_get_rights($this->context, null, $this->deve->id);
+            $before = $DB->perf_get_reads();
+            $preloaded = \mod_these\local\rendering::register_preload($dossiers);
+            $rows = [];
+            foreach ($dossiers as $dossier) {
+                $rows[$dossier->id] = these_register_row($dossier, $this->context, null, null, $preloaded);
+            }
+            $queue = \mod_these\local\rendering::primary_action_preload($dossiers);
+            foreach ($dossiers as $dossier) {
+                $this->assertNotNull(these_primary_action($this->cm, $dossier, $rights, $queue));
+            }
+            return [$rows, $DB->perf_get_reads() - $before];
+        };
+        $make(2);
+        [, $few] = $measure();
+        $make(6);
+        [$rows, $many] = $measure();
+        $this->assertCount(8, $rows);
+        $this->assertSame($few, $many, 'Requêtes de l\'export proportionnelles aux dossiers');
+
+        // Mêmes lignes qu'avec la lecture d'un seul dossier.
+        foreach (these_get_dossiers($this->these->id) as $dossier) {
+            $this->assertSame(these_register_row($dossier, $this->context, null, null), $rows[$dossier->id]);
+        }
+        $row = reset($rows);
+        $this->assertStringContainsString('Paul Président', $row['jury']);
+        $this->assertStringContainsString('Refus', $row['lastrefusal']);
+        $this->assertNotSame('', $row['a6']);
     }
 
     /**
@@ -262,6 +328,27 @@ final class deve_tools_test extends these_testcase {
         // La synchronisation quotidienne ne le recrée pas.
         \mod_these\local\calendar::sync_all();
         $this->assertSame([], $events());
+    }
+
+    /**
+     * Un dossier supprimé (effacement RGPD d'un étudiant sans procès-verbal) emporte son événement de
+     * soutenance, qui portait le nom de l'étudiant, sans attendre la synchronisation quotidienne.
+     * Scénario relevé par le test de charge (tools/stresstest).
+     */
+    public function test_calendar_event_deleted_with_dossier(): void {
+        global $DB;
+        $this->setup_activity();
+        $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
+            'status' => THESE_STATUS_DEFENSE_APPROVED, 'defensedate' => make_timestamp(2026, 11, 4, 14),
+        ]);
+        these_set_status($dossier, THESE_STATUS_DEFENSE_VALIDATED, $this->deve->id, 'validated');
+        $uuid = 'these-dossier-' . $dossier->id;
+        $this->assertTrue($DB->record_exists('event', ['modulename' => 'these', 'uuid' => $uuid]));
+
+        $contextlist = new \core_privacy\local\request\approved_contextlist($this->student, 'mod_these', [$this->context->id]);
+        \mod_these\privacy\provider::delete_data_for_user($contextlist);
+        $this->assertFalse($DB->record_exists('these_dossier', ['id' => $dossier->id]));
+        $this->assertFalse($DB->record_exists('event', ['modulename' => 'these', 'uuid' => $uuid]));
     }
 
     /**

@@ -29,6 +29,7 @@ require_once(__DIR__ . '/output_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_these\output\juror_list
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\output\juror_list::class)]
 final class juror_list_test extends output_testcase {
     /**
      * Contexte : nom, statut, matière, présidence possible, adresse, état et actions ; annuaire vide.
@@ -58,7 +59,7 @@ final class juror_list_test extends output_testcase {
             'email' => '', 'status' => 'other', 'institution' => '', 'active' => 0]);
         $list = new juror_list(\mod_these\local\jurors::get_all(), new \moodle_url('/mod/these/jurors.php'));
         $html = $this->renderer()->render($list);
-        $this->assertStringContainsString('<table class="generaltable these-jurors">', $html);
+        $this->assert_html_has($html, './/table[' . self::xclass('generaltable') . ' and ' . self::xclass('these-jurors') . ']');
         $this->assertStringContainsString('DURAND &amp; CO', $html);
         $this->assertStringContainsString(get_string('juroractiveno', 'mod_these'), $html);
     }

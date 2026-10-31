@@ -41,6 +41,13 @@ require_once(__DIR__ . '/these_testcase.php');
  * @covers     \mod_these\event\defense_scheduled
  * @covers     \mod_these\event\minutes_recorded
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\event\dossier_event::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\event\dossier_created::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\event\subject_submitted::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\event\dossier_status_changed::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\event\document_signed::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\event\defense_scheduled::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\event\minutes_recorded::class)]
 final class events_test extends these_testcase {
     /**
      * Événements d'une classe parmi ceux interceptés.
@@ -186,7 +193,7 @@ final class events_test extends these_testcase {
 
         $date = time() + 40 * DAYSECS;
         these_validate_step($this->these, $this->cm, $dossier, $this->deve->id, [
-            'defensedate' => $date, 'devenumber' => these_suggest_devenumber($this->these->id),
+            'defensedate' => $date, 'devenumber' => these_suggest_devenumber(),
         ]);
         $dossier = $this->reload($dossier->id);
         $events = $this->events_of($sink, defense_scheduled::class);

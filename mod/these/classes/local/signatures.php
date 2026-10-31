@@ -251,9 +251,10 @@ class signatures {
      *
      * @param stdClass $dossier
      * @param string $doctype
+     * @param array|null $signatures Signatures du dossier déjà lues (voir get_signatures()).
      * @return bool
      */
-    public static function document_available(stdClass $dossier, $doctype) {
+    public static function document_available(stdClass $dossier, $doctype, ?array $signatures = null) {
         switch ($doctype) {
             case 'subject':
                 return trim((string) $dossier->title) !== '';
@@ -262,7 +263,18 @@ class signatures {
             case 'grid':
                 return !empty(grid::get_grid($dossier));
             case 'agreement':
-                return !empty(self::get_agreement($dossier)) || self::has_signature($dossier->id, 'agreement');
+                if (!empty(self::get_agreement($dossier))) {
+                    return true;
+                }
+                if ($signatures === null) {
+                    return self::has_signature($dossier->id, 'agreement');
+                }
+                foreach ($signatures as $signature) {
+                    if ($signature->doctype === 'agreement' && !empty($signature->timesigned)) {
+                        return true;
+                    }
+                }
+                return false;
             case 'signaletique':
             case 'contract':
                 return !empty(bordereau::get_bordereau($dossier));
@@ -345,6 +357,29 @@ class signatures {
     }
 
     /**
+     * Même réponse que get_signatures(), pour plusieurs dossiers en une requête.
+     *
+     * @param int[] $dossierids
+     * @return array dossierid => (« doctype:slot » => enregistrement these_signature), un tableau par dossier.
+     */
+    public static function get_signatures_for(array $dossierids) {
+        global $DB;
+
+        $all = array_fill_keys(array_map('intval', $dossierids), []);
+        if (!$all) {
+            return [];
+        }
+        $definitions = self::document_definitions();
+        [$insql, $params] = $DB->get_in_or_equal(array_keys($all), SQL_PARAMS_NAMED);
+        foreach ($DB->get_records_select('these_signature', "dossierid $insql", $params, 'id ASC') as $signature) {
+            if (isset($definitions[$signature->doctype])) {
+                $all[(int) $signature->dossierid][$signature->doctype . ':' . $signature->slot] = $signature;
+            }
+        }
+        return $all;
+    }
+
+    /**
      * Décode l'image de signature tracée dans le formulaire (URL de données PNG).
      *
      * @param string $dataurl
@@ -391,6 +426,11 @@ class signatures {
      * - verifiedby : compte DEVE qui a vérifié l'identité du signataire ou enregistré le scan ;
      * - time : date de la signature (scan : date portée sur le document), maintenant par défaut.
      *
+     * La signature est une opération sur le dossier (voir dossiers::dossier_operation()) : apposée depuis
+     * « Mes signatures », un lien ou la DEVE, elle est refusée si le dossier a changé de statut
+     * entre-temps (un renvoi qui vient de révoquer la signature attendue, par exemple) ; apposée par une
+     * validation ou une soumission, elle s'exécute dans l'opération de celle-ci.
+     *
      * @param context $context Contexte du module.
      * @param stdClass $dossier
      * @param string $doctype
@@ -413,75 +453,107 @@ class signatures {
         $email = '',
         array $options = []
     ) {
-        global $DB;
+        $operation = function () use ($context, $dossier, $doctype, $slot, $userid, $name, $png, $email, $options) {
+            global $DB;
 
-        $now = (int) ($options['time'] ?? 0) ?: time();
-        $method = in_array($options['method'] ?? '', ['inperson', 'scan'], true) ? $options['method'] : 'online';
-        $signature = $DB->get_record('these_signature', ['dossierid' => $dossier->id, 'doctype' => $doctype, 'slot' => $slot]);
-        $record = (object) [
-            'dossierid' => $dossier->id,
-            'doctype' => $doctype,
-            'slot' => $slot,
-            'userid' => (int) $userid,
-            'signername' => trim($name),
-            'signeremail' => $email !== '' ? $email : ($signature->signeremail ?? ''),
-            'token' => null,
-            'timesigned' => $now,
-            'contenthash' => self::document_hash($dossier, $doctype, $slot),
-            'templatehash' => seals::document_template_hash($dossier, $doctype),
-            'ipaddress' => getremoteaddr(),
-            'method' => $method,
-            'delegated' => empty($options['delegated']) ? 0 : 1,
-            'verifiedby' => (int) ($options['verifiedby'] ?? 0),
-        ];
-        if ($signature) {
-            $record->id = $signature->id;
-            $DB->update_record('these_signature', $record);
-        } else {
-            $record->requesttime = 0;
-            $record->timecreated = $now;
-            $record->id = $DB->insert_record('these_signature', $record);
-        }
+            $now = (int) ($options['time'] ?? 0) ?: time();
+            $method = in_array($options['method'] ?? '', ['inperson', 'scan'], true) ? $options['method'] : 'online';
+            $signature = $DB->get_record('these_signature', ['dossierid' => $dossier->id, 'doctype' => $doctype, 'slot' => $slot]);
+            $record = (object) [
+                'dossierid' => $dossier->id,
+                'doctype' => $doctype,
+                'slot' => $slot,
+                'userid' => (int) $userid,
+                'signername' => trim($name),
+                'signeremail' => $email !== '' ? $email : ($signature->signeremail ?? ''),
+                'token' => null,
+                'timesigned' => $now,
+                'contenthash' => self::document_hash($dossier, $doctype, $slot),
+                'templatehash' => seals::document_template_hash($dossier, $doctype),
+                'ipaddress' => getremoteaddr(),
+                'method' => $method,
+                'delegated' => empty($options['delegated']) ? 0 : 1,
+                'verifiedby' => (int) ($options['verifiedby'] ?? 0),
+            ];
+            if ($signature) {
+                $record->id = $signature->id;
+                $DB->update_record('these_signature', $record);
+            } else {
+                $record->requesttime = 0;
+                $record->timecreated = $now;
+                $record->id = $DB->insert_record('these_signature', $record);
+            }
 
+            self::store_signature_image($context, $record->id, $png, $userid);
+
+            // Historique : au nom du compte DEVE qui a vérifié l'identité ou enregistré le scan, s'il y en a un.
+            dossiers::log(
+                $dossier->id,
+                $record->verifiedby ?: $userid,
+                'signed',
+                $dossier->status,
+                $dossier->status,
+                self::signature_remark($doctype, $slot, $name, (bool) $record->delegated, $method, $signature ?: null)
+            );
+            seals::seal_document($context, $dossier, $doctype);
+            document_signed::create_from_dossier($dossier, $context, $record->verifiedby ?: $userid, [
+                'doctype' => $doctype, 'slot' => $slot, 'method' => $method, 'signatureid' => (int) $record->id,
+            ])->trigger();
+            return $DB->get_record('these_signature', ['id' => $record->id]);
+        };
+        return dossiers::dossier_operation($dossier, $operation);
+    }
+
+    /**
+     * Remplace l'image d'une signature (aucune image pour un scan).
+     *
+     * @param context $context
+     * @param int $signatureid
+     * @param string $png Image de la signature ('' pour aucune).
+     * @param int $userid Signataire (0 sans compte).
+     * @return void
+     */
+    private static function store_signature_image(context $context, $signatureid, $png, $userid) {
         $fs = get_file_storage();
-        $fs->delete_area_files($context->id, 'mod_these', 'signature', $record->id);
+        $fs->delete_area_files($context->id, 'mod_these', 'signature', $signatureid);
         if ((string) $png !== '') {
             $fs->create_file_from_string([
                 'contextid' => $context->id,
                 'component' => 'mod_these',
                 'filearea' => 'signature',
-                'itemid' => $record->id,
+                'itemid' => $signatureid,
                 'filepath' => '/',
                 'filename' => 'signature.png',
                 'userid' => $userid ?: null,
             ], $png);
         }
+    }
 
-        // Historique : au nom du compte DEVE qui a vérifié l'identité ou enregistré le scan, s'il y en a un.
+    /**
+     * Mention d'une signature à l'historique du dossier : document, emplacement, signataire,
+     * délégation, validation qui l'a précédée et mode de signature.
+     *
+     * @param string $doctype
+     * @param string $slot
+     * @param string $name Nom du signataire.
+     * @param bool $delegated
+     * @param string $method 'online', 'inperson' ou 'scan'.
+     * @param stdClass|null $previous Signature attendue avant celle-ci, s'il y en avait une.
+     * @return string
+     */
+    private static function signature_remark($doctype, $slot, $name, $delegated, $method, ?stdClass $previous) {
         $remark = self::document_label($doctype) . ' — ' . self::slot_label($slot) . ' — ' . trim($name);
-        if ($record->delegated) {
+        if ($delegated) {
             $remark .= ' (' . get_string('signeddelegated', 'mod_these') . ')';
         }
-        $validated = $signature ? signatureagent::validator_label($signature) : '';
+        $validated = $previous ? signatureagent::validator_label($previous) : '';
         if ($validated !== '') {
             $remark .= ' — ' . $validated;
         }
         if ($method !== 'online') {
             $remark .= ' — ' . get_string('signedmethod' . $method, 'mod_these');
         }
-        dossiers::log(
-            $dossier->id,
-            $record->verifiedby ?: $userid,
-            'signed',
-            $dossier->status,
-            $dossier->status,
-            $remark
-        );
-        seals::seal_document($context, $dossier, $doctype);
-        document_signed::create_from_dossier($dossier, $context, $record->verifiedby ?: $userid, [
-            'doctype' => $doctype, 'slot' => $slot, 'method' => $method, 'signatureid' => (int) $record->id,
-        ])->trigger();
-        return $DB->get_record('these_signature', ['id' => $record->id]);
+        return $remark;
     }
 
     /**

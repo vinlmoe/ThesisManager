@@ -35,9 +35,18 @@ require_once(__DIR__ . '/these_testcase.php');
  * @covers     ::these_jury_access_open
  * @covers     ::these_get_jury_member_access
  * @covers     ::these_dossier_operation
+ * @covers     \mod_these\local\dossiers
  * @covers     \mod_these\pdf\html_document::restrict_images
  * @covers     \mod_these\pdf\html_document::strip_tcpdf_tags
  */
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_seal_document')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_signature_template_changed')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_get_signatures_by_token')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_jury_access_open')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_get_jury_member_access')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_dossier_operation')]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\dossiers::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\pdf\html_document::class)]
 final class integrity_test extends these_testcase {
     /**
      * Modèle d'origine d'un document, complété d'un paragraphe.
@@ -153,8 +162,32 @@ final class integrity_test extends these_testcase {
     }
 
     /**
+     * Un lien de signature ne sert plus tant que le dossier est abandonné (comme les liens d'accès du jury,
+     * révoqués à l'abandon), et sert de nouveau à sa réouverture. Scénario relevé par le test de charge
+     * (tools/stresstest) : le président du jury pouvait signer les conclusions d'une thèse abandonnée.
+     */
+    public function test_signature_token_unusable_while_cancelled(): void {
+        $this->setup_activity();
+        $sink = $this->redirectEmails();
+        $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
+            'status' => THESE_STATUS_SUBJECT_SUBMITTED, 'directorid' => $this->director->id, 'externaldirector' => 1,
+            'extdirectorname' => 'Dr Externe', 'extdirectoremail' => 'externe@example.com',
+        ]);
+        these_request_signature($this->these, $this->cm, $dossier, 'extdirector', ['subject']);
+        $token = $this->token_sent_to($sink->get_messages(), 'externe@example.com');
+        $sink->close();
+
+        $dossier = these_cancel_dossier($dossier, $this->deve->id, 'Abandon.');
+        $this->assertEmpty(these_get_signatures_by_token($token));
+
+        these_reopen_dossier($dossier, $this->deve->id);
+        $this->assertCount(1, these_get_signatures_by_token($token));
+    }
+
+    /**
      * L'accès du jury expire après la soutenance et cesse à la clôture du dossier ; un membre ayant
-     * un compte y accède sans lien, reconnu à son adresse.
+     * un compte y accède sans lien, reconnu au compte rattaché à la validation de son éligibilité (pas
+     * à la seule égalité d'adresse).
      */
     public function test_jury_access_lifetime(): void {
         global $DB;
@@ -164,8 +197,9 @@ final class integrity_test extends these_testcase {
             'status' => THESE_STATUS_SCHEDULED, 'directorid' => $this->director->id, 'defensedate' => time() + DAYSECS,
         ]);
         $juror = $this->getDataGenerator()->create_user(['email' => 'juror@example.org']);
-        these_save_jury($dossier->id, [(object) ['juryrole' => 'president', 'fullname' => 'Jean MARTIN', 'jurytitle' => 'Pr',
-            'institution' => 'VetAgro Sup', 'email' => 'juror@example.org']]);
+        $president = (object) ['juryrole' => 'president', 'fullname' => 'Jean MARTIN', 'jurytitle' => 'Pr',
+            'institution' => 'VetAgro Sup', 'email' => 'juror@example.org', 'jurystatus' => 'pr', 'eligible' => true];
+        these_save_jury($dossier->id, [$president], $this->deve->id);
         these_notify_jury($this->these, $this->cm, $dossier);
         $token = $this->token_sent_to($sink->get_messages(), 'juror@example.org', 'jury.php');
         $member = these_get_jury($dossier->id)[0];
@@ -173,6 +207,8 @@ final class integrity_test extends these_testcase {
         $this->assertNotNull(these_get_jury_access($token));
         $this->assertNotNull(these_get_jury_member_access($member->id, $juror));
         $this->assertNull(these_get_jury_member_access($member->id, $this->student));
+        $homonym = $this->getDataGenerator()->create_user(['email' => 'juror@example.org']);
+        $this->assertNull(these_get_jury_member_access($member->id, $homonym));
 
         // Soutenance passée depuis plus longtemps que la durée de validité.
         $DB->set_field('these_dossier', 'defensedate', time() - THESE_TOKEN_LIFETIME - DAYSECS, ['id' => $dossier->id]);
@@ -226,6 +262,122 @@ final class integrity_test extends these_testcase {
         }
         $this->assertEquals(THESE_STATUS_CANCELLED, $this->reload($dossier->id)->status);
         $this->assertSame($logs, $DB->count_records('these_log', ['dossierid' => $dossier->id]));
+    }
+
+    /**
+     * La modification d'un dossier par la DEVE (edit.php) ne remet pas le dossier dans le statut où elle
+     * l'a vu : validé ou abandonné entre-temps, il le reste, et la modification est refusée. Scénario
+     * relevé par le test de charge en concurrence (tools/stresstest) : un dossier abandonné pendant
+     * l'enregistrement revenait à son ancien statut en gardant son statut d'abandon.
+     */
+    public function test_edit_does_not_overwrite_a_newer_status(): void {
+        $this->setup_activity();
+        $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
+            'status' => THESE_STATUS_SUBJECT_SUBMITTED, 'directorid' => $this->director->id, 'title' => 'Sujet',
+        ]);
+        $seen = clone $dossier;
+        these_cancel_dossier($dossier, $this->deve->id, 'Abandon');
+        $fields = ['title' => 'Sujet corrigé', 'titleen' => '', 'summary' => '', 'keywords' => '', 'devenumber' => '',
+            'libraryref' => '', 'defenselocation' => '', 'directorid' => $this->director->id, 'defensedate' => 0];
+        try {
+            \mod_these\local\dossiers::edit_dossier($this->these, $this->cm, $seen, $fields, [], $this->deve->id);
+            $this->fail('Modification d\'un dossier périmé acceptée');
+        } catch (\moodle_exception $e) {
+            $this->assertSame('dossierchanged', $e->errorcode);
+        }
+        $dossier = $this->reload($dossier->id);
+        $this->assertEquals(THESE_STATUS_CANCELLED, $dossier->status);
+        $this->assertSame('Sujet', $dossier->title);
+
+        // Dossier à jour : modification enregistrée, statut inchangé.
+        $dossier = \mod_these\local\dossiers::edit_dossier($this->these, $this->cm, $dossier, $fields, [], $this->deve->id);
+        $this->assertEquals(THESE_STATUS_CANCELLED, $this->reload($dossier->id)->status);
+        $this->assertSame('Sujet corrigé', $this->reload($dossier->id)->title);
+    }
+
+    /**
+     * La génération des documents de soutenance est une opération sur le dossier : sur un dossier qui a
+     * changé de statut entre-temps (documents transmis par une autre personne de la DEVE), elle est
+     * refusée et ne touche pas aux documents. Scénario relevé par le test de charge en concurrence
+     * (tools/stresstest) : une génération pendant la transmission supprimait les fichiers en cours
+     * d'envoi (erreur de ZipArchive) et l'historique ne suivait plus le statut.
+     */
+    public function test_generate_documents_of_changed_dossier_is_refused(): void {
+        global $DB;
+        $this->setup_activity();
+        $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
+            'status' => THESE_STATUS_CONFORM, 'directorid' => $this->director->id, 'defensedate' => time() + WEEKSECS,
+        ]);
+        $seen = clone $dossier;
+        these_set_status($dossier, THESE_STATUS_SCHEDULED, $this->deve->id, 'documentssent');
+        try {
+            these_generate_documents($this->these, $this->context, $seen, $this->deve->id);
+            $this->fail('Génération sur un dossier périmé acceptée');
+        } catch (\moodle_exception $e) {
+            $this->assertSame('dossierchanged', $e->errorcode);
+        }
+        $this->assertEmpty(these_get_files($this->context, 'generated', $dossier->id));
+        $this->assertFalse($DB->record_exists('these_log', ['dossierid' => $dossier->id, 'logaction' => 'documentsgenerated']));
+
+        $dossier = $this->reload($dossier->id);
+        $this->assertNotEmpty(these_generate_documents($this->these, $this->context, $dossier, $this->deve->id));
+    }
+
+    /**
+     * Une signature apposée hors d'une validation (« Mes signatures », lien, DEVE) est refusée si le
+     * dossier a changé de statut entre-temps : le renvoi qui vient de révoquer la signature attendue
+     * l'emporte. Scénario relevé par le test de charge en concurrence (tools/stresstest) : la signature
+     * d'un agent, apposée pendant un renvoi, était recréée sur un dossier renvoyé.
+     */
+    public function test_signature_on_changed_dossier_is_refused(): void {
+        $this->setup_activity();
+        $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
+            'status' => THESE_STATUS_SUBJECT_REGISTERED, 'directorid' => $this->director->id, 'title' => 'Sujet',
+        ]);
+        $seen = clone $dossier;
+        these_return_dossier($this->these, $this->cm, $dossier, $this->librarian->id, 'student', 'À reprendre.');
+        try {
+            $png = these_sample_signature_image();
+            these_sign_document($this->context, $seen, 'subject', 'deve', $this->deve->id, 'Agent', $png);
+            $this->fail('Signature sur un dossier périmé acceptée');
+        } catch (\moodle_exception $e) {
+            $this->assertSame('dossierchanged', $e->errorcode);
+        }
+        $this->assertSame([], these_get_signatures($dossier->id));
+    }
+
+    /**
+     * Une relance des signatures (lien d'un signataire sans compte, demande aux agents DEVE) sur un dossier
+     * qui a changé de statut entre-temps est refusée : elle ne rouvre pas les signatures qu'un renvoi vient
+     * de révoquer. Scénario relevé par le test de charge en concurrence (tools/stresstest) : la relance
+     * inscrivait à l'historique un statut périmé et recréait des demandes sur un dossier renvoyé.
+     */
+    public function test_signature_request_on_changed_dossier_is_refused(): void {
+        global $DB;
+        $this->setup_activity();
+        \mod_these\local\scopesettings::set(these_settings_scope($this->these), ['deveagent' => $this->deve->username]);
+        $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
+            'status' => THESE_STATUS_SUBJECT_REGISTERED, 'directorid' => $this->director->id, 'title' => 'Sujet',
+            'externaldirector' => 1, 'extdirectorname' => 'Dr Externe', 'extdirectoremail' => 'externe@example.com',
+        ]);
+        $seen = clone $dossier;
+        these_return_dossier($this->these, $this->cm, $dossier, $this->librarian->id, 'student', 'À reprendre.');
+        $sink = $this->redirectEmails();
+        foreach (['extdirector', 'agents'] as $request) {
+            try {
+                if ($request === 'agents') {
+                    these_request_agent_signatures($this->these, $this->cm, $seen, ['subject']);
+                } else {
+                    these_request_signature($this->these, $this->cm, $seen, 'extdirector', ['subject']);
+                }
+                $this->fail('Relance sur un dossier périmé acceptée : ' . $request);
+            } catch (\moodle_exception $e) {
+                $this->assertSame('dossierchanged', $e->errorcode);
+            }
+        }
+        $this->assertSame([], $sink->get_messages());
+        $sink->close();
+        $this->assertFalse($DB->record_exists('these_signature', ['dossierid' => $dossier->id]));
     }
 
     /**

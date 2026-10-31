@@ -84,6 +84,10 @@ class signaturetokens {
      * signatureagent::request_agent_signatures()). L'université non plus quand elle signe sur papier
      * ou par ses délégataires internes (voir university::sends_link()).
      *
+     * Opération sur le dossier (voir dossiers::dossier_operation()) : une relance sur un dossier qui a
+     * changé de statut entre-temps est refusée, au lieu de rouvrir des signatures qu'un renvoi vient de
+     * révoquer.
+     *
      * @param stdClass $these
      * @param stdClass $cm
      * @param stdClass $dossier
@@ -92,67 +96,72 @@ class signaturetokens {
      * @return string|null Jeton, ou null si aucun document n'attend ce signataire.
      */
     public static function request_signature(stdClass $these, stdClass $cm, stdClass $dossier, $slot, ?array $doctypes = null) {
-        global $DB;
+        return dossiers::dossier_operation($dossier, function () use ($these, $cm, $dossier, $slot, $doctypes) {
+            global $DB;
 
-        if (($slot === 'dg' && signatureagent::signs_dg_by_delegation($these)) || !university::sends_link($these, $slot)) {
-            return null;
-        }
-        $doctypes = self::pending_documents_for_slot($dossier, $slot, $doctypes);
-        if (!$doctypes) {
-            return null;
-        }
-        $signer = signatures::external_signers($dossier)[$slot];
-        $token = rights::new_token();
-        $now = time();
-        foreach ($doctypes as $doctype) {
-            $signature = $DB->get_record('these_signature', ['dossierid' => $dossier->id, 'doctype' => $doctype, 'slot' => $slot]);
-            $record = (object) [
-                'dossierid' => $dossier->id,
-                'doctype' => $doctype,
-                'slot' => $slot,
-                'userid' => 0,
-                'signername' => $signer['name'],
-                'signeremail' => $signer['email'],
-                'token' => rights::token_hash($token),
-                'requesttime' => $now,
-                'timesigned' => 0,
-                'contenthash' => null,
-                'templatehash' => null,
-            ];
-            if ($signature) {
-                $record->id = $signature->id;
-                $DB->update_record('these_signature', $record);
-            } else {
-                $record->timecreated = $now;
-                $DB->insert_record('these_signature', $record);
+            if (($slot === 'dg' && signatureagent::signs_dg_by_delegation($these)) || !university::sends_link($these, $slot)) {
+                return null;
             }
-        }
+            $doctypes = self::pending_documents_for_slot($dossier, $slot, $doctypes);
+            if (!$doctypes) {
+                return null;
+            }
+            $signer = signatures::external_signers($dossier)[$slot];
+            $token = rights::new_token();
+            $now = time();
+            foreach ($doctypes as $doctype) {
+                $signature = $DB->get_record(
+                    'these_signature',
+                    ['dossierid' => $dossier->id, 'doctype' => $doctype, 'slot' => $slot]
+                );
+                $record = (object) [
+                    'dossierid' => $dossier->id,
+                    'doctype' => $doctype,
+                    'slot' => $slot,
+                    'userid' => 0,
+                    'signername' => $signer['name'],
+                    'signeremail' => $signer['email'],
+                    'token' => rights::token_hash($token),
+                    'requesttime' => $now,
+                    'timesigned' => 0,
+                    'contenthash' => null,
+                    'templatehash' => null,
+                ];
+                if ($signature) {
+                    $record->id = $signature->id;
+                    $DB->update_record('these_signature', $record);
+                } else {
+                    $record->timecreated = $now;
+                    $DB->insert_record('these_signature', $record);
+                }
+            }
 
-        $labels = implode(', ', array_map([signatures::class, 'document_label'], $doctypes));
-        if ($signer['email'] !== '' && validate_email($signer['email'])) {
-            $vars = notifications::email_base_vars($these, $cm, $dossier);
-            $vars['name'] = $signer['name'];
-            $vars['document'] = $labels;
-            $vars['url'] = (new moodle_url('/mod/these/sign.php', ['token' => $token]))->out(false);
-            notifications::send_email(
-                $these,
-                'signaturerequest',
-                [notifications::make_external_user($signer['email'], $signer['name'])],
-                $vars,
-                '',
-                '',
-                $dossier
+            $labels = implode(', ', array_map([signatures::class, 'document_label'], $doctypes));
+            if ($signer['email'] !== '' && validate_email($signer['email'])) {
+                $vars = notifications::email_base_vars($these, $cm, $dossier);
+                $vars['name'] = $signer['name'];
+                $vars['document'] = $labels;
+                $vars['url'] = (new moodle_url('/mod/these/sign.php', ['token' => $token]))->out(false);
+                notifications::send_email(
+                    $these,
+                    'signaturerequest',
+                    [notifications::make_external_user($signer['email'], $signer['name'])],
+                    $vars,
+                    '',
+                    '',
+                    $dossier
+                );
+            }
+            dossiers::log(
+                $dossier->id,
+                0,
+                'signaturerequested',
+                $dossier->status,
+                $dossier->status,
+                signatures::slot_label($slot) . ($signer['name'] !== '' ? ' (' . $signer['name'] . ')' : '') . ' — ' . $labels
             );
-        }
-        dossiers::log(
-            $dossier->id,
-            0,
-            'signaturerequested',
-            $dossier->status,
-            $dossier->status,
-            signatures::slot_label($slot) . ($signer['name'] !== '' ? ' (' . $signer['name'] . ')' : '') . ' — ' . $labels
-        );
-        return $token;
+            return $token;
+        });
     }
 
     /**
@@ -178,10 +187,13 @@ class signaturetokens {
     /**
      * Signatures en attente correspondant à un jeton d'invitation : tous les documents qu'un même
      * signataire doit signer dans un dossier. Le lien vaut rights::TOKEN_LIFETIME à partir de
-     * l'invitation ; la DEVE peut en envoyer un nouveau depuis le suivi des signatures.
+     * l'invitation ; la DEVE peut en envoyer un nouveau depuis le suivi des signatures. Comme les
+     * signatures des agents (voir signatureagent::get_user_pending_signatures()), celles d'un dossier
+     * abandonné ne sont plus proposées : le lien vaut de nouveau si le dossier est rouvert.
      *
      * @param string $token
-     * @return stdClass[] Signatures en attente, vide si le jeton est inconnu, déjà utilisé ou expiré.
+     * @return stdClass[] Signatures en attente, vide si le jeton est inconnu, déjà utilisé ou expiré, ou si
+     *                    le dossier est abandonné.
      */
     public static function get_signatures_by_token($token) {
         global $DB;
@@ -190,11 +202,14 @@ class signaturetokens {
         if (strlen($token) < 32) {
             return [];
         }
-        return array_values($DB->get_records_select(
-            'these_signature',
-            'token = :token AND timesigned = 0 AND requesttime > :since',
-            ['token' => rights::token_hash($token), 'since' => time() - rights::TOKEN_LIFETIME],
-            'id ASC'
+        return array_values($DB->get_records_sql(
+            "SELECT s.*
+               FROM {these_signature} s
+               JOIN {these_dossier} d ON d.id = s.dossierid
+              WHERE s.token = :token AND s.timesigned = 0 AND s.requesttime > :since AND d.status <> :cancelled
+           ORDER BY s.id ASC",
+            ['token' => rights::token_hash($token), 'since' => time() - rights::TOKEN_LIFETIME,
+                'cancelled' => THESE_STATUS_CANCELLED]
         ));
     }
 }

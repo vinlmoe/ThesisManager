@@ -34,6 +34,11 @@ require_once(__DIR__ . '/these_testcase.php');
  * @covers     ::these_render_dossier
  * @covers     \mod_these\local\rendering::spreadsheet_safe
  */
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_get_email_definitions')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_validate_jury')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_suggest_devenumber')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('these_render_dossier')]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\rendering::class)]
 final class helpers_test extends these_testcase {
     /**
      * Export tableur : une cellule qui commence par =, +, - ou @ est précédée d'une apostrophe ; les
@@ -91,14 +96,14 @@ final class helpers_test extends these_testcase {
     public function test_devenumber(): void {
         $this->setup_activity();
         $year = userdate(time(), '%Y');
-        $this->assertEquals($year . '-001', these_suggest_devenumber($this->these->id));
+        $this->assertEquals($year . '-001', these_suggest_devenumber());
 
         $other = $this->getDataGenerator()->create_and_enrol($this->course, 'student');
         $dossier = $this->generator->create_dossier($this->these, $this->student->id, ['devenumber' => $year . '-007']);
         $this->generator->create_dossier($this->these, $other->id, ['devenumber' => 'ANCIEN-12']);
-        $this->assertEquals($year . '-008', these_suggest_devenumber($this->these->id));
-        $this->assertTrue(these_devenumber_taken($this->these->id, $year . '-007'));
-        $this->assertFalse(these_devenumber_taken($this->these->id, $year . '-007', $dossier->id));
+        $this->assertEquals($year . '-008', these_suggest_devenumber());
+        $this->assertTrue(these_devenumber_taken($year . '-007'));
+        $this->assertFalse(these_devenumber_taken($year . '-007', $dossier->id));
     }
 
     /**

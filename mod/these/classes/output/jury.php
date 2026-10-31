@@ -75,12 +75,30 @@ class jury implements \renderable, \templatable {
     }
 
     /**
+     * Ligne du compte Moodle rattaché à un membre (vue de la DEVE) : seul ce compte le fait reconnaître
+     * comme membre du jury ; sans compte, il accède aux documents par le lien envoyé par courriel.
+     *
+     * @param \stdClass $member
+     * @param array $accounts Comptes rattachés, indexés par id.
+     * @return array Fragment.
+     */
+    protected function account(\stdClass $member, array $accounts): array {
+        $account = $accounts[(int) ($member->userid ?? 0)] ?? null;
+        if ($account) {
+            return parts::muted(get_string('juryuseraccount', 'mod_these', fullname($account)));
+        }
+        return parts::muted(get_string('jurynoaccount', 'mod_these'));
+    }
+
+    /**
      * Données du gabarit mod_these/jury.
      *
      * @param \renderer_base $output
      * @return array hasmembers, heading, table (voir table_context)
      */
     public function export_for_template(\renderer_base $output): array {
+        global $DB;
+
         if (empty($this->members)) {
             return ['hasmembers' => false, 'heading' => '', 'table' => false];
         }
@@ -93,6 +111,12 @@ class jury implements \renderable, \templatable {
         }
         if ($this->staff) {
             $head[] = get_string('juryeligiblecheck', 'mod_these');
+        }
+        $accounts = [];
+        $userids = array_filter(array_map('intval', array_column($this->members, 'userid')));
+        if ($this->staff && $userids) {
+            $fields = 'id,' . implode(',', \core_user\fields::get_name_fields());
+            $accounts = $DB->get_records_list('user', 'id', array_unique($userids), '', $fields);
         }
         $rows = [];
         foreach ($this->members as $member) {
@@ -107,7 +131,7 @@ class jury implements \renderable, \templatable {
                 $row[] = [parts::text($member->email)];
             }
             if ($this->staff) {
-                $row[] = $this->eligibility($member);
+                $row[] = array_merge($this->eligibility($member), [$this->account($member, $accounts)]);
             }
             $rows[] = $row;
         }

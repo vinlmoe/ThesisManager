@@ -29,6 +29,7 @@ require_once(__DIR__ . '/output_testcase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_thesesynthesis\output\search_form
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_thesesynthesis\output\search_form::class)]
 final class search_form_test extends output_testcase {
     /**
      * Contexte : quatre champs, puis un champ par question (texte ou liste avec « Indifférent »),
@@ -71,12 +72,14 @@ final class search_form_test extends output_testcase {
             these_get_questions($this->env->scope),
             []
         ));
-        $this->assertStringContainsString('id="thesesynthesis-search"', $html);
-        $field = '<div class="form-inline d-flex align-items-center mb-2"><label class="mr-2 me-2 mb-1">';
-        $this->assertStringContainsString($field, $html);
-        $this->assertStringContainsString('<h5 class="mt-3">' . get_string('questionnaire', 'mod_these') . '</h5>', $html);
-        $input = '<input type="text" name="q" value="" size="50" class="form-control" id="search-q" />';
-        $this->assertStringContainsString($input, $html);
-        $this->assertStringEndsWith('class="btn btn-secondary">' . get_string('reset') . '</a></form>', $html);
+        $form = './/form[@id = "thesesynthesis-search"]';
+        $this->assert_html_has($html, $form);
+        // Chaque champ sur sa ligne, précédé de son libellé.
+        $this->assert_html_has($html, $form . '//div[' . self::xclass('form-inline') . ']/label');
+        $this->assert_html_has($html, $form . '//h5[normalize-space() = "' . get_string('questionnaire', 'mod_these') . '"]');
+        $this->assert_html_has($html, $form . '//input[@type = "text"][@name = "q"][@id = "search-q"][@value = ""]');
+        // Le formulaire se termine par le lien de réinitialisation.
+        $last = $form . '/*[last()][self::a][@href][' . self::xclass('btn-secondary') . ']';
+        $this->assert_html_has($html, $last . '[normalize-space() = "' . get_string('reset') . '"]');
     }
 }
