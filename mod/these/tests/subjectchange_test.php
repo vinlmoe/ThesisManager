@@ -173,4 +173,32 @@ final class subjectchange_test extends these_testcase {
             $this->assertTrue(\mod_these\local\rights::user_knows_archived_subject($entry, $dossier, $this->context, $user->id));
         }
     }
+
+    /**
+     * Changement de sujet d'un dossier dont le directeur a vu son compte supprimé : le changement est
+     * enregistré (l'ancien sujet est archivé sans nom de directeur) au lieu d'échouer sur une TypeError.
+     * Scénario relevé par le test de charge (tools/stresstest).
+     */
+    public function test_change_subject_with_deleted_director(): void {
+        $this->setup_activity();
+        $newdirector = $this->getDataGenerator()->create_and_enrol($this->course, 'teacher');
+        $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
+            'status' => THESE_STATUS_ACTIVE, 'directorid' => $this->director->id, 'title' => 'Ancien sujet',
+        ]);
+        delete_user($this->director);
+        $sink = $this->redirectEmails();
+
+        $data = (object) ['title' => 'Nouveau sujet', 'titleen' => '', 'summary' => 'Résumé', 'keywords' => 'x ; y',
+            'studyyear' => 'A5', 'directorid' => $newdirector->id, 'confidential' => 0, 'externaldirector' => 0];
+        these_change_subject($this->these, $this->cm, $dossier, $data, $this->student->id, 'Directeur parti.');
+        $sink->close();
+
+        $dossier = $this->reload($dossier->id);
+        $this->assertEquals(THESE_STATUS_SUBJECT_SUBMITTED, $dossier->status);
+        $this->assertEquals($newdirector->id, $dossier->directorid);
+        $history = array_values(these_get_subject_history($dossier->id));
+        $this->assertCount(1, $history);
+        $this->assertSame('Ancien sujet', $history[0]->title);
+        $this->assertSame('', $history[0]->directorname);
+    }
 }

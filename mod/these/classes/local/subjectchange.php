@@ -87,7 +87,9 @@ class subjectchange {
                 throw new coding_exception('Changement de sujet impossible au statut ' . $dossier->status);
             }
             $context = context_module::instance($cm->id);
-            $olddirector = $dossier->directorid ? $DB->get_record('user', ['id' => $dossier->directorid, 'deleted' => 0]) : null;
+            // Ancien directeur dont le compte a été supprimé : ni nom à archiver, ni personne à prévenir.
+            $olddirector = $dossier->directorid
+                ? ($DB->get_record('user', ['id' => $dossier->directorid, 'deleted' => 0]) ?: null) : null;
             self::archive_subject($these, $context, $dossier, $olddirector, $userid, $reason);
 
             // Tous les documents signés (sujet, et soutenance d'un dossier abandonné relancé) sont
