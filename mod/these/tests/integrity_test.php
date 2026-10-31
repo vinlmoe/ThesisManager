@@ -296,6 +296,34 @@ final class integrity_test extends these_testcase {
     }
 
     /**
+     * La génération des documents de soutenance est une opération sur le dossier : sur un dossier qui a
+     * changé de statut entre-temps (documents transmis par une autre personne de la DEVE), elle est
+     * refusée et ne touche pas aux documents. Scénario relevé par le test de charge en concurrence
+     * (tools/stresstest) : une génération pendant la transmission supprimait les fichiers en cours
+     * d'envoi (erreur de ZipArchive) et l'historique ne suivait plus le statut.
+     */
+    public function test_generate_documents_of_changed_dossier_is_refused(): void {
+        global $DB;
+        $this->setup_activity();
+        $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
+            'status' => THESE_STATUS_CONFORM, 'directorid' => $this->director->id, 'defensedate' => time() + WEEKSECS,
+        ]);
+        $seen = clone $dossier;
+        these_set_status($dossier, THESE_STATUS_SCHEDULED, $this->deve->id, 'documentssent');
+        try {
+            these_generate_documents($this->these, $this->context, $seen, $this->deve->id);
+            $this->fail('Génération sur un dossier périmé acceptée');
+        } catch (\moodle_exception $e) {
+            $this->assertSame('dossierchanged', $e->errorcode);
+        }
+        $this->assertEmpty(these_get_files($this->context, 'generated', $dossier->id));
+        $this->assertFalse($DB->record_exists('these_log', ['dossierid' => $dossier->id, 'logaction' => 'documentsgenerated']));
+
+        $dossier = $this->reload($dossier->id);
+        $this->assertNotEmpty(these_generate_documents($this->these, $this->context, $dossier, $this->deve->id));
+    }
+
+    /**
      * Les modèles ne peuvent faire lire à TCPDF que les images du module ou des images en ligne.
      */
     public function test_template_images_are_restricted(): void {
