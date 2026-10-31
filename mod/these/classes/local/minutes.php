@@ -47,6 +47,8 @@ class minutes {
      * @param int $userid
      * @param stdClass $decision {result, mention, prizeproposal, correctionsrequested, correctionsnote}
      * @param string $remark
+     * @param array $drafts Brouillons des gestionnaires de fichiers du formulaire (zone => draftitemid),
+     *                      enregistrés dans l'opération (voir files::save_drafts()).
      * @return stdClass Le dossier à jour.
      */
     public static function record_minutes(
@@ -55,9 +57,11 @@ class minutes {
         stdClass $dossier,
         $userid,
         stdClass $decision,
-        $remark = ''
+        $remark = '',
+        array $drafts = []
     ) {
-        return dossiers::dossier_operation($dossier, function () use ($these, $cm, $dossier, $userid, $decision, $remark) {
+        $operation = function () use ($these, $cm, $dossier, $userid, $decision, $remark, $drafts) {
+            files::save_drafts($dossier, $drafts);
             $admitted = (int) $decision->result === THESE_RESULT_ADMITTED;
             $mention = (string) ($decision->mention ?? '');
             $corrections = $admitted && !empty($decision->correctionsrequested);
@@ -90,7 +94,8 @@ class minutes {
                 'result' => (int) $decision->result, 'corrections' => $corrections,
             ])->trigger();
             return $dossier;
-        });
+        };
+        return dossiers::dossier_operation($dossier, $operation);
     }
 
     /**
@@ -162,18 +167,28 @@ class minutes {
     }
 
     /**
-     * Dépôt du manuscrit corrigé par l'étudiant (les fichiers sont enregistrés par l'appelant) : le
-     * dossier passe au directeur, ou revient à l'étape qui l'avait renvoyé.
+     * Dépôt du manuscrit corrigé par l'étudiant (brouillon du formulaire enregistré dans la même
+     * opération) : le dossier passe au directeur, ou revient à l'étape qui l'avait renvoyé.
      *
      * @param stdClass $these
      * @param stdClass $cm
      * @param stdClass $dossier
      * @param int $userid
      * @param string $done Corrections apportées.
+     * @param array $drafts Brouillons des gestionnaires de fichiers du formulaire (zone => draftitemid),
+     *                      enregistrés dans l'opération (voir files::save_drafts()).
      * @return stdClass Le dossier à jour.
      */
-    public static function submit_corrections(stdClass $these, stdClass $cm, stdClass $dossier, $userid, $done) {
-        return dossiers::dossier_operation($dossier, function () use ($these, $cm, $dossier, $userid, $done) {
+    public static function submit_corrections(
+        stdClass $these,
+        stdClass $cm,
+        stdClass $dossier,
+        $userid,
+        $done,
+        array $drafts = []
+    ) {
+        return dossiers::dossier_operation($dossier, function () use ($these, $cm, $dossier, $userid, $done, $drafts) {
+            files::save_drafts($dossier, $drafts);
             if ((int) $dossier->status !== THESE_STATUS_CORRECTIONS) {
                 throw new coding_exception('Dépôt des corrections impossible au statut ' . $dossier->status);
             }

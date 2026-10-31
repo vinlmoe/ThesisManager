@@ -149,8 +149,8 @@ function these_report_editable(stdClass $dossier) {
  * @param bool $favorable
  * @return stdClass Le dossier à jour.
  */
-function these_save_report(stdClass $dossier, $userid, $favorable) {
-    return \mod_these\local\defenses::save_report($dossier, $userid, $favorable);
+function these_save_report(stdClass $dossier, $userid, $favorable, array $drafts = []) {
+    return \mod_these\local\defenses::save_report($dossier, $userid, $favorable, $drafts);
 }
 
 /**
@@ -252,9 +252,10 @@ function these_save_defense(
     stdClass $data,
     $submit,
     $userid,
-    ?stdClass $signature = null
+    ?stdClass $signature = null,
+    array $drafts = []
 ) {
-    return \mod_these\local\defenses::save_defense($these, $cm, $dossier, $data, $submit, $userid, $signature);
+    return \mod_these\local\defenses::save_defense($these, $cm, $dossier, $data, $submit, $userid, $signature, $drafts);
 }
 
 /**
@@ -331,8 +332,16 @@ function these_reopen_dossier(stdClass $dossier, $userid, $comment = '') {
  * @param string $remark
  * @return stdClass Le dossier à jour.
  */
-function these_record_minutes(stdClass $these, stdClass $cm, stdClass $dossier, $userid, stdClass $decision, $remark = '') {
-    return \mod_these\local\minutes::record_minutes($these, $cm, $dossier, $userid, $decision, $remark);
+function these_record_minutes(
+    stdClass $these,
+    stdClass $cm,
+    stdClass $dossier,
+    $userid,
+    stdClass $decision,
+    $remark = '',
+    array $drafts = []
+) {
+    return \mod_these\local\minutes::record_minutes($these, $cm, $dossier, $userid, $decision, $remark, $drafts);
 }
 
 /**
@@ -369,8 +378,8 @@ function these_is_adjourned(stdClass $dossier) {
  * @param string $done Corrections apportées.
  * @return stdClass Le dossier à jour.
  */
-function these_submit_corrections(stdClass $these, stdClass $cm, stdClass $dossier, $userid, $done) {
-    return \mod_these\local\minutes::submit_corrections($these, $cm, $dossier, $userid, $done);
+function these_submit_corrections(stdClass $these, stdClass $cm, stdClass $dossier, $userid, $done, array $drafts = []) {
+    return \mod_these\local\minutes::submit_corrections($these, $cm, $dossier, $userid, $done, $drafts);
 }
 
 /**

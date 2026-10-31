@@ -78,15 +78,8 @@ $mform->set_data($params + [
 if ($mform->is_cancelled()) {
     redirect(backlinks::to_dossier($cm, $dossier)->url);
 } else if ($data = $mform->get_data()) {
-    file_save_draft_area_files(
-        $data->directorreport,
-        $context->id,
-        'mod_these',
-        'directorreport',
-        $dossier->id,
-        these_filemanager_options('directorreport')
-    );
-    these_save_report($dossier, $USER->id, !empty($data->reportfavorable));
+    // Rapport enregistré dans l'opération, sous le verrou du dossier (double envoi du formulaire).
+    these_save_report($dossier, $USER->id, !empty($data->reportfavorable), ['directorreport' => $data->directorreport]);
     redirect(
         backlinks::after_action($cm, $dossierurl),
         get_string('reportsaved', 'mod_these'),

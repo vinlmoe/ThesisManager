@@ -52,15 +52,18 @@ class defenses {
 
     /**
      * Enregistre l'avis du directeur sur son rapport (sans changer le statut du dossier) ; le rapport
-     * lui-même est un fichier, déposé par l'appelant (zone directorreport).
+     * lui-même est un fichier (zone directorreport), enregistré dans la même opération.
      *
      * @param stdClass $dossier
      * @param int $userid
      * @param bool $favorable
+     * @param array $drafts Brouillons des gestionnaires de fichiers du formulaire (zone => draftitemid),
+     *                      enregistrés dans l'opération (voir files::save_drafts()).
      * @return stdClass Le dossier à jour.
      */
-    public static function save_report(stdClass $dossier, $userid, $favorable) {
-        return dossiers::dossier_operation($dossier, function () use ($dossier, $userid, $favorable) {
+    public static function save_report(stdClass $dossier, $userid, $favorable, array $drafts = []) {
+        return dossiers::dossier_operation($dossier, function () use ($dossier, $userid, $favorable, $drafts) {
+            files::save_drafts($dossier, $drafts);
             return dossiers::set_status($dossier, $dossier->status, $userid, 'reportsaved', '', [
                 'reportfavorable' => $favorable ? 1 : 0,
             ]);
@@ -101,8 +104,8 @@ class defenses {
     /**
      * Enregistre le dossier de soutenance (phase 2, étape 1) : date proposée, jury, données du
      * bordereau, de la fiche signalétique et du contrat de diffusion, conclusions, et, si demandé, le
-     * soumet signé (bordereau et contrat de diffusion). Le manuscrit est enregistré par l'appelant ;
-     * la salle est attribuée par la DEVE à la validation du dossier.
+     * soumet signé (bordereau et contrat de diffusion). Le manuscrit (brouillon du formulaire) est
+     * enregistré dans la même opération ; la salle est attribuée par la DEVE à la validation du dossier.
      *
      * @param stdClass $these
      * @param stdClass $cm
@@ -113,6 +116,8 @@ class defenses {
      * @param bool $submit
      * @param int $userid
      * @param stdClass|null $signature Signature de l'étudiant (voir these_signature_from_form()).
+     * @param array $drafts Brouillons des gestionnaires de fichiers du formulaire (zone => draftitemid),
+     *                      enregistrés dans l'opération (voir files::save_drafts()).
      * @return stdClass Le dossier à jour.
      */
     public static function save_defense(
@@ -122,9 +127,11 @@ class defenses {
         stdClass $data,
         $submit,
         $userid,
-        ?stdClass $signature = null
+        ?stdClass $signature = null,
+        array $drafts = []
     ) {
-        return dossiers::dossier_operation($dossier, function () use ($these, $cm, $dossier, $data, $submit, $userid, $signature) {
+        $operation = function () use ($these, $cm, $dossier, $data, $submit, $userid, $signature, $drafts) {
+            files::save_drafts($dossier, $drafts);
             $context = context_module::instance($cm->id);
             jury::save_jury($dossier->id, juryform::extract_submitted_jury($data));
 
@@ -185,6 +192,7 @@ class defenses {
             }
             notifications::notify_actor($these, $cm, $dossier);
             return $dossier;
-        });
+        };
+        return dossiers::dossier_operation($dossier, $operation);
     }
 }

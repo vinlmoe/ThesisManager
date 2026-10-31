@@ -131,20 +131,22 @@ $mform->set_data($formdata);
 if ($mform->is_cancelled()) {
     redirect($viewurl);
 } else if ($data = $mform->get_data()) {
-    file_save_draft_area_files(
-        $data->manuscript,
-        $context->id,
-        'mod_these',
-        'manuscript',
-        $dossier->id,
-        these_filemanager_options('manuscript')
-    );
     // Réponses au questionnaire, enregistrées avec le brouillon comme à la soumission.
     if ($questions) {
         these_save_answers($dossier, $questions, $data);
     }
     $submit = !empty($data->submitdefense);
-    these_save_defense($these, $cm, $dossier, $data, $submit, $USER->id, $submit ? these_signature_from_form($data) : null);
+    // Manuscrit enregistré dans l'opération, sous le verrou du dossier (double envoi du formulaire).
+    these_save_defense(
+        $these,
+        $cm,
+        $dossier,
+        $data,
+        $submit,
+        $USER->id,
+        $submit ? these_signature_from_form($data) : null,
+        ['manuscript' => $data->manuscript]
+    );
     redirect(
         $viewurl,
         get_string($submit ? 'defensesubmittedmsg' : 'draftsaved', 'mod_these'),

@@ -477,28 +477,24 @@ class stress_runner {
     }
 
     /**
-     * Dépose un fichier PDF minimal dans une zone d'un dossier.
+     * Brouillon d'un gestionnaire de fichiers de l'utilisateur courant (dépôt d'un fichier dans un
+     * formulaire), enregistré par l'opération dans la zone du dossier, sous son verrou, comme le fait la
+     * page (voir \mod_these\local\files::save_drafts()).
      *
-     * @param context $context
      * @param string $filearea
-     * @param int $dossierid
      * @param string $filename
-     * @return void
+     * @return array Zone => identifiant du brouillon.
      */
-    protected function put_file(context $context, $filearea, $dossierid, $filename) {
-        $fs = get_file_storage();
-        $fs->delete_area_files($context->id, 'mod_these', $filearea, $dossierid);
-        try {
-            $fs->create_file_from_string(
-                ['contextid' => $context->id, 'component' => 'mod_these', 'filearea' => $filearea,
-                'itemid' => $dossierid, 'filepath' => '/', 'filename' => $filename],
-                "%PDF-1.4\n% " . $filearea . ' ' . random_string(16) . "\n%%EOF\n"
-            );
-        } catch (stored_file_creation_exception $e) {
-            // Même fichier déposé au même instant par un autre processus (double envoi du formulaire) :
-            // la page, qui enregistre ses fichiers hors du verrou du dossier, échouerait de même.
-            throw new stress_refusal('fichier déposé en même temps (double envoi)');
-        }
+    protected function draft_file($filearea, $filename) {
+        global $CFG, $USER;
+        require_once($CFG->libdir . '/filelib.php');
+        $draftitemid = file_get_unused_draft_itemid();
+        get_file_storage()->create_file_from_string(
+            ['contextid' => \context_user::instance($USER->id)->id, 'component' => 'user', 'filearea' => 'draft',
+            'itemid' => $draftitemid, 'filepath' => '/', 'filename' => $filename],
+            "%PDF-1.4\n% " . $filearea . ' ' . random_string(16) . "\n%%EOF\n"
+        );
+        return [$filearea => $draftitemid];
     }
 
     /**
@@ -1070,7 +1066,7 @@ class stress_runner {
         }
         $submit = $this->chance(80);
         $this->think();
-        $this->put_file($activity->context, 'manuscript', $dossier->id, 'manuscrit.pdf');
+        $drafts = $this->draft_file('manuscript', 'manuscrit.pdf');
         these_save_answers($dossier, $questions, $answers);
         these_save_defense(
             $activity->these,
@@ -1079,7 +1075,8 @@ class stress_runner {
             $data,
             $submit,
             $student->id,
-            $submit ? $this->signature($student) : null
+            $submit ? $this->signature($student) : null,
+            $drafts
         );
         return true;
     }
@@ -1112,8 +1109,7 @@ class stress_runner {
             throw new stress_refusal('rapport non modifiable');
         }
         $this->think();
-        $this->put_file($activity->context, 'directorreport', $dossier->id, 'rapport.pdf');
-        these_save_report($dossier, $user->id, $this->chance(90));
+        these_save_report($dossier, $user->id, $this->chance(90), $this->draft_file('directorreport', 'rapport.pdf'));
         return true;
     }
 
@@ -1547,12 +1543,11 @@ class stress_runner {
         $roll = $this->rand(1, 100);
         $result = $roll <= 20 ? THESE_RESULT_ADJOURNED : THESE_RESULT_ADMITTED;
         $this->think();
-        $this->put_file($activity->context, 'pv', $dossier->id, 'pv-' . random_string(4) . '.pdf');
         these_record_minutes($activity->these, $activity->cm, $dossier, $user->id, (object) [
             'result' => $result, 'mention' => $this->pick(['', 'honorable', 'treshonorable']),
             'prizeproposal' => $this->chance(10), 'correctionsrequested' => $roll > 60,
             'correctionsnote' => 'Corriger la discussion.',
-        ], 'PV');
+        ], 'PV', $this->draft_file('pv', 'pv-' . random_string(4) . '.pdf'));
         return true;
     }
 
@@ -1579,8 +1574,14 @@ class stress_runner {
             throw new stress_refusal('corrections non attendues');
         }
         $this->think();
-        $this->put_file($activity->context, 'corrections', $dossier->id, 'corrige.pdf');
-        these_submit_corrections($activity->these, $activity->cm, $dossier, $student->id, 'Corrections faites.');
+        these_submit_corrections(
+            $activity->these,
+            $activity->cm,
+            $dossier,
+            $student->id,
+            'Corrections faites.',
+            $this->draft_file('corrections', 'corrige.pdf')
+        );
         return true;
     }
 

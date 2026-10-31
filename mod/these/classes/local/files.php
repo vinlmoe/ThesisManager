@@ -17,6 +17,7 @@
 namespace mod_these\local;
 
 use context;
+use stdClass;
 
 /**
  * Zones de fichiers des dossiers.
@@ -60,6 +61,37 @@ class files {
                 break;
         }
         return $options;
+    }
+
+    /**
+     * Enregistre les brouillons des gestionnaires de fichiers d'un formulaire dans les zones du dossier.
+     * À appeler dans l'opération qui enregistre le formulaire (dossiers::dossier_operation()), sous le
+     * verrou du dossier : deux envois simultanés du même formulaire ne se disputent plus la zone ; le
+     * second trouve le dossier changé (refus attendu) ou réenregistre le même brouillon, sans effet.
+     *
+     * @param stdClass $dossier
+     * @param array $drafts Zone => identifiant du brouillon (draftitemid).
+     * @return void
+     */
+    public static function save_drafts(stdClass $dossier, array $drafts) {
+        global $CFG;
+
+        if (!$drafts) {
+            return;
+        }
+        require_once($CFG->libdir . '/filelib.php');
+        $cm = get_coursemodule_from_instance('these', $dossier->theseid, 0, false, MUST_EXIST);
+        $context = \context_module::instance($cm->id);
+        foreach ($drafts as $filearea => $draftitemid) {
+            file_save_draft_area_files(
+                (int) $draftitemid,
+                $context->id,
+                'mod_these',
+                $filearea,
+                $dossier->id,
+                self::filemanager_options($filearea)
+            );
+        }
     }
 
     /**
