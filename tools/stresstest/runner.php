@@ -86,6 +86,8 @@ class stress_runner {
     public $synthesis;
     /** @var int[] Dossiers auxquels se limite le tirage (concurrence), vide pour tous. */
     protected $focus = [];
+    /** @var array Jetons de signature envoyés, par dossier : vérifiés inutilisables une fois le dossier abandonné. */
+    protected $tokens = [];
     /** @var stdClass|null Étudiant imposé à la prochaine création de dossier (peuplement). */
     protected $forcestudent = null;
 
@@ -565,6 +567,8 @@ class stress_runner {
 
         $this->opnumber++;
         $touched = [];
+        // Chaque opération est une nouvelle requête : les caches de requête repartent de zéro.
+        \mod_these\local\scopesettings::reset_cache();
         $start = microtime(true);
         $outcome = 'ok';
         $message = '';
@@ -1293,6 +1297,7 @@ class stress_runner {
             if ($token === null) {
                 throw new stress_refusal('pas de lien pour ' . $slot);
             }
+            $this->tokens[$dossier->id][] = $token;
             \core\session\manager::set_user(guest_user());
             $this->think();
             $pending = these_get_signatures_by_token($token);
@@ -1400,6 +1405,7 @@ class stress_runner {
             $this->violation('ancien jeton encore valide après un nouvel envoi', 'signtoken', $dossier->id);
         }
         $token = $second ?? $token;
+        $this->tokens[$dossier->id][] = $token;
         if ($this->chance(50)) {
             // Jeton expiré.
             global $DB;
@@ -1984,8 +1990,11 @@ class stress_runner {
         }
         $logs = array_values($DB->get_records('these_log', ['dossierid' => $id], 'id ASC'));
         // Dossier réduit à son procès-verbal par un effacement RGPD (ici ou dans un autre processus).
-        $kept = !empty($this->keptminutes[$id]['erased']) || (!$logs && (int) $dossier->defenseresult !== 0)
-            || (!$logs && !get_file_storage()->is_area_empty($this->activity($dossier)->context->id, 'mod_these', 'pv', $id));
+        $reduced = !$logs || $logs[0]->logaction !== 'created';
+        $minutes = (int) $dossier->defenseresult !== 0
+            || !get_file_storage()->is_area_empty($this->activity($dossier)->context->id, 'mod_these', 'pv', $id)
+            || !get_file_storage()->is_area_empty($this->activity($dossier)->context->id, 'mod_these', 'pvadjourned', $id);
+        $kept = !empty($this->keptminutes[$id]['erased']) || ($reduced && $minutes);
         if ($kept && empty($this->keptminutes[$id]['erased'])) {
             // Effacé par un autre processus : l'état d'avant n'est pas connu ici.
             unset($this->keptminutes[$id]);
@@ -2083,18 +2092,31 @@ class stress_runner {
                 $violations[] = "empreinte du document scellé $doctype absente de l'historique";
             }
         }
+        // Demande d'une autre date : sans objet une fois la soutenance déposée de nouveau (avec une date).
+        if (!empty($dossier->daterequested)) {
+            $requested = $resubmitted = 0;
+            foreach ($logs as $log) {
+                if ($log->logaction === 'daterequested') {
+                    $requested = (int) $log->id;
+                } else if (in_array($log->logaction, ['defensesubmitted', 'defenseresubmitted'], true)) {
+                    $resubmitted = (int) $log->id;
+                }
+            }
+            if ($resubmitted > $requested) {
+                $violations[] = 'nouvelle date encore attendue alors que la soutenance a été déposée de nouveau';
+            }
+        }
         // Accès du jury révoqués pour un dossier clos ou abandonné.
         if (in_array($status, [THESE_STATUS_CLOSED, THESE_STATUS_CANCELLED], true)) {
             if ($DB->record_exists_select('these_jury', 'dossierid = ? AND accesstoken IS NOT NULL', [$id])) {
                 $violations[] = 'lien d\'accès du jury actif sur un dossier clos ou abandonné';
             }
         }
-        foreach ($signatures as $key => $signature) {
-            if (
-                $signature->token !== null && $status === THESE_STATUS_CANCELLED
-                    && self::signatures_by_token_hash($signature->token)
-            ) {
-                $violations[] = "lien de signature utilisable sur un dossier $status : $key";
+        if ($status === THESE_STATUS_CANCELLED) {
+            foreach ($this->tokens[$id] ?? [] as $token) {
+                foreach (these_get_signatures_by_token($token) as $pending) {
+                    $violations[] = "lien de signature utilisable sur un dossier abandonné : {$pending->doctype}:{$pending->slot}";
+                }
             }
         }
         // Calendrier : un événement exactement pour une soutenance arrêtée.
@@ -2188,8 +2210,19 @@ class stress_runner {
             }
             // Fichiers lisibles : l'archive d'un ancien sujet confidentiel reproduit son titre.
             if (these_can_view_filearea('subjectarchive', $rights)) {
+                $files = \mod_these\local\files::get_files($activity->context, 'subjectarchive', $dossier->id);
                 foreach ($DB->get_records('these_subjecthistory', ['dossierid' => $dossier->id, 'confidential' => 1]) as $e) {
-                    if (\mod_these\local\files::get_files($activity->context, 'subjectarchive', $dossier->id)) {
+                    $archived = array_filter($files, function ($file) use ($e) {
+                        return preg_match('/-' . $e->id . '\.pdf$/', $file->get_filename());
+                    });
+                    if (
+                        $archived && \mod_these\local\rights::user_knows_archived_subject(
+                            $e,
+                            $dossier,
+                            $activity->context,
+                            $user->id
+                        )
+                    ) {
                         $violations[] = "archive d'un ancien sujet confidentiel accessible à {$user->username}";
                         break;
                     }
@@ -2247,21 +2280,5 @@ class stress_runner {
             $violations[] = "$orphans événement(s) de soutenance sans dossier";
         }
         return $violations;
-    }
-
-    /**
-     * Signatures en attente pour une empreinte de jeton (sans le contrôle du statut du dossier), pour
-     * vérifier qu'un lien d'un dossier abandonné ne mène plus à rien (voir these_get_signatures_by_token()).
-     *
-     * @param string $hash
-     * @return stdClass[]
-     */
-    protected static function signatures_by_token_hash($hash) {
-        global $DB;
-        return $DB->get_records_select(
-            'these_signature',
-            'token = :token AND timesigned = 0 AND requesttime > :since',
-            ['token' => $hash, 'since' => time() - \mod_these\local\rights::TOKEN_LIFETIME]
-        );
     }
 }
