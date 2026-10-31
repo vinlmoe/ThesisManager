@@ -418,7 +418,9 @@ qu'une décision du jury a été reportée.
   avec un avis d'archivage. L'effacement prend le verrou du dossier : une
   opération en cours se termine avant lui, une opération suivante est refusée.
   La mise à jour 2026103100 marque de même les dossiers déjà réduits à leur
-  procès-verbal (historique vide, étudiant supprimé) ;
+  procès-verbal (procès-verbal enregistré, historique sans création ni import :
+  l'ancien effacement le supprimait ; les entrées inscrites après lui par une
+  opération concurrente sont retirées) ;
 - **membre du personnel** (directeur, DEVE, bibliothèque, agent signataire,
   membre du jury ayant un compte rattaché) : les dossiers des autres restent,
   mais ses références y sont dissociées (nom, image et adresse de ses

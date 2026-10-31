@@ -280,4 +280,37 @@ final class upgrade_test extends these_testcase {
         $this->assertEquals(21, $DB->count_records('these_griditem', ['theseid' => 0, 'synthesisid' => $synthesis->id]));
         $this->assertEquals(1, $DB->count_records('these_griditem', ['theseid' => $custom->id]));
     }
+
+    /**
+     * 2026103100 : dossiers déjà réduits à leur procès-verbal par l'ancien effacement (historique sans
+     * création, PV enregistré) clos et archivés, entrées inscrites après l'effacement retirées ; un
+     * dossier ordinaire n'est pas touché.
+     */
+    public function test_erased_dossiers_marked(): void {
+        global $DB;
+        $this->setup_activity();
+        $gen = $this->getDataGenerator();
+        $minutes = ['status' => THESE_STATUS_CORRECTIONS, 'defenseresult' => THESE_RESULT_ADMITTED];
+        $erased = $this->generator->create_dossier($this->these, $this->student->id, $minutes);
+        $stray = $this->generator->create_dossier($this->these, $gen->create_and_enrol($this->course)->id, $minutes);
+        these_log($stray->id, $this->deve->id, 'edited', THESE_STATUS_CORRECTIONS, THESE_STATUS_CORRECTIONS);
+        $ordinary = $this->generator->create_dossier($this->these, $gen->create_and_enrol($this->course)->id, $minutes);
+        these_log($ordinary->id, $this->deve->id, 'created', THESE_STATUS_DRAFT, THESE_STATUS_DRAFT);
+        $DB->set_field('these_dossier', 'defensedate', time() - WEEKSECS, ['id' => $erased->id]);
+        \mod_these\local\calendar::sync($this->reload($erased->id));
+        $this->assertTrue($DB->record_exists('event', ['uuid' => 'these-dossier-' . $erased->id]));
+
+        $previous = 2026103003;
+        set_config('version', $previous, 'mod_these');
+        $this->assertTrue(xmldb_these_upgrade($previous));
+        foreach ([$erased, $stray] as $dossier) {
+            $dossier = $this->reload($dossier->id);
+            $this->assertEquals(THESE_STATUS_CLOSED, $dossier->status);
+            $this->assertGreaterThan(0, $dossier->erasedtime);
+            $this->assertEquals(['erased'], $DB->get_fieldset_select('these_log', 'logaction', 'dossierid = ?', [$dossier->id]));
+        }
+        $this->assertFalse($DB->record_exists('event', ['uuid' => 'these-dossier-' . $erased->id]));
+        $this->assertEquals(0, $this->reload($ordinary->id)->erasedtime);
+        $this->assertEquals(THESE_STATUS_CORRECTIONS, $this->reload($ordinary->id)->status);
+    }
 }
