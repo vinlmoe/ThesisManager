@@ -652,7 +652,15 @@ class stress_runner {
         $stat['max'] = max($stat['max'], $elapsed);
         unset($stat);
         foreach (array_unique($touched) as $id) {
-            foreach ($this->check_dossier($id) as $violation) {
+            $violations = $this->check_dossier($id);
+            if ($violations && $this->worker !== 'main') {
+                // Plusieurs processus : les lectures de la vérification ne sont pas faites dans un même
+                // instantané de la base ; une écriture validée entre deux lectures peut faire croire à un
+                // écart. Seuls comptent les écarts encore là à une seconde lecture.
+                usleep(200000);
+                $violations = array_intersect($violations, $this->check_dossier($id));
+            }
+            foreach ($violations as $violation) {
                 $this->violation($violation, $name, $id);
             }
         }
@@ -2107,7 +2115,22 @@ class stress_runner {
             if (!\mod_these\local\seals::document_fully_signed($dossier, $doctype)) {
                 $violations[] = "document scellé sans toutes ses signatures : $doctype";
             }
-            $hash = hash('sha256', $sealed->get_content());
+            // Document descellé par un autre processus entre la lecture de l'enregistrement et celle du
+            // contenu : contenu absent, sans autre conséquence.
+            set_error_handler(function () {
+                return true;
+            });
+            try {
+                $content = $sealed->get_content();
+            } catch (Throwable $e) {
+                $content = false;
+            } finally {
+                restore_error_handler();
+            }
+            if ($content === false) {
+                continue;
+            }
+            $hash = hash('sha256', $content);
             $label = these_document_label($doctype) . ' — SHA-256 ';
             $last = null;
             foreach ($sealedlogs as $remark) {

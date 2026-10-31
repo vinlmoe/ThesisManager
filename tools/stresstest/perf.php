@@ -140,8 +140,12 @@ function perf_login($wwwroot, $username, $password) {
     if (!preg_match('/name="logintoken" value="([^"]+)"/', $page['body'], $match)) {
         cli_error('Page de connexion inattendue pour ' . $username);
     }
-    perf_curl($wwwroot . '/login/index.php', $jar, ['username' => $username, 'password' => $password,
+    $page = perf_curl($wwwroot . '/login/index.php', $jar, ['username' => $username, 'password' => $password,
         'logintoken' => $match[1]]);
+    if (strpos($page['body'], '/login/logout.php') === false) {
+        cli_error('Connexion impossible pour ' . $username . ' (HTTP ' . $page['status'] . ') : voir README.md, '
+            . '$CFG->disablelogintoken.');
+    }
     return $jar;
 }
 
@@ -179,7 +183,7 @@ function perf_curl($url, $jar, ?array $post = null) {
     ]);
     if ($post !== null) {
         curl_setopt($curl, CURLOPT_POST, true);
-        curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($post));
+        curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($post, '', '&'));
     }
     $body = (string) curl_exec($curl);
     $status = (int) curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
