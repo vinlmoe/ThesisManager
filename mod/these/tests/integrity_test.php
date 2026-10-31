@@ -35,6 +35,7 @@ require_once(__DIR__ . '/these_testcase.php');
  * @covers     ::these_jury_access_open
  * @covers     ::these_get_jury_member_access
  * @covers     ::these_dossier_operation
+ * @covers     \mod_these\local\dossiers
  * @covers     \mod_these\pdf\html_document::restrict_images
  * @covers     \mod_these\pdf\html_document::strip_tcpdf_tags
  */
@@ -44,6 +45,7 @@ require_once(__DIR__ . '/these_testcase.php');
 #[\PHPUnit\Framework\Attributes\CoversFunction('these_jury_access_open')]
 #[\PHPUnit\Framework\Attributes\CoversFunction('these_get_jury_member_access')]
 #[\PHPUnit\Framework\Attributes\CoversFunction('these_dossier_operation')]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\dossiers::class)]
 #[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\pdf\html_document::class)]
 final class integrity_test extends these_testcase {
     /**
@@ -260,6 +262,37 @@ final class integrity_test extends these_testcase {
         }
         $this->assertEquals(THESE_STATUS_CANCELLED, $this->reload($dossier->id)->status);
         $this->assertSame($logs, $DB->count_records('these_log', ['dossierid' => $dossier->id]));
+    }
+
+    /**
+     * La modification d'un dossier par la DEVE (edit.php) ne remet pas le dossier dans le statut où elle
+     * l'a vu : validé ou abandonné entre-temps, il le reste, et la modification est refusée. Scénario
+     * relevé par le test de charge en concurrence (tools/stresstest) : un dossier abandonné pendant
+     * l'enregistrement revenait à son ancien statut en gardant son statut d'abandon.
+     */
+    public function test_edit_does_not_overwrite_a_newer_status(): void {
+        $this->setup_activity();
+        $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
+            'status' => THESE_STATUS_SUBJECT_SUBMITTED, 'directorid' => $this->director->id, 'title' => 'Sujet',
+        ]);
+        $seen = clone $dossier;
+        these_cancel_dossier($dossier, $this->deve->id, 'Abandon');
+        $fields = ['title' => 'Sujet corrigé', 'titleen' => '', 'summary' => '', 'keywords' => '', 'devenumber' => '',
+            'libraryref' => '', 'defenselocation' => '', 'directorid' => $this->director->id, 'defensedate' => 0];
+        try {
+            \mod_these\local\dossiers::edit_dossier($this->these, $this->cm, $seen, $fields, [], $this->deve->id);
+            $this->fail('Modification d\'un dossier périmé acceptée');
+        } catch (\moodle_exception $e) {
+            $this->assertSame('dossierchanged', $e->errorcode);
+        }
+        $dossier = $this->reload($dossier->id);
+        $this->assertEquals(THESE_STATUS_CANCELLED, $dossier->status);
+        $this->assertSame('Sujet', $dossier->title);
+
+        // Dossier à jour : modification enregistrée, statut inchangé.
+        $dossier = \mod_these\local\dossiers::edit_dossier($this->these, $this->cm, $dossier, $fields, [], $this->deve->id);
+        $this->assertEquals(THESE_STATUS_CANCELLED, $this->reload($dossier->id)->status);
+        $this->assertSame('Sujet corrigé', $this->reload($dossier->id)->title);
     }
 
     /**

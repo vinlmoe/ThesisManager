@@ -326,6 +326,49 @@ class dossiers {
     }
 
     /**
+     * Modification d'un dossier par la DEVE (edit.php) : sujet, numéros, directeur, date, lieu et jury,
+     * sans changement de statut. Comme les autres opérations, elle ne s'applique que si le dossier est
+     * encore dans le statut où la DEVE l'a vu : sinon, l'enregistrement remettrait le dossier dans ce
+     * statut, effaçant une validation, un renvoi ou un abandon enregistrés entre-temps.
+     *
+     * @param stdClass $these
+     * @param stdClass $cm
+     * @param stdClass $dossier Dossier tel que la DEVE l'a vu.
+     * @param array $fields Champs du formulaire (title, titleen, summary, keywords, devenumber, libraryref,
+     *                      defenselocation, directorid, defensedate).
+     * @param array $newjury Jury soumis (voir juryform::extract_submitted_jury()).
+     * @param int $userid
+     * @return stdClass Le dossier à jour.
+     */
+    public static function edit_dossier(stdClass $these, stdClass $cm, stdClass $dossier, array $fields, array $newjury, $userid) {
+        return self::dossier_operation($dossier, function () use ($these, $cm, $dossier, $fields, $newjury, $userid) {
+            $jury = jury::get_jury($dossier->id);
+            $signature = function ($member) {
+                return [$member->juryrole, $member->fullname, $member->jurytitle, $member->institution, $member->email,
+                    (int) ($member->jurorid ?? 0), (string) ($member->jurystatus ?? '')];
+            };
+            $eligibility = function ($member) {
+                return (int) !empty($member->eligible);
+            };
+            $jurychanged = array_map($signature, $jury) !== array_map($signature, $newjury);
+            $eligibilitychanged = array_map($eligibility, $jury) !== array_map($eligibility, $newjury);
+            if ($jurychanged || $eligibilitychanged) {
+                jury::save_jury($dossier->id, $newjury, $userid);
+                // Jury déjà validé par la DEVE : les nouveaux membres sont prévenus à leur tour.
+                if ((int) $dossier->status >= THESE_STATUS_DEFENSE_VALIDATED) {
+                    juryaccess::notify_jury($these, $cm, $dossier);
+                }
+            }
+            $defensechanged = $jurychanged || (int) ($fields['defensedate'] ?? 0) !== (int) $dossier->defensedate
+                || (string) ($fields['defenselocation'] ?? '') !== (string) $dossier->defenselocation;
+            if ($defensechanged && !empty($dossier->documentstime)) {
+                $fields['documentstime'] = 0;
+            }
+            return self::set_status($dossier, $dossier->status, $userid, 'edited', '', $fields);
+        });
+    }
+
+    /**
      * Supprime des dossiers et tout ce qui leur est rattaché (jury, historique, fichiers).
      *
      * @param int[] $dossierids
