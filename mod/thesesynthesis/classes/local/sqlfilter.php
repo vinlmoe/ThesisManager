@@ -35,7 +35,7 @@ class sqlfilter {
     /** @var int Compteur des noms de paramètres. */
     protected $count = 0;
 
-    /** @var array|null Caractères accentués remplacés par PostgreSQL, voir fold(). */
+    /** @var array|null Lettres latines accentuées et leur équivalent ASCII, voir fold_map(). */
     protected static $foldmap = null;
 
     /**
@@ -117,9 +117,9 @@ class sqlfilter {
     }
 
     /**
-     * Texte replié comme le fait fold() en SQL : minuscules, lettres latines accentuées remplacées par
-     * leur équivalent ASCII. Les autres écritures (grec, cyrillique...) restent telles quelles, pour
-     * se comparer aux données enregistrées.
+     * Texte replié : minuscules, lettres latines accentuées remplacées par leur équivalent ASCII. Les
+     * autres écritures (grec, cyrillique...) restent telles quelles, pour se comparer aux données
+     * enregistrées.
      *
      * @param string $text
      * @return string
@@ -134,37 +134,65 @@ class sqlfilter {
     }
 
     /**
-     * Expression SQL repliée (voir fold_text()) : PostgreSQL ne sait pas comparer sans tenir compte des
-     * accents (voir sql_like()), les lettres latines accentuées y sont donc remplacées par leur
-     * équivalent ASCII. Les autres bases le font par leur collation.
+     * Expression régulière PostgreSQL qui reconnaît un texte replié (voir fold_text()) dans un texte
+     * accentué : chaque lettre devient la classe de ses variantes accentuées (« e » : [eéèêë...]), et
+     * chaque suite de lettres équivalente à une seule lettre (« oe », « ae », « ss »...) admet aussi
+     * cette lettre (œ, æ, ß...). Les autres caractères sont pris littéralement.
      *
-     * @param string $expr
+     * @param string $text Texte replié.
      * @return string
      */
-    public static function fold(string $expr): string {
-        global $DB;
-
-        if ($DB->get_dbfamily() !== 'postgres') {
-            return $expr;
-        }
+    public static function accent_pattern(string $text): string {
+        static $classes = null;
         [$from, $to, $multiple] = self::fold_map();
-        foreach ($multiple as $char => $ascii) {
-            $expr = "REPLACE($expr, '$char', '$ascii')";
+        if ($classes === null) {
+            $classes = [];
+            foreach (mb_str_split($from) as $i => $char) {
+                $classes[$to[$i]] = ($classes[$to[$i]] ?? $to[$i]) . $char;
+            }
         }
-        return "TRANSLATE($expr, '$from', '$to')";
+        $sequences = [];
+        foreach ($multiple as $char => $ascii) {
+            $sequences[$ascii] = ($sequences[$ascii] ?? '') . $char;
+        }
+        $class = function ($char) use ($classes) {
+            if (isset($classes[$char])) {
+                return '[' . $classes[$char] . ']';
+            }
+            // Caractère ASCII autre que lettre ou chiffre : échappé (littéral pour PostgreSQL).
+            return preg_match('/^[\x00-\x7F]$/', $char) && !ctype_alnum($char) ? '\\' . $char : $char;
+        };
+        $chars = mb_str_split($text);
+        $pattern = '';
+        for ($i = 0; $i < count($chars); $i++) {
+            $pair = $chars[$i] . ($chars[$i + 1] ?? '');
+            if (isset($sequences[$pair])) {
+                $pattern .= '(?:' . $class($chars[$i]) . $class($chars[$i + 1]) . '|[' . $sequences[$pair] . '])';
+                $i++;
+            } else {
+                $pattern .= $class($chars[$i]);
+            }
+        }
+        return $pattern;
     }
 
     /**
-     * Condition « l'expression contient le mot », sans tenir compte de la casse ni des accents.
+     * Condition « l'expression contient le texte », sans tenir compte de la casse ni des accents
+     * latins. PostgreSQL ne sait pas comparer sans tenir compte des accents (voir sql_like()) : le
+     * texte y est cherché par une expression régulière (voir accent_pattern()). Les autres bases le
+     * font par leur collation.
      *
      * @param string $expr Expression SQL (champ ou concaténation).
-     * @param string $word Mot replié (voir words()).
+     * @param string $text Texte replié (voir words(), fold_text()).
      * @return string
      */
-    public function contains(string $expr, string $word): string {
+    public function contains(string $expr, string $text): string {
         global $DB;
 
-        return $DB->sql_like(self::fold($expr), $this->param('%' . self::escape($word) . '%'), false, false);
+        if ($DB->get_dbfamily() === 'postgres') {
+            return $expr . ' ' . $DB->sql_regex(true, false) . ' ' . $this->param(self::accent_pattern($text));
+        }
+        return $DB->sql_like($expr, $this->param('%' . self::escape($text) . '%'), false, false);
     }
 
     /**

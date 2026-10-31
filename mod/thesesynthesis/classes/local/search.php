@@ -73,8 +73,8 @@ class search {
         }
         [$from, $params, $bytheseid] = $query;
         $records = $DB->get_records_sql(
-            'SELECT d.* ' . $from . ' ORDER BY ' . self::year_order($from, $params) . $DB->sql_order_by_text('d.title', 255)
-                . ', d.id',
+            'SELECT d.* ' . $from . ' ORDER BY ' . self::year_order(array_keys($bytheseid))
+                . $DB->sql_order_by_text('d.title', 255) . ', d.id',
             $params,
             $limitfrom,
             $limitnum
@@ -128,18 +128,21 @@ class search {
 
     /**
      * Tri par année de soutenance décroissante, dans le fuseau de l'utilisateur comme
-     * dossiers::defense_year() : comparaison de la date aux débuts d'année des dates trouvées (lues en
-     * une requête).
+     * dossiers::defense_year() : comparaison de la date aux débuts des années couvertes par les dossiers
+     * des activités cherchées (première et dernière dates lues en une requête, sans les filtres).
      *
-     * @param string $from Clause FROM ... WHERE de la recherche.
-     * @param array $params
-     * @return string Début de la clause ORDER BY (vide si aucun dossier trouvé n'a de date).
+     * @param int[] $theseids Instances des activités cherchées.
+     * @return string Début de la clause ORDER BY (vide si aucun dossier n'a de date).
      */
-    protected static function year_order($from, array $params) {
+    protected static function year_order(array $theseids) {
         global $DB;
 
         $date = self::date_expression();
-        $range = $DB->get_record_sql("SELECT MIN($date) AS first, MAX($date) AS last $from AND $date > 0", $params);
+        [$insql, $params] = $DB->get_in_or_equal($theseids, SQL_PARAMS_NAMED);
+        $range = $DB->get_record_sql(
+            "SELECT MIN($date) AS first, MAX($date) AS last FROM {these_dossier} d WHERE d.theseid $insql AND $date > 0",
+            $params
+        );
         if (empty($range->first)) {
             return '';
         }

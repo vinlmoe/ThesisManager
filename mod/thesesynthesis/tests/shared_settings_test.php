@@ -455,6 +455,10 @@ final class shared_settings_test extends \advanced_testcase {
         $check($env->deve, ['text' => 'ETUDE rage'], 12);
         $check($env->deve, ['text' => 'oedeme'], 12);
         $check($env->deve, ['text' => 'κουρής'], 1);
+        // Caractères spéciaux pris littéralement (jokers de LIKE, expressions régulières).
+        $check($env->deve, ['text' => '.*'], 0);
+        $check($env->deve, ['text' => '%'], 0);
+        $check($env->deve, ['text' => 'rage['], 0);
         $check($env->deve, ['text' => 'etude rage', 'year' => 2027], 4);
         $check($env->deve, ['answers' => [$list => 'Chat']], 4);
         $check($env->deve, ['answers' => [$list => 'Chat/Lynx']], 4);
