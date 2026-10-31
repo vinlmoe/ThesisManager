@@ -13,7 +13,7 @@ de version recalés sur la date. Les numéros entre parenthèses des sections de
 développement ne correspondent à aucune version installable ; 0.11.2 n'a jamais
 été étiquetée.
 
-## mod_these 0.26.0 (2026103003) et mod_thesesynthesis 0.8.1 (2026103003) — jury reconnu par son compte, procès-verbal conservé, fin de la dette
+## mod_these 0.26.0 (2026103100) et mod_thesesynthesis 0.8.1 (2026103100) — jury reconnu par son compte, procès-verbal conservé, fin de la dette, test de charge
 
 - **Membres du jury reconnus par leur compte, plus par leur adresse.** Le
   dernier constat de sécurité de l'analyse du 30 octobre est fermé : la
@@ -71,7 +71,34 @@ développement ne correspondent à aucune version installable ; 0.11.2 n'a jamai
   registre, file « À traiter » et portée des paramètres lus par lot. Tableau
   de bord DEVE de 6 188 à 62 lectures (1,7 s à 0,35 s), export du registre de
   4 415 à 147 requêtes (3,2 s à 0,42 s).
-- Guide 2.21.
+- **Numéro d'enregistrement DEVE unique sur tout le site** (auparavant par
+  activité : deux promotions la même année recevaient toutes deux 2026-001).
+  La numérotation AAAA-NNN continue d'une promotion à l'autre ; le numéro est
+  attribué sous un verrou commun au site (s'il est pris entre-temps, le
+  dossier reçoit le suivant, annoncé à la DEVE) et garanti par un index
+  unique ; un numéro saisi déjà pris est refusé. L'étape 2026103100 convertit
+  les numéros vides en NULL et liste les doublons existants à corriger :
+  l'index reste alors non unique jusqu'à `php mod/these/cli/devenumber_index.php`
+  (voir INSTALL). Une restauration vide un numéro déjà attribué sur le site.
+- **Grille de conformité enregistrée à la création de l'activité** (et de
+  l'activité de suivi, à la restauration, et par l'étape 2026103100 pour les
+  activités existantes) au lieu de la première lecture, qui échouait quand
+  deux lectures étaient simultanées.
+- **Dossier réduit à son procès-verbal après effacement RGPD : clos, archivé
+  et sorti du circuit** (champ `these_dossier.erasedtime`) : plus aucune
+  action possible, procès-verbal en lecture seule avec un avis d'archivage,
+  soutenance retirée du calendrier. L'effacement prend le verrou de chaque
+  dossier. L'étape 2026103100 reconnaît les dossiers déjà effacés.
+- **Fichiers des formulaires enregistrés sous le verrou du dossier**
+  (soutenance, rapport, procès-verbal, corrections, scans) : un double envoi
+  est refusé proprement au lieu d'échouer.
+- **Suivi des thèses paginé** (50 dossiers par page, « À traiter » comprise)
+  et **recherche faite en base**, droits et sujet confidentiel compris : avec
+  2 000 dossiers, suivi de la DEVE de 1,07 s à 0,33 s, recherche de 1,56 s à
+  0,27 s. Le filtre texte cherche chaque mot, sans casse ni accents
+  (« oedeme » trouve « Œdème », aussi sous MySQL et MariaDB) ; les dossiers
+  suivis sont triés par dernière modification sur toutes les promotions.
+- Guide 2.22.
 
 ## mod_these 0.25.0 (2026103002) et mod_thesesynthesis 0.8.0 (2026103002) — dette architecturale, messagerie et événements
 
