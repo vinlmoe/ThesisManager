@@ -134,6 +134,32 @@ class calendar {
     }
 
     /**
+     * Supprime les événements de soutenance de dossiers supprimés (effacement RGPD d'un étudiant, par
+     * exemple), sans attendre la synchronisation quotidienne.
+     *
+     * @param int[] $dossierids
+     * @return void
+     */
+    public static function delete_events(array $dossierids) {
+        global $CFG, $DB;
+
+        if (!$dossierids) {
+            return;
+        }
+        require_once($CFG->dirroot . '/calendar/lib.php');
+        $uuids = array_map(function ($id) {
+            return 'these-dossier-' . (int) $id;
+        }, $dossierids);
+        [$insql, $params] = $DB->get_in_or_equal($uuids, SQL_PARAMS_NAMED);
+        $params['modulename'] = 'these';
+        $params['eventtype'] = self::EVENTTYPE;
+        $events = $DB->get_records_select('event', "modulename = :modulename AND eventtype = :eventtype AND uuid $insql", $params);
+        foreach ($events as $record) {
+            \calendar_event::load($record)->delete();
+        }
+    }
+
+    /**
      * Remet en accord le calendrier avec tous les dossiers (tâche quotidienne) : événements des
      * soutenances arrêtées, y compris celles fixées avant cette fonction, et suppression des autres.
      *

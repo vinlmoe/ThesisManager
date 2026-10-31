@@ -273,6 +273,27 @@ final class deve_tools_test extends these_testcase {
     }
 
     /**
+     * Un dossier supprimé (effacement RGPD d'un étudiant sans procès-verbal) emporte son événement de
+     * soutenance, qui portait le nom de l'étudiant, sans attendre la synchronisation quotidienne.
+     * Scénario relevé par le test de charge (tools/stresstest).
+     */
+    public function test_calendar_event_deleted_with_dossier(): void {
+        global $DB;
+        $this->setup_activity();
+        $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
+            'status' => THESE_STATUS_DEFENSE_APPROVED, 'defensedate' => make_timestamp(2026, 11, 4, 14),
+        ]);
+        these_set_status($dossier, THESE_STATUS_DEFENSE_VALIDATED, $this->deve->id, 'validated');
+        $uuid = 'these-dossier-' . $dossier->id;
+        $this->assertTrue($DB->record_exists('event', ['modulename' => 'these', 'uuid' => $uuid]));
+
+        $contextlist = new \core_privacy\local\request\approved_contextlist($this->student, 'mod_these', [$this->context->id]);
+        \mod_these\privacy\provider::delete_data_for_user($contextlist);
+        $this->assertFalse($DB->record_exists('these_dossier', ['id' => $dossier->id]));
+        $this->assertFalse($DB->record_exists('event', ['modulename' => 'these', 'uuid' => $uuid]));
+    }
+
+    /**
      * Récapitulatif hebdomadaire : dossiers qui attendent la DEVE et soutenances de la semaine, envoyé
      * à la DEVE ; rien quand il est désactivé.
      */

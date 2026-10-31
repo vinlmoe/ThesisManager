@@ -369,7 +369,8 @@ class dossiers {
     }
 
     /**
-     * Supprime des dossiers et tout ce qui leur est rattaché (jury, historique, fichiers).
+     * Supprime des dossiers et tout ce qui leur est rattaché (jury, historique, fichiers, soutenance au
+     * calendrier).
      *
      * @param int[] $dossierids
      * @param context|null $context Contexte du module, pour supprimer aussi les fichiers. Sans
@@ -403,6 +404,7 @@ class dossiers {
         $DB->delete_records_select('these_subjecthistory', "dossierid $insql", $inparams);
         $DB->delete_records_select('these_log', "dossierid $insql", $inparams);
         $DB->delete_records_select('these_dossier', "id $insql", $inparams);
+        calendar::delete_events($dossierids);
     }
 
     /**
