@@ -192,7 +192,55 @@ class sqlfilter {
         if ($DB->get_dbfamily() === 'postgres') {
             return $expr . ' ' . $DB->sql_regex(true, false) . ' ' . $this->param(self::accent_pattern($text));
         }
-        return $DB->sql_like($expr, $this->param('%' . self::escape($text) . '%'), false, false);
+        // La collation ignore casse et accents, mais LIKE compare caractère par caractère : « oe » n'y
+        // vaut jamais « œ ». Chaque variante où une suite de lettres est remplacée par sa lettre unique
+        // est donc cherchée aussi.
+        $conditions = [];
+        foreach (self::ligature_variants($text) as $variant) {
+            $conditions[] = $DB->sql_like($expr, $this->param('%' . self::escape($variant) . '%'), false, false);
+        }
+        return count($conditions) === 1 ? $conditions[0] : '(' . implode(' OR ', $conditions) . ')';
+    }
+
+    /**
+     * Variantes d'un texte replié où chaque suite de lettres équivalente à une seule lettre (« oe »,
+     * « ae », « ss »...) est gardée ou remplacée par cette lettre (œ, æ, ß...). Le nombre de suites
+     * remplaçables est borné : au-delà, les suivantes restent telles quelles.
+     *
+     * @param string $text Texte replié.
+     * @param int $max Nombre maximal de suites remplaçables (2^max variantes au plus).
+     * @return string[] Le texte d'origine en premier.
+     */
+    public static function ligature_variants(string $text, int $max = 4): array {
+        [, , $multiple] = self::fold_map();
+        // Une seule forme par ligature : la comparaison ignore déjà la casse (« Œ » vaut « œ »).
+        $sequences = [];
+        foreach ($multiple as $char => $ascii) {
+            $sequences[$ascii][core_text::strtolower($char)] = core_text::strtolower($char);
+        }
+        $variants = [''];
+        $chars = mb_str_split($text);
+        $replaceable = 0;
+        for ($i = 0; $i < count($chars); $i++) {
+            $pair = $chars[$i] . ($chars[$i + 1] ?? '');
+            if (isset($sequences[$pair]) && $replaceable < $max) {
+                $replaceable++;
+                $next = [];
+                foreach ($variants as $variant) {
+                    $next[] = $variant . $pair;
+                    foreach ($sequences[$pair] as $ligature) {
+                        $next[] = $variant . $ligature;
+                    }
+                }
+                $variants = $next;
+                $i++;
+            } else {
+                foreach ($variants as $key => $variant) {
+                    $variants[$key] = $variant . $chars[$i];
+                }
+            }
+        }
+        return array_values(array_unique($variants));
     }
 
     /**
