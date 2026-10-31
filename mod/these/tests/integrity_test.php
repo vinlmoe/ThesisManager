@@ -160,6 +160,29 @@ final class integrity_test extends these_testcase {
     }
 
     /**
+     * Un lien de signature ne sert plus tant que le dossier est abandonné (comme les liens d'accès du jury,
+     * révoqués à l'abandon), et sert de nouveau à sa réouverture. Scénario relevé par le test de charge
+     * (tools/stresstest) : le président du jury pouvait signer les conclusions d'une thèse abandonnée.
+     */
+    public function test_signature_token_unusable_while_cancelled(): void {
+        $this->setup_activity();
+        $sink = $this->redirectEmails();
+        $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
+            'status' => THESE_STATUS_SUBJECT_SUBMITTED, 'directorid' => $this->director->id, 'externaldirector' => 1,
+            'extdirectorname' => 'Dr Externe', 'extdirectoremail' => 'externe@example.com',
+        ]);
+        these_request_signature($this->these, $this->cm, $dossier, 'extdirector', ['subject']);
+        $token = $this->token_sent_to($sink->get_messages(), 'externe@example.com');
+        $sink->close();
+
+        $dossier = these_cancel_dossier($dossier, $this->deve->id, 'Abandon.');
+        $this->assertEmpty(these_get_signatures_by_token($token));
+
+        these_reopen_dossier($dossier, $this->deve->id);
+        $this->assertCount(1, these_get_signatures_by_token($token));
+    }
+
+    /**
      * L'accès du jury expire après la soutenance et cesse à la clôture du dossier ; un membre ayant
      * un compte y accède sans lien, reconnu au compte rattaché à la validation de son éligibilité (pas
      * à la seule égalité d'adresse).

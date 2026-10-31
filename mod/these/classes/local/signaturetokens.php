@@ -178,10 +178,13 @@ class signaturetokens {
     /**
      * Signatures en attente correspondant à un jeton d'invitation : tous les documents qu'un même
      * signataire doit signer dans un dossier. Le lien vaut rights::TOKEN_LIFETIME à partir de
-     * l'invitation ; la DEVE peut en envoyer un nouveau depuis le suivi des signatures.
+     * l'invitation ; la DEVE peut en envoyer un nouveau depuis le suivi des signatures. Comme les
+     * signatures des agents (voir signatureagent::get_user_pending_signatures()), celles d'un dossier
+     * abandonné ne sont plus proposées : le lien vaut de nouveau si le dossier est rouvert.
      *
      * @param string $token
-     * @return stdClass[] Signatures en attente, vide si le jeton est inconnu, déjà utilisé ou expiré.
+     * @return stdClass[] Signatures en attente, vide si le jeton est inconnu, déjà utilisé ou expiré, ou si
+     *                    le dossier est abandonné.
      */
     public static function get_signatures_by_token($token) {
         global $DB;
@@ -190,11 +193,14 @@ class signaturetokens {
         if (strlen($token) < 32) {
             return [];
         }
-        return array_values($DB->get_records_select(
-            'these_signature',
-            'token = :token AND timesigned = 0 AND requesttime > :since',
-            ['token' => rights::token_hash($token), 'since' => time() - rights::TOKEN_LIFETIME],
-            'id ASC'
+        return array_values($DB->get_records_sql(
+            "SELECT s.*
+               FROM {these_signature} s
+               JOIN {these_dossier} d ON d.id = s.dossierid
+              WHERE s.token = :token AND s.timesigned = 0 AND s.requesttime > :since AND d.status <> :cancelled
+           ORDER BY s.id ASC",
+            ['token' => rights::token_hash($token), 'since' => time() - rights::TOKEN_LIFETIME,
+                'cancelled' => THESE_STATUS_CANCELLED]
         ));
     }
 }
