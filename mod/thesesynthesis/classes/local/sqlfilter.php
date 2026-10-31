@@ -78,30 +78,23 @@ class sqlfilter {
     }
 
     /**
-     * Mots cherchés : texte normalisé (minuscules, sans accents, voir search::normalise()), coupé aux
-     * espaces.
+     * Mots cherchés : texte replié (voir fold_text()), coupé aux espaces.
      *
      * @param string $text
      * @return string[]
      */
     public static function words($text): array {
-        return array_values(array_filter(preg_split('/\s+/', search::normalise($text)), 'strlen'));
+        return array_values(array_filter(preg_split('/\s+/', self::fold_text($text)), 'strlen'));
     }
 
     /**
-     * Expression SQL sans accents : PostgreSQL ne sait pas comparer sans tenir compte des accents
-     * (voir sql_like()), les lettres accentuées latines y sont donc remplacées par leur équivalent
-     * ASCII, comme le fait search::normalise() en PHP. Les autres bases le font par leur collation.
+     * Lettres latines accentuées (U+00C0 à U+017F) et leur équivalent ASCII en minuscules, tel que le
+     * donne search::normalise().
      *
-     * @param string $expr
-     * @return string
+     * @return array [lettres remplacées une à une, leurs équivalents, lettres remplacées par plusieurs
+     *               (lettre => équivalent)]
      */
-    public static function fold(string $expr): string {
-        global $DB;
-
-        if ($DB->get_dbfamily() !== 'postgres') {
-            return $expr;
-        }
+    protected static function fold_map(): array {
         if (self::$foldmap === null) {
             $from = $to = '';
             $multiple = [];
@@ -120,7 +113,41 @@ class sqlfilter {
             }
             self::$foldmap = [$from, $to, $multiple];
         }
-        [$from, $to, $multiple] = self::$foldmap;
+        return self::$foldmap;
+    }
+
+    /**
+     * Texte replié comme le fait fold() en SQL : minuscules, lettres latines accentuées remplacées par
+     * leur équivalent ASCII. Les autres écritures (grec, cyrillique...) restent telles quelles, pour
+     * se comparer aux données enregistrées.
+     *
+     * @param string $text
+     * @return string
+     */
+    public static function fold_text($text): string {
+        [$from, $to, $multiple] = self::fold_map();
+        $pairs = $multiple;
+        foreach (mb_str_split($from) as $i => $char) {
+            $pairs[$char] = $to[$i];
+        }
+        return strtr(core_text::strtolower((string) $text), $pairs);
+    }
+
+    /**
+     * Expression SQL repliée (voir fold_text()) : PostgreSQL ne sait pas comparer sans tenir compte des
+     * accents (voir sql_like()), les lettres latines accentuées y sont donc remplacées par leur
+     * équivalent ASCII. Les autres bases le font par leur collation.
+     *
+     * @param string $expr
+     * @return string
+     */
+    public static function fold(string $expr): string {
+        global $DB;
+
+        if ($DB->get_dbfamily() !== 'postgres') {
+            return $expr;
+        }
+        [$from, $to, $multiple] = self::fold_map();
         foreach ($multiple as $char => $ascii) {
             $expr = "REPLACE($expr, '$char', '$ascii')";
         }
@@ -131,7 +158,7 @@ class sqlfilter {
      * Condition « l'expression contient le mot », sans tenir compte de la casse ni des accents.
      *
      * @param string $expr Expression SQL (champ ou concaténation).
-     * @param string $word Mot normalisé (voir words()).
+     * @param string $word Mot replié (voir words()).
      * @return string
      */
     public function contains(string $expr, string $word): string {

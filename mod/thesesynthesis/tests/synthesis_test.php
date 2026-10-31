@@ -30,12 +30,14 @@ require_once($CFG->dirroot . '/mod/thesesynthesis/locallib.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     ::thesesynthesis_get_dossiers
  * @covers     ::thesesynthesis_count_dossiers
+ * @covers     ::thesesynthesis_count_search
  * @covers     ::thesesynthesis_get_juries
  * @covers     ::thesesynthesis_get_available_activities
  * @covers     \mod_these\page\planning_page
  */
 #[\PHPUnit\Framework\Attributes\CoversFunction('thesesynthesis_get_dossiers')]
 #[\PHPUnit\Framework\Attributes\CoversFunction('thesesynthesis_count_dossiers')]
+#[\PHPUnit\Framework\Attributes\CoversFunction('thesesynthesis_count_search')]
 #[\PHPUnit\Framework\Attributes\CoversFunction('thesesynthesis_get_juries')]
 #[\PHPUnit\Framework\Attributes\CoversFunction('thesesynthesis_get_available_activities')]
 #[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\page\planning_page::class)]
@@ -350,6 +352,8 @@ final class synthesis_test extends \advanced_testcase {
         $activity = $env->activities[0];
         $DB->update_record('these_dossier', (object) ['id' => $activity->dossier->id, 'confidential' => 1,
             'title' => 'Sujet SECRETISSIME']);
+        // Nom fixé : un nom tiré au hasard peut être écrit dans un alphabet non latin.
+        $DB->set_field('user', 'lastname', 'Lefèvre-Durand', ['id' => $activity->dossier->userid]);
         $student = $DB->get_record('user', ['id' => $activity->dossier->userid]);
         $roleid = $gen->create_role(['shortname' => 'theseviewall']);
         assign_capability('mod/these:view', CAP_ALLOW, $roleid, \context_system::instance()->id);
@@ -378,8 +382,8 @@ final class synthesis_test extends \advanced_testcase {
     }
 
     /**
-     * Le nombre de lectures des listes paginées (page, total, file « À traiter ») ne dépend ni du nombre
-     * de dossiers ni de la page demandée.
+     * Le nombre de lectures des listes paginées (page, total, file « À traiter », recherche des thèses)
+     * ne dépend ni du nombre de dossiers ni de la page demandée.
      */
     public function test_paged_reads_do_not_grow_with_dossiers(): void {
         global $DB;
@@ -410,6 +414,12 @@ final class synthesis_test extends \advanced_testcase {
                 'todo' => function () use ($links, $user, $page) {
                     return count(thesesynthesis_get_dossiers($links, $user->id, ['todo' => true], $page * 3, 3));
                 },
+                'find' => function () use ($links, $user, $page) {
+                    return count(thesesynthesis_search($links, $user->id, ['text' => 'pagine'], [], $page * 3, 3));
+                },
+                'findcount' => function () use ($links, $user) {
+                    return thesesynthesis_count_search($links, $user->id, ['text' => 'pagine']);
+                },
             ];
             $result = [];
             foreach ($lists as $name => $load) {
@@ -423,17 +433,18 @@ final class synthesis_test extends \advanced_testcase {
 
         $add(4);
         $few = $reads($env->deve, 0);
-        $this->assertSame([3, 3, 4, 3], array_column($few, 1));
+        $this->assertSame([3, 3, 4, 3, 3, 4], array_column($few, 1));
         $fewdirector = $reads($env->director, 0);
-        $this->assertSame([3, 3, 4, 1], array_column($fewdirector, 1));
+        $this->assertSame([3, 3, 4, 1, 3, 4], array_column($fewdirector, 1));
         $add(16);
         $many = $reads($env->deve, 2);
-        $this->assertSame([3, 3, 20, 3], array_column($many, 1));
+        $this->assertSame([3, 3, 20, 3, 3, 20], array_column($many, 1));
         $manydirector = $reads($env->director, 2);
-        $this->assertSame([3, 3, 20, 0], array_column($manydirector, 1));
+        $this->assertSame([3, 3, 20, 0, 3, 20], array_column($manydirector, 1));
         $this->assertSame(array_column($few, 0), array_column($many, 0));
         // La file vide du directeur, page 2, ne lit pas les étudiants : seules les listes non vides se comparent.
-        $this->assertSame(array_slice(array_column($fewdirector, 0), 0, 3), array_slice(array_column($manydirector, 0), 0, 3));
+        unset($fewdirector['todo'], $manydirector['todo']);
+        $this->assertSame(array_column($fewdirector, 0), array_column($manydirector, 0));
     }
 
     /**
