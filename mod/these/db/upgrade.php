@@ -29,7 +29,7 @@
  * @return bool
  */
 function xmldb_these_upgrade($oldversion) {
-    global $DB;
+    global $DB, $OUTPUT;
 
     if ($oldversion < 2026102504) {
         // Les documents réservés au personnel (rapport du directeur, grille de conformité) ne sont
@@ -419,6 +419,24 @@ function xmldb_these_upgrade($oldversion) {
         }
         $members->close();
         upgrade_mod_savepoint(true, 2026103003, 'these');
+    }
+
+    if ($oldversion < 2026103100) {
+        // Numéro DEVE unique sur le site, garanti par un index unique (NULL pour un numéro vide). Des
+        // doublons enregistrés auparavant (unicité contrôlée par le seul formulaire, et par activité)
+        // ne font pas échouer la mise à jour : l'index est alors non unique et les doublons sont
+        // listés pour être corrigés, avant cli/devenumber_index.php (voir INSTALL.md).
+        require_once(__DIR__ . '/upgradelib.php');
+        $duplicates = these_upgrade_devenumber_index();
+        if ($duplicates) {
+            $report = these_upgrade_devenumber_report($duplicates);
+            if (CLI_SCRIPT) {
+                mtrace($report);
+            } else {
+                echo $OUTPUT->notification(nl2br(s($report)), \core\output\notification::NOTIFY_WARNING);
+            }
+        }
+        upgrade_mod_savepoint(true, 2026103100, 'these');
     }
 
     return true;

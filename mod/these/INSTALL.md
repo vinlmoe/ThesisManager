@@ -21,6 +21,35 @@ php admin/cli/upgrade.php
 Ou se connecter en administrateur : Moodle détecte le plugin et propose de
 l'installer.
 
+### Mise à jour vers 2026103100 : numéros DEVE en double
+
+Le numéro d'enregistrement DEVE devient unique sur tout le site (index unique
+sur `these_dossier.devenumber`, numéro vide enregistré NULL). Avant cette
+version, l'unicité n'était contrôlée que par les formulaires, et par activité :
+deux promotions ont pu recevoir le même numéro, deux validations simultanées
+aussi. La mise à jour ne s'arrête pas sur ces doublons : elle crée alors un
+index **non unique** et affiche la liste des numéros en double, avec pour
+chacun les dossiers (identifiant) et leur activité — en ligne de commande dans
+la sortie de `admin/cli/upgrade.php`, sinon en avertissement sur la page de
+mise à jour :
+
+```
+Numéros d'enregistrement DEVE attribués à plusieurs dossiers : ...
+- numéro 2026-001 : dossier 12 (Promotion 2026), dossier 87 (Promotion 2027)
+```
+
+Tant que les doublons restent, rien n'empêche d'en créer de nouveaux en dehors
+du module ; le module, lui, contrôle déjà chaque nouvelle attribution sous
+verrou. La DEVE corrige chaque doublon (*Modifier le dossier*, champ du
+numéro), puis l'administrateur lance :
+
+```bash
+php mod/these/cli/devenumber_index.php
+```
+
+qui liste les doublons restants (code de sortie 1) ou, s'il n'y en a plus, rend
+l'index unique.
+
 ## 2. Rôles et capacités
 
 | Acteur | Rôle Moodle | Capacités |
@@ -245,6 +274,14 @@ signés.
   utilisées par la recherche des thèses (`mod_thesesynthesis`).
 - **Numéro d'enregistrement DEVE** : attribué à la validation du dossier de
   soutenance (après le dépôt de la thèse), et non plus à l'enregistrement du sujet.
+  Il est **unique sur tout le site** : la numérotation AAAA-NNN se poursuit
+  d'une promotion (activité) à l'autre. L'attribution se fait sous un verrou
+  commun et la base l'impose par un index unique : si le numéro proposé est
+  attribué entre-temps à un autre dossier, le suivant est retenu (et indiqué à
+  la DEVE) ; un numéro saisi déjà pris est refusé, à la validation, à la
+  modification du dossier comme à l'import. À la restauration d'une sauvegarde,
+  un numéro déjà attribué sur le site est vidé (signalé dans le journal de la
+  restauration).
 - **Rapport du directeur** : déposé en fichier (PDF ou Word) sur sa propre page
   (*Déposer le rapport*), rédigé à partir du modèle Word proposé dans les
   paramètres du circuit (*Modèle du rapport du directeur*, téléchargeable

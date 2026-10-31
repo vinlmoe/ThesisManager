@@ -390,22 +390,20 @@ function these_delete_dossiers(array $dossierids, ?context $context = null) {
 /**
  * Voir \mod_these\local\dossiers::suggest_devenumber().
  *
- * @param int $theseid
  * @param int|null $time Date de référence (année), maintenant par défaut.
  * @return string
  */
-function these_suggest_devenumber($theseid, $time = null) {
-    return \mod_these\local\dossiers::suggest_devenumber($theseid, $time);
+function these_suggest_devenumber($time = null) {
+    return \mod_these\local\dossiers::suggest_devenumber($time);
 }
 
 /**
  * Voir \mod_these\local\dossiers::devenumber_taken().
  *
- * @param int $theseid
  * @param string $number
  * @param int $excludeid Dossier à ignorer (celui qu'on enregistre).
  * @return bool
  */
-function these_devenumber_taken($theseid, $number, $excludeid = 0) {
-    return \mod_these\local\dossiers::devenumber_taken($theseid, $number, $excludeid);
+function these_devenumber_taken($number, $excludeid = 0) {
+    return \mod_these\local\dossiers::devenumber_taken($number, $excludeid);
 }

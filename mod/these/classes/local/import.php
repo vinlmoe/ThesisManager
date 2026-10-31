@@ -260,17 +260,24 @@ class import {
             if ($parsed->error !== null) {
                 $result['message'] = $parsed->error;
             } else {
-                $result['ok'] = true;
                 $result['student'] = fullname($parsed->student);
                 $seen[$parsed->student->id] = true;
                 if ($values['devenumber'] !== '') {
                     $numbers[$values['devenumber']] = true;
                 }
-                if (!$dryrun) {
-                    self::create_imported_dossier($these, $values, $parsed, $userid);
+                try {
+                    if (!$dryrun) {
+                        self::create_imported_dossier($these, $values, $parsed, $userid);
+                    }
+                    $result['ok'] = true;
+                    $result['message'] = get_string($dryrun ? 'importwouldcreate' : 'importcreated', 'mod_these')
+                        . ($parsed->status !== THESE_STATUS_ACTIVE ? ' — ' . workflow::status_label($parsed->status) : '');
+                } catch (moodle_exception $e) {
+                    if ($e->errorcode !== 'devenumbertaken') {
+                        throw $e;
+                    }
+                    $result['message'] = get_string('devenumbertaken', 'mod_these');
                 }
-                $result['message'] = get_string($dryrun ? 'importwouldcreate' : 'importcreated', 'mod_these')
-                    . ($parsed->status !== THESE_STATUS_ACTIVE ? ' — ' . workflow::status_label($parsed->status) : '');
             }
             $report[] = $result;
         }
@@ -337,7 +344,7 @@ class import {
             $parsed->error = get_string('importusernotenrolled', 'mod_these', s($values['director']));
         } else if (
             $values['devenumber'] !== ''
-                && (isset($numbers[$values['devenumber']]) || dossiers::devenumber_taken($these->id, $values['devenumber']))
+                && (isset($numbers[$values['devenumber']]) || dossiers::devenumber_taken($values['devenumber']))
         ) {
             $parsed->error = get_string('devenumbertaken', 'mod_these');
         } else if ($parsed->status === null) {
@@ -373,7 +380,7 @@ class import {
             'summary' => $values['summary'],
             'keywords' => $values['keywords'],
             'directorid' => $parsed->director ? $parsed->director->id : 0,
-            'devenumber' => $values['devenumber'],
+            'devenumber' => dossiers::normalise_devenumber($values['devenumber']),
             'libraryref' => $values['libraryref'],
             'defensedate' => (int) $parsed->defensedate,
             'proposeddate' => (int) $parsed->defensedate,
@@ -388,7 +395,19 @@ class import {
                 || $values['corrections'] !== '');
             $record['correctionsnote'] = $values['corrections'];
         }
-        $dossierid = $DB->insert_record('these_dossier', (object) $record);
-        dossiers::log($dossierid, $userid, 'imported', $parsed->status, $parsed->status);
+        $insert = function () use ($DB, $record, $parsed, $userid) {
+            $dossierid = $DB->insert_record('these_dossier', (object) $record);
+            dossiers::log($dossierid, $userid, 'imported', $parsed->status, $parsed->status);
+        };
+        if ($record['devenumber'] === null) {
+            $insert();
+            return;
+        }
+        // Numéro DEVE contrôlé de nouveau sous le verrou des numéros : il a pu être attribué depuis la
+        // vérification de la ligne.
+        dossiers::with_devenumbers_locked(function () use ($record, $insert) {
+            dossiers::claim_devenumber(0, $record['devenumber']);
+            $insert();
+        });
     }
 }

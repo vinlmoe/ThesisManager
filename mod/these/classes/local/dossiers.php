@@ -36,6 +36,18 @@ use stdClass;
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class dossiers {
+    /** Attente maximale d'un verrou (dossier, numéros DEVE d'une activité), en secondes. */
+    const LOCK_TIMEOUT = 10;
+
+    /** @var bool[] Dossiers dont l'opération en cours tient le verrou (identifiant => true). */
+    private static $held = [];
+
+    /** @var \core\lock\lock[] Verrous pris pendant l'opération en cours, rendus après sa transaction. */
+    private static $operationlocks = [];
+
+    /** @var \core\lock\lock[] Verrous des numéros DEVE pris par with_devenumbers_locked(). */
+    private static $scopelocks = [];
+
     /**
      * Dossier d'un étudiant dans une instance, s'il existe.
      *
@@ -120,8 +132,11 @@ class dossiers {
      * @param int $userid Auteur de l'action.
      * @param string $action Voir these_log().
      * @param string $remark
-     * @param array $fields Autres champs du dossier à enregistrer.
+     * @param array $fields Autres champs du dossier à enregistrer. Un numéro DEVE (devenumber) est
+     *                      attribué par claim_devenumber(), avec, s'il y a lieu, le numéro proposé par
+     *                      le formulaire (clé devenumberproposed, non enregistrée).
      * @return stdClass Le dossier à jour.
+     * @throws moodle_exception devenumbertaken si le numéro saisi est attribué à un autre dossier.
      */
     public static function set_status(stdClass $dossier, $tostatus, $userid, $action, $remark = '', array $fields = []) {
         global $DB;
@@ -130,6 +145,14 @@ class dossiers {
         $fromstatus = (int) $dossier->status;
         if (!workflow::transition_allowed($fromstatus, $tostatus)) {
             throw new coding_exception('Transition de statut interdite : ' . $fromstatus . ' vers ' . (int) $tostatus);
+        }
+        // Numéro DEVE : contrôlé et attribué sous le verrou des numéros du site, s'il change.
+        $proposed = $fields['devenumberproposed'] ?? null;
+        unset($fields['devenumberproposed']);
+        if (array_key_exists('devenumber', $fields)) {
+            $number = self::normalise_devenumber($fields['devenumber']);
+            $fields['devenumber'] = $number === self::normalise_devenumber($dossier->devenumber ?? null)
+                ? $number : self::claim_devenumber($dossier->id, $number, $proposed);
         }
         $update = array_merge($fields, ['id' => $dossier->id, 'status' => (int) $tostatus, 'timemodified' => $now]);
         if ((int) $tostatus !== $fromstatus) {
@@ -173,16 +196,15 @@ class dossiers {
      */
     public static function dossier_operation(stdClass $dossier, callable $operation) {
         global $DB;
-        static $held = [];
 
-        if (empty($dossier->id) || !empty($held[$dossier->id])) {
+        if (empty($dossier->id) || !empty(self::$held[$dossier->id])) {
             return $operation();
         }
-        $lock = \core\lock\lock_config::get_lock_factory('mod_these')->get_lock('dossier' . $dossier->id, 10);
+        $lock = \core\lock\lock_config::get_lock_factory('mod_these')->get_lock('dossier' . $dossier->id, self::LOCK_TIMEOUT);
         if (!$lock) {
             throw new moodle_exception('dossierbusy', 'mod_these');
         }
-        $held[$dossier->id] = true;
+        self::$held[$dossier->id] = true;
         try {
             $status = $DB->get_field('these_dossier', 'status', ['id' => $dossier->id]);
             if ($status === false || (int) $status !== (int) $dossier->status) {
@@ -191,13 +213,21 @@ class dossiers {
             $transaction = $DB->start_delegated_transaction();
             try {
                 $result = $operation();
-                $transaction->allow_commit();
             } catch (\Throwable $e) {
                 $transaction->rollback($e);
             }
+            $transaction->allow_commit();
             return $result;
         } finally {
-            unset($held[$dossier->id]);
+            unset(self::$held[$dossier->id]);
+            if (!self::$held) {
+                // Fin de l'opération la plus externe, transaction validée ou annulée : les verrous pris
+                // en chemin (numéros DEVE) sont rendus.
+                foreach (self::$operationlocks as $operationlock) {
+                    $operationlock->release();
+                }
+                self::$operationlocks = [];
+            }
             $lock->release();
         }
     }
@@ -409,22 +439,17 @@ class dossiers {
 
     /**
      * Propose le numéro d'enregistrement DEVE suivant, au format AAAA-NNN : l'année en cours et le
-     * premier numéro d'ordre libre de cette année dans l'activité.
+     * premier numéro d'ordre libre de cette année sur le site (la numérotation continue d'une activité,
+     * d'une promotion, à l'autre).
      *
-     * @param int $theseid
      * @param int|null $time Date de référence (année), maintenant par défaut.
      * @return string
      */
-    public static function suggest_devenumber($theseid, $time = null) {
+    public static function suggest_devenumber($time = null) {
         global $DB;
 
         $year = userdate($time ?? time(), '%Y');
-        $numbers = $DB->get_fieldset_select(
-            'these_dossier',
-            'devenumber',
-            'theseid = ? AND ' . $DB->sql_like('devenumber', '?'),
-            [$theseid, $year . '-%']
-        );
+        $numbers = $DB->get_fieldset_select('these_dossier', 'devenumber', $DB->sql_like('devenumber', '?'), [$year . '-%']);
         $max = 0;
         foreach ($numbers as $number) {
             if (preg_match('/^' . $year . '-(\d+)$/', (string) $number, $matches)) {
@@ -435,20 +460,108 @@ class dossiers {
     }
 
     /**
-     * Indique si un numéro DEVE est déjà attribué à un autre dossier de l'activité.
+     * Indique si un numéro DEVE est déjà attribué à un autre dossier du site.
      *
-     * @param int $theseid
-     * @param string $number
+     * @param string|null $number
      * @param int $excludeid Dossier à ignorer (celui qu'on enregistre).
      * @return bool
      */
-    public static function devenumber_taken($theseid, $number, $excludeid = 0) {
+    public static function devenumber_taken($number, $excludeid = 0) {
         global $DB;
 
-        return $DB->record_exists_select(
-            'these_dossier',
-            'theseid = ? AND devenumber = ? AND id <> ?',
-            [$theseid, trim($number), $excludeid]
-        );
+        $number = self::normalise_devenumber($number);
+        if ($number === null) {
+            return false;
+        }
+        return $DB->record_exists_select('these_dossier', 'devenumber = ? AND id <> ?', [$number, (int) $excludeid]);
+    }
+
+    /**
+     * Numéro DEVE tel qu'il est enregistré : sans espaces autour, null s'il est vide (l'index unique
+     * du numéro ignore les valeurs nulles, pas les chaînes vides).
+     *
+     * @param string|null $number
+     * @return string|null
+     */
+    public static function normalise_devenumber($number) {
+        $number = trim((string) $number);
+        return $number === '' ? null : $number;
+    }
+
+    /**
+     * Attribue un numéro DEVE à un dossier, sous le verrou des numéros du site : à appeler dans une
+     * opération sur le dossier (dossier_operation() ; le verrou est alors gardé jusqu'à la fin de sa
+     * transaction) ou dans with_devenumbers_locked(). Deux attributions simultanées ne peuvent donc pas
+     * retenir le même numéro.
+     *
+     * @param int $dossierid Dossier à qui le numéro est attribué (0 pour un dossier à créer).
+     * @param string|null $number Numéro saisi.
+     * @param string|null $proposed Numéro proposé par le formulaire (suggest_devenumber()) : s'il a été
+     *                              gardé tel quel et qu'il vient d'être attribué à un autre dossier, le
+     *                              numéro libre suivant est attribué à sa place.
+     * @return string|null Numéro attribué, null s'il est vide.
+     * @throws moodle_exception devenumbertaken si le numéro saisi est déjà attribué à un autre dossier.
+     */
+    public static function claim_devenumber($dossierid, $number, $proposed = null) {
+        $number = self::normalise_devenumber($number);
+        if ($number === null) {
+            return null;
+        }
+        self::lock_devenumbers();
+        if (self::devenumber_taken($number, $dossierid)) {
+            if ($number === self::normalise_devenumber($proposed)) {
+                return self::suggest_devenumber();
+            }
+            throw new moodle_exception('devenumbertaken', 'mod_these');
+        }
+        return $number;
+    }
+
+    /**
+     * Exécute, hors d'une opération sur un dossier (import, par exemple), une écriture de numéros DEVE
+     * sous le verrou des numéros du site. Les écritures doivent être validées avant la fin de
+     * $callback (pas de transaction englobante).
+     *
+     * @param callable $callback
+     * @return mixed Résultat de $callback.
+     * @throws moodle_exception dossierbusy si le verrou n'a pas pu être pris.
+     */
+    public static function with_devenumbers_locked(callable $callback) {
+        if (self::$scopelocks || isset(self::$operationlocks['devenumbers'])) {
+            return $callback();
+        }
+        $lock = \core\lock\lock_config::get_lock_factory('mod_these')->get_lock('devenumbers', self::LOCK_TIMEOUT);
+        if (!$lock) {
+            throw new moodle_exception('dossierbusy', 'mod_these');
+        }
+        self::$scopelocks['devenumbers'] = $lock;
+        try {
+            return $callback();
+        } finally {
+            unset(self::$scopelocks['devenumbers']);
+            $lock->release();
+        }
+    }
+
+    /**
+     * Prend le verrou des numéros DEVE du site pour l'opération en cours, jusqu'à la fin de sa
+     * transaction (voir dossier_operation()).
+     *
+     * @return void
+     * @throws coding_exception hors d'une opération sur un dossier ou de with_devenumbers_locked().
+     * @throws moodle_exception dossierbusy si le verrou n'a pas pu être pris.
+     */
+    private static function lock_devenumbers() {
+        if (self::$scopelocks || isset(self::$operationlocks['devenumbers'])) {
+            return;
+        }
+        if (!self::$held) {
+            throw new coding_exception('Numéro DEVE attribué hors d\'une opération sur un dossier');
+        }
+        $lock = \core\lock\lock_config::get_lock_factory('mod_these')->get_lock('devenumbers', self::LOCK_TIMEOUT);
+        if (!$lock) {
+            throw new moodle_exception('dossierbusy', 'mod_these');
+        }
+        self::$operationlocks['devenumbers'] = $lock;
     }
 }

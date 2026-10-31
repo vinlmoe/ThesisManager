@@ -861,7 +861,8 @@ class stress_runner {
                 if (empty(\mod_these\local\a6::get($dossier)['defvdate'])) {
                     throw new stress_refusal('DEFV non saisi');
                 }
-                $fields['devenumber'] = these_suggest_devenumber($activity->these->id);
+                $fields['devenumber'] = these_suggest_devenumber();
+                $fields['devenumberproposed'] = $fields['devenumber'];
                 $fields['defensedate'] = (int) ($dossier->defensedate ?: $dossier->proposeddate);
                 $fields['defenselocation'] = $this->pick(['Amphithéâtre A', 'Salle du conseil', 'Salle 12']);
                 $fields['agreement'] = json_encode(array_merge(these_get_agreement($dossier), [
@@ -2175,8 +2176,8 @@ class stress_runner {
         if ($events !== $expected) {
             $violations[] = "événements de calendrier : $events au lieu de $expected";
         }
-        // Numéro DEVE unique dans l'activité.
-        if (trim((string) $dossier->devenumber) !== '' && these_devenumber_taken($dossier->theseid, $dossier->devenumber, $id)) {
+        // Numéro DEVE unique sur le site.
+        if (trim((string) $dossier->devenumber) !== '' && these_devenumber_taken($dossier->devenumber, $id)) {
             $violations[] = 'numéro DEVE en double : ' . $dossier->devenumber;
         }
         if ($this->render) {

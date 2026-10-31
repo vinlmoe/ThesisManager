@@ -125,7 +125,8 @@ switch ($step['key']) {
         // Grille de conformité : le directeur la remplit lui-même, sans reprendre les cases de l'étudiant.
         break;
     case 'devedefense':
-        $formdata->devenumber = $dossier->devenumber ?: these_suggest_devenumber($these->id);
+        $formdata->devenumber = $dossier->devenumber ?: these_suggest_devenumber();
+        $formdata->devenumberproposed = $dossier->devenumber ? '' : $formdata->devenumber;
         $formdata->defensedate = $dossier->defensedate ?: $dossier->proposeddate;
         $formdata->defenselocation = $dossier->defenselocation;
         $formdata = (object) array_merge((array) $formdata, these_jury_form_data($jury));
@@ -179,6 +180,7 @@ if ($mform->is_cancelled()) {
             break;
         case 'devedefense':
             $fields['devenumber'] = trim($data->devenumber);
+            $fields['devenumberproposed'] = (string) ($data->devenumberproposed ?? '');
             $fields['defensedate'] = (int) $data->defensedate;
             $fields['defenselocation'] = trim($data->defenselocation);
             // DEFV de la validation des études, repris dans l'agrément que la DEVE signe.
@@ -189,7 +191,7 @@ if ($mform->is_cancelled()) {
             these_save_jury($dossier->id, these_extract_submitted_jury($data, true), $USER->id);
             break;
     }
-    these_validate_step(
+    $validated = these_validate_step(
         $these,
         $cm,
         $dossier,
@@ -199,6 +201,10 @@ if ($mform->is_cancelled()) {
         $signs ? these_signature_from_form($data) : null
     );
     $message = get_string('stepvalidated', 'mod_these');
+    if (isset($fields['devenumber']) && (string) $validated->devenumber !== $fields['devenumber']) {
+        // Numéro proposé attribué entre-temps à un autre dossier : le suivant a été retenu.
+        $message .= ' ' . get_string('devenumberreassigned', 'mod_these', s($validated->devenumber));
+    }
     if ($step['key'] === 'devedefense') {
         // Éligibilité validée : les membres du jury sont prévenus et reçoivent l'accès aux documents.
         $notified = these_notify_jury($these, $cm, $DB->get_record('these_dossier', ['id' => $dossier->id]));

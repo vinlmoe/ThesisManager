@@ -184,8 +184,12 @@ $string['editsubject'] = 'Modifier le sujet';
 $string['registration'] = 'Enregistrements';
 $string['devenumber'] = "Numéro d'enregistrement DEVE";
 $string['devenumber_help'] = "Numéro d'ordre attribué à la thèse après le dépôt de la soutenance. Le numéro proposé est le suivant de l'année en cours (format AAAA-NNN) ; "
-    . "il peut être modifié, mais doit rester unique dans l'activité.";
-$string['devenumbertaken'] = 'Ce numéro est déjà attribué à un autre dossier.';
+    . "la numérotation se poursuit d'une activité à l'autre du site ; il peut être modifié, mais doit rester unique sur le site.";
+$string['devenumbertaken'] = 'Ce numéro est déjà attribué à un autre dossier du site.';
+$string['devenumberreassigned'] = 'Le numéro proposé venant d\'être attribué à un autre dossier, le dossier a reçu le numéro {$a}.';
+$string['upgradedevenumberduplicates'] = 'Numéros d\'enregistrement DEVE attribués à plusieurs dossiers : l\'unicité des numéros ne pourra être garantie par la base qu\'une fois ces doublons corrigés (Modifier le dossier). Lancer ensuite php mod/these/cli/devenumber_index.php. Doublons :';
+$string['upgradedevenumberduplicate'] = 'numéro {$a->number} : {$a->dossiers}';
+$string['upgradedevenumberdossier'] = 'dossier {$a->id} ({$a->activity})';
 $string['libraryref'] = 'Référence de la notice bibliographique';
 
 // Soutenance.

@@ -131,6 +131,7 @@
         <INDEX NAME="status" UNIQUE="false" FIELDS="status"/>
         <INDEX NAME="directorid" UNIQUE="false" FIELDS="directorid"/>
         <INDEX NAME="defensedate" UNIQUE="false" FIELDS="defensedate"/>
+        <INDEX NAME="devenumber" UNIQUE="true" FIELDS="devenumber" COMMENT="Numéro DEVE unique sur le site (NULL quand il est vide)"/>
       </INDEXES>
     </TABLE>
 

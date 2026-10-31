@@ -32,5 +32,5 @@ $plugin->release   = '0.8.1';
 $plugin->dependencies = [
     // Annuaire du jury, paramètres partagés (modèles, grille, questionnaire, paramètres du circuit),
     // composants de rendu, menu « Paramètres », liens de retour.
-    'mod_these' => 2026103003,
+    'mod_these' => 2026103100,
 ];

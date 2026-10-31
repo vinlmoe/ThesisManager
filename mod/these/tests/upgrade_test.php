@@ -22,6 +22,7 @@ global $CFG;
 require_once($CFG->dirroot . '/mod/these/tests/these_testcase.php');
 require_once($CFG->libdir . '/upgradelib.php');
 require_once($CFG->dirroot . '/mod/these/db/upgrade.php');
+require_once($CFG->dirroot . '/mod/these/db/upgradelib.php');
 
 /**
  * Étapes de mise à jour du module.
@@ -178,5 +179,81 @@ final class upgrade_test extends these_testcase {
         set_config('version', $previous, 'mod_these');
         $this->assertTrue(xmldb_these_upgrade($previous));
         $this->assertEquals($this->director->id, $DB->get_field('these_jury', 'userid', ['id' => $ids['externe']]));
+    }
+
+    /**
+     * Index du numéro DEVE (unique, ou non unique s'il y a des doublons), sur le schéma de la version
+     * précédente (sans index).
+     *
+     * @return bool|null true : unique, false : non unique, null : absent.
+     */
+    private function devenumber_index_unique() {
+        global $DB;
+        foreach ($DB->get_indexes('these_dossier') as $index) {
+            if ($index['columns'] === ['devenumber']) {
+                return (bool) $index['unique'];
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Retire l'index du numéro DEVE (schéma antérieur à 2026103100).
+     *
+     * @return void
+     */
+    private function drop_devenumber_index(): void {
+        global $DB;
+        $DB->get_manager()->drop_index(
+            new \xmldb_table('these_dossier'),
+            new \xmldb_index('devenumber', XMLDB_INDEX_UNIQUE, ['devenumber'])
+        );
+        $this->assertNull($this->devenumber_index_unique());
+    }
+
+    /**
+     * 2026103100 sans doublon : numéros vides convertis en NULL, index unique créé.
+     */
+    public function test_devenumber_unique_index(): void {
+        global $DB;
+        $this->setup_activity();
+        $this->assertTrue($this->devenumber_index_unique(), 'install.xml');
+        $this->drop_devenumber_index();
+        $other = $this->getDataGenerator()->create_and_enrol($this->course, 'student');
+        $a = $this->generator->create_dossier($this->these, $this->student->id, ['devenumber' => '']);
+        $b = $this->generator->create_dossier($this->these, $other->id, ['devenumber' => '2026-001']);
+
+        $previous = 2026103003;
+        set_config('version', $previous, 'mod_these');
+        $this->assertTrue(xmldb_these_upgrade($previous));
+        $this->assertTrue($this->devenumber_index_unique());
+        $this->assertNull($DB->get_field('these_dossier', 'devenumber', ['id' => $a->id]));
+        $this->assertEquals('2026-001', $DB->get_field('these_dossier', 'devenumber', ['id' => $b->id]));
+    }
+
+    /**
+     * 2026103100 avec des doublons (entre deux activités du site) : la mise à jour aboutit avec un index
+     * non unique et liste les doublons ; une fois ceux-ci corrigés, cli/devenumber_index.php (même
+     * fonction) rend l'index unique.
+     */
+    public function test_devenumber_duplicates_reported(): void {
+        global $DB;
+        $this->setup_activity();
+        $this->drop_devenumber_index();
+        $these2 = $this->getDataGenerator()->create_module('these', ['course' => $this->course->id, 'name' => 'Promotion B']);
+        $other = $this->getDataGenerator()->create_and_enrol($this->course, 'student');
+        $a = $this->generator->create_dossier($this->these, $this->student->id, ['devenumber' => '2026-001']);
+        $b = $this->generator->create_dossier($these2, $other->id, ['devenumber' => '2026-001']);
+
+        $previous = 2026103003;
+        set_config('version', $previous, 'mod_these');
+        $this->expectOutputRegex('/2026-001.*' . $a->id . '.*' . $b->id . '.*Promotion B/s');
+        $this->assertTrue(xmldb_these_upgrade($previous));
+        $this->assertFalse($this->devenumber_index_unique());
+        $this->assertGreaterThan($previous, (int) get_config('mod_these', 'version'));
+
+        $DB->set_field('these_dossier', 'devenumber', '2026-002', ['id' => $b->id]);
+        $this->assertSame([], these_upgrade_devenumber_index());
+        $this->assertTrue($this->devenumber_index_unique());
     }
 }

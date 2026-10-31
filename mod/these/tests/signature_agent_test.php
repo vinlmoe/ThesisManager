@@ -181,7 +181,7 @@ final class signature_agent_test extends these_testcase {
 
         // Validation par l'équipe DEVE : un seul courriel à l'agent, rien à la direction générale.
         these_validate_step($this->these, $this->cm, $dossier, $this->deve->id, [
-            'defensedate' => time() + 40 * DAYSECS, 'devenumber' => these_suggest_devenumber($this->these->id),
+            'defensedate' => time() + 40 * DAYSECS, 'devenumber' => these_suggest_devenumber(),
         ]);
         $dossier = $this->reload($dossier->id);
         $this->assertEquals(THESE_STATUS_DEFENSE_VALIDATED, $dossier->status);

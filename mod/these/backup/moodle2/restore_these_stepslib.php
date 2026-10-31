@@ -231,7 +231,19 @@ class restore_these_activity_structure_step extends restore_activity_structure_s
         }
         $data->directorid = $this->map_user($data->directorid);
         $data->returnedby = $this->map_user($data->returnedby);
-        $newid = $DB->insert_record('these_dossier', $data);
+        // Numéro DEVE unique sur le site : un numéro déjà attribué à un autre dossier (celui de l'activité
+        // sauvegardée, sur le même site) est vidé, à attribuer de nouveau par la DEVE.
+        $data->devenumber = \mod_these\local\dossiers::normalise_devenumber($data->devenumber ?? null);
+        $number = $data->devenumber;
+        $newid = \mod_these\local\dossiers::with_devenumbers_locked(function () use ($DB, $data) {
+            if (\mod_these\local\dossiers::devenumber_taken($data->devenumber)) {
+                $data->devenumber = null;
+            }
+            return $DB->insert_record('these_dossier', $data);
+        });
+        if ($number !== null && $data->devenumber === null) {
+            $this->log("Dossier de thèse $oldid : numéro DEVE $number déjà attribué sur le site, vidé", backup::LOG_WARNING);
+        }
         $this->set_mapping('these_dossier', $oldid, $newid, true);
     }
 

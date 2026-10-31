@@ -122,6 +122,10 @@ class review_form extends base_form {
                 $mform->addElement('text', 'devenumber', get_string('devenumber', 'mod_these'), ['size' => 20]);
                 $mform->setType('devenumber', PARAM_TEXT);
                 $mform->addHelpButton('devenumber', 'devenumber', 'mod_these');
+                // Numéro proposé : gardé tel quel, il est remplacé par le suivant s'il est attribué
+                // entre-temps à un autre dossier (voir dossiers::claim_devenumber()).
+                $mform->addElement('hidden', 'devenumberproposed', '');
+                $mform->setType('devenumberproposed', PARAM_TEXT);
                 $mform->addElement('date_time_selector', 'defensedate', get_string('defensedate', 'mod_these'));
                 \mod_these\local\scopesettings::add_location_field(
                     $mform,
@@ -258,7 +262,10 @@ class review_form extends base_form {
                 $number = trim((string) $data['devenumber']);
                 if ($number === '') {
                     $errors['devenumber'] = get_string('required');
-                } else if (dossiers::devenumber_taken($this->_customdata['theseid'], $number, $data['dossierid'])) {
+                } else if (
+                    $number !== trim((string) ($data['devenumberproposed'] ?? ''))
+                        && dossiers::devenumber_taken($number, $data['dossierid'])
+                ) {
                     $errors['devenumber'] = get_string('devenumbertaken', 'mod_these');
                 }
                 if (empty($this->_customdata['defvrecorded'])) {

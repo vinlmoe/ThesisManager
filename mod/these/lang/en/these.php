@@ -182,8 +182,12 @@ $string['editsubject'] = 'Edit the subject';
 $string['registration'] = 'Registrations';
 $string['devenumber'] = 'Registrar number';
 $string['devenumber_help'] = 'Registration number of the thesis, assigned after the defence submission. The suggested number is the next one of the current year '
-    . '(YYYY-NNN format); it can be changed but must remain unique in the activity.';
-$string['devenumbertaken'] = 'This number is already used by another file.';
+    . '(YYYY-NNN format), numbering continuing across all the activities of the site; it can be changed but must remain unique on the site.';
+$string['devenumbertaken'] = 'This number is already assigned to another file of the site.';
+$string['devenumberreassigned'] = 'The suggested number having just been assigned to another file, the file received number {$a}.';
+$string['upgradedevenumberduplicates'] = 'Registrar numbers assigned to several files: the uniqueness of numbers cannot be enforced by the database until they are corrected (Edit the file). Then run php mod/these/cli/devenumber_index.php. Duplicates:';
+$string['upgradedevenumberduplicate'] = 'number {$a->number}: {$a->dossiers}';
+$string['upgradedevenumberdossier'] = 'file {$a->id} ({$a->activity})';
 $string['libraryref'] = 'Bibliographic record reference';
 
 // Defence.

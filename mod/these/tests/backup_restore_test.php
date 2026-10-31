@@ -110,7 +110,9 @@ final class backup_restore_test extends these_testcase {
         $this->assertEquals($this->student->id, $newdossier->userid);
         $this->assertEquals($this->director->id, $newdossier->directorid);
         $this->assertEquals(THESE_STATUS_DEFENSE_SUBMITTED, $newdossier->status);
-        $this->assertEquals('2026-010', $newdossier->devenumber);
+        // Numéro DEVE unique sur le site : celui du dossier d'origine, toujours là, n'est pas repris.
+        $this->assertNull($newdossier->devenumber);
+        $this->assertEquals('2026-010', $DB->get_field('these_dossier', 'devenumber', ['id' => $dossier->id]));
         $this->assertEquals(4, $DB->count_records('these_jury', ['dossierid' => $newdossier->id]));
         $this->assertEquals(1, $DB->count_records('these_log', ['dossierid' => $newdossier->id]));
         $president = $DB->get_record('these_jury', ['dossierid' => $newdossier->id, 'juryrole' => 'president'], '*', MUST_EXIST);

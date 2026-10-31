@@ -131,7 +131,7 @@ final class workflow_test extends these_testcase {
         $dossier = $this->reload($dossier->id);
         $this->assertEquals(THESE_STATUS_DEFENSE_APPROVED, $dossier->status);
         $date = time() + 40 * DAYSECS;
-        $number = these_suggest_devenumber($this->these->id);
+        $number = these_suggest_devenumber();
         these_validate_step($this->these, $this->cm, $dossier, $this->deve->id, ['defensedate' => $date,
             'devenumber' => $number]);
         $dossier = $this->reload($dossier->id);
