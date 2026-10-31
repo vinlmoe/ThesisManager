@@ -119,6 +119,7 @@ final class prerequisites_test extends these_testcase {
 
         // Soutenance programmée : le procès-verbal attend la signature de l'université.
         $dossier->status = THESE_STATUS_SCHEDULED;
+        $DB->set_field('these_dossier', 'status', THESE_STATUS_SCHEDULED, ['id' => $dossier->id]);
         $this->assertTrue(prerequisites::only_university(array_filter(
             prerequisites::missing($dossier),
             function ($item) {

@@ -391,6 +391,11 @@ class signatures {
      * - verifiedby : compte DEVE qui a vérifié l'identité du signataire ou enregistré le scan ;
      * - time : date de la signature (scan : date portée sur le document), maintenant par défaut.
      *
+     * La signature est une opération sur le dossier (voir dossiers::dossier_operation()) : apposée depuis
+     * « Mes signatures », un lien ou la DEVE, elle est refusée si le dossier a changé de statut
+     * entre-temps (un renvoi qui vient de révoquer la signature attendue, par exemple) ; apposée par une
+     * validation ou une soumission, elle s'exécute dans l'opération de celle-ci.
+     *
      * @param context $context Contexte du module.
      * @param stdClass $dossier
      * @param string $doctype
@@ -413,52 +418,55 @@ class signatures {
         $email = '',
         array $options = []
     ) {
-        global $DB;
+        $operation = function () use ($context, $dossier, $doctype, $slot, $userid, $name, $png, $email, $options) {
+            global $DB;
 
-        $now = (int) ($options['time'] ?? 0) ?: time();
-        $method = in_array($options['method'] ?? '', ['inperson', 'scan'], true) ? $options['method'] : 'online';
-        $signature = $DB->get_record('these_signature', ['dossierid' => $dossier->id, 'doctype' => $doctype, 'slot' => $slot]);
-        $record = (object) [
-            'dossierid' => $dossier->id,
-            'doctype' => $doctype,
-            'slot' => $slot,
-            'userid' => (int) $userid,
-            'signername' => trim($name),
-            'signeremail' => $email !== '' ? $email : ($signature->signeremail ?? ''),
-            'token' => null,
-            'timesigned' => $now,
-            'contenthash' => self::document_hash($dossier, $doctype, $slot),
-            'templatehash' => seals::document_template_hash($dossier, $doctype),
-            'ipaddress' => getremoteaddr(),
-            'method' => $method,
-            'delegated' => empty($options['delegated']) ? 0 : 1,
-            'verifiedby' => (int) ($options['verifiedby'] ?? 0),
-        ];
-        if ($signature) {
-            $record->id = $signature->id;
-            $DB->update_record('these_signature', $record);
-        } else {
-            $record->requesttime = 0;
-            $record->timecreated = $now;
-            $record->id = $DB->insert_record('these_signature', $record);
-        }
+            $now = (int) ($options['time'] ?? 0) ?: time();
+            $method = in_array($options['method'] ?? '', ['inperson', 'scan'], true) ? $options['method'] : 'online';
+            $signature = $DB->get_record('these_signature', ['dossierid' => $dossier->id, 'doctype' => $doctype, 'slot' => $slot]);
+            $record = (object) [
+                'dossierid' => $dossier->id,
+                'doctype' => $doctype,
+                'slot' => $slot,
+                'userid' => (int) $userid,
+                'signername' => trim($name),
+                'signeremail' => $email !== '' ? $email : ($signature->signeremail ?? ''),
+                'token' => null,
+                'timesigned' => $now,
+                'contenthash' => self::document_hash($dossier, $doctype, $slot),
+                'templatehash' => seals::document_template_hash($dossier, $doctype),
+                'ipaddress' => getremoteaddr(),
+                'method' => $method,
+                'delegated' => empty($options['delegated']) ? 0 : 1,
+                'verifiedby' => (int) ($options['verifiedby'] ?? 0),
+            ];
+            if ($signature) {
+                $record->id = $signature->id;
+                $DB->update_record('these_signature', $record);
+            } else {
+                $record->requesttime = 0;
+                $record->timecreated = $now;
+                $record->id = $DB->insert_record('these_signature', $record);
+            }
 
-        self::store_signature_image($context, $record->id, $png, $userid);
+            self::store_signature_image($context, $record->id, $png, $userid);
 
-        // Historique : au nom du compte DEVE qui a vérifié l'identité ou enregistré le scan, s'il y en a un.
-        dossiers::log(
-            $dossier->id,
-            $record->verifiedby ?: $userid,
-            'signed',
-            $dossier->status,
-            $dossier->status,
-            self::signature_remark($doctype, $slot, $name, (bool) $record->delegated, $method, $signature ?: null)
-        );
-        seals::seal_document($context, $dossier, $doctype);
-        document_signed::create_from_dossier($dossier, $context, $record->verifiedby ?: $userid, [
-            'doctype' => $doctype, 'slot' => $slot, 'method' => $method, 'signatureid' => (int) $record->id,
-        ])->trigger();
-        return $DB->get_record('these_signature', ['id' => $record->id]);
+            // Historique : au nom du compte DEVE qui a vérifié l'identité ou enregistré le scan, s'il y en a un.
+            dossiers::log(
+                $dossier->id,
+                $record->verifiedby ?: $userid,
+                'signed',
+                $dossier->status,
+                $dossier->status,
+                self::signature_remark($doctype, $slot, $name, (bool) $record->delegated, $method, $signature ?: null)
+            );
+            seals::seal_document($context, $dossier, $doctype);
+            document_signed::create_from_dossier($dossier, $context, $record->verifiedby ?: $userid, [
+                'doctype' => $doctype, 'slot' => $slot, 'method' => $method, 'signatureid' => (int) $record->id,
+            ])->trigger();
+            return $DB->get_record('these_signature', ['id' => $record->id]);
+        };
+        return dossiers::dossier_operation($dossier, $operation);
     }
 
     /**

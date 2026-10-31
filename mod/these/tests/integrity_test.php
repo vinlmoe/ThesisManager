@@ -324,6 +324,29 @@ final class integrity_test extends these_testcase {
     }
 
     /**
+     * Une signature apposée hors d'une validation (« Mes signatures », lien, DEVE) est refusée si le
+     * dossier a changé de statut entre-temps : le renvoi qui vient de révoquer la signature attendue
+     * l'emporte. Scénario relevé par le test de charge en concurrence (tools/stresstest) : la signature
+     * d'un agent, apposée pendant un renvoi, était recréée sur un dossier renvoyé.
+     */
+    public function test_signature_on_changed_dossier_is_refused(): void {
+        $this->setup_activity();
+        $dossier = $this->generator->create_dossier($this->these, $this->student->id, [
+            'status' => THESE_STATUS_SUBJECT_REGISTERED, 'directorid' => $this->director->id, 'title' => 'Sujet',
+        ]);
+        $seen = clone $dossier;
+        these_return_dossier($this->these, $this->cm, $dossier, $this->librarian->id, 'student', 'À reprendre.');
+        try {
+            $png = these_sample_signature_image();
+            these_sign_document($this->context, $seen, 'subject', 'deve', $this->deve->id, 'Agent', $png);
+            $this->fail('Signature sur un dossier périmé acceptée');
+        } catch (\moodle_exception $e) {
+            $this->assertSame('dossierchanged', $e->errorcode);
+        }
+        $this->assertSame([], these_get_signatures($dossier->id));
+    }
+
+    /**
      * Les modèles ne peuvent faire lire à TCPDF que les images du module ou des images en ligne.
      */
     public function test_template_images_are_restricted(): void {
