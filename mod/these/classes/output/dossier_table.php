@@ -81,6 +81,7 @@ class dossier_table implements \renderable, \templatable {
             '',
         ];
         $dateformat = get_string('strftimedate', 'langconfig');
+        $preloaded = $this->todo ? rendering::primary_action_preload($this->dossiers) : null;
         $rows = [];
         foreach ($this->dossiers as $dossier) {
             $student = (object) [];
@@ -99,7 +100,8 @@ class dossier_table implements \renderable, \templatable {
             $open = parts::link($url, get_string('open', 'mod_these'), 'btn btn-sm btn-secondary');
             $actions = [$open];
             $action = $this->todo
-                ? rendering::primary_action($this->cm, $dossier, rights::get_rights($context, $dossier, $USER->id)) : null;
+                ? rendering::primary_action($this->cm, $dossier, rights::get_rights($context, $dossier, $USER->id), $preloaded)
+                : null;
             if ($action) {
                 $actions = [parts::link($action[1], $action[0], 'btn btn-sm btn-primary mr-1 mb-1'), $open];
             }

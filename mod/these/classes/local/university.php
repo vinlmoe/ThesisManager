@@ -112,20 +112,22 @@ class university {
      * paper_slots()).
      *
      * @param stdClass $dossier
+     * @param stdClass|null $these Activité du dossier, déjà lue.
+     * @param array|null $signatures Signatures du dossier déjà lues (voir signatures::get_signatures()).
      * @return array doctype => emplacements de l'université encore attendus
      */
-    public static function pending(stdClass $dossier) {
+    public static function pending(stdClass $dossier, ?stdClass $these = null, ?array $signatures = null) {
         global $DB;
 
-        $these = $DB->get_record('these', ['id' => $dossier->theseid]);
+        $these = $these ?? $DB->get_record('these', ['id' => $dossier->theseid]);
         $paper = $these ? self::paper_slots($these) : [];
         if (!$paper) {
             return [];
         }
-        $signatures = signatures::get_signatures($dossier->id);
+        $signatures = $signatures ?? signatures::get_signatures($dossier->id);
         $pending = [];
         foreach (array_keys(signatures::document_definitions()) as $doctype) {
-            if (!signatures::document_available($dossier, $doctype)) {
+            if (!signatures::document_available($dossier, $doctype, $signatures)) {
                 continue;
             }
             $university = [];

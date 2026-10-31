@@ -251,9 +251,10 @@ class signatures {
      *
      * @param stdClass $dossier
      * @param string $doctype
+     * @param array|null $signatures Signatures du dossier déjà lues (voir get_signatures()).
      * @return bool
      */
-    public static function document_available(stdClass $dossier, $doctype) {
+    public static function document_available(stdClass $dossier, $doctype, ?array $signatures = null) {
         switch ($doctype) {
             case 'subject':
                 return trim((string) $dossier->title) !== '';
@@ -262,7 +263,18 @@ class signatures {
             case 'grid':
                 return !empty(grid::get_grid($dossier));
             case 'agreement':
-                return !empty(self::get_agreement($dossier)) || self::has_signature($dossier->id, 'agreement');
+                if (!empty(self::get_agreement($dossier))) {
+                    return true;
+                }
+                if ($signatures === null) {
+                    return self::has_signature($dossier->id, 'agreement');
+                }
+                foreach ($signatures as $signature) {
+                    if ($signature->doctype === 'agreement' && !empty($signature->timesigned)) {
+                        return true;
+                    }
+                }
+                return false;
             case 'signaletique':
             case 'contract':
                 return !empty(bordereau::get_bordereau($dossier));
@@ -342,6 +354,29 @@ class signatures {
             }
         }
         return $signatures;
+    }
+
+    /**
+     * Même réponse que get_signatures(), pour plusieurs dossiers en une requête.
+     *
+     * @param int[] $dossierids
+     * @return array dossierid => (« doctype:slot » => enregistrement these_signature), un tableau par dossier.
+     */
+    public static function get_signatures_for(array $dossierids) {
+        global $DB;
+
+        $all = array_fill_keys(array_map('intval', $dossierids), []);
+        if (!$all) {
+            return [];
+        }
+        $definitions = self::document_definitions();
+        [$insql, $params] = $DB->get_in_or_equal(array_keys($all), SQL_PARAMS_NAMED);
+        foreach ($DB->get_records_select('these_signature', "dossierid $insql", $params, 'id ASC') as $signature) {
+            if (isset($definitions[$signature->doctype])) {
+                $all[(int) $signature->dossierid][$signature->doctype . ':' . $signature->slot] = $signature;
+            }
+        }
+        return $all;
     }
 
     /**

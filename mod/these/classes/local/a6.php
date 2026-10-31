@@ -41,13 +41,18 @@ class a6 {
      *
      * @param int $userid
      * @param stdClass|null $dossier Dossier dont reprendre l'ancienne valeur, à défaut de saisie.
+     * @param array|null $records Validations déjà lues (these_a6), indexées par étudiant.
      * @return array {date (int, 0 si inconnue ou non validée), notyet (bool), school (string),
      *               recorded (saisie par la DEVE), defvdate (int, 0 si inconnue), defvschool (string)}
      */
-    public static function get_for_user($userid, ?stdClass $dossier = null) {
+    public static function get_for_user($userid, ?stdClass $dossier = null, ?array $records = null) {
         global $DB;
 
-        $record = $userid ? $DB->get_record('these_a6', ['userid' => (int) $userid]) : null;
+        if ($records !== null) {
+            $record = $records[(int) $userid] ?? null;
+        } else {
+            $record = $userid ? $DB->get_record('these_a6', ['userid' => (int) $userid]) : null;
+        }
         $agreement = $dossier ? signatures::get_agreement($dossier) : [];
         $bordereau = $dossier ? bordereau::get_bordereau($dossier) : [];
         if ($record) {
@@ -100,10 +105,11 @@ class a6 {
      * Validation de l'A6 de l'étudiant d'un dossier.
      *
      * @param stdClass $dossier
+     * @param array|null $records Validations déjà lues (voir get_for_user()).
      * @return array Voir get_for_user().
      */
-    public static function get(stdClass $dossier) {
-        return self::get_for_user((int) ($dossier->userid ?? 0), $dossier);
+    public static function get(stdClass $dossier, ?array $records = null) {
+        return self::get_for_user((int) ($dossier->userid ?? 0), $dossier, $records);
     }
 
     /**
@@ -248,10 +254,11 @@ class a6 {
      * Libellé de la validation de l'A6 de l'étudiant d'un dossier, pour le dossier et le dépôt.
      *
      * @param stdClass $dossier
+     * @param array|null $records Validations déjà lues (voir get_for_user()).
      * @return string
      */
-    public static function label(stdClass $dossier) {
-        return self::format(self::get($dossier));
+    public static function label(stdClass $dossier, ?array $records = null) {
+        return self::format(self::get($dossier, $records));
     }
 
     /**

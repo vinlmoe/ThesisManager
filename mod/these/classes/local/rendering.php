@@ -285,9 +285,11 @@ class rendering {
      * @param stdClass $cm
      * @param stdClass $dossier
      * @param stdClass $rights Voir these_get_rights().
+     * @param array|null $preloaded Données lues d'avance pour toute une liste (voir
+     *                              primary_action_preload()) ; sans elles, lues pour ce dossier.
      * @return array|null [libellé, moodle_url], ou null sans action attendue.
      */
-    public static function primary_action(stdClass $cm, stdClass $dossier, stdClass $rights) {
+    public static function primary_action(stdClass $cm, stdClass $dossier, stdClass $rights, ?array $preloaded = null) {
         global $DB;
 
         $params = ['id' => $cm->id, 'dossierid' => $dossier->id];
@@ -301,13 +303,38 @@ class rendering {
         }
         if ($rights->deve && $status === THESE_STATUS_SCHEDULED) {
             // Pièces de l'université pas encore revenues signées : leurs scans d'abord.
-            $these = $DB->get_record('these', ['id' => $dossier->theseid], '*', MUST_EXIST);
-            if (prerequisites::only_university(prerequisites::missing($dossier), university::paper_slots($these))) {
+            $these = $preloaded['these'][(int) $dossier->theseid]
+                ?? $DB->get_record('these', ['id' => $dossier->theseid], '*', MUST_EXIST);
+            $signatures = $preloaded['signatures'][(int) $dossier->id] ?? null;
+            $missing = prerequisites::missing($dossier, $signatures);
+            if (prerequisites::only_university($missing, university::paper_slots($these))) {
                 return [get_string('universityaddscan', 'mod_these'), new moodle_url('/mod/these/scan.php', $params)];
             }
             return [get_string('depositminutes', 'mod_these'), new moodle_url('/mod/these/minutes.php', $params)];
         }
         return null;
+    }
+
+    /**
+     * Données de primary_action() lues d'avance pour une liste de dossiers : activités et signatures
+     * des soutenances programmées, seules à en avoir besoin.
+     *
+     * @param stdClass[] $dossiers
+     * @return array these (par activité), signatures (par dossier).
+     */
+    public static function primary_action_preload(array $dossiers) {
+        global $DB;
+
+        $scheduled = array_filter($dossiers, function ($dossier) {
+            return (int) $dossier->status === THESE_STATUS_SCHEDULED;
+        });
+        if (!$scheduled) {
+            return ['these' => [], 'signatures' => []];
+        }
+        return [
+            'these' => $DB->get_records_list('these', 'id', array_unique(array_column($scheduled, 'theseid'))),
+            'signatures' => signatures::get_signatures_for(array_column($scheduled, 'id')),
+        ];
     }
 
     /**
@@ -344,14 +371,25 @@ class rendering {
      * @param context $context Contexte de l'activité.
      * @param stdClass|null $student
      * @param stdClass|null $director
+     * @param array|null $preloaded Données de tous les dossiers exportés, lues d'avance (voir
+     *                              register_preload()) ; sans elles, lues pour ce dossier.
      * @return array Colonnes de l'export (voir export.php).
      */
-    public static function register_row(stdClass $dossier, context $context, ?stdClass $student, ?stdClass $director) {
+    public static function register_row(
+        stdClass $dossier,
+        context $context,
+        ?stdClass $student,
+        ?stdClass $director,
+        ?array $preloaded = null
+    ) {
+        $preloaded = $preloaded ?? self::register_preload([$dossier]);
+        $id = (int) $dossier->id;
+        $signatures = $preloaded['signatures'][$id] ?? [];
         $roles = workflow::jury_role_options();
         $dateformat = get_string('strftimedatetimeshort', 'langconfig');
         $jury = array_map(function ($member) use ($roles) {
             return ($roles[$member->juryrole] ?? $member->juryrole) . ' : ' . $member->fullname;
-        }, jury::get_jury($dossier->id));
+        }, $preloaded['juries'][$id] ?? []);
         $embargo = bordereau::embargo_until($dossier);
         return [
             'devenumber' => $dossier->devenumber,
@@ -371,14 +409,58 @@ class rendering {
             'result' => (int) $dossier->defenseresult ? workflow::result_label($dossier->defenseresult) : '',
             'mention' => workflow::mention_label($dossier->mention),
             'embargo' => $embargo ? userdate($embargo, get_string('strftimedatefullshort', 'langconfig')) : '',
-            'a6' => a6::label($dossier),
+            'a6' => a6::label($dossier, $preloaded['a6']),
             'directortitle' => (string) $dossier->directortitle,
             'missingsignatures' => implode(' ; ', array_map(function ($item) {
                 return signatures::document_label($item['doctype']) . ' — ' . signatures::slot_label($item['slot']);
-            }, prerequisites::missing($dossier))),
-            'universitypieces' => self::university_pieces_label($context, $dossier),
-            'lastrefusal' => self::last_refusal_label($dossier),
+            }, prerequisites::missing($dossier, $signatures))),
+            'universitypieces' => self::university_pieces_label(
+                $context,
+                $dossier,
+                $preloaded['these'][(int) $dossier->theseid] ?? null,
+                $signatures
+            ),
+            'lastrefusal' => self::last_refusal_label($preloaded['refusals'][$id] ?? null),
         ];
+    }
+
+    /**
+     * Données de l'export du registre lues d'avance pour tous les dossiers exportés, en une requête par
+     * table : jurys, signatures, validations de l'A6, activités et derniers refus de signer.
+     *
+     * @param stdClass[] $dossiers
+     * @return array juries, signatures (par dossier), a6 (par étudiant), these (par activité), refusals
+     *               (dernier refus, par dossier).
+     */
+    public static function register_preload(array $dossiers) {
+        global $DB;
+
+        $ids = array_map('intval', array_column($dossiers, 'id'));
+        $preloaded = ['juries' => jury::get_juries($ids), 'signatures' => signatures::get_signatures_for($ids),
+            'a6' => [], 'these' => [], 'refusals' => []];
+        $userids = array_filter(array_unique(array_map('intval', array_column($dossiers, 'userid'))));
+        if ($userids) {
+            foreach ($DB->get_records_list('these_a6', 'userid', $userids) as $record) {
+                $preloaded['a6'][(int) $record->userid] = $record;
+            }
+        }
+        $theseids = array_unique(array_map('intval', array_column($dossiers, 'theseid')));
+        $preloaded['these'] = $theseids ? $DB->get_records_list('these', 'id', $theseids) : [];
+        if ($ids) {
+            [$insql, $params] = $DB->get_in_or_equal($ids, SQL_PARAMS_NAMED);
+            $params['action'] = 'agentrefused';
+            $logs = $DB->get_records_select(
+                'these_log',
+                "dossierid $insql AND logaction = :action",
+                $params,
+                'timecreated ASC, id ASC',
+                'id, dossierid, timecreated, remark'
+            );
+            foreach ($logs as $log) {
+                $preloaded['refusals'][(int) $log->dossierid] = $log;
+            }
+        }
+        return $preloaded;
     }
 
     /**
@@ -387,12 +469,19 @@ class rendering {
      *
      * @param context $context
      * @param stdClass $dossier
+     * @param stdClass|null $these Activité du dossier, déjà lue.
+     * @param array|null $signatures Signatures du dossier, déjà lues.
      * @return string
      */
-    protected static function university_pieces_label(context $context, stdClass $dossier) {
+    protected static function university_pieces_label(
+        context $context,
+        stdClass $dossier,
+        ?stdClass $these = null,
+        ?array $signatures = null
+    ) {
         $dateformat = get_string('strftimedatefullshort', 'langconfig');
         $items = [];
-        foreach (array_keys(university::pending($dossier)) as $doctype) {
+        foreach (array_keys(university::pending($dossier, $these, $signatures)) as $doctype) {
             $file = university::get_sealed($context, $dossier->id, $doctype);
             $items[] = signatures::document_label($doctype) . ' — ' . ($file
                 ? get_string('universitysealedon', 'mod_these', userdate($file->get_timecreated(), $dateformat))
@@ -404,24 +493,13 @@ class rendering {
     /**
      * Dernier refus de signer d'un agent DEVE, pour l'export : date et motif.
      *
-     * @param stdClass $dossier
+     * @param stdClass|null $log Dernier refus (these_log), voir register_preload().
      * @return string
      */
-    protected static function last_refusal_label(stdClass $dossier) {
-        global $DB;
-
-        $logs = $DB->get_records(
-            'these_log',
-            ['dossierid' => $dossier->id, 'logaction' => 'agentrefused'],
-            'timecreated DESC, id DESC',
-            'id, timecreated, remark',
-            0,
-            1
-        );
-        if (!$logs) {
+    protected static function last_refusal_label(?stdClass $log) {
+        if (!$log) {
             return '';
         }
-        $log = reset($logs);
         return userdate($log->timecreated, get_string('strftimedatetimeshort', 'langconfig')) . ' — ' . $log->remark;
     }
 

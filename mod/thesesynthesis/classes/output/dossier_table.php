@@ -76,6 +76,8 @@ class dossier_table implements \renderable, \templatable {
             get_string('defensedate', 'mod_these'),
             '',
         ];
+        // Activités et signatures des soutenances programmées lues d'avance pour toute la file.
+        $preloaded = $this->todo ? \mod_these\local\rendering::primary_action_preload(array_column($this->rows, 'dossier')) : null;
         $rows = [];
         foreach ($this->rows as $row) {
             $date = (int) ($row->dossier->defensedate ?: $row->dossier->proposeddate);
@@ -84,7 +86,8 @@ class dossier_table implements \renderable, \templatable {
             $action = $this->todo ? these_primary_action(
                 $row->link->cm,
                 $row->dossier,
-                these_get_rights($row->link->context, $row->dossier, $USER->id)
+                these_get_rights($row->link->context, $row->dossier, $USER->id),
+                $preloaded
             ) : null;
             if ($action) {
                 array_unshift($actions, parts::link($action[1], $action[0], 'btn btn-sm btn-primary mr-1 mb-1'));

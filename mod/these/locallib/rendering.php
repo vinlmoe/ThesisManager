@@ -157,10 +157,17 @@ function these_render_dossier(
  * @param context $context Contexte de l'activité.
  * @param stdClass|null $student
  * @param stdClass|null $director
+ * @param array|null $preloaded Voir \mod_these\local\rendering::register_preload().
  * @return array Colonnes de l'export (voir export.php).
  */
-function these_register_row(stdClass $dossier, context $context, ?stdClass $student, ?stdClass $director) {
-    return \mod_these\local\rendering::register_row($dossier, $context, $student, $director);
+function these_register_row(
+    stdClass $dossier,
+    context $context,
+    ?stdClass $student,
+    ?stdClass $director,
+    ?array $preloaded = null
+) {
+    return \mod_these\local\rendering::register_row($dossier, $context, $student, $director, $preloaded);
 }
 
 /**
@@ -203,8 +210,9 @@ function these_render_dossier_table(array $dossiers, stdClass $cm, array $option
  * @param stdClass $cm
  * @param stdClass $dossier
  * @param stdClass $rights
+ * @param array|null $preloaded Voir \mod_these\local\rendering::primary_action_preload().
  * @return array|null
  */
-function these_primary_action(stdClass $cm, stdClass $dossier, stdClass $rights) {
-    return \mod_these\local\rendering::primary_action($cm, $dossier, $rights);
+function these_primary_action(stdClass $cm, stdClass $dossier, stdClass $rights, ?array $preloaded = null) {
+    return \mod_these\local\rendering::primary_action($cm, $dossier, $rights, $preloaded);
 }
