@@ -256,4 +256,28 @@ final class upgrade_test extends these_testcase {
         $this->assertSame([], these_upgrade_devenumber_index());
         $this->assertTrue($this->devenumber_index_unique());
     }
+
+    /**
+     * 2026103100 : éléments d'origine de la grille créés pour les activités (et activités de suivi) qui
+     * n'en ont pas ; une grille modifiée par la DEVE est conservée telle quelle.
+     */
+    public function test_grid_items_created(): void {
+        global $DB;
+        $this->setup_activity();
+        $synthesis = $this->getDataGenerator()->create_module('thesesynthesis', ['course' => $this->course->id]);
+        $custom = $this->getDataGenerator()->create_module('these', ['course' => $this->course->id]);
+        these_save_grid_items(these_local_scope($custom), [
+            (object) ['itemkey' => '', 'section' => 'fond', 'label' => 'Seul élément', 'conditional' => 0],
+        ]);
+        // Activités antérieures à la mise à jour : grille enregistrée à la première lecture, jamais lue.
+        $DB->delete_records('these_griditem', ['theseid' => $this->these->id]);
+        $DB->delete_records('these_griditem', ['synthesisid' => $synthesis->id]);
+
+        $previous = 2026103003;
+        set_config('version', $previous, 'mod_these');
+        $this->assertTrue(xmldb_these_upgrade($previous));
+        $this->assertEquals(21, $DB->count_records('these_griditem', ['theseid' => $this->these->id, 'synthesisid' => 0]));
+        $this->assertEquals(21, $DB->count_records('these_griditem', ['theseid' => 0, 'synthesisid' => $synthesis->id]));
+        $this->assertEquals(1, $DB->count_records('these_griditem', ['theseid' => $custom->id]));
+    }
 }

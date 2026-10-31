@@ -30,13 +30,43 @@ require_once(__DIR__ . '/these_testcase.php');
  * @covers     ::these_get_grid_items
  * @covers     ::these_save_grid_items
  * @covers     ::these_conclusions_error
+ * @covers     \mod_these\local\grid
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_these\local\grid::class)]
 #[\PHPUnit\Framework\Attributes\CoversFunction('these_get_grid_items')]
 #[\PHPUnit\Framework\Attributes\CoversFunction('these_save_grid_items')]
 #[\PHPUnit\Framework\Attributes\CoversFunction('these_conclusions_error')]
 final class grid_conclusions_test extends these_testcase {
     /**
-     * Éléments d'origine enregistrés à la première consultation, puis modifiés : libellé changé,
+     * Éléments d'origine enregistrés à la création de l'activité « Gestion des thèses » comme à celle
+     * de l'activité « Suivi des thèses » (portée partagée) ; la lecture de la grille n'écrit jamais, même
+     * pour une portée sans élément (éléments d'origine présentés sans être enregistrés).
+     */
+    public function test_grid_items_created_with_activity(): void {
+        global $DB;
+        $this->setup_activity();
+        $this->assertEquals(21, $DB->count_records('these_griditem', ['theseid' => $this->these->id, 'synthesisid' => 0]));
+
+        $synthesis = $this->getDataGenerator()->create_module('thesesynthesis', ['course' => $this->course->id]);
+        $this->assertEquals(21, $DB->count_records('these_griditem', ['theseid' => 0, 'synthesisid' => $synthesis->id]));
+
+        // Portée sans élément (activité antérieure à la mise à jour) : aucune écriture à la lecture.
+        $DB->delete_records('these_griditem', ['theseid' => $this->these->id]);
+        $writes = $DB->perf_get_writes();
+        $items = these_get_grid_items(these_local_scope($this->these));
+        $this->assertSame($writes, $DB->perf_get_writes());
+        $this->assertCount(6, $items['fond']);
+        $this->assertCount(15, $items['forme']);
+        $this->assertEquals(0, $DB->count_records('these_griditem', ['theseid' => $this->these->id]));
+
+        // Création des éléments d'origine : seulement pour une portée qui n'en a pas.
+        $this->assertEquals(21, \mod_these\local\grid::create_default_items(these_local_scope($this->these)));
+        $this->assertEquals(0, \mod_these\local\grid::create_default_items(these_local_scope($this->these)));
+        $this->assertEquals(21, $DB->count_records('these_griditem', ['theseid' => $this->these->id]));
+    }
+
+    /**
+     * Éléments d'origine, puis modifiés : libellé changé,
      * élément supprimé, élément ajouté ; les réponses restent attachées aux clés.
      */
     public function test_grid_items(): void {

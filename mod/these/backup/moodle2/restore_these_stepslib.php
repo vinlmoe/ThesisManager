@@ -345,5 +345,10 @@ class restore_these_activity_structure_step extends restore_activity_structure_s
         $this->add_related_files('mod_these', 'signature', 'these_signature');
         $this->add_related_files('mod_these', 'sealed', 'these_dossier');
         $this->add_related_files('mod_these', 'universityseal', 'these_dossier');
+        // Sauvegarde antérieure à 2026103100, sans grille enregistrée : éléments d'origine, comme à la
+        // création d'une activité.
+        if ($theseid = $this->task->get_activityid()) {
+            \mod_these\local\grid::create_default_items((object) ['theseid' => $theseid, 'synthesisid' => 0]);
+        }
     }
 }

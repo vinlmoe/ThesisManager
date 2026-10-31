@@ -99,3 +99,35 @@ function these_upgrade_devenumber_report(array $duplicates) {
     }
     return implode("\n", $lines);
 }
+
+/**
+ * Éléments d'origine de la grille de conformité des activités « Gestion des thèses » et « Suivi des
+ * thèses » qui n'en ont pas (voir \mod_these\local\grid::create_default_items()).
+ *
+ * @return int Nombre de portées complétées.
+ */
+function these_upgrade_create_grid_items() {
+    global $DB;
+
+    $scopes = [];
+    $theseids = $DB->get_fieldset_sql(
+        "SELECT t.id FROM {these} t
+          WHERE NOT EXISTS (SELECT 1 FROM {these_griditem} g WHERE g.theseid = t.id AND g.synthesisid = 0)"
+    );
+    foreach ($theseids as $theseid) {
+        $scopes[] = (object) ['theseid' => (int) $theseid, 'synthesisid' => 0];
+    }
+    if ($DB->get_manager()->table_exists('thesesynthesis')) {
+        $synthesisids = $DB->get_fieldset_sql(
+            "SELECT s.id FROM {thesesynthesis} s
+              WHERE NOT EXISTS (SELECT 1 FROM {these_griditem} g WHERE g.theseid = 0 AND g.synthesisid = s.id)"
+        );
+        foreach ($synthesisids as $synthesisid) {
+            $scopes[] = (object) ['theseid' => 0, 'synthesisid' => (int) $synthesisid];
+        }
+    }
+    foreach ($scopes as $scope) {
+        \mod_these\local\grid::create_default_items($scope);
+    }
+    return count($scopes);
+}

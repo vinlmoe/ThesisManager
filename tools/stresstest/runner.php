@@ -258,11 +258,6 @@ class stress_runner {
                 'required' => 1]);
             these_save_question($scope, (object) ['qtype' => 'text', 'label' => 'Laboratoire', 'options' => '', 'required' => 0]);
         }
-        // Éléments d'origine de la grille, enregistrés à la première consultation : enregistrés ici, avant les
-        // opérations simultanées (voir README.md, « première consultation simultanée »).
-        foreach ($this->activities as $activity) {
-            these_get_grid_items(these_settings_scope($activity->these));
-        }
         accesslib_clear_all_caches(true);
         \mod_these\local\scopesettings::reset_cache();
     }

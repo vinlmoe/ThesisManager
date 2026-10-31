@@ -60,11 +60,71 @@ class grid {
     }
 
     /**
-     * Éléments de la grille de conformité d'une portée de paramètres (voir these_settings_scope()),
-     * modifiables par la DEVE. Les éléments d'origine (these_grid_items()) sont enregistrés à la
-     * première consultation.
+     * Éléments d'origine de la grille (grid_items()), sous forme d'enregistrements d'une portée.
      *
-     * @param stdClass|null $scope null : éléments d'origine, sans enregistrement (aperçus).
+     * @param stdClass|null $scope
+     * @return stdClass[] Dans l'ordre, sans identifiant.
+     */
+    protected static function default_records(?stdClass $scope) {
+        $records = [];
+        $sortorder = 0;
+        foreach (self::grid_items() as $section => $items) {
+            foreach ($items as $key => $conditional) {
+                $records[] = (object) array_merge($scope ? doctemplates::scope_conditions($scope) : [], [
+                    'itemkey' => $key,
+                    'section' => $section,
+                    'label' => get_string('grid' . $key, 'mod_these'),
+                    'conditional' => (int) $conditional,
+                    'sortorder' => $sortorder++,
+                    'timemodified' => time(),
+                ]);
+            }
+        }
+        return $records;
+    }
+
+    /**
+     * Enregistre les éléments d'origine de la grille d'une portée qui n'en a aucun : à la création
+     * d'une activité (« Gestion des thèses » ou « Suivi des thèses »), à la restauration d'une
+     * sauvegarde qui n'en contient pas et à la mise à jour 2026103100. La lecture de la grille
+     * (get_grid_items()) n'écrit jamais : deux premières lectures simultanées se heurtaient à l'index
+     * unique de la portée.
+     *
+     * @param stdClass $scope Voir doctemplates::local_scope() ; theseid ou synthesisid renseigné.
+     * @return int Nombre d'éléments enregistrés (0 si la portée en avait déjà).
+     */
+    public static function create_default_items(stdClass $scope) {
+        global $DB;
+
+        if ($DB->record_exists('these_griditem', doctemplates::scope_conditions($scope))) {
+            return 0;
+        }
+        $records = self::default_records($scope);
+        $DB->insert_records('these_griditem', $records);
+        return count($records);
+    }
+
+    /**
+     * Observateur de la création d'un module de cours : une activité « Suivi des thèses » porte la
+     * portée de paramètres partagée par les promotions qu'elle suit ; sa grille reçoit les éléments
+     * d'origine dès sa création, comme celle d'une activité « Gestion des thèses » (these_add_instance()).
+     *
+     * @param \core\event\course_module_created $event
+     * @return void
+     */
+    public static function course_module_created(\core\event\course_module_created $event) {
+        if (($event->other['modulename'] ?? '') !== 'thesesynthesis' || empty($event->other['instanceid'])) {
+            return;
+        }
+        self::create_default_items((object) ['theseid' => 0, 'synthesisid' => (int) $event->other['instanceid']]);
+    }
+
+    /**
+     * Éléments de la grille de conformité d'une portée de paramètres (voir these_settings_scope()),
+     * modifiables par la DEVE. Lecture seule : une portée sans élément enregistré (activité antérieure
+     * à la mise à jour, grille vidée par la DEVE) présente les éléments d'origine sans les enregistrer.
+     *
+     * @param stdClass|null $scope null : éléments d'origine (aperçus).
      * @return array rubrique => [clé => {itemkey, section, label, conditional, sortorder}]
      */
     public static function get_grid_items(?stdClass $scope) {
@@ -73,25 +133,7 @@ class grid {
         $records = $scope
             ? $DB->get_records('these_griditem', doctemplates::scope_conditions($scope), 'sortorder ASC, id ASC') : [];
         if (!$records) {
-            $records = [];
-            $sortorder = 0;
-            foreach (self::grid_items() as $section => $items) {
-                foreach ($items as $key => $conditional) {
-                    $records[] = (object) array_merge($scope ? doctemplates::scope_conditions($scope) : [], [
-                        'itemkey' => $key,
-                        'section' => $section,
-                        'label' => get_string('grid' . $key, 'mod_these'),
-                        'conditional' => (int) $conditional,
-                        'sortorder' => $sortorder++,
-                        'timemodified' => time(),
-                    ]);
-                }
-            }
-            if ($scope) {
-                foreach ($records as $record) {
-                    $record->id = $DB->insert_record('these_griditem', $record);
-                }
-            }
+            $records = self::default_records($scope);
         }
         $sections = array_fill_keys(self::grid_sections(), []);
         foreach ($records as $record) {

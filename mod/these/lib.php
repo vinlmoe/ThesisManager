@@ -130,7 +130,11 @@ function these_add_instance($moduleinstance, $mform = null) {
     $moduleinstance->timecreated = time();
     $moduleinstance->timemodified = $moduleinstance->timecreated;
 
-    return $DB->insert_record('these', $moduleinstance);
+    $id = $DB->insert_record('these', $moduleinstance);
+    // Grille de conformité de l'activité : éléments d'origine enregistrés dès la création, jamais à la
+    // lecture (voir \mod_these\local\grid::create_default_items()).
+    \mod_these\local\grid::create_default_items((object) ['theseid' => $id, 'synthesisid' => 0]);
+    return $id;
 }
 
 /**

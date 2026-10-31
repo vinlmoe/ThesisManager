@@ -436,6 +436,9 @@ function xmldb_these_upgrade($oldversion) {
                 echo $OUTPUT->notification(nl2br(s($report)), \core\output\notification::NOTIFY_WARNING);
             }
         }
+        // Grille de conformité enregistrée à la création de l'activité et plus à la première lecture :
+        // éléments d'origine des activités (et des activités de suivi) qui n'en ont pas encore.
+        these_upgrade_create_grid_items();
         upgrade_mod_savepoint(true, 2026103100, 'these');
     }
 
